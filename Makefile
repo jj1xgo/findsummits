@@ -78,7 +78,10 @@ LINT_MD_PATHS ?=
 lint-md: venv
 	@if [ -n "$(LINT_MD_PATHS)" ]; then targets="$(LINT_MD_PATHS)"; ropt="-r"; \
 	else targets=$$(git -c core.quotepath=false ls-files '*.md'); \
-	ops_targets=$$(git -C .claude ls-files '*.md' ':!:archives/**' ':!:spec-findings/**' | sed 's#^#.claude/#'); \
+	ops_targets=""; \
+	if [ -e .claude/.git ]; then \
+	  ops_targets=$$(git -C .claude ls-files '*.md' ':!:archives/**' ':!:spec-findings/**' | sed 's#^#.claude/#'); \
+	fi; \
 	targets="$$targets $$ops_targets"; ropt=""; fi; \
 	venv/bin/python3 -m pymarkdown -c .pymarkdown scan $$ropt $$targets; s1=$$?; \
 	venv/bin/python3 scripts/lint_docs.py $$targets; s2=$$?; \

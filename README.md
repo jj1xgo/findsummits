@@ -68,6 +68,10 @@ venv/bin/python3 scripts/merge.py ...
 
 本ツールが生成する GeoJSON / CSV / XLSX には地理院タイルの標高値から解析した派生データが含まれます。再配布時も上記出典の明示をお願いします。
 
+## 開発
+
+共通規則は [AGENTS.md](AGENTS.md)、作業別の詳細は [開発ガイド](docs/03_development.md) を参照してください。
+
 ## ライセンス
 
 GPL-3.0

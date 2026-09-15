@@ -9,7 +9,7 @@ cyberjapandata.gsi.go.jp
 pypi.org
 files.pythonhosted.org
 
-# GitHub 公式 MCP サーバー（クロスリポジトリ issue 操作。CLAUDE.md「環境課題の連携」節参照）
+# GitHub 公式 MCP サーバー（クロスリポジトリ issue 操作用）
 api.githubcopilot.com
 
 # Codex CLI（MCPセカンドオピニオン用、内部運用issue参照）。ChatGPTアカウント認証時、

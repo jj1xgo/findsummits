@@ -87,7 +87,7 @@ ref/geojson_v*/
 # LibreOffice lock files
 .~lock.*
 
-# CLAUDE.md・.claude/ はメンテナ個人の開発運用ファイル（プロダクト本体ではない）。
-# .claude/ は別途管理するため追跡しない
+# root CLAUDE.md は公開共通規則の読込入口。その他の個人設定は追跡しない。
 CLAUDE.md
+!/CLAUDE.md
 .claude/
