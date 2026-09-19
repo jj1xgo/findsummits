@@ -40,6 +40,10 @@ make clean                                 # build/ を削除
   `requirements.txt` に追記する。`pip install` だけで済ませない。
 - パッケージを削除したとき、および定期的な依存整合確認では `make venv-rebuild` で venv をクリーン再構築する。
 - checkout の移動で実行ファイルの shebang が壊れた場合も `make venv-rebuild` で作り直す。
+- 並行作業やリリース作業はブランチ切替でなく `git worktree` で checkout を分ける。`venv/`・`build/`・
+  `params/config.ini`・`params/fetch_config.ini` は git 管理外のため worktree には無く、worktree ごとに `make venv`・
+  `make`・設定ファイルの複製が要る（`DATA_DIR` はリポジトリ外なので複製不要）。ルートの `.worktreeinclude` は
+  Claude Code が worktree を作るときに複製する設定ファイルの一覧で、手動の `git worktree add` には効かない。
 
 ## 3. 検証と文書更新
 
