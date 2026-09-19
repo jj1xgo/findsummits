@@ -56,7 +56,8 @@ venv: venv/.installed
 venv/.installed: requirements.txt
 	python3 -m venv venv
 	venv/bin/python3 -m pip install --upgrade pip
-	venv/bin/python3 -m pip install -r requirements.txt
+	# コンパイル済み拡張はビルド済み wheel のみ許可（ソースビルドに落ちると OS の共有ライブラリに依存し、別環境で動かない venv になる）
+	venv/bin/python3 -m pip install --only-binary numpy,shapely,pillow -r requirements.txt
 	@touch venv/.installed
 
 # venv をクリーン再構築（孤立パッケージを除去し requirements.txt と完全一致させる）

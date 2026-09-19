@@ -39,6 +39,9 @@ make clean                                 # build/ を削除
 - `requirements.txt` を依存の正とする。新しいサードパーティ製パッケージを import したら、同じコミットで
   `requirements.txt` に追記する。`pip install` だけで済ませない。
 - パッケージを削除したとき、および定期的な依存整合確認では `make venv-rebuild` で venv をクリーン再構築する。
+- コンパイル済み拡張（numpy・shapely・pillow）は `make venv` がビルド済み wheel だけを許可する（`--only-binary`）。
+  ソースビルドに落ちると OS の共有ライブラリに依存し、ホストとコンテナの一方でしか動かない venv になるため。
+  wheel が無くて失敗したら、ソースビルドでしのがず `requirements.txt` の版を見直す。
 - checkout の移動で実行ファイルの shebang が壊れた場合も `make venv-rebuild` で作り直す。
 - 並行作業やリリース作業はブランチ切替でなく `git worktree` で checkout を分ける。`venv/`・`build/`・
   `params/config.ini`・`params/fetch_config.ini` は git 管理外のため worktree には無く、worktree ごとに `make venv`・
