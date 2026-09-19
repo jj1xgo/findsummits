@@ -1,0 +1,4 @@
+# Claude Code が worktree（EnterWorktree / --worktree / subagent）を作るときに複製する gitignore 対象ファイル。
+# gitignore 構文。追跡済みファイルは対象外。手動の git worktree add には効かない。
+params/config.ini
+params/fetch_config.ini

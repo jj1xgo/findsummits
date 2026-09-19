@@ -55,8 +55,8 @@ venv: venv/.installed
 
 venv/.installed: requirements.txt
 	python3 -m venv venv
-	venv/bin/pip install --upgrade pip
-	venv/bin/pip install -r requirements.txt
+	venv/bin/python3 -m pip install --upgrade pip
+	venv/bin/python3 -m pip install -r requirements.txt
 	@touch venv/.installed
 
 # venv をクリーン再構築（孤立パッケージを除去し requirements.txt と完全一致させる）
