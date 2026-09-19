@@ -51,6 +51,8 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
   レイアウト等）を HLD/LLD** へ反映要否判断する。HLD/LLD 未作成の段階では HLD 相当の UI 具体値は
   モックアップが暫定保持し、HLD/LLD 起票時に抽出する。
 - 埋め込みサンプルデータ（例示フィーチャ）は仕様ではないため、仕様反映の対象外。
+- モックアップは作業用ビューアと同じテンプレート構成（HTML + データファイル）にサンプルデータを与えたものとし、
+  データの差し替えでローカル確認する。共通化と昇格の方法は HLD（[ADR-URD-019](decisions/ADR-URD-019-public-viewer-served-from-evidence-geojson.md)）。
 
 ## GLOSSARY と SOURCES の役割分担
 

@@ -104,6 +104,7 @@ dominant 行は申請書 XLSX で 2 行（追加 + 削除）に展開される�
 - **ADR-SRS-030**（rename-central-geojson-merged-summit）: 本 ADR 決定時のファイル名 `merged.geojson` を `merged_summit.geojson`（和名「突合済み統合 GeoJSON」）へリネームした。本 ADR の本文は最新名に更新済み
 - **ADR-SRS-033**（defect-confirmation-via-xlsx）: 本 ADR で決定した「不備フラグを `merged_summit.geojson` metadata に格納する」設計を改訂。top-level boolean 不備フラグは metadata から削除し、不備確認の責務を `merged_summit.xlsx`（per-row 表示）へ移行する。per-feature プロパティ（`key_col_resolved`・`area_complete`）は維持する。
 - **ADR-SRS-004 / ADR-SRS-010**: 影響なし（per-mesh 段階の出力フォーマットは変更不要）
+- **ADR-URD-019**: [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の GeoJSON 埋め込み方式を「固定テンプレート + 別ファイルのデータ」に改訂
 
 ### 関連 ISSUE への影響
 

@@ -16,11 +16,11 @@
 
 1. **軸の混在**: peak 値（new/dominant）と summit 値（unmatched）を黙って1表に混在させており、
    表の見出し「match_status 別」だけでは主語が不明。
-2. **消費側との乖離**: 消費側（[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成) 申請書 XLSX・[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用-html-ビューア生成) ビューア・[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) ZIP）は既に
+2. **消費側との乖離**: 消費側（[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成) 申請書 XLSX・[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信) ビューア・[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) ZIP）は既に
    サミットアクション軸で再グルーピングしているが、生成者 [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) のスキーマは
    peak.match_status 軸のままで軸が3つ（[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)/[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成)/[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)）存在していた。
 3. **実行時導出の分散**: カテゴリ分類（[ADR-SRS-035](ADR-SRS-035-viewer-category-filter-feature-mapping.md)）は
-   消費側（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用-html-ビューア生成) ビューア・[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) ZIP）が `feature_type`/`match_status`/`is_band_change_candidate`
+   消費側（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信) ビューア・[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) ZIP）が `feature_type`/`match_status`/`is_band_change_candidate`
    から実行時に導出していた。生成者 [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) がスキーマ正本であるにもかかわらず、
    分類ロジックが消費側に分散していた。
 4. **XLSX の同型 muddiness**: `merged_summit.xlsx`（6.2.7）・`merged_summit_revised.xlsx`（6.2.3）の
@@ -75,7 +75,7 @@
 |---|---|---|
 | `merged_summit.geojson`（[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)） | フィーチャ構成表が peak.match_status 軸 | 全フィーチャに `category` プロパティ付与。フィーチャ構成表を申請カテゴリ別に再編 |
 | `merged_summit.xlsx` / `merged_summit_revised.xlsx`（[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)） | `match_status` 列のみ（値域が行種別で異なり直読困難） | `category` 列を追加（`match_status` 列は残す） |
-| ビューアカテゴリフィルター（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用-html-ビューア生成)） | 消費側が実行時に `feature_type`/`match_status`/`is_band_change_candidate` から導出（ADR-SRS-035） | 格納済み `category` プロパティを読む（導出ロジックを廃止） |
+| ビューアカテゴリフィルター（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信)） | 消費側が実行時に `feature_type`/`match_status`/`is_band_change_candidate` から導出（ADR-SRS-035） | 格納済み `category` プロパティを読む（導出ロジックを廃止） |
 | 申請エビデンス ZIP 分割（[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成)） | new/dominant/changed/unchanged.geojson（4ファイル、delete サミットは dominant に同梱） | add/band_change/no_change/delete/review.geojson（5ファイル、ファイル名は category 値に厳密準拠、削除独立・要確認同梱） |
 
 ### FR-021 ZIP への `review.geojson` 同梱
@@ -98,7 +98,7 @@ XLSX は直読が多いため category 列を追加するが、GeoJSON は現状
 
 ## Consequences
 
-- `category` プロパティは [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の算出・付与から始まり、[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成)/[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)/[FR-013](../20_SRS.md#fr-013-html-ビューア生成)/[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用-html-ビューア生成)/[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) および
+- `category` プロパティは [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の算出・付与から始まり、[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成)/[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)/[FR-013](../20_SRS.md#fr-013-html-ビューア生成)/[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信)/[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成) および
   `00_GLOSSARY.md` への追従が必要。
 - 旧4分類（new/dominant/changed/unchanged）の記述が全成果物から消滅し、
   新5分類（add/band_change/no_change/delete/review）に統一される。
