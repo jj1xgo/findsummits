@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-07-18 |
+| 最終更新日 | 2026-09-19 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -214,8 +214,9 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 
 | 呼称 | 説明 |
 |---|---|
-| v1.0 | 現行 URD/SRS がスコープとするバージョン。日本全国の3×3メッシュ解析による初回リリース。 |
-| v2.0 | [URD §7 将来スコープ](10_URD.md#7-将来スコープv20-候補)（解析処理の効率化・DEM1a 標高データへの追従等）を想定する次期バージョン。要件化されていない構想段階の呼称であり、正式な URD/SRS スコープではない。 |
+| v0.x.y | 正式リリース前の採番。正本は git の annotated tag。x / y の更新基準は [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md) を参照。 |
+| v1.0 | 現行 URD/SRS がスコープとするバージョン。日本全国の3×3メッシュ解析による初回リリース。`v1.0.0` の到達条件と互換性保証対象は [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md) を参照。 |
+| v2.0 | [URD §7 将来スコープ](10_URD.md#7-将来スコープv20-候補)（解析処理の効率化・DEM1a 標高データへの追従等）を想定する次期バージョン。要件化されていない構想段階の呼称であり、正式な URD/SRS スコープではない。スコープ名であり、要件化された時点の SemVer 上の番号は 1.x になりうる（[ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md)）。 |
 
 ### 設計判断記録
 
@@ -235,6 +236,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-015-...`
     - 次の SRS: `ADR-SRS-047-...`
+    - 次の OPS: `ADR-OPS-002-...`
     - 初の HLD: `ADR-HLD-001-...`（以降のステージも同様に 001 から）
 
 例: `ADR-URD-005-northern-territories-exclusion.md`（スコープ判断）、`ADR-SRS-001-hybrid-c-python-architecture.md`（アーキテクチャ判断）、（将来）`ADR-HLD-001-...`

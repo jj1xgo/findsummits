@@ -42,6 +42,8 @@ make lint               # Markdown/Python/GeoJSON/HTML を検証
 ## リリース
 
 `devel → main` の直接マージは禁止。リリースは `release/*` ブランチを介す。
+`release/*` → main のマージ後、main のマージコミットに annotated tag `vX.Y.Z` を打つ。採番規則と手順は
+[開発ガイド](docs/03_development.md#5-バージョンとタグ)。
 
 ## 個人運用の補足
 

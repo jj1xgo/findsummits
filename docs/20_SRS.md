@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-07-21 |
+| 最終更新日 | 2026-09-19 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -102,7 +102,7 @@
 ソフトウェア要件を規定する。
 
 **対象システム**: findsummits（解析エンジン + Python スクリプト群）  
-**対象バージョン**: 1.0（予定）  
+**対象システムバージョン**: 1.0（予定）  
 **対象外**: 実装詳細（HLD/LLD）、テスト仕様（UT/IT/ST）、運用仕様（OPS）
 
 ---
@@ -981,6 +981,11 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - `attribution`: `"地理院タイル（標高タイル）を加工して作成。出典: 国土地理院"`（固定文字列。[UR-011](10_URD.md#ur-011)・[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md) 準拠）
     - `source_url`: `"https://maps.gsi.go.jp/development/ichiran.html"`（固定文字列）
     - `license_url`: `"https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html"`（固定文字列）
+    - `software_version`: 生成に用いた findsummits の版識別文字列。git の annotated tag を正本とし
+      `git describe --tags --dirty` 相当の形式（例 `v0.2.0`、`v0.2.0-5-gabc1234`）。タグが無い場合は
+      コミットハッシュのみ（`--always` 相当、例 `8428ea0`）。採番規則は
+      [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md)。取得・埋め込み機構は
+      HLD に委ねる
   - **変更申請判定（Points バンド遷移）**:
     - 判定対象: `peak.match_status="matched"` のピーク
     - `peak_points = band(floor(peak_elev))`: `peak_elev` を切り捨て（floor）した整数 m でバンド判定
@@ -1224,6 +1229,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - SOTA サミットリスト基準日（`summitslist_date`）（UTC）
     - 地理院タイル更新日（提供元）（`gsi_tile_latest_date`）（UTC）: パイプラインがローカルキャッシュタイルの mtime 最大値として `merged_summit.geojson` の `metadata` に格納する（根拠: [ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)）。表示時は `(UTC)` を付記する
     - 解析実行日時（`generated_at`）
+    - 解析ソフトウェアバージョン（`software_version`）
   - **等高線オーバーレイ**: 地理院標高タイル（dem5a/dem5b/dem5c/dem10b）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）
   - **補助参照レイヤー**（いずれもレイヤーコントロールから ON/OFF・デフォルト OFF）:
     - **1次メッシュグリッド**: 日本国土の1次メッシュ境界を表示する（一定ズーム以上でメッシュコードのラベルを表示）。解析単位の確認用
@@ -1392,7 +1398,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | `no_change.geojson` | 変更なし既存サミットおよび関連フィーチャ | `category="no_change"` のフィーチャ全て（フィーチャ構成は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)） |
 | `review.geojson` | 要確認サミット（孤立既存サミット） | `category="review"` のフィーチャ全て（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)） |
 
-  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `attribution` / `source_url` / `license_url`）を複製する（`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
+  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url`）を複製する（`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
   - 各 GeoJSON は [FR-009](#fr-009-sotaリスト突合match_status-判定) で定義した category 別フィーチャ構成に基づき、関連フィーチャ（col・activation_zone・delete_zone・peak_col_link・coord_diff）を同一 `summit_code` で紐付けて格納する（category によって含まれるフィーチャ種類は異なる）
   - 対象 category のフィーチャが 0 件の場合も空 FeatureCollection（`{"type":"FeatureCollection","features":[]}`）として ZIP に同梱する（5 ファイルを常に出力し、エビデンスの完全性を保つ）
   - GeoJSON の生成は localStorage の編集内容（山岳名JP/EN・rationale 編集値）を埋め込みデータにマージしたうえで行う（localStorage を直接読むのではなく、[FR-019](#fr-019-html-ビューア機能仕様) の引き継ぎ確認を経た現在の編集状態のスナップショットを使用する。[FR-020](#fr-020-公開用-html-ビューア生成) と同方式）
@@ -1422,7 +1428,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
   - 公開用は閲覧専用（編集 UI なし・XLSX エクスポートなし・localStorage 不使用）
   - **提供機能**: 公開用は [FR-019](#fr-019-html-ビューア機能仕様) が定義する閲覧系機能のうち、**編集 UI・エクスポート機能・localStorage を除く全て**を含む（地図表示・マーカー・背景タイル切替・検索・カテゴリ別表示フィルター・等高線/基準点/1次メッシュ各レイヤー・popup・ピーク↔Keyコル相互ジャンプ等）。各フィーチャの「全データ」折りたたみ popup も作業用と同様に含む（申請証跡としての透明性を優先するため、作業用と同一の popup 内容を維持する）
-  - **メタデータ表示**: 埋め込みデータの `metadata`（`summitslist_date`・`gsi_tile_latest_date`・`generated_at`）を引き継ぎ、[FR-019](#fr-019-html-ビューア機能仕様) と同様に基準日等を画面表示する（UTC 付記）
+  - **メタデータ表示**: 埋め込みデータの `metadata`（`summitslist_date`・`gsi_tile_latest_date`・`generated_at`・`software_version`）を引き継ぎ、[FR-019](#fr-019-html-ビューア機能仕様) と同様に基準日等を画面表示する（UTC 付記）
   - **帰属表示**: [UR-011](10_URD.md#ur-011) に従い、公開用テンプレートにも [FR-019](#fr-019-html-ビューア機能仕様) と同等の地図帰属表示（`© 国土地理院` 常時表示＋OSM/OpenTopoMap 各選択時の attribution 併記＋「加工して作成」の旨の明示）を備える。詳細は [6.2.7](#627-公開用-html閲覧専用ブラウザダウンロード) 参照
   - localStorage の入力内容（山岳名JP/EN・rationale 編集値）を埋め込みデータにマージしたうえで、公開用テンプレートに GeoJSON データを埋め込み、自己完結型 HTML を生成する。マージ対象は **エクスポート時点のビューア表示状態のスナップショット**（localStorage を直接読むのではなく、[FR-019](#fr-019-html-ビューア機能仕様) の引き継ぎ確認を経た現在の編集状態）とする
   - ユーザーはダウンロードした HTML を GitHub Pages 等の静的ホスティングに配置することで外部公開できる
@@ -1453,7 +1459,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 ### NFR-003: 再現性（決定論的出力）
 
 - **対応 UR**: [UR-004](10_URD.md#ur-004), [UR-005](10_URD.md#ur-005)
-- 同一ローカルキャッシュ・同一パラメータで実行した場合、すべての出力（CSV・GeoJSON・XLSX）が同一の内容になること（`metadata.generated_at` 等の実行時タイムスタンプを除く。ピーク座標・標高・突合結果・採番が同一であることを保証する）（タイル再取得・キャッシュ削除によりローカルキャッシュの内容が変わった場合は再現性対象外）
+- 同一ローカルキャッシュ・同一パラメータで実行した場合、すべての出力（CSV・GeoJSON・XLSX）が同一の内容になること（`metadata.generated_at` 等の実行時タイムスタンプおよび `metadata.software_version` を除く。ピーク座標・標高・突合結果・採番が同一であることを保証する）（タイル再取得・キャッシュ削除によりローカルキャッシュの内容が変わった場合は再現性対象外）
 - ピーク候補検出時のピクセル走査順を決定論化するため、標高降順ソートに決定論的タイブレーク規則（ピクセルインデックス昇順）を設ける（詳細は [FR-005](#fr-005-ピーク候補検出) 参照。仮サミットコード採番順序とは別処理段階のタイブレークである）
 - 仮サミットコードの採番順序は [FR-009](#fr-009-sotaリスト突合match_status-判定) で規定する（標高降順 → プロミネンス降順 → `peak_lat` 降順 → `peak_lon` 昇順）。同一の入力 per-mesh CSV 集合からは常に同一の仮サミットコードが得られる
 - 統合時の代表採用ロジック（[FR-008](#fr-008-per-mesh-csv-統合)）・主ピーク特定のタイブレーク（[FR-009](#fr-009-sotaリスト突合match_status-判定)）・ピクセル座標→緯度経度変換（[FR-016](#fr-016-ピーク域ポリゴン生成)）も、それぞれの規定に従い決定論的に一意な結果を返す
@@ -1595,7 +1601,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | ファイル | `$DATA_DIR/results/merged_summit.geojson` |
 | 形式 | GeoJSON（RFC 7946） |
 | 座標参照系 | WGS84（EPSG:4326） |
-| メタデータ | トップレベルに `metadata` オブジェクトを付与。定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（`summitslist_date` / `generated_at` / `gsi_tile_latest_date` / `attribution` / `source_url` / `license_url`） |
+| メタデータ | トップレベルに `metadata` オブジェクトを付与。定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（`summitslist_date` / `generated_at` / `gsi_tile_latest_date` / `software_version` / `attribution` / `source_url` / `license_url`） |
 | フィーチャ構成 | [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（Point / Polygon / LineString 全フィーチャ含む） |
 | `rationale` プロパティ | new / dominant ピーク Point に ※2 フォーマット、match_status=delete サミット Point に ※4 フォーマット、`is_band_change_candidate=true` の matched ピーク Point に ※5 フォーマットで付与。HTML ビューアで編集可能。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定) |
 
@@ -1641,7 +1647,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | 使用ライブラリ | Leaflet（地図・CDN 経由） |
 | 背景タイル | 国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap（切り替え可能。既定: 国土地理院標準地図） |
 | 提供機能 | [FR-019](#fr-019-html-ビューア機能仕様) の閲覧系機能のうち編集 UI・エクスポート・localStorage を除く全て（「全データ」popup を含む）。詳細は [FR-020](#fr-020-公開用-html-ビューア生成) 参照 |
-| メタデータ表示 | 埋め込み `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時を画面表示 |
+| メタデータ表示 | 埋め込み `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時・解析ソフトウェアバージョンを画面表示 |
 | 帰属表示 | `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を基図選択によらず常時表示。OSM 選択時は `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を併記。「加工して作成」の旨を明示する（[UR-011](10_URD.md#ur-011)） |
 | 特徴 | 自己完結型（GeoJSON 埋め込み・編集 UI なし・XLSX エクスポートなし・localStorage 不使用）。地図表示は Leaflet（CDN 経由）および各タイルサーバーへの疎通を要する（オフライン環境では地図タイル表示不可） |
 
@@ -1663,7 +1669,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | `no_change.geojson` | 変更なし既存サミットおよび関連フィーチャ（申請対象外・参照用同梱） | `category="no_change"` のフィーチャ全て。[FR-021](#fr-021-申請エビデンス-zip-生成) 参照 |
 | `review.geojson` | 要確認サミット（孤立既存サミット・申請対象外・参照用同梱） | `category="review"` のフィーチャ全て。[FR-021](#fr-021-申請エビデンス-zip-生成) 参照 |
 
-各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `attribution` / `source_url` / `license_url`）を複製する（定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）。
+各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url`）を複製する（定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）。
 
 #### 6.2.9 地理院標高タイル
 
