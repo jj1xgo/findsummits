@@ -3,6 +3,12 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-05-21 |
 
+## 2026-09-21 追補
+
+座標による AZ / delete 判定ゾーンの判定は維持する。AZ 内の登録が複数なら全件 ambiguous として保留し、主ピークが ambiguous の AZ 外 delete も申請保留とする。
+現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
+[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
+
 ## Context
 
 ### 削除判定方式の課題（旧方針: コル等高線ポリゴン）

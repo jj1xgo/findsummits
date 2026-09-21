@@ -3,6 +3,12 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-06-29 |
 
+## 2026-09-21 追補
+
+1行=1サミットを維持する。AZ 内複数登録は登録ごとの行に同じピーク・コル・解析属性を反復し、AZ 外保留削除候補は自身の登録値・距離と組 ID を保持する。後者の主ピーク情報は同じ review_group_id の AZ 内行で照合する。以下の review=孤立のみ・ピーク属性空欄という初回表をこの範囲で拡張する。
+現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
+[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
+
 ## Context
 
 `merged_summit.geojson` は 5 カテゴリ（add/band_change/no_change/delete/review）のクラスタに

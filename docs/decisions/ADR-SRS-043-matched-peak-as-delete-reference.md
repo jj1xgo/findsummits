@@ -5,6 +5,12 @@
 
 > **本 ADR は [ADR-SRS-042](ADR-SRS-042-matched-peak-excluded-from-dominant-candidate.md) を supersede する。**
 
+## 2026-09-21 追補
+
+通常の matched 親による削除申請は維持する。主ピーク選択の候補には ambiguous も含め、選ばれた親が ambiguous の場合だけ AZ 外の delete サミットを review として申請保留する。地形判定は可能でも存続コードが未決着な関連登録を一組として確認するための例外であり、別候補への再割当ては行わない。
+現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
+[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
+
 ## Context
 
 [ADR-SRS-042](ADR-SRS-042-matched-peak-excluded-from-dominant-candidate.md) は「matched ピークを

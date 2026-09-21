@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-09-19 |
+| 最終更新日 | 2026-09-21 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -17,7 +17,7 @@
 | 用語（本書での表記） | 正式名称 | 説明 |
 |---|---|---|
 | SOTA | Summits On The Air | [Summits On The Air](https://www.sota.org.uk/)。アマチュア無線の運用活動。本プロジェクトは[SOTA日本支部](https://www.kawauchi.homeip.mydns.jp/sotajp/)（JA）の山岳リスト更新申請を目的とする。 |
-| サミット | Summit | SOTA に登録されている山岳。本プロジェクトでは `$DATA_DIR/ref/summitslist.csv` に含まれる JA プレフィックスのサミットを指す。GeoJSON では `type="summit"` のフィーチャで表現され、`match_status` は `matched`（存続）・`delete`（削除候補）・`unmatched`（要確認の孤立サミット。[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）のいずれかを取る。 |
+| サミット | Summit | SOTA に登録されている山岳。本プロジェクトでは `$DATA_DIR/ref/summitslist.csv` に含まれる JA プレフィックスのサミットを指す。GeoJSON では `feature_type="summit"` のフィーチャで表現され、`match_status` は `matched`（存続）・`delete`（削除候補）・`ambiguous`（同一 AZ 内の複数登録）・`unmatched`（要確認の孤立サミット。[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）のいずれかを取る。 |
 | サミットコード | Summit Code | SOTAが各山岳に付与する識別コード。`JA/YN-001` の形式（`JA`: アソシエーション、`YN`: リージョン、`001`: サミット番号）。`summitslist.csv` の `SummitCode` 列が正式名称。matched サミットに対応。プロパティ名: `summit_code` |
 | アクティベーションゾーン | Activation Zone | SOTAルールにおける山頂での運用可能エリア。山頂の最高地点から標高差 25m 以内の連続エリアをさす。このエリア内での無線運用が「山頂からの運用」として認められる（参照: [SOTA日本支部 FAQ Q12](https://www.kawauchi.homeip.mydns.jp/sotajp/faqs/)）。本プロジェクトではピークと既存SOTAサミットの照合に使用する（[FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)）。本プロジェクトにおける標高差の設定値はデータ辞書の**アクティベーションゾーン標高差**（[SRS 2.2.1](20_SRS.md#221-設定可能項目)）で管理する。 |
 | プロミネンス | 比高 | ピークの独立性を示す指標。ピーク標高とコル標高の差。本プロジェクトでは 150m 以上を申請対象とする。 |
@@ -165,11 +165,13 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | 用語（本書での表記） | 正式名称 | 説明 |
 |---|---|---|
 | サミット候補 | — | 既存 SOTA サミットリストにない新規ピーク（match_status="new"）。SOTA 日本支部への追加申請対象。 |
-| 削除候補サミット | — | match_status=delete が確定した既存 SOTA サミット。サミット座標が dominant peak の delete判定ゾーン内に存在するがアクティベーションゾーン外であると判定されたもの。SOTA 日本支部への削除申請対象となる。 |
-| 要確認サミット | — | match_status=unmatched の既存 SOTA サミット。サミット座標がどのピークのアクティベーションゾーンにも delete判定ゾーンにも含まれない孤立サミット。噴火・山体崩壊・カルデラ陥没による消滅（削除すべき）と、しきい値不備・解析欠落（システム不備）が同一症状のため座標では機械区別できず、SOTA 日本支部担当者の確認に委ねる。申請書の削除行には自動掲載せず、件数が要確認サミット件数しきい値を超えた場合のみ解析異常として停止する（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md) 参照）。 |
+| 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete として削除申請対象になる（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
+| 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
 | 主ピーク | dominant peak | 削除候補となる SOTA サミットが従属するピーク。サミット座標がそのピークの delete判定ゾーン内に含まれることで判定される（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照）。 |
 | delete判定ゾーン | delete-determination zone | 既存 SOTA サミットの削除判定に使用するピーク域ポリゴン。ピーク標高から `min(プロミネンス, delete_zone_max_drop)` 以内の連続エリア（Flood Fill 閾値は `max(col_elev, peak_elev - delete_zone_max_drop)` 以上）。`delete_zone_max_drop`（デフォルト 250m）はデータ辞書「delete判定ゾーン比高上限」として定義（[SRS 2.2.1](20_SRS.md#221-設定可能項目) 参照）。詳細は SRS [FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照。 |
-| 削除（delete） | — | `summit.match_status` の値。既存 SOTA サミット座標が検出ピークの delete判定ゾーン内に存在するがアクティベーションゾーン外であることを示す（削除候補）。申請書の「削除」アクションに対応する。`deleted`（削除済み）と区別するため命令形を採用。 |
+| 削除（delete） | — | `summit.match_status` の幾何学的な判定値（削除候補）。申請の有無は category で決まり、ambiguous 主ピークに従属する登録は delete/review として保留する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。`deleted`（削除済み）と区別するため命令形を採用。 |
+| 複数登録未決着（ambiguous） | — | 帰属 AZ は一意だが、その AZ 内に複数の現役登録があり存続コードが未決着である状態。ピークと AZ 内登録全件の match_status に用いる。全ゾーン外の unmatched とは区別する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
+| 保留組 | — | 複数登録ピーク、その AZ 内登録全件、およびそのピークが主ピークに選ばれた AZ 外削除候補をまとめた確認単位。地形・接続線も review とし、通常の申請を続行しつつ組全体の申請を保留する（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)）。 |
 
 ### 申請カテゴリ
 
@@ -180,8 +182,8 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | `add` | 追加 | 新設サミット（`peak.match_status` ∈ {new, dominant}） | 追加 |
 | `band_change` | 変更あり | 既存サミット（matched ∧ バンド遷移あり） | 変更 |
 | `no_change` | 変更なし | 既存サミット（matched ∧ バンド遷移なし） | 申請不要 |
-| `delete` | 削除 | 既存サミット（`summit.match_status="delete"`） | 削除 |
-| `review` | 要確認 | 既存サミット（`summit.match_status="unmatched"`） | 担当者手動判断 |
+| `delete` | 削除 | 既存サミット（`summit.match_status="delete"` かつ主ピークが ambiguous ではない） | 削除 |
+| `review` | 要確認 | 孤立 unmatched および複数登録の保留組全体 | 担当者確認まで申請保留 |
 
 ### データ構造（列名・フラグ・識別子）
 
@@ -189,6 +191,8 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 
 | 用語 | 説明 |
 |---|---|
+| review_reason | 要確認理由。値域の正本は SRS の[全フィーチャ共通の確認用属性](20_SRS.md#各フィーチャのプロパティ)。通常は空文字。 |
+| review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 | key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、3×3 メッシュ解析範囲外でコルが未発見の場合 `false`。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
 | area_complete | per-mesh GeoJSON のアクティベーションゾーンプロパティ。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |
 | 仮サミットコード | 申請前の new ピークに暫定付与する識別コード。正式なサミットコードはSOTA審査後に確定する。`summit_code` プロパティに格納（`match_status="new"` の場合）。 |

@@ -3,6 +3,12 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-06-27 |
 
+## 2026-09-21 追補
+
+孤立 unmatched の確認・件数ゲートは維持する。category=review は複数登録の保留組も含むよう拡張したが、その組数・登録件数は孤立 unmatched のしきい値に加算しない。
+現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
+[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
+
 ## Context
 
 [FR-009（SOTAリスト突合）](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) は、既存 SOTA サミット座標を各ピークのアクティベーションゾーン（AZ）・delete判定ゾーンへの point-in-polygon で判定する（[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md)・[ADR-URD-007](ADR-URD-007-peak-match-status-terminology.md)）。
