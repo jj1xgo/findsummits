@@ -955,7 +955,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - 各 delete 候補サミット座標に対して、delete判定ゾーンポリゴン（`feature_type="delete_zone"`）内に
       その座標が含まれるピークを候補とする（point-in-polygon 判定）。`match_status=matched` および `ambiguous` のピークも候補に含む
       （matched ピークの AZ 外・delete判定ゾーン内に存在する delete 候補サミットは、当該 matched ピークを
-      主ピークとして削除申請を自動生成する。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md) 参照）
+      主ピークとして削除申請候補を自動生成する。今回の申請行の出力は application_exclusion にも従う。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md) 参照）
     - 候補が複数の場合は**プロミネンスが最小のピーク**を主ピークとする（プロミネンスが最小のピークは親ピークへ最も早く合流する局所的な隆起であり、delete 候補サミットと同一山塊と見なせる）。プロミネンスが同値の場合は `peak_lat` 降順（北→南）→ `peak_lon` 昇順（西→東）でタイブレークする（採番順序と同方向。[NFR-003](#nfr-003-再現性決定論的出力) が保証する決定論性と整合）。なお `key_col_resolved=false`（`prominence=null`）のピークは Key コルが解析範囲外に存在する独立峰級（物理的には最大級のプロミネンスを持つ）であるため、最大扱い（`key_col_resolved=true` のピークより後回し）とする。採番順序（仮サミットコード採番）の null=最小扱いとは逆方向になるが、主ピーク特定は「同一山塊を代表する局所隆起」という物理的意味に基づく選択であり、採番の便宜上の順序付けとは異なる。`key_col_resolved=false` のピーク同士のタイブレークは `peak_lat` 降順 → `peak_lon` 昇順で一意に決定する
     - いずれの delete判定ゾーンにも含まれないサミットは `summit.match_status="unmatched"`（要確認）として記録する。主ピークは紐付かず `dominant_peak_code` 等は付与しない。停止はせず、件数しきい値超過時のみ不備ゲートで停止する（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)。自動フォールバック・申請書削除行への自動掲載は行わない）
     - 付与するカラム: `dominant_peak_code`（主ピークのサミットコード。主ピークが `matched` の場合は当該ピークの既存 SOTA コード）、`dominant_peak_dist_m`（主ピークから delete 候補サミット座標までの距離 m。Haversine 公式で計算。人手確認用）。主ピークが `ambiguous` の場合、コードは空文字とし距離は保持する。親の参照には後述の `review_group_id` を使う
@@ -1102,8 +1102,8 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | `stability` | confirmed / unstable / -（`-` = 広域モード確定ピーク・通常モード安定性評価なし。定義は [FR-008](#fr-008-per-mesh-csv-統合) 参照） |
 | `key_col_resolved` | コル確定フラグ（true=確定 / false=未確定） |
 | `points` | 標高バンドに基づくポイント数（1/2/4/6/8/10）。`peak_elev` から算出。出力プロパティ名は `points`（[FR-009](#fr-009-sotaリスト突合match_status-判定) 内部変数 `peak_points` とは別） |
-| `is_band_change_candidate` | Points バンド遷移フラグ（bool）。matched のみ。`points ≠ sota_points` の場合 true（変更申請対象）。new / dominant は空欄。ambiguous は JSON null |
-| `rationale` | 申請書根拠テキスト（new / dominant は ※2 フォーマット、`is_band_change_candidate=true` の matched は ※5 フォーマット。[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成。matched（バンド変更なし）・ambiguous は空文字）。申請対象のみ HTML ビューアで編集可能 |
+| `is_band_change_candidate` | Points バンド遷移フラグ（bool）。matched のみ。`points ≠ sota_points` の場合 true（変更申請候補。今回の出力可否は application_exclusion も参照）。new / dominant は空欄。ambiguous は JSON null |
+| `rationale` | 申請書根拠テキスト（new / dominant は ※2 フォーマット、`is_band_change_candidate=true` の matched は ※5 フォーマット。[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成。matched（バンド変更なし）・ambiguous は空文字）。通常の申請候補は除外中も HTML ビューアで編集可能 |
 | `analysis_count` | このピークが含まれた解析回数（重複排除前の出現回数）。[FR-008](#fr-008-per-mesh-csv-統合) 算出値 |
 | `expected_count` | このピークが含まれるべき期待解析回数。日本全土1次メッシュコードリスト基準で [FR-008](#fr-008-per-mesh-csv-統合) が算出。通常モード行のみ（広域モード行は空欄） |
 | `municipality` | 市区町村名（例: "根室市"・"標津町"）。N03 前処理済み市区町村 GeoJSON 未存在時は空文字 |
@@ -1136,7 +1136,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | `summit_name_jp` | 日本語山岳名（本 FR が geojson_v{N} から取得し格納。未取得時は空文字） |
 | `sota_alt_m` | SOTA 登録標高（m） |
 | `sota_points` | 標高バンドに基づくポイント数（1/2/4/6/8/10）。`sota_alt_m` から算出 |
-| `rationale` | 申請書根拠テキスト（バッチの category=delete は ※4 フォーマット。[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成。matched・全 review は空文字）。通常申請対象は HTML ビューアで編集可能。担当者指定削除の専用 rationale は [FR-019](#fr-019-html-ビューア機能仕様) に従う |
+| `rationale` | 申請書根拠テキスト（バッチの category=delete は ※4 フォーマット。[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成。matched・全 review は空文字）。通常の申請候補は除外中も HTML ビューアで編集可能。担当者指定削除の専用 rationale は [FR-019](#fr-019-html-ビューア機能仕様) に従う |
 | `municipality` | 市区町村名（例: "根室市"・"標津町"）。N03 前処理済み市区町村 GeoJSON 未存在時は空文字。match_status によらず全サミットに付与 |
 | `region_name` | 都道府県名（北海道は振興局名）。N03 前処理済み地域 GeoJSON の `region_name` から取得。未取得時は空文字。match_status によらず全サミットに付与 |
 | `dominant_peak_code` | 主ピークのサミットコード（幾何学的な delete サミットのみ付与。担当者指定削除は空欄）。主ピークが dominant の場合は仮サミットコード、主ピークが matched の場合は既存 SOTA コード。ambiguous 親の場合は空文字。それ以外は空欄 |
@@ -1468,7 +1468,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | sota_lon | SOTA リスト登録経度。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
 | sota_alt_m | SOTA リスト登録標高（m）。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
 | sota_points | 標高バンドに基づくポイント数（1/2/4/6/8/10）。`sota_alt_m`（整数 m）でバンド判定（[GLOSSARY 参照](00_GLOSSARY.md#標高バンドpoints-算出表)）。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
-| is_band_change_candidate | Points バンド遷移フラグ（bool）。`points ≠ sota_points` の場合 true（変更申請対象）。band_change/no_change のみ（matched peak 行）。それ以外は空欄 |
+| is_band_change_candidate | Points バンド遷移フラグ（bool）。`points ≠ sota_points` の場合 true（変更申請候補。今回の出力可否は application_exclusion も参照）。band_change/no_change のみ（matched peak 行）。それ以外は空欄 |
 | municipality | 市区町村名（例: "根室市"・"標津町"）。N03 前処理済み市区町村 GeoJSON 未存在時は空文字 |
 | region_name | 都道府県名（北海道は振興局名）。N03 前処理済み地域 GeoJSON の `region_name` から取得。未取得時は空文字 |
 | area_complete | アクティベーションゾーンが解析範囲内で完結しているか（true=完結 / false=途切れ）。add/band_change/no_change および AZ 内 ambiguous 行に対応 AZ の値を転記。通常 delete・AZ 外保留・孤立 review 行は空欄 |

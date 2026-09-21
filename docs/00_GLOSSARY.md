@@ -165,7 +165,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | 用語（本書での表記） | 正式名称 | 説明 |
 |---|---|---|
 | サミット候補 | — | 既存 SOTA サミットリストにない新規ピーク（match_status="new"）。SOTA 日本支部への追加申請対象。 |
-| 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete として削除申請対象になる（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
+| 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete の削除候補となる。今回の申請可否は application_exclusion と組み合わせて判定する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
 | 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
 | 担当者指定削除 | — | 孤立 unmatched を担当者が作業用ビューアで明示的に削除申請へ含めた状態。category=delete、review_decision=delete とし、match_status と review_reason は unmatched のまま保持する。親ピーク・接続線を持たない（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。 |
 | 主ピーク | dominant peak | 削除候補となる SOTA サミットが従属するピーク。サミット座標がそのピークの delete判定ゾーン内に含まれることで判定される（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照）。 |
