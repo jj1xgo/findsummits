@@ -62,12 +62,9 @@ build/
 # 環境設定（個人のパス等を含むため）
 params/config.ini
 .claude-container
-# .claude-container.d/ はビルド成果物用 *.d パターン（本ファイル2行目）と名前が衝突し
-# ディレクトリごと無視されるため明示的に un-ignore する。env のみ除外
-# （ホスト固有パスを含むランタイム設定のため）。allowed-domains.txt / packages.txt /
-# requirements.txt は第三者にも有用な環境情報として本体追跡する
-!.claude-container.d/
-.claude-container.d/env
+# c3c の実行設定はホスト固有パスを含むため除外する。
+# ビルド入力はプロジェクト固有の環境定義として追跡する。
+.c3c/env
 
 # fetch 設定（メールアドレス等の個人情報を含むため）
 params/fetch_config.ini
