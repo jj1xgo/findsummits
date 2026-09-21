@@ -957,7 +957,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - いずれの delete判定ゾーンにも含まれないサミットは `summit.match_status="unmatched"`（要確認）として記録する。主ピークは紐付かず `dominant_peak_code` 等は付与しない。停止はせず、件数しきい値超過時のみ不備ゲートで停止する（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)。自動フォールバック・申請書削除行への自動掲載は行わない）
     - 付与するカラム: `dominant_peak_code`（主ピークのサミットコード。主ピークが `matched` の場合は当該ピークの既存 SOTA コード）、`dominant_peak_dist_m`（主ピークから delete 候補サミット座標までの距離 m。Haversine 公式で計算。人手確認用）。主ピークが `ambiguous` の場合、コードは空文字とし距離は保持する。親の参照には後述の `review_group_id` を使う
   - **rationale プロパティ生成**（各フィーチャの `rationale` プロパティに格納する申請書根拠テキスト。HTML ビューアで編集可能・[FR-011](#fr-011-申請書-xlsx-生成) の XLSX 列 I に転記）:
-    - **対象フィーチャ**: match_status が `new` / `dominant` のピーク Point、`category="band_change"`（`is_band_change_candidate=true`）の matched ピーク Point、`category=delete` の既存 SOTA サミット Point
+    - **対象フィーチャ**: match_status が `new` / `dominant` のピーク Point、`category="band_change"`（`is_band_change_candidate=true`）の matched ピーク Point、バッチ生成時の `category=delete` の既存 SOTA サミット Point
     - **※2 追加根拠フォーマット**（new / dominant ピーク Point に付与）:
 
       ```text
@@ -968,7 +968,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
       プロミネンス：{prominence}m
       ```
 
-    - **※4 削除根拠フォーマット**（category=delete の既存 SOTA サミット Point に付与。全 review は空文字）:
+    - **※4 削除根拠フォーマット**（バッチ生成時の category=delete の既存 SOTA サミット Point に付与。全 review は空文字）:
 
       ```text
       国土地理院標高タイルを解析し、{dominant_peak_code}に従属している事を確認
