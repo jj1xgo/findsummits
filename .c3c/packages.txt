@@ -12,3 +12,6 @@ libpng-dev
 
 # Python venv 基盤（make venv が使用）。python3 は python3-venv の Depends 経由で入る
 python3-venv
+
+# Codex のサンドボックス
+bubblewrap
