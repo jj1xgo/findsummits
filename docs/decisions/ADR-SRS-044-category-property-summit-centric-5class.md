@@ -115,3 +115,8 @@ XLSX は直読が多いため category 列を追加するが、GeoJSON は現状
 - 旧4分類（new/dominant/changed/unchanged）の記述が全成果物から消滅し、
   新5分類（add/band_change/no_change/delete/review）に統一される。
 - `ADR-SRS-035` は本 ADR により廃止（superseded）。
+
+## 2026-09-21 申請除外の追補
+
+5カテゴリは提案アクションの分類として維持する。申請書の行選定は category が add/delete/band_change かつ application_exclusion が空文字であることを条件とする。除外しても category は変更せず、5 GeoJSON には除外対象も保持する。
+詳細は [ADR-SRS-050](ADR-SRS-050-persistent-exclusion-decisions.md) と [FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様) を参照。

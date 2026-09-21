@@ -186,6 +186,9 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | `delete` | 削除 | 既存サミット（主ピークが ambiguous ではない幾何学的削除候補、または担当者指定削除） | 削除 |
 | `review` | 要確認 | 未選択・取消後の孤立 unmatched および複数登録の保留組全体 | 担当者確認まで申請保留 |
 
+category は提案されているアクションの分類であり、今回申請へ出力するかは application_exclusion と組み合わせて判定する。
+除外しても分類は変えず、5カテゴリのエビデンスへ残す（[ADR-SRS-050](decisions/ADR-SRS-050-persistent-exclusion-decisions.md)）。
+
 ### データ構造（列名・フラグ・識別子）
 
 per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
@@ -195,6 +198,10 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | review_reason | バッチで要確認となった理由（出自）。担当者指定削除後も unmatched を保持するため、現在の保留判定は category=review で行う。値域の正本は SRS の[全フィーチャ共通の確認用属性](20_SRS.md#各フィーチャのプロパティ)。通常候補は空文字。 |
 | review_decision | 担当者の明示判断。未選択・取消後は空文字、担当者指定削除は delete。バッチ生成時は全件空文字（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | review_note | 担当者指定削除の根拠本文。テンプレート全文の rationale と区別する。未選択・取消後の下書きは現在状態・成果物の本属性に含めない（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| application_exclusion | 今回の申請除外状態。空文字は除外なし、manual は有効な担当者判断、parent_add は親の追加除外に伴う従属削除の保留。バッチは全件空文字（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| exclusion_note | 申請除外の理由。manual は任意入力の本文、parent_add は関連追加候補を示す固定文。通常 rationale・review_note と区別する（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| 除外台帳 | 適用中と未適用の manual 判断を保持する内部データ。判断ファイルは台帳を持ち運ぶ JSON であり、公開エビデンスとは別の成果物（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
+| 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 | key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、3×3 メッシュ解析範囲外でコルが未発見の場合 `false`。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
 | area_complete | per-mesh GeoJSON のアクティベーションゾーンプロパティ。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |

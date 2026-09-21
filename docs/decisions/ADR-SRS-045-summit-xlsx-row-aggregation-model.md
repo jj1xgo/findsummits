@@ -87,3 +87,8 @@ SRS 未定義だった。本 ADR はその欠落を補完する。
 - `ADR-SRS-041` の Consequences（「`merged_summit.xlsx` のカラム統一が維持される」）は本 ADR の
   行モデルが前提として成立する（相互補完関係。既存 ADR の本文変更は不要）
 - [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の実装は本 ADR の規則に従って行集約を実装する（実装フェーズ）
+
+## 2026-09-21 申請除外の追補
+
+1行=1サミットと行数・行位置を維持し、除外された候補も両一覧へ保持する。application_exclusion・exclusion_note 列を追加し、バッチは空文字、改訂一覧は現在状態の値を転記する。除外によって登録・解析属性や行の生成元を変えない。
+詳細は [ADR-SRS-050](ADR-SRS-050-persistent-exclusion-decisions.md) と [FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様) を参照。
