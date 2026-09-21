@@ -995,6 +995,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - 両サミット一覧 XLSX の保留組の行は通常行・孤立 review 行の後に置き、組間は `review_group_id` 昇順、組内は AZ 内登録→保留削除候補の順、それぞれ `summit_code` 昇順とする。既存行同士の相対順は変えない。
     - GeoJSON の保留組は通常フィーチャ・孤立 summit の後に `review_group_id` 昇順で置く。組内はピーク→コル→AZ→delete 判定ゾーン→ピーク・コル線→AZ 内登録と各接続線→保留削除候補と各接続線の順。各登録はコード昇順とし、生成条件を満たさないコル等は飛ばす。
     - 入力順に依存せず上記順序を固定し、[NFR-003](#nfr-003-再現性決定論的出力) を維持する。
+    - 既存の通常行・孤立 review 行同士の具体的な並びは HLD で定め、上記の保留組追加順序と整合させる。
   - **metadata 付与**（`merged_summit.geojson` の top-level `metadata` オブジェクトとして格納。[ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md)・[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md) 準拠）:
     - `summitslist_date`: `$DATA_DIR/ref/summitslist.csv` 1行目（`SOTA Summits List (Date=DD/MM/YYYY)` 形式）からパースした日付文字列
     - `generated_at`: 本 FR 実行時の ISO 8601 形式の日時文字列（パイプライン最終実行日時）
