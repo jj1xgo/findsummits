@@ -167,6 +167,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | サミット候補 | — | 既存 SOTA サミットリストにない新規ピーク（match_status="new"）。SOTA 日本支部への追加申請対象。 |
 | 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete として削除申請対象になる（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
 | 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
+| 担当者指定削除 | — | 孤立 unmatched を担当者が作業用ビューアで明示的に削除申請へ含めた状態。category=delete、review_decision=delete とし、match_status と review_reason は unmatched のまま保持する。親ピーク・接続線を持たない（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。 |
 | 主ピーク | dominant peak | 削除候補となる SOTA サミットが従属するピーク。サミット座標がそのピークの delete判定ゾーン内に含まれることで判定される（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照）。 |
 | delete判定ゾーン | delete-determination zone | 既存 SOTA サミットの削除判定に使用するピーク域ポリゴン。ピーク標高から `min(プロミネンス, delete_zone_max_drop)` 以内の連続エリア（Flood Fill 閾値は `max(col_elev, peak_elev - delete_zone_max_drop)` 以上）。`delete_zone_max_drop`（デフォルト 250m）はデータ辞書「delete判定ゾーン比高上限」として定義（[SRS 2.2.1](20_SRS.md#221-設定可能項目) 参照）。詳細は SRS [FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照。 |
 | 削除（delete） | — | `summit.match_status` の幾何学的な判定値（削除候補）。申請の有無は category で決まり、ambiguous 主ピークに従属する登録は delete/review として保留する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。`deleted`（削除済み）と区別するため命令形を採用。 |
@@ -175,15 +176,15 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 
 ### 申請カテゴリ
 
-[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が `merged_summit.geojson` の全フィーチャに付与する `category` プロパティの5分類。サミット中心の申請アクションに対応し、ビューアのフィルター・XLSX カラム・申請エビデンス ZIP のファイル分割に共通して使用する（[ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md) 参照）。
+[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が `merged_summit.geojson` の全フィーチャに付与する `category` プロパティの5分類。担当者指定削除に限り [FR-019](20_SRS.md#fr-019-html-ビューア機能仕様) が現在状態を更新する。サミット中心の申請アクションに対応し、ビューアのフィルター・XLSX カラム・申請エビデンス ZIP のファイル分割に共通して使用する（[ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md) 参照）。
 
 | `category` 値 | 表示ラベル | 主語 | 申請アクション |
 |---|---|---|---|
 | `add` | 追加 | 新設サミット（`peak.match_status` ∈ {new, dominant}） | 追加 |
 | `band_change` | 変更あり | 既存サミット（matched ∧ バンド遷移あり） | 変更 |
 | `no_change` | 変更なし | 既存サミット（matched ∧ バンド遷移なし） | 申請不要 |
-| `delete` | 削除 | 既存サミット（`summit.match_status="delete"` かつ主ピークが ambiguous ではない） | 削除 |
-| `review` | 要確認 | 孤立 unmatched および複数登録の保留組全体 | 担当者確認まで申請保留 |
+| `delete` | 削除 | 既存サミット（主ピークが ambiguous ではない幾何学的削除候補、または担当者指定削除） | 削除 |
+| `review` | 要確認 | 未選択・取消後の孤立 unmatched および複数登録の保留組全体 | 担当者確認まで申請保留 |
 
 ### データ構造（列名・フラグ・識別子）
 
@@ -191,7 +192,9 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 
 | 用語 | 説明 |
 |---|---|
-| review_reason | 要確認理由。値域の正本は SRS の[全フィーチャ共通の確認用属性](20_SRS.md#各フィーチャのプロパティ)。通常は空文字。 |
+| review_reason | バッチで要確認となった理由（出自）。担当者指定削除後も unmatched を保持するため、現在の保留判定は category=review で行う。値域の正本は SRS の[全フィーチャ共通の確認用属性](20_SRS.md#各フィーチャのプロパティ)。通常候補は空文字。 |
+| review_decision | 担当者の明示判断。未選択・取消後は空文字、担当者指定削除は delete。バッチ生成時は全件空文字（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| review_note | 担当者指定削除の根拠本文。テンプレート全文の rationale と区別する。未選択・取消後の下書きは現在状態・成果物の本属性に含めない（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 | key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、3×3 メッシュ解析範囲外でコルが未発見の場合 `false`。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
 | area_complete | per-mesh GeoJSON のアクティベーションゾーンプロパティ。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |

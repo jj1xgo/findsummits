@@ -9,6 +9,12 @@
 現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
 [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
 
+## 2026-09-21 担当者指定削除の追補
+
+孤立 unmatched を担当者が削除申請へ回す操作・根拠・取消・再解析時の個別再選択を [ADR-SRS-049](ADR-SRS-049-unmatched-manual-delete.md) で具体化した。根拠未記入は警告してドラフト出力を許す。バッチの unmatched 判定・件数ゲートは維持する。
+
+以下は当初の決定記録（既存追補を除く）。
+
 ## Context
 
 [FR-009（SOTAリスト突合）](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) は、既存 SOTA サミット座標を各ピークのアクティベーションゾーン（AZ）・delete判定ゾーンへの point-in-polygon で判定する（[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md)・[ADR-URD-007](ADR-URD-007-peak-match-status-terminology.md)）。

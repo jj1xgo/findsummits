@@ -9,6 +9,12 @@
 現行の決定は [ADR-SRS-048](ADR-SRS-048-multiple-summits-in-one-az.md)、出力契約は
 [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。以下は初回決定時の記録。
 
+## 2026-09-21 担当者指定削除の追補
+
+担当者指定削除の改訂一覧は元の孤立サミット行を同じ位置で delete/unmatched 行へ更新し、1 行を維持する。全解析属性・主ピーク情報は空欄、登録値は自身の値とし、両一覧へ review_decision・review_note 列を追加する（バッチは空文字）。詳細は [ADR-SRS-049](ADR-SRS-049-unmatched-manual-delete.md)。
+
+以下は当初の決定記録（既存追補を除く）。
+
 ## Context
 
 `merged_summit.geojson` は 5 カテゴリ（add/band_change/no_change/delete/review）のクラスタに
