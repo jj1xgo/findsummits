@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-06-30 |
 
+> **補足（2026-09-23）:** 存在メッシュからは北方領土除外メッシュを除く（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）。
+
 ## Context
 
 [FR-014](../20_SRS.md#fr-014-広域結合解析オーケストレーション)（広域結合解析オーケストレーション）は、コル未確定ピークに対して

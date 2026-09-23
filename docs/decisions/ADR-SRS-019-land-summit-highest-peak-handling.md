@@ -4,6 +4,8 @@
 | 決定日 | 2026-06-12（2026-06-18 層2の実施箇所を [FR-022](../20_SRS.md#fr-022-コル充足判定) → [FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) に改訂。ADR-SRS-027） |
 
 > ※ **層2（陸地最高峰の手動確定を [FR-022](../20_SRS.md#fr-022-コル充足判定) が行う）** とした本 ADR Decision の箇所は、[ADR-SRS-027](ADR-SRS-027-fr022-purification-fr023-pipeline-control.md)（2026-06-18）によって supersede された。陸地最高峰の海面確定は **[FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) が `merged_peak.csv` 生成時に毎回適用**する（案B）。
+>
+> **補足（2026-09-23）:** 存在メッシュからは北方領土除外メッシュを除く（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）。
 
 ## Context
 

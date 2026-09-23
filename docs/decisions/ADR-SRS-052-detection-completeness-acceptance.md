@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-09-21 |
 
+> **補足（2026-09-23）:** 「SRS の関連残件」の北方領土除外と全欠如停止の境界は、[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md) で決着した。
+
 ## Context
 
 [UR-001](../10_URD.md#ur-001) の全国ピーク検出と [UR-007](../10_URD.md#ur-007) の独立峰検出は網羅性を要求するが、
