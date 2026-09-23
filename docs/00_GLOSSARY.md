@@ -241,7 +241,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 |---|---|
 | v0.x.y | 正式リリース前の採番。正本は git の annotated tag。x / y の更新基準は [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md) を参照。 |
 | v1.0 | 現行 URD/SRS がスコープとするバージョン。日本全国の3×3メッシュ解析による初回リリース。`v1.0.0` の到達条件と互換性保証対象は [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md) を参照。 |
-| v2.0 | [URD §7 将来スコープ](10_URD.md#7-将来スコープv20-候補)（解析処理の効率化・DEM1a 標高データへの追従等）を想定する次期バージョン。要件化されていない構想段階の呼称であり、正式な URD/SRS スコープではない。スコープ名であり、要件化された時点の SemVer 上の番号は 1.x になりうる（[ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md)）。 |
+| v2.0 | [URD §7 将来スコープ](10_URD.md#7-将来スコープv20候補)（解析処理の効率化・DEM1a 標高データへの追従等）を想定する次期バージョン。要件化されていない構想段階の呼称であり、正式な URD/SRS スコープではない。スコープ名であり、要件化された時点の SemVer 上の番号は 1.x になりうる（[ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md)）。 |
 
 ### 設計判断記録
 
