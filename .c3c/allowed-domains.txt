@@ -1,11 +1,11 @@
 # findsummits プロジェクト固有のエグレス許可ドメイン一覧。
-# claude-container リポジトリ同梱のデフォルト（api.anthropic.com 等）に追加される。
+# c3c リポジトリ同梱のデフォルト（api.anthropic.com 等）に追加される。
 #
 # 国土地理院 標高タイル配信サーバー（scripts/prefetch_tiles.py が dem5/dem10b タイルを取得）
 cyberjapandata.gsi.go.jp
 
 # PyPI（make venv / make venv-rebuild が実行時に pip install するため両方必要。
-# index への到達だけでは pip install は完走しない。claude-container README 参照）
+# index への到達だけでは pip install は完走しない。c3c README 参照）
 pypi.org
 files.pythonhosted.org
 

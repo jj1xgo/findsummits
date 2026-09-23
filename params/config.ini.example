@@ -1,5 +1,5 @@
 [paths]
-# データディレクトリ（claude-container使わない人はホストのパスを設定）
+# データディレクトリ（c3c使わない人はホストのパスを設定）
 DATA_DIR = /path/to/your/data
 # ログディレクトリ（省略時は DATA_DIR/logs/）
 LOG_DIR = /path/to/your/logs
