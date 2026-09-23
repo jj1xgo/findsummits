@@ -1753,7 +1753,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 
 [FR-009](#fr-009-sotaリスト突合match_status-判定) の全国一括突合と不備ゲートを維持する
 （[ADR-SRS-028](decisions/ADR-SRS-028-nationwide-batch-matching-fr010-removal.md)）。
-正常系 E2E は全国入力を記載手順で準備し、[UR-001](10_URD.md#ur-001) の解析対象175メッシュを解析する（北方領土除外メッシュは省略される）。小規模解析の成功や
+正常系 E2E は全国入力を記載手順で準備し、[UR-001](10_URD.md#ur-001) の処理範囲175メッシュを処理する（北方領土除外メッシュは省略として扱う）。小規模解析の成功や
 事前生成済みの統合出力を渡すだけの確認を、クリーン環境からの完遂に代えない。
 テストデータの対象版・取得日・識別情報、設定値、文書の版、実行環境、ログ、成果物の確認結果を記録する。
 具体的なデータ版・コマンド・出力値は ST の実行手順で固定し、本要件で実装方式を先取りしない。
@@ -2232,7 +2232,7 @@ URD セクション 5 に基づき（SRS で詳細化）:
 - 標高データは国土地理院タイルのみ使用（DEM5a/5b/5c/DEM10b の優先順）
 - サミット判定基準は SOTA ルール（プロミネンス ≥ 150m）に従う
 - 申請書フォーマットは SOTA 日本支部指定の XLSX テンプレートに従う
-- 日本の land 1 次メッシュは総数 176 メッシュ（参照: [`ref/SOURCES.md`](../ref/SOURCES.md) — 第1次地域区画定義）。うち竹島を含む 5531 を除いた 175 メッシュを解析対象とする
+- 日本の land 1 次メッシュは総数 176 メッシュ（参照: [`ref/SOURCES.md`](../ref/SOURCES.md) — 第1次地域区画定義）。うち竹島を含む 5531 を除いた 175 メッシュを処理範囲とする
 - 一部の 1 次メッシュには北方領土が含まれるが、北方領土に所在するピークは SOTA 日本支部の管轄外のため解析対象外とする。除外方法は [FR-001](#fr-001-標高タイル事前取得)・[FR-017](#fr-017-n03-行政区域前処理データ準備) で規定する（タイル単位除外。陸地が北方領土のみとなる1次メッシュは除外メッシュとして省略し、175メッシュの期待集合からは削除しない。根拠: [ADR-URD-005](decisions/ADR-URD-005-northern-territories-exclusion.md)、[ADR-SRS-018](decisions/ADR-SRS-018-northern-territories-skip-at-tile-fetch.md)、[ADR-SRS-053](decisions/ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）
 - 竹島（島根県）に所在するピークは SOTA 日本支部の管轄外（韓国 SOTA サミット HL/GB-430 として登録済み）のため解析対象外とする。具体的には日本全土1次メッシュコードリスト [`params/mesh_list_japan.txt`](../params/mesh_list_japan.txt) から竹島が含まれるメッシュ 5531 をコメントアウトすることで除外する（根拠: [ADR-URD-009](decisions/ADR-URD-009-takeshima-exclusion.md)）
 - 以下の参照データはツールが自動取得しない。ユーザーが手動で管理することが前提:
