@@ -145,5 +145,5 @@ Phase 1〜4 の詳細手順・検証手順は採用後に各 ISSUE として登�
 
 - [ADR-SRS-001: C + Python ハイブリッドアーキテクチャ](ADR-SRS-001-hybrid-c-python-architecture.md)（部分置換）
 - [SRS FR-015: 標高地形図出力](../20_SRS.md#fr-015-標高地形図出力)
-- [SRS FR-016: アクティベーションゾーン計算](../20_SRS.md#fr-016-アクティベーションゾーン計算)
+- [SRS FR-016: ピーク域ポリゴン生成（旧称: アクティベーションゾーン計算）](../20_SRS.md#fr-016-ピーク域ポリゴン生成)
 - [調査資料: cpp-opencv-migration-research.md](research/cpp-opencv-migration-research.md)
