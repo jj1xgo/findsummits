@@ -351,7 +351,7 @@ const GEOJSON_DATA = {
                     dominant_peak_code: "JA/YN-A00",
                     dominant_peak_dist_m: 342,
                     municipality: "相模原市", region_name: "神奈川県",
-                    rationale: "国土地理院標高タイルを解析し、JA/YN-A00に従属している事を確認" } },
+                    rationale: "国土地理院標高タイルを解析し、追加申請するピーク（35.25,138.65）に従属している事を確認" } },
     { type: "Feature", geometry: { type: "Polygon", coordinates: [[[138.635,35.230],[138.665,35.230],[138.665,35.270],[138.635,35.270],[138.635,35.230]]] },
       properties: { feature_type: "delete_zone", category: "add", summit_code: "JA/YN-A00" } },
     { type: "Feature", geometry: { type: "LineString", coordinates: [[138.65,35.25],[138.63,35.23]] },
@@ -1160,7 +1160,12 @@ function renderFeatures() {
       const sotaLon = geom.coordinates[0].toFixed(5);
       let summitPopupHtml;
       if (p.match_status === "delete") {
-        const defaultNotes = `国土地理院標高タイルを解析し、${p.dominant_peak_code}に従属している事を確認`;
+        // 親が dominant（仮コード）なら座標で、matched なら正式コードで親を示す（SRS FR-009 ※4）
+        const parentPeak = peakByCode[p.dominant_peak_code];
+        const parentRef = (parentPeak && parentPeak.properties.match_status === "dominant")
+          ? `追加申請するピーク（${parentPeak.geometry.coordinates[1]},${parentPeak.geometry.coordinates[0]}）`
+          : p.dominant_peak_code;
+        const defaultNotes = `国土地理院標高タイルを解析し、${parentRef}に従属している事を確認`;
         const savedNotes = savedInputs[p.summit_code]?.notes ?? defaultNotes;
         summitPopupHtml = `
           <div class="popup-title"><i class="fa-solid fa-circle" style="color:${sotaColor}"></i> ${p.summit_name_jp || p.summit_name}<span class="popup-badge">${badge}</span></div>
