@@ -919,7 +919,7 @@ const ContourLayer = L.GridLayer.extend({
 const contourLayer = new ContourLayer();
 
 // ---- レイヤーコントロール（topright 最上部）----
-L.control.layers(baseLayers, { "1次メッシュ": meshGrid, "基準点": cpLayer, "等高線": contourLayer }, { position: "topright" }).addTo(map);
+L.control.layers(baseLayers, { "1次メッシュ": meshGrid, "基準点": cpLayer, "等高線（目安）": contourLayer }, { position: "topright" }).addTo(map);
 L.control.zoom({ position: "topright" }).addTo(map);
 
 // ---- localStorage ----

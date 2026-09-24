@@ -1235,7 +1235,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - **生成機構**: テンプレートファイル（詳細は HLD）をソースコードに同梱し、`$DATA_DIR/results/merged_viewer.html` へ複製する。`merged_summit.geojson` の内容を `merged_viewer_data.js` として同ディレクトリに出力する。HTML はデータファイルを読み込んで表示する（読み込み機構は HLD）。`file://` プロトコルで直接開いて動作すること（HTML とデータファイルは同一ディレクトリに置く）
   - **GeoJSON メタデータ**: `merged_summit.geojson` のトップレベルの `metadata` オブジェクトの定義は [FR-009](#fr-009-sotaリスト突合match_status-判定) を参照（[FR-009](#fr-009-sotaリスト突合match_status-判定) が生成する）。本 FR は metadata を含む GeoJSON データをそのままデータファイルに書き出す。ビューアが表示に使うキーの一覧は [FR-019](#fr-019-html-ビューア機能仕様) を参照
   - **生成するフィーチャ構成・各フィーチャのプロパティの定義**: `merged_summit.geojson` が含むフィーチャ構成（申請カテゴリ別）と各フィーチャのプロパティ定義（`category` プロパティを含む）は、生成者である [FR-009](#fr-009-sotaリスト突合match_status-判定) が保持する（スキーマ正本は [FR-009](#fr-009-sotaリスト突合match_status-判定)。本 FR はその定義に従って生成された GeoJSON を入力として受け取るのみ。[ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md)・[ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md)）
-  - **異常系**: [FR-009](#fr-009-sotaリスト突合match_status-判定) が不備ゲートとして異常終了した場合、本 FR は実行をスキップし、HTML・データファイルとも生成しない（前提条件: [FR-009](#fr-009-sotaリスト突合match_status-判定) の正常終了。[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md)・[ADR-SRS-033](decisions/ADR-SRS-033-defect-confirmation-via-xlsx.md)）
+  - **異常系**: [FR-009](#fr-009-sotaリスト突合match_status-判定) が不備ゲートとして異常終了した場合、本 FR は実行をスキップし、HTML・データファイルとも生成しない（前提条件: [FR-009](#fr-009-sotaリスト突合match_status-判定) の正常終了。[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md)・[ADR-SRS-033](decisions/ADR-SRS-033-defect-confirmation-via-xlsx.md)）。フェーズ4 を単独で起動した場合などに入力の `merged_summit.geojson` が存在しない、または読み取りエラーの場合はエラー終了する
 
 ---
 
@@ -1258,6 +1258,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 外部I/F | 必須 | — | 基図としていずれか1つを常時表示し切替可（既定: 国土地理院標準地図。[6.2.5](#625-作業用-html-ビューア) 参照）。ブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
 | 地理院標高タイル（dem5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
 | 地理院基準点タイル | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 基準点レイヤー ON 時にブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
+| ライブラリ（Leaflet・SheetJS・JSZip） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§9](#9-外部システム依存関係環境)）。取得失敗時の扱いは本 FR の異常系 |
 | localStorage 編集内容 | 内部データ | 任意 | 初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート） | 再訪時に読み込む。未編集（localStorage 空）の場合は初期値を使用 |
 
 **出力**:
@@ -1311,13 +1312,13 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - 地理院タイル更新日（提供元）（`gsi_tile_latest_date`）（UTC）: パイプラインがローカルキャッシュタイルの mtime 最大値として `merged_summit.geojson` の `metadata` に格納する（根拠: [ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)）。表示時は `(UTC)` を付記する
     - 解析実行日時（`generated_at`）
     - 解析ソフトウェアバージョン（`software_version`）
-  - **等高線オーバーレイ**: 地理院標高タイル（dem5a/dem5b/dem5c/dem10b）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）
+  - **等高線オーバーレイ**: 地理院標高タイル（dem5a/dem5b/dem5c/dem10b）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）。簡易的な描画のため、地理院地図の等高線と位置がずれることがある。地形のおおまかな確認に使う目安であり、標高・コル位置の根拠には使わない。レイヤー名等で目安であることを利用者に示す（表記は HLD。[ADR-SRS-015](decisions/ADR-SRS-015-contour-overlay.md)）
   - **補助参照レイヤー**（いずれもレイヤーコントロールから ON/OFF・デフォルト OFF）:
     - **1次メッシュグリッド**: 日本国土の1次メッシュ境界を表示する（一定ズーム以上でメッシュコードのラベルを表示）。解析単位の確認用
     - **基準点レイヤー**: 国土地理院の基準点（電子基準点・一等／二等／三等三角点）を表示する。種別ごとに配色し、点名・基準点種別・基準点コードを popup 表示する。データは地理院基準点タイル（`https://cyberjapandata.gsi.go.jp/xyz/cp/{z}/{x}/{y}.geojson`）をブラウザから実行時取得する（出典・利用形態は [SOURCES.md](../ref/SOURCES.md) 参照。採用経緯: [ADR-SRS-034](decisions/ADR-SRS-034-viewer-reference-layers.md)）
   - 地図帰属表示: peak/col/summit/AZ/delete_zone 等の GeoJSON データは地理院標高タイル解析由来であるため、**基図の選択に関わらず** `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を常時表示する。等高線レイヤー ON/OFF 状態によらず同 attribution を維持する。OSM 選択時は加えて `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を表示する。基準点レイヤー ON 時は基準点データの出典として `国土地理院` を併記する（地理院由来のため提供元は上記 `© 国土地理院` と同一）。地理院タイルデータを加工して作成した旨を明示する（[UR-011](10_URD.md#ur-011)）
-  - **ピーク popup の情報表示**: ピークの popup には標高・プロミネンスに加え、プロミネンスの根拠となる **Keyコル標高（`col_elev`）** を表示する。key_col Point が GeoJSON に含まれない場合（陸地最高峰・島嶼部最高峰は `col_lat/col_lon=0.0` sentinel のため key_col feature が除外される）は「未定義（陸地最高峰）」と表示する。陸地最高峰と島嶼部最高峰はビューア上で区別しない（`is_island` プロパティは使用しない）。どちらも `col_lat`/`col_lon`=0.0 sentinel で統一されておりビューアが区別できる内部属性を持たないため、「未定義（陸地最高峰）」を統一ラベルとして使用する
-  - **Keyコル（key_col）popup の表示**: Keyコルのマーカー popup には、Keyコル標高・対応するピークのコード（new の場合は仮コード）・緯度経度を表示する。ambiguous 親ではコードに代えて「要確認ピーク」と親座標・組の登録一覧を表示する
+  - **ピーク popup の情報表示**: ピークの popup には標高・プロミネンスに加え、プロミネンスの根拠となる **Keyコル標高（`col_elev`）** を表示する。key_col Point が GeoJSON に含まれない場合（陸地最高峰・島嶼部最高峰は `col_lat/col_lon=0.0` sentinel のため key_col feature が除外される）は「海面（0m）」と表示する（Key コルが海面で確定しており、申請書の根拠 ※2 の「コル標高：0m」と一致させる）。陸地最高峰と島嶼部最高峰はビューア上で区別しない（`is_island` プロパティは使用しない）。どちらも `col_lat`/`col_lon`=0.0 sentinel で統一されておりビューアが区別できる内部属性を持たないため、「海面（0m）」を統一ラベルとして使用する
+  - **Keyコル（key_col）popup の表示**: Keyコルのマーカー popup には、Keyコル標高・対応するピークのコード（new / dominant の場合は仮コード）・緯度経度を表示する。ambiguous 親ではコードに代えて「要確認ピーク」と親座標・組の登録一覧を表示する
   - **ピーク↔Keyコル相互ジャンプ**: ピーク popup に「Keyコルへ移動」ボタン（`key_col_resolved=true` のときのみ）、Keyコル popup に「ピークへ移動」ボタンを設け、押下で対応するフィーチャへ地図移動して popup を開く
   - **複数登録の要確認表示**:
     - 要確認フィルターで保留組の地形・全登録・接続線を表示する。ピークの表示名は「要確認ピーク」と座標とし、popup に申請保留中であること、AZ 内コード一覧、主ピーク依存の AZ 外保留コード一覧を区別して表示する。個別 summit popup にも保留理由と同じ組の登録を確認する手段を設ける。
@@ -1373,6 +1374,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - **入力内容の保持（localStorage）**:
     - 入力した山岳名・通常 rationale 編集内容と、担当者指定削除の判断・根拠下書き、および除外台帳はブラウザの localStorage に保存し、再訪時も維持する（localStorage 容量上限を超過した場合の扱いは HLD に委ねる）
     - キー: データファイルの `metadata.generated_at` を含む文字列
+    - 山岳名・通常 rationale の編集値は、対象ごとに次の識別値で保存・照合する（仮サミットコードは実行ごとに再採番されるため識別に使わない。[8.2.2](#822-localstorage-編集内容詳細仕様)）: new / dominant のピークはピーク座標、既存サミット（band_change の matched 登録・通常 delete）は正式 SummitCode。引き継ぎ時に今回の対象と一致しない保存値は適用せず、件数と識別値を利用者に知らせる
     - 新しいパイプライン実行で `generated_at` が変わった場合、前回の入力が残っていれば「前回の入力内容が残っています（解析日時: XXX）。引き継ぎますか？」と警告・選択を促す。「引き継ぐ」を選んだ場合は前回 `generated_at` キーの入力内容を今回の `generated_at` キーに引き継いで使用する（担当者指定削除は根拠下書きのみ継承し、判断は個別再選択する。除外台帳も確認対象と明示し、継承時は同じ対象・条件に一致する判断を再選択なしで適用、非継承時は空台帳とする。[8.2.2](#822-localstorage-編集内容詳細仕様)。詳細実装は HLD に委ねる）。「引き継がない」を選んだ場合は前回 localStorage を破棄せず保持したまま、今回の `generated_at` キーで初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート）から開始する（確認なしにユーザーの入力成果を削除しない。前回データの破棄・容量上限超過時の扱いは HLD に委ねる）
   - **申請成果物のエクスポート機能**（申請書/申請エビデンスの2ボタン。除外判断の保存・読込操作は別途設け、配置は HLD）:
     - 申請書エクスポート時、複数登録の組数と保留登録件数（AZ 内＋主ピーク依存の AZ 外）を示し、それらは申請対象外であると警告表示する。保留組を除いたドラフトとして、無関係な候補の出力は続行する。
@@ -2149,9 +2151,12 @@ FR が生成・参照する内部データ。メモリ上・一時ファイル�
 | 形式 | JSON（ブラウザ localStorage に保存） |
 | 管理 FR | [FR-019](#fr-019-html-ビューア機能仕様) が保存・読み込み・マージロジックを管理（詳細は HLD） |
 | ライフサイクル | ブラウザのストレージ上に存在する限り保持。復元・継承を経た現在の表示・編集状態だけを各エクスポートへ反映する。保存済みの下書きを出力側で直接マージしない |
+| 山岳名・通常 rationale の保存単位 | metadata.generated_at と対象の識別値の組。識別値は new / dominant のピークがピーク座標（中心データの WGS84 数値。完全一致で照合し、丸め・距離許容・最寄りへの付け替えを行わない）、既存サミット（band_change の matched 登録・通常 delete）が正式 SummitCode。仮サミットコード・山岳名・配列番号は識別値にしない。キー文字列・JSON 構造は HLD |
 | 担当者指定削除の保存単位 | metadata.generated_at と正式 SummitCode の組。判断と根拠下書きを保存する。キー文字列・JSON 構造は HLD |
 
-担当者指定削除は以下の保存・復元規則に従う（通常の山岳名・rationale の継承は従来どおり）。
+**山岳名・通常 rationale の引き継ぎ**: 「引き継ぐ」を選んだとき、前世代の保存値を上記の識別値で今回の対象と照合し、一致した対象にだけ適用する。一致しない保存値（ピークが消えた・座標が変わった・既存登録が不在や対象外になった）は適用せず、件数と識別値を利用者に知らせ、前世代の保存値は保持する。再採番で仮コードが変わっても、同じ座標のピークには同じ入力を適用する。
+
+担当者指定削除は以下の保存・復元規則に従う。
 
 - 同一世代への再訪: 元のバッチ入力で対象適格性を再検証し、明示判断と根拠を復元する。従来の山岳名・rationale 保存値だけでは削除にしない。
 - 取消: 現在状態の review_decision・review_note・rationale を空文字に戻す。根拠下書きは同一世代に保持し、再選択時に戻す。未選択の下書きは成果物へ出さない。
