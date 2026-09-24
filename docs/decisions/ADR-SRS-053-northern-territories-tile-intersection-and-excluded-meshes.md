@@ -5,7 +5,7 @@
 
 ## Context
 
-[ADR-SRS-018](ADR-SRS-018-northern-territories-skip-at-tile-fetch.md) は、北方領土除外タイルリストをタイル中心点がポリゴン内に含まれるかどうかで列挙する方式を採用した。実測調査（[research](research/northern-territories-tile-exclusion-survey.md)）により、この中心点判定では海岸線付近のタイル（中心が海側にずれるタイル）が除外から漏れることが分かった。中心点判定の除外は Z15 で 6,502 枚だが、ADR-URD-005 の交差ベースの検証では 7,321 枚とされており、約 819 枚が漏れている。
+[ADR-URD-005](ADR-URD-005-northern-territories-exclusion.md) の Decision 1 は、北方領土除外タイルリストをタイル中心点がポリゴン内に含まれるかどうかで列挙する方式を採用し、[ADR-SRS-018](ADR-SRS-018-northern-territories-skip-at-tile-fetch.md) はそのリストのタイルを取得段階で除外すると定めた。実測調査（[research](research/northern-territories-tile-exclusion-survey.md)）により、この中心点判定では海岸線付近のタイル（中心が海側にずれるタイル）が除外から漏れることが分かった。中心点判定の除外は Z15 で 6,502 枚だが、ADR-URD-005 の交差ベースの検証では 7,321 枚とされており、約 819 枚が漏れている。
 
 さらに、地理院の配信状況を抜き取り確認したところ、漏れた択捉島の DEM10b 海岸タイルが HTTP 200 で配信され、陸地の標高値（最高 121.78m）を含んでいることを確認した。ADR-SRS-018 が記録する「択捉島・色丹島の DEM10b は HTTP 404」（2026-06-28 時点）は、2026-09-23 時点の状態と一致しない。
 
