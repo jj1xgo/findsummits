@@ -18,7 +18,7 @@
 
 - GCC（C99）
 - libpng, libm, pthread
-- Python 3.13 + python3-venv パッケージ
+- Python 3.13 以上 + python3-venv パッケージ
 
 ## セットアップ
 
