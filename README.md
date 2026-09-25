@@ -16,9 +16,12 @@
 
 ## 必要環境
 
-- GCC（C99）
-- libpng, libm, pthread
+- Linux（x86_64）、物理メモリ 62.72 GiB とスワップ 48 GiB 以上、データ置き場に 150 GB 以上の空き
+- GNU make、GCC、libpng（開発用ヘッダを含む）
 - Python 3.13 以上 + python3-venv パッケージ
+- Web ブラウザ（作業用 HTML ビューアの確認・編集とエクスポート）。タイル取得・`make venv`・ビューアの利用にはインターネット接続が要る
+
+条件の詳細と根拠は [環境定義](docs/01_environment.md) を参照。
 
 ## セットアップ
 

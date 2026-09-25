@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-15 |
-| 最終更新日 | 2026-09-19 |
+| 最終更新日 | 2026-09-25 |
 | ステータス | 確定 |
 
 ## 目次
@@ -23,7 +23,7 @@
 
 ## 2. 実行環境と依存管理
 
-必要環境と初期設定は [README](../README.md)、環境定義は [01_environment.md](01_environment.md) を参照。
+動作前提環境（最低動作条件）の正本は [01_environment.md](01_environment.md)、初期設定の手順は [README](../README.md) を参照。
 Python のセットアップと実行方法は [01_environment.md「Python 環境セットアップ」](01_environment.md#python-環境セットアップ) に従う。
 本節は依存変更時の手順を定め、環境構成やバージョンは同文書と `requirements.txt` に一元化する。
 
