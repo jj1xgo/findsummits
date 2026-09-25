@@ -4,15 +4,9 @@ shapely
 numpy
 pillow
 
-# lint（開発ツール: markdown チェック用。ランタイム import はしない。
-# 再構築でルール挙動が変わらないようバージョン固定）
-pymarkdownlnt==0.9.38
-# lint（開発ツール: python 静的解析用。ランタイム import はしない。
-# 再構築でルール挙動が変わらないようバージョン固定）
-ruff==0.15.19
-# lint（開発ツール: GeoJSON 検証用。ランタイム import はしない。
-# 再構築でルール挙動が変わらないようバージョン固定）
-geojson-validator==0.6.0
-# lint（開発ツール: HTML 構文チェック用。ランタイム import はしない。
-# 再構築でルール挙動が変わらないようバージョン固定）
-djlint==1.39.4
+# lint（開発ツール。ランタイムで import しない）。版は固定せず、PyPI の最新の安定版に追従する。
+# make venv は導入済みの版を上げないため、既存 venv の更新は make lint-latest で行う（docs/01_environment.md）。
+pymarkdownlnt
+ruff
+geojson-validator
+djlint

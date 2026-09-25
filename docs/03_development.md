@@ -55,7 +55,7 @@ make clean                                 # build/ を削除
 
 - `make lint` の対象拡張子・使用ツール・設定・除外は `Makefile` を参照。
   新しい機械的チェックは `make lint` の依存 target に追加し、指示ファイルに別コマンドの必須規則を増やさない。
-- lint ツールの構成・固定版と最新版の検証方法は
+- lint ツールの構成・版の扱い・最新版への更新方法は
   [01_environment.md「Python パッケージ」](01_environment.md#python-パッケージrequirementstxt-で管理) に従う。
 - docs の表記揺れをレビューで同種のものについて2回以上修正した場合、機械化できる規則は
   `scripts/lint_docs.py` の検査E規則テーブルに追加する。1回限りの揺れは追加不要。

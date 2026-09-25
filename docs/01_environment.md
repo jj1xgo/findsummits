@@ -91,7 +91,7 @@ venv/bin/python3 scripts/output_geojson.py ...
 | numpy | `analysis/` の分析スクリプト（Keyコル距離分析など。本番パイプラインでは未使用） |
 | pillow | `analysis/` の PNG タイルデコード・画像生成（本番パイプラインでは未使用） |
 
-**開発ツール**（ランタイムで import しない）。再構築で lint の挙動が変わらないよう版を固定する:
+**開発ツール**（ランタイムで import しない）。版は固定せず、PyPI の最新の安定版に追従する:
 
 | パッケージ | 用途 |
 |---|---|
@@ -100,15 +100,33 @@ venv/bin/python3 scripts/output_geojson.py ...
 | geojson-validator | GeoJSON 構造・ジオメトリ検証（`make lint` → `lint-geojson`） |
 | djlint | HTML 構文チェック（`make lint` → `lint-html`） |
 
-最新版での通過確認は以下で行う:
+「最新の安定版」は、venv の Python で pip が既定の候補選択（`--pre` を付けない）で選ぶ版を指す。通常は、プレリリースと取り下げ（yanked）版を除き、
+`Requires-Python` が venv の Python に合う最も新しい版になる。Python の版や実行した時期によって、選ばれる版は変わりうる。
+pip はその回に入れるツールとその依存だけで版を決めるため、venv のほかのパッケージとの衝突は警告だけで終わることがある。
+衝突が気になるときは `venv/bin/python3 -m pip check` で確かめる。
+
+`make venv` は、すでに入っているパッケージの版を上げない（`requirements.txt` を変えて再実行されても同じ）。
+`venv/.installed` が `requirements.txt` より新しい間は、`make lint` は PyPI に接続しない。
+既存の venv の lint ツールは、次で最新版に上げる（PyPI への接続が要る）:
 
 ```bash
-make lint-latest       # lint ツールを最新版へ上げてから make lint を実行（手動確認用）
-                       # 実行後は make venv-rebuild で venv を固定版へ復元すること
+make lint-latest       # lint ツールを最新版へ上げ、版を表示してから make lint を実行
 ```
 
+PyPI に届かないとき、pip は警告だけを出し、導入済みの版のまま成功することがある。その場合は、表示された版を最新版と見なさない。
+
+新しく作る venv（初回の `make venv`、`make venv-rebuild`、新しい worktree）には、その時点の最新版が入る。
+このため venv ごとに lint ツールの版がずれることがある。CI や別の worktree と lint の結果が違うときは、
+先に `make lint-latest` で揃える。
+
+版を固定しない代わりに、次を受け入れる:
+
+- ツールの更新で新しい規則が働き、コードを変えていなくても lint が警告を出すことがある。作業の範囲外のファイルに出た警告は、その作業の変更に混ぜず、別の課題として扱う（直すか、規則の設定（`ruff.toml` など）を見直す）。
+- 過去の commit を当時と同じ版で lint するには、版を指定して入れ直す（例: `venv/bin/python3 -m pip install ruff==<版>`）。
+- geojson-validator は shapely と requests に依存するため、`make lint-latest` でこれらのランタイム依存が上がることがある。
+
 GitHub Actions（`.github/workflows/lint-latest.yml`）が月 1 回と手動実行で `make lint-latest` を実行する。
-実行条件は同ファイルを参照。
+CI は Python 3.13 の新しい venv で動くため、手元と選ばれる版が異なりうる。schedule は既定ブランチで走る。実行条件は同ファイルを参照。
 
 ## 開発環境
 

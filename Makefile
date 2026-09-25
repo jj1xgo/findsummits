@@ -115,11 +115,15 @@ lint-html: venv
 	else targets=$$(git ls-files '*.html'); fi; \
 	venv/bin/python3 -m djlint $$targets --lint --profile html
 
-# lint ツールを最新版へ上げてからチェック（手動更新確認 + CI 用）。
-# requirements.txt の固定は変えない＝ローカルの再現性は維持。
-# ローカルで実行すると venv が固定版とズレるため、確認後は make venv-rebuild で復元すること。
+# lint ツールを PyPI の最新の安定版へ上げてからチェック（既存 venv の更新 + CI 用）。
+# requirements.txt は lint ツールの版を固定しないため、実行後に venv を戻す必要はない。
+# make venv は導入済みの版を上げないので、既存 venv の lint ツールはこの target で上げる。
+# 対象は requirements.txt の lint ツールと揃え、ランタイム依存を -r で一括に上げない。
+# geojson-validator は shapely に依存するため、make venv と同じ --only-binary を付ける。
+# 更新後に 4 ツールの版を表示する（PyPI に届かず更新されなかった場合も、表示された版で確かめられるように）。
 lint-latest: venv
-	venv/bin/python3 -m pip install --upgrade ruff djlint geojson-validator pymarkdownlnt
+	venv/bin/python3 -m pip install --upgrade --only-binary numpy,shapely,pillow pymarkdownlnt ruff geojson-validator djlint
+	venv/bin/python3 -m pip list --format=freeze | grep -iE '^(pymarkdownlnt|ruff|geojson[-_]validator|djlint)=='
 	@$(MAKE) lint
 
 .PHONY: all clean findsummits test_mesh_analyze test_analyze test_terrain_image terrain_colormap_demo venv venv-rebuild lint-md lint-py lint-geojson lint-html lint-latest
