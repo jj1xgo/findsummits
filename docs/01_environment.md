@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-09-23 |
+| 最終更新日 | 2026-09-25 |
 | ステータス | ドラフト |
 
 ## ホスト環境
@@ -24,12 +24,13 @@
 
 | 項目 | 値 |
 |---|---|
-| OS | Debian GNU/Linux trixie (x86_64、コンテナ・リビルドで最新化) |
+| OS | Debian GNU/Linux testing (x86_64、コンテナ・リビルドで最新化。2026-09-25 時点のコードネームは forky) |
 | CPU | AMD Ryzen 7 2700（16スレッド）@ 3.20 GHz |
 | メモリ | 62.72 GiB |
 | スワップ | 48 GiB（`/swapfile` 32 GiB + `/dev/zram0` 16 GiB） |
 | データディスク (`/data`) | ホストの `/mnt/findsummits` をマウント（457.38 GiB ext4） |
 | Shell | bash 5.3.9 |
+| Python | Debian の `python3`（リビルドで最新化。2026-09-25 時点 3.14.7）。CI（`lint-latest.yml`）は 3.13 |
 
 ## C 解析エンジン ビルド依存（`src/` のビルドに必要）
 
@@ -46,6 +47,8 @@ Python スクリプトの実行にはリポジトリ直下の `venv/` を使用�
 実行依存が揃うとは限らないため、以下の `venv/bin/python3` で呼び出す。
 コンテナで checkout を `/workspace` にマウントする場合は `/workspace/venv/` となり、
 マウント元に永続化されるためコンテナのリビルド後も残る。
+`git worktree` で作業するときは worktree ごとに `make venv` で作り、本体の `venv/` を共有しない
+（[開発ガイド](03_development.md)）。
 
 ```bash
 make venv          # venv 作成 + 依存パッケージインストール（初回 or requirements.txt 変更時）
@@ -57,19 +60,20 @@ make venv          # venv 作成 + 依存パッケージインストール（初
 venv/bin/python3 scripts/prefetch_tiles.py ...
 venv/bin/python3 scripts/merge.py ...
 venv/bin/python3 scripts/preprocess_pref_boundaries.py ...
+venv/bin/python3 scripts/output_geojson.py ...
 ```
 
 ## Python パッケージ（`requirements.txt` で管理）
 
-**ランタイム依存**（本番パイプラインで import するもの）:
+**ランタイム依存**（本番パイプラインと `analysis/` で import するもの。計画分を含む）:
 
 | パッケージ | 用途 |
 |---|---|
 | requests | タイル取得（prefetch_tiles.py） |
-| openpyxl | XLSX 出力 |
+| openpyxl | XLSX 出力（計画分。申請書 XLSX 出力は未実装で、2026-09-25 時点で import するコードは無い） |
 | shapely | 都道府県/振興局 point-in-polygon 判定（merge.py, preprocess_pref_boundaries.py） |
-| numpy | Keyコル距離分析（analysis/analyze_keycol_distance.py） |
-| pillow | PNG タイルデコード（analysis/ スクリプト群） |
+| numpy | `analysis/` の分析スクリプト（Keyコル距離分析など。本番パイプラインでは未使用） |
+| pillow | `analysis/` の PNG タイルデコード・画像生成（本番パイプラインでは未使用） |
 
 **開発ツール**（ランタイムで import しない、バージョン固定）:
 
