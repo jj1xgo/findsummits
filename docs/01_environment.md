@@ -105,7 +105,7 @@ venv/bin/python3 scripts/output_geojson.py ...
 pip はその回に入れるツールとその依存だけで版を決めるため、venv のほかのパッケージとの衝突は警告だけで終わることがある。
 衝突が気になるときは `venv/bin/python3 -m pip check` で確かめる。
 
-`make venv` は、すでに入っているパッケージの版を上げない（`requirements.txt` を変えて再実行されても同じ）。
+`make venv` は、依存条件を満たす導入済みの lint ツールを、最新版への追従目的では更新しない。
 `venv/.installed` が `requirements.txt` より新しい間は、`make lint` は PyPI に接続しない。
 既存の venv の lint ツールは、次で最新版に上げる（PyPI への接続が要る）:
 

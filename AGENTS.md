@@ -30,7 +30,7 @@
 ## ビルドと検証の入口
 
 ```bash
-make venv               # Python の固定依存をセットアップ
+make venv               # Python の依存をセットアップ
 make                    # build/findsummits をビルド
 make test_mesh_analyze  # build/test_mesh_analyze をビルド（実行は別）
 make test_analyze       # build/test_analyze をビルド（実行は別）
