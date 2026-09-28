@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-09-25 |
+| 最終更新日 | 2026-09-28 |
 | ステータス | ドラフト |
 
 ## 目次
@@ -135,3 +135,14 @@ CI は Python 3.13 の新しい venv で動くため、手元と選ばれる版�
 
 コンテナ [c3c](https://github.com/JJ1XGO/c3c) 上でも同じ手順で動く。コンテナで動かすときは、checkout と
 データ置き場をマウントし、`params/config.ini` の `DATA_DIR` をコンテナ内のパスにする。
+
+c3c の設定ディレクトリ（`.c3c/`）は本リポジトリに含まない。c3c で動かすときは利用者が用意する。書式は
+c3c の README の[利用側プロジェクトの設定](https://github.com/JJ1XGO/c3c#利用側プロジェクトの設定)節を参照。
+
+- `allowed-domains.txt`: c3c の組み込み（Claude Code 用の API・GitHub 等）に加えて許可する通信先。
+  [ハードウェアと OS](#ハードウェアと-os) の「ネットワーク」行の接続先として、`cyberjapandata.gsi.go.jp`（標高タイル）と
+  `pypi.org`・`files.pythonhosted.org`（`make venv`）を書く
+- `packages.txt`: [ソフトウェア](#ソフトウェア) の依存を Debian の apt パッケージ名で書く（`gcc`・`libc6-dev`・`make`・`libpng-dev`・`python3-venv`）。
+  `libc6-dev` は推奨依存を入れないビルドでは明示が要る
+- `requirements.txt`: 空でよい。Python の依存は `make venv` が venv に入れる
+- `base-image.txt`: 任意。置かなければ c3c の既定の `debian:stable` になる。上の動作確認は Debian testing で行っている

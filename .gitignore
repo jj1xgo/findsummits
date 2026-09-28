@@ -62,9 +62,8 @@ build/
 # 環境設定（個人のパス等を含むため）
 params/config.ini
 .claude-container
-# c3c の実行設定はホスト固有パスを含むため除外する。
-# ビルド入力はプロジェクト固有の環境定義として追跡する。
-.c3c/env
+# c3c の設定ディレクトリはメンテナ個人の環境のため追跡しない（手元では symlink の場合がある）。
+/.c3c
 
 # fetch 設定（メールアドレス等の個人情報を含むため）
 params/fetch_config.ini
