@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-09-24 |
+| 最終更新日 | 2026-09-28 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -174,18 +174,18 @@
 
 ### 3.2 主要コンポーネント構成
 
-各コンポーネントの責務と主要 I/O を論理的に定義する。実装言語・実装ファイル名の決定は ADR に委ねる（[ADR-SRS-001](decisions/ADR-SRS-001-hybrid-c-python-architecture.md)、[ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) 参照）。
+各コンポーネントの責務と主要 I/O を論理的に定義する。実装言語・実装ファイル名の決定は ADR に委ねる（[ADR-SRS-001](decisions/ADR-SRS-001-hybrid-c-python-architecture.md)、[ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) 参照）。ID は下流の設計文書（HLD 以降）がコンポーネントを指すときの識別子で、本表を正本とする。
 
-| コンポーネント | 責務 | 主要入力 | 主要出力 |
-|---|---|---|---|
-| 行政区域前処理コンポーネント | 都道府県・振興局境界 GeoJSON を解析用形式に変換（初回のみ） | N03 行政区域 GeoJSON、日本全土1次メッシュコードリスト | N03 前処理済み地域 GeoJSON / 市区町村 GeoJSON / 北方領土除外タイルリスト / 北方領土除外メッシュリスト |
-| タイル取得コンポーネント | DEM タイルを国土地理院から取得・ローカルキャッシュ | メッシュコード、取得設定、北方領土除外タイルリスト、北方領土除外メッシュリスト | ローカルキャッシュ済み PNG タイル |
-| パイプライン制御コンポーネント | フェーズ2〜4 の実行順序・N エスカレーションループを管理 | merged_peak.csv・コル未確定ピーク座標リスト（[FR-022](#fr-022-コル充足判定) 出力） | （各 FR への委譲によって成果物が生成される） |
-| 地形解析エンジン | DEM からピーク／コル／プロミネンス／AZ・delete判定ゾーンを検出 | ローカルキャッシュ済み PNG タイル、北方領土除外メッシュリスト | 処理モードにより異なる（通常モード: per-mesh CSV / per-mesh ピーク候補 GeoJSON / 標高地形図 PNG、広域モード: per-mesh CSV / 標高地形図 PNG。広域モードは per-mesh ピーク候補 GeoJSON を生成しない） |
-| 統合・突合コンポーネント | per-mesh 成果物を統合し SOTA リストと突合、rationale 生成・不備フラグ判定・exit code 制御 | per-mesh CSV／GeoJSON、SOTA リスト CSV、SOTA 既存サミット GeoJSON、N03 前処理済み GeoJSON 群（地域・市区町村）、北方領土除外メッシュリスト | **merged_summit.geojson**（中心データ）、merged_summit.xlsx（サミット一覧（突合後））、merged_peak.csv（内部 work CSV）、merged_peak.geojson（内部中間） |
-| 可視化生成コンポーネント | merged_summit.geojson から HTML ビューアを生成 | merged_summit.geojson | merged_viewer.html・merged_viewer_data.js |
-| 申請書生成 UI | HTML ビューア内でユーザー操作に応じて申請書 XLSX を生成 | ユーザー操作（HTML ビューア上） | 申請書 XLSX・サミット一覧（申請内容反映版）・申請エビデンス ZIP |
-| 公開用ビューア | 静的ホスティング上で公開用データ（申請エビデンス GeoJSON）を閲覧専用表示 | 公開用データ（申請エビデンス GeoJSON）・テンプレート | 公開用ビューア（HTML + GeoJSON） |
+| ID | コンポーネント | 責務 | 主要入力 | 主要出力 |
+|---|---|---|---|---|
+| C1 | 行政区域前処理コンポーネント | 都道府県・振興局境界 GeoJSON を解析用形式に変換（初回のみ） | N03 行政区域 GeoJSON、日本全土1次メッシュコードリスト | N03 前処理済み地域 GeoJSON / 市区町村 GeoJSON / 北方領土除外タイルリスト / 北方領土除外メッシュリスト |
+| C2 | タイル取得コンポーネント | DEM タイルを国土地理院から取得・ローカルキャッシュ | メッシュコード、取得設定、北方領土除外タイルリスト、北方領土除外メッシュリスト | ローカルキャッシュ済み PNG タイル |
+| C3 | パイプライン制御コンポーネント | フェーズ2〜4 の実行順序・N エスカレーションループを管理 | merged_peak.csv・コル未確定ピーク座標リスト（[FR-022](#fr-022-コル充足判定) 出力） | （各 FR への委譲によって成果物が生成される） |
+| C4 | 地形解析エンジン | DEM からピーク／コル／プロミネンス／AZ・delete判定ゾーンを検出 | ローカルキャッシュ済み PNG タイル、北方領土除外メッシュリスト | 処理モードにより異なる（通常モード: per-mesh CSV / per-mesh ピーク候補 GeoJSON / 標高地形図 PNG、広域モード: per-mesh CSV / 標高地形図 PNG。広域モードは per-mesh ピーク候補 GeoJSON を生成しない） |
+| C5 | 統合・突合コンポーネント | per-mesh 成果物を統合し SOTA リストと突合、rationale 生成・不備フラグ判定・exit code 制御 | per-mesh CSV／GeoJSON、SOTA リスト CSV、SOTA 既存サミット GeoJSON、N03 前処理済み GeoJSON 群（地域・市区町村）、北方領土除外メッシュリスト | **merged_summit.geojson**（中心データ）、merged_summit.xlsx（サミット一覧（突合後））、merged_peak.csv（内部 work CSV）、merged_peak.geojson（内部中間） |
+| C6 | 可視化生成コンポーネント | merged_summit.geojson から HTML ビューアを生成 | merged_summit.geojson | merged_viewer.html・merged_viewer_data.js |
+| C7 | 申請書生成 UI | HTML ビューア内でユーザー操作に応じて申請書 XLSX を生成 | ユーザー操作（HTML ビューア上） | 申請書 XLSX・サミット一覧（申請内容反映版）・申請エビデンス ZIP |
+| C8 | 公開用ビューア | 静的ホスティング上で公開用データ（申請エビデンス GeoJSON）を閲覧専用表示 | 公開用データ（申請エビデンス GeoJSON）・テンプレート | 公開用ビューア（HTML + GeoJSON） |
 
 ### 3.3 フェーズ分割
 
