@@ -144,5 +144,7 @@ c3c の README の[利用側プロジェクトの設定](https://github.com/JJ1X
   `pypi.org`・`files.pythonhosted.org`（`make venv`）を書く
 - `packages.txt`: [ソフトウェア](#ソフトウェア) の依存を Debian の apt パッケージ名で書く（`gcc`・`libc6-dev`・`make`・`libpng-dev`・`python3-venv`）。
   `libc6-dev` は推奨依存を入れないビルドでは明示が要る
-- `requirements.txt`: 空でよい。Python の依存は `make venv` が venv に入れる
+- `env`: データ置き場を `EXTRA_MOUNT` でコンテナ内の `/data` にマウントする。キーは c3c の README の
+  [環境変数](https://github.com/JJ1XGO/c3c#環境変数)節を参照
+- `requirements.txt`: 空ファイルを置く（置かないと c3c が WARNING を出す）。Python の依存は `make venv` が venv に入れる
 - `base-image.txt`: 任意。置かなければ c3c の既定の `debian:stable` になる。上の動作確認は Debian testing で行っている
