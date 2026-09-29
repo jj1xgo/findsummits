@@ -1,0 +1,199 @@
+<svg width="1400" height="1720" viewBox="0 0 1400 1720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="図2 コンポーネント別 IPO 図"><title>コンポーネント別 IPO 図</title><desc>C1 から C8 の主要な入力、処理、出力。詳細な条件と全入出力は本文を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; } .pre, .blue { fill: #1d4ed8; }
+.man { fill: #c2410c; } .run { fill: #7c3aed; }
+.pre, .man, .run { font-weight: 700; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="42" class="ttl">IPO 図（C1〜C8 の入力・処理・出力）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">仕様の俯瞰</text>
+  <text x="195" y="79">出典: SRS §3.2・§3.3.1、HLD §2.2.2・§2.2.3・§2.2.4</text>
+
+  <text x="30" y="118"><tspan class="pre">[事前取得]</tspan> バッチ実行前に HTTP で取得　<tspan class="man">[手動配置]</tspan> 利用者が置くファイル　<tspan class="run">[実行時]</tspan> ブラウザが実行時に取得</text>
+  <text x="30" y="144">← は送り元、→ は宛先。ソース同梱 = params またはテンプレート。点線矢印 = 制御（データ成果物なし）</text>
+
+  <!-- 列見出し -->
+  <rect x="30" y="160" width="470" height="38" fill="#374151"/>
+  <text x="265" y="186" class="w" text-anchor="middle">入力</text>
+  <rect x="540" y="160" width="360" height="38" fill="#374151"/>
+  <text x="720" y="186" class="w" text-anchor="middle">処理（コンポーネント）</text>
+  <rect x="940" y="160" width="430" height="38" fill="#374151"/>
+  <text x="1155" y="186" class="w" text-anchor="middle">出力（→ 宛先）</text>
+
+  <!-- C1: y=210 h=160 -->
+  <rect x="30" y="210" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="244"><tspan class="man">[手動配置]</tspan> N03 行政区域 ZIP（国土数値情報）</text>
+  <text x="44" y="270">日本全土1次メッシュコードリスト（ソース同梱）</text>
+  <text x="44" y="296">設定ファイル（config.ini）</text>
+  <rect x="540" y="210" width="360" height="160" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="554" y="244" class="b">C1 行政区域前処理コンポーネント</text>
+  <text x="554" y="270">フェーズ1・初回のみ｜Python</text>
+  <text x="554" y="296">60 地域（都府県・振興局）に集約し、</text>
+  <text x="554" y="322">北方領土を判定（FR-017）</text>
+  <rect x="940" y="210" width="430" height="160" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="244">N03 前処理済み地域・市区町村 GeoJSON</text>
+  <text x="954" y="270">　→ C5（FR-009）</text>
+  <text x="954" y="296">北方領土除外タイルリスト → C2</text>
+  <text x="954" y="322">北方領土除外メッシュリスト</text>
+  <text x="954" y="348">　→ C2・C4・C5（FR-008）</text>
+  <line x1="500" y1="290" x2="538" y2="290" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="290" x2="938" y2="290" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C2: y=384 h=186 -->
+  <rect x="30" y="384" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="418"><tspan class="pre">[事前取得]</tspan> 国土地理院 標高タイル（HTTP）</text>
+  <text x="44" y="444">　DEM5a/5b/5c・DEM10b、PNG</text>
+  <text x="44" y="470">1次メッシュコードリスト（任意・利用者指定）</text>
+  <text x="44" y="496">取得設定（並列数・間隔・User-Agent）</text>
+  <text x="44" y="522">北方領土除外タイル／メッシュリスト ← C1</text>
+  <text x="44" y="548">日本全土1次メッシュコードリスト（ソース同梱）</text>
+  <rect x="540" y="384" width="360" height="186" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="554" y="418" class="b">C2 タイル取得コンポーネント</text>
+  <text x="554" y="444">フェーズ1｜Python バッチ</text>
+  <text x="554" y="470">標高タイルを取得してローカル</text>
+  <text x="554" y="496">キャッシュに置き、北方領土除外</text>
+  <text x="554" y="522">を適用（FR-001）</text>
+  <rect x="940" y="384" width="430" height="186" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="418">標高タイル（ローカルキャッシュ）</text>
+  <text x="954" y="444">　→ C4（解析の入力）</text>
+  <text x="954" y="470">　→ C5（FR-009 は mtime のみ使用）</text>
+  <text x="954" y="496">　→ C3（前提検査）</text>
+  <line x1="500" y1="477" x2="538" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="477" x2="938" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C3: y=584 h=186 -->
+  <rect x="30" y="584" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="618">利用者のコマンド（1次メッシュコードリスト</text>
+  <text x="44" y="644">　（任意）・フェーズ指定）</text>
+  <text x="44" y="670">各段の終了状態 ← C4・C5・C6</text>
+  <text x="44" y="696">未確定リストのパス ← C5（FR-022）</text>
+  <text x="44" y="722">前提検査の対象: merged_peak.csv・</text>
+  <text x="44" y="748">merged_peak.geojson・タイルキャッシュ</text>
+  <rect x="540" y="584" width="360" height="186" rx="6" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>
+  <text x="554" y="618" class="b">C3 パイプライン制御コンポーネント</text>
+  <text x="554" y="644">フェーズ2〜4｜shell スクリプト</text>
+  <text x="554" y="670">【制御】順序制御と N の所有</text>
+  <text x="554" y="696">（N=3→4→5→6）・前提検査</text>
+  <text x="554" y="722">CSV を操作しない（FR-023）</text>
+  <rect x="940" y="584" width="430" height="186" rx="6" fill="#f3f4f6" stroke="#475569"/>
+  <text x="954" y="618" class="b">【制御のみ・データ成果物なし】</text>
+  <text x="954" y="644">起動（N・モード・メッシュリスト・パス）</text>
+  <text x="954" y="670">　→ C4・C5・C6</text>
+  <text x="954" y="696">未確定リストのパスを C4（広域）へ転送</text>
+  <text x="954" y="722">終了コード → 利用者</text>
+  <line x1="500" y1="677" x2="538" y2="677" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="677" x2="938" y2="677" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah2)"/>
+
+  <!-- C4: y=784 h=186 -->
+  <rect x="30" y="784" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="818">標高タイル（ローカルキャッシュ）← C2</text>
+  <text x="44" y="844">北方領土除外メッシュリスト ← C1</text>
+  <text x="44" y="870">起動引数（モード・N・未確定リスト・</text>
+  <text x="44" y="896">　メッシュリスト）← C3</text>
+  <text x="44" y="922">日本全土1次メッシュコードリスト（ソース同梱）</text>
+  <text x="44" y="948">設定ファイル（config.ini）</text>
+  <rect x="540" y="784" width="360" height="186" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="554" y="818" class="b">C4 地形解析エンジン</text>
+  <text x="554" y="844">フェーズ2・3｜C++ 1本（通常／広域）</text>
+  <text x="554" y="870">ピーク／コル／プロミネンス、</text>
+  <text x="554" y="896">AZ・delete判定ゾーン、ピーク域</text>
+  <text x="554" y="922">ポリゴン（FR-004・014・002・</text>
+  <text x="554" y="948">003・015・005・006・007・016）</text>
+  <rect x="940" y="784" width="430" height="186" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="818">per-mesh CSV（通常・広域）→ C5（FR-008）</text>
+  <text x="954" y="844">per-mesh ピーク候補 GeoJSON</text>
+  <text x="954" y="870">　（通常モードのみ）→ C5（FR-018）</text>
+  <text x="954" y="896">標高地形図 PNG → 利用者</text>
+  <line x1="500" y1="877" x2="538" y2="877" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="877" x2="938" y2="877" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C5: y=984 h=212 -->
+  <rect x="30" y="984" width="470" height="212" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="1018">per-mesh CSV・GeoJSON ← C4</text>
+  <text x="44" y="1044">N03 前処理済み GeoJSON・北方領土除外</text>
+  <text x="44" y="1070">　メッシュリスト ← C1</text>
+  <text x="44" y="1096"><tspan class="man">[手動配置]</tspan> SOTA サミットリスト CSV、</text>
+  <text x="44" y="1122">　SOTA 既存サミット GeoJSON</text>
+  <text x="44" y="1148">陸地最高峰リスト等（ソース同梱）</text>
+  <text x="44" y="1174">タイルの mtime ← C2、設定ファイル</text>
+  <rect x="540" y="984" width="360" height="212" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="554" y="1018" class="b">C5 統合・突合コンポーネント</text>
+  <text x="554" y="1044">フェーズ2〜4｜Python バッチ</text>
+  <text x="554" y="1070">（FR ごとの起動口）</text>
+  <text x="554" y="1096">統合（FR-008・018）、コル充足</text>
+  <text x="554" y="1122">判定（FR-022）、SOTA 突合、</text>
+  <text x="554" y="1148">rationale・不備ゲート（FR-009）</text>
+  <rect x="940" y="984" width="430" height="212" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="1018">merged_summit.geojson（中心データ）</text>
+  <text x="954" y="1044">　→ C6・利用者</text>
+  <text x="954" y="1070">merged_summit.xlsx（サミット一覧</text>
+  <text x="954" y="1096">　（突合後））→ 利用者</text>
+  <text x="954" y="1122">merged_peak.csv・.geojson（内部中間）</text>
+  <text x="954" y="1148">終了状態・未確定リストのパス → C3</text>
+  <line x1="500" y1="1090" x2="538" y2="1090" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="1090" x2="938" y2="1090" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C6: y=1210 h=134 -->
+  <rect x="30" y="1210" width="470" height="134" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="1244">merged_summit.geojson ← C5</text>
+  <text x="44" y="1270">テンプレート（ソース同梱）</text>
+  <text x="44" y="1296">起動 ← C3</text>
+  <rect x="540" y="1210" width="360" height="134" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="554" y="1244" class="b">C6 可視化生成コンポーネント</text>
+  <text x="554" y="1270">フェーズ4｜Python バッチ</text>
+  <text x="554" y="1296">テンプレートを複製し、データ</text>
+  <text x="554" y="1322">ファイルを出力（FR-013）</text>
+  <rect x="940" y="1210" width="430" height="134" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="1244">merged_viewer.html</text>
+  <text x="954" y="1270">＋ merged_viewer_data.js → C7</text>
+  <line x1="500" y1="1277" x2="538" y2="1277" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="1277" x2="938" y2="1277" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C7: y=1358 h=160 -->
+  <rect x="30" y="1358" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="1392">merged_viewer.html＋data.js ← C6</text>
+  <text x="44" y="1418">（ファイルのみ・バッチと実行時通信しない）</text>
+  <text x="44" y="1444">利用者の操作、除外判断ファイル（任意）</text>
+  <text x="44" y="1470"><tspan class="run">[実行時]</tspan> 背景タイル・地理院標高タイル・</text>
+  <text x="44" y="1496">　地理院基準点タイル・CDN</text>
+  <rect x="540" y="1358" width="360" height="160" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="554" y="1392" class="b">C7 申請書生成 UI</text>
+  <text x="554" y="1418">フェーズ5｜ブラウザ内 JavaScript</text>
+  <text x="554" y="1444">表示と rationale 編集</text>
+  <text x="554" y="1470">申請書類をブラウザ内で生成</text>
+  <text x="554" y="1496">（FR-019・011・012・021）</text>
+  <rect x="940" y="1358" width="430" height="160" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="1392">申請書 XLSX（C7 が生成）→ 利用者</text>
+  <text x="954" y="1418">　→ SOTA 日本支部マネージャへ提出</text>
+  <text x="954" y="1444">サミット一覧（申請内容反映版・ZIP 同梱）</text>
+  <text x="954" y="1470">申請エビデンス ZIP（GeoJSON 5本を同梱）</text>
+  <text x="954" y="1496">除外判断 JSON（ZIP には含めない）</text>
+  <line x1="500" y1="1438" x2="538" y2="1438" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="1438" x2="938" y2="1438" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+
+  <!-- C8: y=1532 h=160 -->
+  <rect x="30" y="1532" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
+  <text x="44" y="1566"><tspan class="man">[手動配置]</tspan> ZIP 同梱の GeoJSON 5本</text>
+  <text x="44" y="1592">（利用者が公開用データ置き場へ配置・無改変）</text>
+  <text x="44" y="1618">テンプレート（ソース同梱）</text>
+  <text x="44" y="1644"><tspan class="run">[実行時]</tspan> 背景タイル・地理院標高タイル・</text>
+  <text x="44" y="1670">　地理院基準点タイル・CDN</text>
+  <rect x="540" y="1532" width="360" height="160" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="554" y="1566" class="b">C8 公開用ビューア</text>
+  <text x="554" y="1592">フェーズ5｜静的ホスティング上</text>
+  <text x="554" y="1618">閲覧専用で表示。配置された</text>
+  <text x="554" y="1644">GeoJSON を無改変で配信</text>
+  <text x="554" y="1670">（FR-020）</text>
+  <rect x="940" y="1532" width="430" height="160" rx="6" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="954" y="1566">公開用ビューア（HTML＋GeoJSON）</text>
+  <text x="954" y="1592">　→ SOTA 日本支部マネージャが閲覧</text>
+  <line x1="500" y1="1612" x2="538" y2="1612" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <line x1="900" y1="1612" x2="938" y2="1612" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+</svg>

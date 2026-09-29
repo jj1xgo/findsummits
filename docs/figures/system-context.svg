@@ -1,0 +1,207 @@
+<svg width="1400" height="1240" viewBox="0 0 1400 1240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="図1 全体コンテキスト図"><title>全体コンテキスト図</title><desc>外部入力、ローカル処理、ブラウザでの申請書生成、手動公開と閲覧の関係。個別の入出力は本文を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; } .pre, .blue { fill: #1d4ed8; }
+.man { fill: #c2410c; } .run { fill: #7c3aed; }
+.pre, .man, .run { font-weight: 700; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="42" class="ttl">全体コンテキスト図（findsummits）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">仕様の俯瞰</text>
+  <text x="195" y="79">出典: SRS §3.1・§3.2・§3.3.2、HLD §2.2.2・§2.2.3</text>
+
+  <!-- 凡例 行1: 線種 -->
+  <line x1="30" y1="122" x2="90" y2="122" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <text x="100" y="128">ファイル受け渡し・事前取得</text>
+  <line x1="380" y1="122" x2="440" y2="122" stroke="#334155" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah1)"/>
+  <text x="450" y="128">ブラウザ実行時の外部接続</text>
+  <line x1="720" y1="122" x2="780" y2="122" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+  <text x="790" y="128">制御（起動・終了状態）</text>
+  <!-- 凡例 行2: 箱 -->
+  <rect x="30" y="150" width="34" height="22" fill="#f3f4f6" stroke="#6b7280"/>
+  <text x="72" y="168">外部データ・外部サービス</text>
+  <rect x="320" y="150" width="34" height="22" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="362" y="168">本システムのコンポーネント</text>
+  <rect x="630" y="150" width="34" height="22" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="672" y="168">成果物</text>
+  <rect x="760" y="150" width="34" height="22" fill="#ffedd5" stroke="#ea580c"/>
+  <text x="802" y="168">関係者（利用者・マネージャ）</text>
+
+  <g transform="translate(0,40)">
+    <!-- システム境界 -->
+    <rect x="380" y="170" width="640" height="780" rx="14" fill="#eff6ff" stroke="#1d4ed8" stroke-width="3"/>
+    <text x="395" y="196" class="b blue">findsummits のローカル実行部分（C1〜C7）</text>
+
+    <!-- バッチ処理ブロック（取得時のネットワーク接続は C2 の入力に表示） -->
+    <rect x="405" y="210" width="590" height="370" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="2"/>
+    <text x="420" y="236" class="b">解析・成果物生成は入力とキャッシュ配置後オフライン</text>
+
+    <rect x="425" y="252" width="270" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="440" y="284" class="b">C1 行政区域前処理</text>
+    <text x="440" y="312">フェーズ1・初回のみ</text>
+
+    <rect x="710" y="252" width="265" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="725" y="284" class="b">C2 タイル取得</text>
+    <text x="725" y="312">フェーズ1</text>
+
+    <rect x="425" y="350" width="550" height="72" rx="6" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>
+    <text x="440" y="380" class="b">C3 パイプライン制御（制御のみ）</text>
+    <text x="440" y="408">C4・C5・C6 を順に起動し、終了状態を受け取る</text>
+
+    <line x1="512" y1="422" x2="512" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+    <line x1="699" y1="422" x2="699" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+    <line x1="887" y1="422" x2="887" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+
+    <rect x="425" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="512" y="482" class="b" text-anchor="middle">C4</text>
+    <text x="512" y="508" text-anchor="middle">地形解析</text>
+    <text x="512" y="534" text-anchor="middle">エンジン</text>
+
+    <rect x="612" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="699" y="482" class="b" text-anchor="middle">C5</text>
+    <text x="699" y="508" text-anchor="middle">統合・突合</text>
+
+    <rect x="800" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="887" y="482" class="b" text-anchor="middle">C6</text>
+    <text x="887" y="508" text-anchor="middle">可視化生成</text>
+
+    <!-- バッチ → C7 （ファイル） -->
+    <line x1="900" y1="580" x2="900" y2="678" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="888" y="610" text-anchor="end">merged_viewer.html ＋</text>
+    <text x="888" y="636" text-anchor="end">merged_viewer_data.js（C6）</text>
+
+    <!-- ブラウザブロック -->
+    <rect x="405" y="680" width="590" height="258" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+    <text x="420" y="706" class="b">ローカル HTML ビューア（ブラウザ・フェーズ5）</text>
+    <rect x="425" y="722" width="550" height="200" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="440" y="754" class="b">C7 申請書生成 UI</text>
+    <text x="440" y="784">作業用ビューアで確認・rationale 編集</text>
+    <text x="440" y="812">申請書 XLSX などをブラウザ内で生成</text>
+    <text x="440" y="840">バッチとは実行時に通信しない</text>
+    <text x="440" y="868">（C6 が出力したファイルを開く）</text>
+    <text x="440" y="896">除外判断ファイル（任意）を読み込める</text>
+
+    <!-- 外部データ（左） -->
+    <text x="30" y="168" class="b">外部データ（バッチの入力）</text>
+
+    <rect x="30" y="180" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="206" class="b">国土地理院 標高タイル</text>
+    <text x="44" y="231">DEM5a/5b/5c・DEM10b（PNG）</text>
+    <text x="44" y="256"><tspan class="pre">[事前取得]</tspan> C2 が HTTP で取得</text>
+    <line x1="330" y1="224" x2="403" y2="224" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="30" y="278" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="304" class="b">N03 行政区域 ZIP</text>
+    <text x="44" y="329">国土交通省 国土数値情報</text>
+    <text x="44" y="354"><tspan class="man">[手動配置]</tspan> → C1</text>
+    <line x1="330" y1="322" x2="403" y2="322" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="30" y="376" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="402" class="b">SOTA サミットリスト CSV</text>
+    <text x="44" y="427">summitslist.csv（SOTA DB）</text>
+    <text x="44" y="452"><tspan class="man">[手動配置]</tspan> → C5（FR-009）</text>
+    <line x1="330" y1="420" x2="403" y2="420" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="30" y="474" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="500" class="b">SOTA 既存サミット GeoJSON</text>
+    <text x="44" y="525">ジオサミットでひとこえ</text>
+    <text x="44" y="550"><tspan class="man">[手動配置]</tspan> → C5（FR-009）</text>
+    <line x1="330" y1="518" x2="403" y2="518" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <!-- 利用者 -->
+    <rect x="30" y="600" width="300" height="170" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+    <text x="44" y="628" class="b">申請担当者（利用者）</text>
+    <text x="44" y="656">① 前処理・取得・解析を起動</text>
+    <text x="44" y="681">　設定・メッシュ範囲を指定</text>
+    <text x="44" y="706">② ビューアで確認・編集・出力</text>
+    <text x="44" y="731">③ GeoJSON 5本を公開用に配置</text>
+    <text x="44" y="756">入力ファイルの手動配置</text>
+
+    <polyline points="330,640 440,640 440,583" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="346" y="632" class="b">①</text>
+    <line x1="330" y1="740" x2="423" y2="740" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="346" y="732" class="b">②</text>
+
+    <!-- 成果物（右） -->
+    <text x="1045" y="200" class="b">成果物（利用者が受け取る）</text>
+
+    <rect x="1045" y="215" width="285" height="80" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="245" class="b">標高地形図 PNG</text>
+    <text x="1058" y="272">C4 が出力（目視確認用）</text>
+    <line x1="995" y1="255" x2="1043" y2="255" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="305" width="285" height="80" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="335" class="b">サミット一覧（突合後）</text>
+    <text x="1058" y="362">merged_summit.xlsx・C5</text>
+    <line x1="995" y1="345" x2="1043" y2="345" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="395" width="285" height="105" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="425" class="b">突合済み統合 GeoJSON</text>
+    <text x="1058" y="452">merged_summit.geojson</text>
+    <text x="1058" y="479">中心データ・C5 が出力</text>
+    <line x1="995" y1="447" x2="1043" y2="447" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="700" width="285" height="50" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="732" class="b">申請書 XLSX（C7 が生成）</text>
+    <line x1="975" y1="725" x2="1043" y2="725" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="756" width="285" height="64" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="783" class="b">サミット一覧</text>
+    <text x="1058" y="809" style="font-size:17px">（申請内容反映版・ZIP 同梱）</text>
+    <line x1="975" y1="788" x2="1043" y2="788" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="826" width="285" height="64" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="853" class="b">除外判断 JSON</text>
+    <text x="1058" y="879">（ZIP には含めない）</text>
+    <line x1="975" y1="858" x2="1043" y2="858" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="1045" y="896" width="285" height="50" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+    <text x="1058" y="928" class="b">申請エビデンス ZIP</text>
+    <line x1="975" y1="918" x2="1043" y2="918" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <!-- 利用者が申請書 XLSX と ZIP をシステム外で提出 -->
+    <line x1="1330" y1="921" x2="1370" y2="921" stroke="#334155" stroke-width="2.5"/>
+    <polyline points="1330,725 1370,725 1370,1003" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="1362" y="990" text-anchor="end">利用者が提出</text>
+
+    <!-- ZIP → C8（③ 利用者が手動配置） -->
+    <line x1="1060" y1="946" x2="1060" y2="1003" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="1070" y="985" class="b">③</text>
+
+    <!-- 静的ホスティングと C8 -->
+    <rect x="690" y="1005" width="400" height="170" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+    <text x="705" y="1031" class="b">静的ホスティング（外部サービス）</text>
+    <rect x="705" y="1043" width="370" height="122" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="720" y="1071" class="b">C8 公開用ビューア（findsummits）</text>
+    <text x="720" y="1098">テンプレート＋GeoJSON 5本</text>
+    <text x="720" y="1124">閲覧専用・無改変で配信</text>
+    <text x="720" y="1150">GeoJSON は③で利用者が配置</text>
+
+    <!-- マネージャ -->
+    <rect x="1140" y="1005" width="250" height="125" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+    <text x="1155" y="1033" class="b">SOTA 日本支部</text>
+    <text x="1155" y="1059" class="b">マネージャ</text>
+    <text x="1155" y="1087">申請書・ZIP の受領と審査</text>
+    <text x="1155" y="1113">公開用ビューアの閲覧</text>
+    <line x1="1075" y1="1100" x2="1138" y2="1100" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <text x="1115" y="1088" text-anchor="middle">閲覧</text>
+
+    <!-- ブラウザ実行時の外部接続 -->
+    <rect x="30" y="990" width="600" height="185" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="46" y="1018" class="b">ブラウザ実行時に接続する外部（事前取得しない）</text>
+    <text x="46" y="1046">・背景タイル（地理院標準地図・淡色地図・OSM・OpenTopoMap）</text>
+    <text x="46" y="1074">・地理院標高タイル（等高線オーバーレイ用）</text>
+    <text x="46" y="1102">・地理院基準点タイル（ベクトルタイル）</text>
+    <text x="46" y="1130">・CDN（C7: Leaflet・SheetJS・JSZip／C8: Leaflet）</text>
+    <text x="46" y="1158">→ C7・C8 のブラウザが直接取得</text>
+    <line x1="560" y1="990" x2="560" y2="924" stroke="#334155" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah1)"/>
+    <text x="572" y="975" class="run">実行時</text>
+    <line x1="630" y1="1090" x2="703" y2="1090" stroke="#334155" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah1)"/>
+  </g>
+</svg>
