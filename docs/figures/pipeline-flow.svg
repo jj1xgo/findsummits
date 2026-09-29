@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1660" viewBox="0 0 1400 1660" role="img" aria-labelledby="title desc">
+<title id="title">解析パイプラインの処理フロー</title>
+<desc id="desc">findsummits の通常の通し実行（フェーズ2〜4）を示す。C3 パイプライン制御（FR-023）が N=3 で開始し、C4 通常解析（FR-004）、C5 CSV 統合（FR-008）、C5 GeoJSON 統合（FR-018）、C5 コル充足判定（FR-022）の順に進む。未確定ピークがゼロならフェーズ4へ進む。残りがあって N が 6 未満なら、C3 が N を 1 増やす。そのうえで C4 広域解析（FR-014）に新しい N と前段 N の未確定 CSV のパスを渡し、CSV 統合・GeoJSON 統合・充足判定に戻る（N=4→5→6）。N=6 で残りがあってもフェーズ4の FR-009 へ進む。FR-009 が正常終了したときだけ C6 ビューア生成（FR-013）を起動し、merged_viewer.html と merged_viewer_data.js を出力する。FR-009 が不備ゲートに該当したときは、調査用の merged_summit.geojson と merged_summit.xlsx を出力してから異常終了し、C6 は起動しない。一般のエラーはその場で即時終了し、調査用の出力は保証しない。出典は HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022。</desc>
+<defs>
+<style>
+text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;font-size:18px;fill:#222}
+.t{font-size:32px;font-weight:bold}
+.src{font-size:18px;fill:#555}
+.b{font-weight:bold}
+.c{text-anchor:middle}
+.e{text-anchor:end}
+.blue{fill:#e3f0fb;stroke:#1f6fb2;stroke-width:2}
+.gray{fill:#eeeeee;stroke:#666666;stroke-width:2}
+.green{fill:#e6f4ea;stroke:#2e7d32;stroke-width:2}
+.red{fill:#fdecea;stroke:#c62828;stroke-width:2}
+.out{fill:#ffffff;stroke:#888888;stroke-width:2;stroke-dasharray:8 6}
+.frame{fill:none;stroke:#9e9e9e;stroke-width:1.5;stroke-dasharray:6 6}
+.ln{fill:none;stroke:#333333;stroke-width:2;marker-end:url(#arw)}
+.lnd{fill:none;stroke:#888888;stroke-width:2;stroke-dasharray:8 6;marker-end:url(#arwg)}
+.lbl{fill:#333333;font-weight:bold}
+.note{fill:#555555}
+.rtx{fill:#b71c1c}
+</style>
+<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333333"/></marker>
+<marker id="arwg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#888888"/></marker>
+</defs>
+
+<rect x="0" y="0" width="1400" height="1660" fill="#ffffff"/>
+
+<!-- タイトル -->
+<text x="700" y="56" class="t c">解析パイプラインの処理フロー</text>
+<text x="700" y="92" class="src c">出典：HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022（通常の通し実行、フェーズ2〜4）</text>
+
+<!-- 凡例 -->
+<rect x="290" y="114" width="26" height="20" class="blue"/><text x="324" y="131">解析処理</text>
+<rect x="440" y="114" width="26" height="20" class="gray"/><text x="474" y="131">制御・分岐</text>
+<rect x="610" y="114" width="26" height="20" class="green"/><text x="644" y="131">正常完了・ビューア</text>
+<rect x="840" y="114" width="26" height="20" class="red"/><text x="874" y="131">異常停止</text>
+<rect x="990" y="114" width="26" height="20" class="out"/><text x="1024" y="131">図の範囲外</text>
+
+<!-- 事前準備 -->
+<rect x="300" y="160" width="520" height="60" rx="8" class="out"/>
+<text x="560" y="197" class="c note">事前準備（この図の範囲外）：前処理・標高タイル取得</text>
+<path d="M560,220 V258" class="lnd"/>
+
+<!-- C3 開始 -->
+<rect x="360" y="260" width="400" height="100" rx="8" class="gray"/>
+<text x="560" y="292" class="c b">C3 パイプライン制御（FR-023）</text>
+<text x="560" y="319" class="c">通し実行を開始（N = 3）</text>
+<text x="560" y="345" class="c note">N を持つのは C3 だけ</text>
+<path d="M560,360 V388" class="ln"/>
+
+<!-- フェーズ2 -->
+<rect x="340" y="375" width="440" height="100" class="frame"/>
+<text x="325" y="420" class="e b">フェーズ2</text>
+<text x="325" y="446" class="e note">3×3 解析</text>
+<rect x="360" y="390" width="400" height="70" rx="8" class="blue"/>
+<text x="560" y="420" class="c b">C4 通常解析（FR-004）</text>
+<text x="560" y="446" class="c">3×3 メッシュ結合解析（N = 3）</text>
+<path d="M560,460 V518" class="ln"/>
+
+<!-- 統合と充足判定（共通） -->
+<path d="M340,520 V790" fill="none" stroke="#9e9e9e" stroke-width="2"/>
+<text x="325" y="560" class="e b">統合と充足判定</text>
+<text x="325" y="586" class="e note">N = 3〜6 の各段で共通</text>
+<text x="325" y="640" class="e note">FR-018 は毎段、</text>
+<text x="325" y="666" class="e note">通常解析の形状と</text>
+<text x="325" y="692" class="e note">その段の merged_peak.csv</text>
+<text x="325" y="718" class="e note">で統合 GeoJSON を再生成</text>
+
+<rect x="360" y="520" width="400" height="70" rx="8" class="blue"/>
+<text x="560" y="550" class="c b">C5 CSV 統合（FR-008）</text>
+<text x="560" y="576" class="c">merged_peak.csv</text>
+<path d="M560,590 V618" class="ln"/>
+
+<rect x="360" y="620" width="400" height="70" rx="8" class="blue"/>
+<text x="560" y="650" class="c b">C5 GeoJSON 統合（FR-018）</text>
+<text x="560" y="676" class="c">merged_peak.geojson</text>
+<path d="M560,690 V718" class="ln"/>
+
+<rect x="360" y="720" width="400" height="70" rx="8" class="blue"/>
+<text x="560" y="750" class="c b">C5 コル充足判定（FR-022）</text>
+<text x="560" y="776" class="c">key_col_unresolved_peaks-&lt;N&gt;.csv</text>
+<path d="M560,790 V818" class="ln"/>
+
+<!-- 分岐1：未確定が残るか -->
+<polygon points="560,820 710,880 560,940 410,880" class="gray"/>
+<text x="560" y="876" class="c b">未確定ピーク</text>
+<text x="560" y="900" class="c b">が残る？</text>
+
+<!-- 残あり → 分岐2 -->
+<path d="M710,880 H868" class="ln"/>
+<text x="790" y="868" class="c lbl">残あり</text>
+
+<!-- 分岐2：N<6 -->
+<polygon points="1000,820 1130,880 1000,940 870,880" class="gray"/>
+<text x="1000" y="887" class="c b">N &lt; 6 ？</text>
+
+<!-- フェーズ3 -->
+<text x="815" y="496" class="b">フェーズ3：広域解析（N = 4 → 5 → 6）</text>
+<rect x="800" y="505" width="580" height="275" class="frame"/>
+
+<path d="M1000,820 V762" class="ln"/>
+<text x="1012" y="800" class="lbl">はい（N &lt; 6）</text>
+
+<rect x="820" y="680" width="360" height="80" rx="8" class="gray"/>
+<text x="1000" y="713" class="c b">C3：N を 1 増やす</text>
+<text x="1000" y="740" class="c">N = 4 → 5 → 6</text>
+
+<path d="M1000,680 V592" class="ln"/>
+<text x="1012" y="630" class="note">新しい N と、前段 N の</text>
+<text x="1012" y="656" class="note">未確定 CSV のパスを渡す</text>
+
+<rect x="820" y="520" width="360" height="70" rx="8" class="blue"/>
+<text x="1000" y="550" class="c b">C4 広域解析（FR-014）</text>
+<text x="1000" y="576" class="c">per-mesh GeoJSON は作らない</text>
+
+<!-- 広域 → CSV 統合へ戻る -->
+<path d="M820,555 H762" class="ln"/>
+
+<!-- フェーズ4 -->
+<rect x="40" y="985" width="1320" height="510" class="frame"/>
+<text x="60" y="1020" class="b">フェーズ4</text>
+<text x="60" y="1046" class="note">SOTA 突合・成果物生成</text>
+
+<!-- ゼロ → FR-009 -->
+<path d="M560,940 V1008" class="ln"/>
+<text x="572" y="972" class="lbl">ゼロ</text>
+
+<!-- N=6 → FR-009 -->
+<path d="M1000,940 V1045 H762" class="ln"/>
+<text x="1012" y="972" class="lbl">いいえ（N = 6）</text>
+<text x="1012" y="1028" class="note">未確定が残っていても進む</text>
+
+<rect x="360" y="1010" width="400" height="70" rx="8" class="blue"/>
+<text x="560" y="1040" class="c b">C5 SOTA リスト突合（FR-009）</text>
+<text x="560" y="1066" class="c">match_status 判定</text>
+<path d="M560,1080 V1108" class="ln"/>
+
+<!-- 分岐3：FR-009 の結果 -->
+<polygon points="560,1110 710,1170 560,1230 410,1170" class="gray"/>
+<text x="560" y="1166" class="c b">FR-009 の</text>
+<text x="560" y="1190" class="c b">結果は？</text>
+
+<!-- 不備ゲート -->
+<path d="M710,1170 H818" class="ln"/>
+<text x="765" y="1158" class="c lbl">不備ゲート</text>
+<rect x="820" y="1095" width="480" height="160" rx="8" class="red"/>
+<text x="1060" y="1127" class="c b rtx">異常終了（不備ゲート）</text>
+<text x="1060" y="1157" class="c">調査用に merged_summit.geojson と</text>
+<text x="1060" y="1183" class="c">merged_summit.xlsx を出力してから停止</text>
+<text x="1060" y="1211" class="c b">C6（ビューア生成）は起動しない</text>
+<text x="1060" y="1239" class="c note">N = 6 でも未確定が残った場合もここ</text>
+
+<!-- 正常終了 → C6 -->
+<path d="M560,1230 V1288" class="ln"/>
+<text x="572" y="1262" class="lbl">正常終了</text>
+<rect x="360" y="1290" width="400" height="100" rx="8" class="green"/>
+<text x="560" y="1320" class="c b">C6 ビューア生成（FR-013）</text>
+<text x="560" y="1346" class="c">merged_viewer.html</text>
+<text x="560" y="1372" class="c">merged_viewer_data.js</text>
+<path d="M560,1390 V1418" class="ln"/>
+<rect x="440" y="1420" width="240" height="50" rx="25" class="green"/>
+<text x="560" y="1451" class="c b">正常完了</text>
+
+<!-- 欄外注記：一般エラー -->
+<rect x="40" y="1515" width="1320" height="100" rx="8" fill="#ffffff" stroke="#c62828" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="60" y="1545" class="b rtx">一般のエラー（各 FR 共通）：入力の欠落・読み書きの失敗・例外などは、その場で即時終了する（フェイルファースト）。</text>
+<text x="60" y="1573" class="rtx">このとき調査用の出力は保証しない。</text>
+<text x="60" y="1601" class="rtx">FR-022 の「未確定あり」はエラーではなく、上の分岐（N &lt; 6 ？）で扱う。</text>
+<text x="60" y="1643" class="note">C7 以降、各フェーズの単独起動、CLI の詳細はこの図の対象外。</text>
+</svg>

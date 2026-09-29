@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="findsummits の全体コンテキスト図とコンポーネント別 IPO 図。SRS と HLD の理解を補助する説明図。">
-    <title>findsummits — 全体像と入力・処理・出力</title>
+    <meta name="description" content="findsummits の全体コンテキスト図、コンポーネント別 IPO 図、解析パイプラインの処理フロー。SRS と HLD の理解を補助する説明図。">
+    <title>findsummits — 全体像・入出力・処理フロー</title>
     <style>
       body { margin: 0; color: #172033; background: #f5f7fa; font: 18px/1.7 sans-serif; }
       main { max-width: 1440px; margin: auto; padding: 24px; }
@@ -27,9 +27,9 @@
   </head>
   <body>
     <main>
-      <h1>findsummits — 全体像と入力・処理・出力</h1>
+      <h1>findsummits — 全体像・入出力・処理フロー</h1>
       <p>標高タイルと既存サミットの情報から解析・確認を経て、申請書類と公開用データを作るまでの関係を示します。図をクリックすると SVG を開いて拡大できます。</p>
-      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#ipo">IPO 図</a></nav>
+      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#ipo">IPO 図</a> · <a href="#pipeline">処理フロー</a></nav>
       <p class="note">仕様の詳細は <a href="../20_SRS.md">SRS</a> と <a href="../30_HLD.md">HLD</a> の本文を参照してください。図は主要な関係の要約です。HLD の実行形態は設計を表し、現行プロトタイプの実装とは異なる場合があります。</p>
       <section id="context">
         <h2>全体コンテキスト図</h2>
@@ -44,6 +44,14 @@
           <a href="component-ipo.svg"><img src="component-ipo.svg" width="1400" height="1720" alt="C1 から C8 の入力、処理、出力を左右の三列で対応づけた IPO 図"></a>
           <figcaption>出典: SRS §3.2〜3.3、HLD §2.2.2〜2.2.4。C3 は処理の起動・終了状態を扱います。再解析のループ、不備ゲート、ブラウザ内の状態や入出力の詳細条件は本文を参照してください。</figcaption>
         </figure>
+      </section>
+      <section id="pipeline">
+        <h2>解析パイプラインの処理フロー</h2>
+        <figure>
+          <a href="pipeline-flow.svg"><img src="pipeline-flow.svg" width="1400" height="1660" alt="通常解析から統合・充足判定へ進み、未確定があれば広域解析を繰り返す。N=6 で残っていても突合へ進み、不備ゲートで調査用出力後に停止する"></a>
+          <figcaption>出典: HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022。通常の通し実行（フェーズ2〜4）を示します。前処理・タイル取得、各フェーズの単独起動、ブラウザ側の操作は図の範囲外です。</figcaption>
+        </figure>
+        <p>未確定が N=6 まで残った場合も SOTA 突合へ進み、調査用の GeoJSON と XLSX を出力して不備ゲートで停止します。ビューア生成を起動するのは突合が正常終了した場合だけです。一般の入力欠落や例外時には調査用の出力を保証しません。</p>
       </section>
       <p>サミット一覧（申請内容反映版）は申請エビデンス ZIP に同梱します。公開用ビューアは同じ ZIP から取り出した GeoJSON 5 本を利用者が無改変で配置して配信します。</p>
     </main>
