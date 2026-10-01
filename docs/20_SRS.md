@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-09-30 |
+| 最終更新日 | 2026-10-01 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -232,48 +232,11 @@
 
 フェーズ1〜4 はバッチ処理、フェーズ5 はローカル HTML ビューア上のユーザー操作と、公開用データの配置・静的ホスティングによる配信で構成される。
 
-```text
-【フェーズ1: 前処理・タイル取得】
-行政区域前処理コンポーネント           N03 行政区域前処理（初回のみ）
-       ├─ N03 前処理済み地域 GeoJSON     ← 統合・突合コンポーネントが参照
-       ├─ N03 前処理済み市区町村 GeoJSON ← 統合・突合コンポーネントが参照
-       ├─ 北方領土除外タイルリスト       ↓
-       └─ 北方領土除外メッシュリスト     ↓（タイル取得・地形解析エンジン・統合時（FR-008）が参照）
-タイル取得コンポーネント              タイル事前取得（北方領土除外タイルリスト・北方領土除外メッシュリストでスキップ）
-       ↓ ユーザーが解析コマンドを実行（FR-023 パイプライン制御コンポーネントが以下を統括）
-【フェーズ2: 3×3メッシュ解析】
-地形解析エンジン         FR-004（3×3 通常モード）: ピーク・コル検出・ピーク域ポリゴン生成（北方領土除外メッシュは解析対象メッシュにしない）
-       ├─ per-mesh CSV              ($DATA_DIR/results/csv/3-<meshcode>.csv)
-       ├─ per-mesh ピーク候補 GeoJSON ($DATA_DIR/results/csv/3-<meshcode>.geojson)
-       └─ 標高地形図                ($DATA_DIR/images/3-<meshcode>_terrain.png)
-       ↓
-統合時（FR-008/FR-018）  ピーク統合（陸地最高峰の海面確定を含む。expected_count は北方領土除外メッシュを数えない）
-       ├─ merged_peak.csv           （内部 work CSV）
-       └─ merged_peak.geojson       ($DATA_DIR/results/merged_peak.geojson) ← 内部中間ファイル
-       ↓ FR-022（コル充足判定）: 全確定（key_col_resolved=false ゼロ）→ フェーズ4 へ / 未確定残りあり → N=4 でフェーズ3 へ（FR-023 が N=4→5→6 を繰り返す）
-【フェーズ3: 広域メッシュ解析】（コル充足判定が未充足を検出した場合のみ実行）
-地形解析エンジン         FR-014（広域結合解析オーケストレーション・N×N + L14・ポリゴン生成なし）
-       ├─ 広域 per-mesh CSV         ($DATA_DIR/results/csv/<N>-<meshcode>-<コーナー>.csv 例: 4-5239-NW.csv)
-       └─ 標高地形図                ($DATA_DIR/images/<N>-<meshcode>-<コーナー>_terrain.png)
-       ↓ → FR-008（per-mesh CSV 統合）+ FR-018（per-mesh ピーク候補 GeoJSON 統合）をセットで再実行 → FR-022（コル充足判定）へ戻る
-       ↓ N=6 まで使い切っても未解決なら以下へ（FR-009 が is_key_col_unresolved で異常終了）
-【フェーズ4: SOTA突合・中心データ生成・HTML ビューア生成】
-統合・突合コンポーネント   SOTA突合・中心データ生成
-       ├─ merged_summit.geojson     ($DATA_DIR/results/merged_summit.geojson) ← 中心データ（全フィーチャ + rationale）
-       └─ merged_summit.xlsx        ($DATA_DIR/results/merged_summit.xlsx) ← サミット一覧（突合後）
-       ↓
-可視化生成コンポーネント   HTML ビューア生成
-       ├─ merged_viewer.html        ← 編集可能なローカル HTML ビューア（テンプレートの複製・rationale 編集機能付き）
-       └─ merged_viewer_data.js     ← 作業用ビューアのデータファイル（merged_summit.geojson の内容。HTML と同一ディレクトリ）
-       ↓ ユーザーが HTML ビューアで確認・rationale 編集後にエクスポートを実行
-【フェーズ5: 申請書生成・公開（ローカル HTML ビューア上のユーザー操作と公開用データの配置）】
-申請書生成 UI             ユーザー操作に応じて成果物を生成
-       ├─ 申請書 XLSX               （ブラウザダウンロード）
-       ├─ サミット一覧（申請内容反映版）  merged_summit_revised.xlsx（申請エビデンス ZIP に同梱）
-       └─ 申請エビデンス ZIP         （FR-021・ブラウザダウンロード）
-       ↓ ユーザーが ZIP 同梱の GeoJSON 5 本をリポジトリの公開用データ置き場へ配置
-公開用ビューア             静的ホスティングがテンプレートと公開用データから配信（FR-020）
-```
+![処理フロー俯瞰図: フェーズ1〜5 の処理と出力ファイル、コル充足判定による広域解析の繰り返し、利用者の操作](figures/phase-flow.svg)
+
+[図を拡大する](figures/phase-flow.svg) · [図の閲覧ページ](figures/spec-overview.html#phase-flow)
+
+フェーズ3 は、コル充足判定（[FR-022](#fr-022-コル充足判定)）が未確定のピークを見つけたときだけ実行し、[FR-023](#fr-023-解析パイプライン制御) が N=4→5→6 を繰り返す。N=6 まで使い切っても未確定が残るときはフェーズ4 へ進み、[FR-009](#fr-009-sotaリスト突合match_status-判定) が `is_key_col_unresolved` で異常終了する。
 
 ---
 

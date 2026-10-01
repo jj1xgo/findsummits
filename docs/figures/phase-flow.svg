@@ -1,0 +1,199 @@
+<svg width="1400" height="1870" viewBox="0 0 1400 1870" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SRS 処理フロー俯瞰図"><title>処理フロー俯瞰図</title><desc>フェーズ1〜5 の処理と出力ファイル、コル充足判定による広域解析の繰り返し、利用者の操作。各ファイルの仕様は SRS の本文を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; }
+.s { font-size: 15px; } .m { font-size: 16px; } .p { font-size: 14px; fill: #374151; }
+.ph { font-size: 22px; font-weight: 700; fill: #1e3a8a; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+  </defs>
+  <text x="30" y="42" class="ttl">処理フロー俯瞰図（findsummits）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">SRS §3.3.2</text>
+  <text x="195" y="79">フェーズ1〜4 はバッチ処理、フェーズ5 はブラウザ上の操作と公開用データの配置・配信</text>
+  <polyline points="30,122 88,122" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <text x="100" y="128">データ・処理の流れ</text>
+  <polyline points="300,122 358,122" fill="none" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+  <text x="370" y="128">判定による分かれ道・繰り返し</text>
+  <polyline points="660,122 718,122" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah3)"/>
+  <text x="730" y="128">利用者の操作</text>
+  <rect x="30" y="150" width="34" height="22" rx="0" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="72" y="168">処理（コンポーネント・FR）</text>
+  <rect x="330" y="150" width="34" height="22" rx="0" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="372" y="168">ブラウザ・配信の処理</text>
+  <rect x="590" y="150" width="34" height="22" rx="0" fill="#fef9c3" stroke="#ca8a04" stroke-width="1"/>
+  <text x="632" y="168">出力（ファイル・成果物）</text>
+  <rect x="20" y="200" width="1360" height="245" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="30" y="212" width="200" height="221" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="46" y="246" class="ph">フェーズ1</text>
+  <text x="46" y="276" class="m">前処理・</text>
+  <text x="46" y="300" class="m">タイル取得</text>
+  <rect x="290" y="215" width="430" height="90" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="243" class="b">行政区域前処理コンポーネント</text>
+  <text x="305" y="269" class="s">N03 行政区域前処理（FR-017・初回のみ）</text>
+  <rect x="290" y="340" width="430" height="90" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="368" class="b">タイル取得コンポーネント</text>
+  <text x="305" y="394" class="s">標高タイルの事前取得（FR-001）</text>
+  <text x="305" y="418" class="s">北方領土除外タイル・メッシュは取得しない</text>
+  <rect x="770" y="215" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="235" class="m b">N03 前処理済み地域 GeoJSON</text>
+  <text x="784" y="255" class="p">統合・突合コンポーネントが参照</text>
+  <rect x="770" y="269" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="289" class="m b">N03 前処理済み市区町村 GeoJSON</text>
+  <text x="784" y="309" class="p">統合・突合コンポーネントが参照</text>
+  <rect x="770" y="323" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="343" class="m b">北方領土除外タイルリスト</text>
+  <text x="784" y="363" class="p">タイル取得が参照</text>
+  <rect x="770" y="377" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="397" class="m b">北方領土除外メッシュリスト</text>
+  <text x="784" y="417" class="p">タイル取得・地形解析エンジン・統合時（FR-008）が参照</text>
+  <line x1="720" y1="243" x2="745" y2="243" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="239" x2="745" y2="401" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,239 768,239" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,293 768,293" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,347 768,347" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,401 768,401" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="490,430 490,493" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah3)"/>
+  <text x="505" y="470" class="s">利用者が解析コマンドを実行（FR-023 パイプライン制御がフェーズ2〜4 を統括）</text>
+  <rect x="20" y="500" width="1360" height="400" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="30" y="512" width="200" height="376" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="46" y="546" class="ph">フェーズ2</text>
+  <text x="46" y="576" class="m">3×3 メッシュ解析</text>
+  <rect x="290" y="515" width="430" height="116" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="543" class="b">地形解析エンジン（FR-004・3×3 通常モード）</text>
+  <text x="305" y="569" class="s">ピーク・コル検出、ピーク域ポリゴン生成</text>
+  <text x="305" y="593" class="s">北方領土除外メッシュは解析対象にしない</text>
+  <rect x="770" y="515" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="535" class="m b">per-mesh CSV</text>
+  <text x="784" y="555" class="p">$DATA_DIR/results/csv/3-&lt;meshcode&gt;.csv</text>
+  <rect x="770" y="569" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="589" class="m b">per-mesh ピーク候補 GeoJSON</text>
+  <text x="784" y="609" class="p">$DATA_DIR/results/csv/3-&lt;meshcode&gt;.geojson</text>
+  <rect x="770" y="623" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="643" class="m b">標高地形図</text>
+  <text x="784" y="663" class="p">$DATA_DIR/images/3-&lt;meshcode&gt;_terrain.png</text>
+  <line x1="720" y1="543" x2="745" y2="543" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="539" x2="745" y2="647" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,539 768,539" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,593 768,593" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,647 768,647" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="490,631 490,678" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="290" y="680" width="430" height="100" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="708" class="b">統合（FR-008・FR-018）</text>
+  <text x="305" y="734" class="s">ピーク統合（陸地最高峰の海面確定を含む）</text>
+  <text x="305" y="758" class="s">expected_count は北方領土除外メッシュを数えない</text>
+  <rect x="770" y="680" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="700" class="m b">merged_peak.csv</text>
+  <text x="784" y="720" class="p">内部 work CSV</text>
+  <rect x="770" y="734" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="754" class="m b">merged_peak.geojson</text>
+  <text x="784" y="774" class="p">$DATA_DIR/results/merged_peak.geojson（内部中間ファイル）</text>
+  <line x1="720" y1="708" x2="745" y2="708" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="704" x2="745" y2="758" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,704 768,704" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,758 768,758" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="490,780 490,818" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="290" y="820" width="430" height="64" rx="6" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>
+  <text x="305" y="847" class="b">コル充足判定（FR-022）</text>
+  <text x="305" y="871" class="s">未確定のピーク（key_col_resolved=false）があるか</text>
+  <rect x="20" y="940" width="1360" height="270" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="30" y="952" width="200" height="246" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="46" y="986" class="ph">フェーズ3</text>
+  <text x="46" y="1016" class="m">広域メッシュ解析</text>
+  <text x="46" y="1040" class="m">（未確定があるとき</text>
+  <text x="46" y="1064" class="m">だけ実行）</text>
+  <rect x="290" y="955" width="430" height="92" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="983" class="b">地形解析エンジン（FR-014・広域）</text>
+  <text x="305" y="1009" class="s">N×N メッシュ・ズームレベル14・ポリゴン生成なし</text>
+  <text x="305" y="1033" class="s">N=4→5→6 を FR-023 が繰り返す</text>
+  <rect x="770" y="955" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="975" class="m b">広域 per-mesh CSV</text>
+  <text x="784" y="995" class="p">$DATA_DIR/results/csv/&lt;N&gt;-&lt;meshcode&gt;-&lt;コーナー&gt;.csv（例 4-5239-NW.csv）</text>
+  <rect x="770" y="1009" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1029" class="m b">標高地形図</text>
+  <text x="784" y="1049" class="p">$DATA_DIR/images/&lt;N&gt;-&lt;meshcode&gt;-&lt;コーナー&gt;_terrain.png</text>
+  <line x1="720" y1="983" x2="745" y2="983" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="979" x2="745" y2="1033" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,979 768,979" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,1033 768,1033" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="490,1047 490,1090" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="290" y="1092" width="430" height="92" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="1120" class="b">統合の再実行（FR-008・FR-018 をセットで）</text>
+  <text x="305" y="1146" class="s">merged_peak.csv・merged_peak.geojson を作り直す</text>
+  <text x="305" y="1170" class="s">そのあとコル充足判定へ戻る</text>
+  <polyline points="490,884 490,953" fill="none" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+  <text x="502" y="908" class="s">未確定あり（N&lt;6）→ N を 1 つ上げてフェーズ3 へ（下）</text>
+  <text x="502" y="930" class="s">全確定、または N=6 で未確定が残る → フェーズ4 へ（左の線）</text>
+  <polyline points="290,1138 266,1138 266,842 288,842" fill="none" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+  <rect x="20" y="1250" width="1360" height="270" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="30" y="1262" width="200" height="246" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="46" y="1296" class="ph">フェーズ4</text>
+  <text x="46" y="1326" class="m">SOTA 突合・</text>
+  <text x="46" y="1350" class="m">成果物生成</text>
+  <rect x="290" y="1265" width="430" height="92" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="1293" class="b">統合・突合コンポーネント（FR-009）</text>
+  <text x="305" y="1319" class="s">SOTA 突合・中心データ生成</text>
+  <text x="305" y="1343" class="s">N=6 でも未確定が残れば is_key_col_unresolved で異常終了</text>
+  <rect x="770" y="1265" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1285" class="m b">merged_summit.geojson</text>
+  <text x="784" y="1305" class="p">$DATA_DIR/results/merged_summit.geojson（中心データ。全フィーチャ＋rationale）</text>
+  <rect x="770" y="1319" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1339" class="m b">merged_summit.xlsx</text>
+  <text x="784" y="1359" class="p">$DATA_DIR/results/merged_summit.xlsx（サミット一覧（突合後））</text>
+  <line x1="720" y1="1293" x2="745" y2="1293" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="1289" x2="745" y2="1343" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,1289 768,1289" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,1343 768,1343" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="490,1357 490,1398" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="290" y="1400" width="430" height="92" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="1428" class="b">可視化生成コンポーネント（FR-013）</text>
+  <text x="305" y="1454" class="s">HTML ビューア生成（テンプレートの複製）</text>
+  <rect x="770" y="1400" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1420" class="m b">merged_viewer.html</text>
+  <text x="784" y="1440" class="p">編集できるローカル HTML ビューア（rationale 編集機能付き）</text>
+  <rect x="770" y="1454" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1474" class="m b">merged_viewer_data.js</text>
+  <text x="784" y="1494" class="p">作業用ビューアのデータ（merged_summit.geojson の内容。HTML と同じディレクトリ）</text>
+  <line x1="720" y1="1428" x2="745" y2="1428" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="1424" x2="745" y2="1478" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,1424 768,1424" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,1478 768,1478" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="290,864 246,864 246,1290 288,1290" fill="none" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
+  <rect x="20" y="1560" width="1360" height="290" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="30" y="1572" width="200" height="266" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="46" y="1606" class="ph">フェーズ5</text>
+  <text x="46" y="1636" class="m">申請書生成・公開</text>
+  <polyline points="490,1492 490,1573" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah3)"/>
+  <text x="505" y="1543" class="s">利用者がビューアで確認・rationale を編集し、エクスポートを実行</text>
+  <rect x="290" y="1575" width="430" height="92" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="305" y="1603" class="b">申請書生成 UI（ブラウザ）</text>
+  <text x="305" y="1629" class="s">利用者の操作に応じて成果物を生成</text>
+  <text x="305" y="1653" class="s">（FR-019・FR-011・FR-012・FR-021）</text>
+  <rect x="770" y="1575" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1595" class="m b">申請書 XLSX</text>
+  <text x="784" y="1615" class="p">ブラウザでダウンロード</text>
+  <rect x="770" y="1629" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1649" class="m b">サミット一覧（申請内容反映版）</text>
+  <text x="784" y="1669" class="p">merged_summit_revised.xlsx（申請エビデンス ZIP に同梱）</text>
+  <rect x="770" y="1683" width="600" height="48" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="784" y="1703" class="m b">申請エビデンス ZIP</text>
+  <text x="784" y="1723" class="p">FR-021・ブラウザでダウンロード</text>
+  <line x1="720" y1="1603" x2="745" y2="1603" stroke="#334155" stroke-width="2.5"/>
+  <line x1="745" y1="1599" x2="745" y2="1707" stroke="#334155" stroke-width="2.5"/>
+  <polyline points="745,1599 768,1599" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,1653 768,1653" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <polyline points="745,1707 768,1707" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="290" y="1745" width="430" height="92" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="305" y="1773" class="b">公開用ビューア（FR-020）</text>
+  <text x="305" y="1799" class="s">静的ホスティングがテンプレートと</text>
+  <text x="305" y="1823" class="s">公開用データから配信</text>
+  <polyline points="890,1731 890,1791 722,1791" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah3)"/>
+  <text x="905" y="1785" class="s">利用者が ZIP 同梱の GeoJSON 5 本を</text>
+  <text x="905" y="1807" class="s">リポジトリの公開用データ置き場へ配置</text>
+</svg>
