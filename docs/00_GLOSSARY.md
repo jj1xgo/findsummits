@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-09-23 |
+| 最終更新日 | 2026-10-02 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -91,6 +91,19 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | タイル行 y | `floor( (1 − ln(tan(lat·π/180) + 1/cos(lat·π/180)) / π) / 2 × 2^z )` |
 
 （参照: [緯度経度からタイル座標への変換（TrailNote）](https://www.trail-note.net/tech/coordinate/)）
+
+<a id="tile-to-latlon"></a>
+
+#### XYZ タイル番号 → 緯度経度
+
+ズームレベル `z`、タイル番号 `x`・`y` から、タイルの北西端の緯度経度を求める（[緯度経度 → XYZ タイル番号](#latlon-to-tile) の逆）。南東端は `x + 1`・`y + 1` を同じ式に入れて求める。
+
+| 項目 | 計算式 |
+|---|---|
+| 北西端の経度（度） | `x / 2^z × 360 − 180` |
+| 北西端の緯度（度） | `atan( sinh( π × (1 − 2y / 2^z) ) ) × 180/π` |
+
+（参照: [Slippy map tilenames（OpenStreetMap Wiki）](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)）
 
 ---
 
