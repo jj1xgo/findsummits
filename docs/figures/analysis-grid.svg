@@ -1,0 +1,115 @@
+<svg width="1400" height="1040" viewBox="0 0 1400 1040" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="解析範囲標高グリッドの作り方"><title>解析範囲標高グリッドの作り方</title><desc>3×3 の窓の例。解析対象メッシュ、bounding box、NODATA で埋める範囲、bounding box の外のはみ出し、外周 1 画素の海面ボーダー、DEM10b の Z14 から Z15 への対応付け、タイルの位置ごとの処理。HLD 3.4.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; }
+.s { font-size: 15px; } .m { font-size: 16px; } .p { font-size: 14px; fill: #374151; }
+.code { font-size: 22px; font-weight: 700; }
+.cap { font-size: 20px; font-weight: 700; fill: #1e3a8a; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="12" height="12" fill="#fee2e2"/>
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#dc2626" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <text x="30" y="42" class="ttl">解析範囲標高グリッドの作り方（3×3 の窓の例）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">HLD §3.4.2</text>
+  <text x="195" y="79">中心 5239。5140 は 1次メッシュコードリストの外。広域解析はタイルごとに縮約して Z14 に書く</text>
+  <text x="70" y="124" class="cap">窓と解析範囲（北が上）</text>
+  <rect x="70" y="140" width="660" height="600" fill="#e2e8f0"/>
+  <rect x="100" y="170" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="300" y="170" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="500" y="170" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="100" y="350" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="300" y="350" width="200" height="180" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="3"/>
+  <rect x="500" y="350" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="100" y="530" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="300" y="530" width="200" height="180" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="500" y="530" width="200" height="180" fill="url(#hatch)" stroke="#dc2626" stroke-width="1.5"/>
+  <g stroke="#475569" stroke-width="1" stroke-dasharray="4 4" opacity="0.45">
+    <line x1="136" y1="140" x2="136" y2="740"/><line x1="202" y1="140" x2="202" y2="740"/><line x1="268" y1="140" x2="268" y2="740"/>
+    <line x1="334" y1="140" x2="334" y2="740"/><line x1="400" y1="140" x2="400" y2="740"/><line x1="466" y1="140" x2="466" y2="740"/>
+    <line x1="532" y1="140" x2="532" y2="740"/><line x1="598" y1="140" x2="598" y2="740"/><line x1="664" y1="140" x2="664" y2="740"/>
+    <line x1="70" y1="200" x2="730" y2="200"/><line x1="70" y1="260" x2="730" y2="260"/><line x1="70" y1="320" x2="730" y2="320"/>
+    <line x1="70" y1="380" x2="730" y2="380"/><line x1="70" y1="440" x2="730" y2="440"/><line x1="70" y1="500" x2="730" y2="500"/>
+    <line x1="70" y1="560" x2="730" y2="560"/><line x1="70" y1="620" x2="730" y2="620"/><line x1="70" y1="680" x2="730" y2="680"/>
+  </g>
+  <rect x="100" y="170" width="600" height="540" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="12 6"/>
+  <rect x="67" y="137" width="666" height="606" fill="none" stroke="#0f172a" stroke-width="6"/>
+  <text x="200" y="258" class="code" text-anchor="middle">5338</text>
+  <text x="400" y="258" class="code" text-anchor="middle">5339</text>
+  <text x="600" y="258" class="code" text-anchor="middle">5340</text>
+  <text x="200" y="438" class="code" text-anchor="middle">5238</text>
+  <text x="400" y="430" class="code" text-anchor="middle">5239</text>
+  <text x="400" y="458" class="s" text-anchor="middle">対象メッシュ（中心）</text>
+  <text x="600" y="438" class="code" text-anchor="middle">5240</text>
+  <text x="200" y="618" class="code" text-anchor="middle">5138</text>
+  <text x="400" y="618" class="code" text-anchor="middle">5139</text>
+  <rect x="520" y="566" width="160" height="112" rx="6" fill="#ffffff" opacity="0.92"/>
+  <text x="600" y="592" class="code" text-anchor="middle">5140</text>
+  <text x="600" y="616" class="s" text-anchor="middle">リスト外</text>
+  <text x="600" y="640" class="s" text-anchor="middle">NODATA で埋める</text>
+  <text x="600" y="664" class="s" text-anchor="middle">（タイルがあっても）</text>
+  <text x="70" y="772" class="m">灰色の帯: bounding box の外のはみ出し（タイルの境目まで。タイルの値を残す）</text>
+  <text x="850" y="124" class="cap">DEM10b の対応付け（Z14 → Z15）</text>
+  <rect x="850" y="170" width="200" height="200" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+  <rect x="950" y="170" width="100" height="100" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="950" y1="170" x2="950" y2="370" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="850" y1="270" x2="1050" y2="270" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="1000" y="226" class="p" text-anchor="middle">128×128</text>
+  <text x="950" y="398" class="s" text-anchor="middle">DEM10b の Z14 のタイル</text>
+  <text x="950" y="420" class="s" text-anchor="middle">(x // 2, y // 2)</text>
+  <polyline points="1060,220 1138,220" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="1150" y="170" width="200" height="200" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="1250" y="276" class="p" text-anchor="middle">256×256</text>
+  <text x="1250" y="398" class="s" text-anchor="middle">Z15 のタイル (x, y)</text>
+  <text x="1250" y="420" class="s" text-anchor="middle">（例: x mod 2 = 1、y mod 2 = 0）</text>
+  <rect x="930" y="470" width="40" height="40" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <polyline points="990,490 1128,490" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="1150" y="450" width="40" height="40" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <rect x="1190" y="450" width="40" height="40" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <rect x="1150" y="490" width="40" height="40" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <rect x="1190" y="490" width="40" height="40" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <text x="950" y="538" class="s" text-anchor="middle">Z14 の 1 画素</text>
+  <text x="1190" y="556" class="s" text-anchor="middle">Z15 の 2×2 画素（最近傍）</text>
+  <text x="850" y="598" class="s">Z15 の画素 (i, j) ← Z14 の画素</text>
+  <text x="850" y="622" class="s">(128 × (x mod 2) + i // 2, 128 × (y mod 2) + j // 2)</text>
+  <rect x="850" y="652" width="34" height="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="894" y="670" class="s">解析対象メッシュ</text>
+  <rect x="850" y="682" width="34" height="22" fill="url(#hatch)" stroke="#dc2626" stroke-width="1"/>
+  <text x="894" y="700" class="s">NODATA で埋める（bbox の中で解析対象でない範囲）</text>
+  <rect x="850" y="712" width="34" height="22" fill="#e2e8f0"/>
+  <text x="894" y="730" class="s">はみ出し（bbox の外。タイルの値を残す）</text>
+  <line x1="850" y1="753" x2="884" y2="753" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="12 6"/>
+  <text x="894" y="759" class="s">bounding box（解析対象メッシュを囲む最小の矩形）</text>
+  <line x1="850" y1="783" x2="884" y2="783" stroke="#0f172a" stroke-width="6"/>
+  <text x="894" y="789" class="s">外周 1 画素の海面ボーダー（0m）</text>
+  <line x1="850" y1="813" x2="884" y2="813" stroke="#475569" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="894" y="819" class="s">Z15 のタイルの境目</text>
+  <text x="30" y="852" class="cap">タイルの位置 (x, y) ごとの処理（D46）</text>
+  <rect x="30" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="150" y="902" class="s" text-anchor="middle">4 つの DEM 種別のタイルを</text>
+  <text x="150" y="926" class="s" text-anchor="middle">cv::imread で読む</text>
+  <polyline points="274,910 299,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="305" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="425" y="902" class="s" text-anchor="middle">画素の中心が埋める範囲なら</text>
+  <text x="425" y="926" class="s" text-anchor="middle">4 つとも (128, 0, 0)</text>
+  <polyline points="549,910 574,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="580" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="700" y="902" class="s" text-anchor="middle">フォールバック</text>
+  <text x="700" y="926" class="s" text-anchor="middle">（3.2。D40）</text>
+  <polyline points="824,910 849,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="855" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="975" y="902" class="s" text-anchor="middle">デコードの 2 段</text>
+  <text x="975" y="926" class="s" text-anchor="middle">（3.3。D43）</text>
+  <polyline points="1099,910 1124,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+  <rect x="1130" y="868" width="240" height="84" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="1250" y="902" class="s" text-anchor="middle">グリッドに float で書く</text>
+  <text x="1250" y="926" class="s" text-anchor="middle">（広域は縮約して Z14）</text>
+  <text x="30" y="990" class="m">無いタイル: 全画素を (128, 0, 0) として扱う（D40）。読めないタイル: パスを控えて続け、窓のタイルを読み終えてから、すべて挙げて止める（D49）。</text>
+  <text x="30" y="1018" class="m">外周 1 画素は海面（0m）。メモリに持つのは、グリッドと読んでいる 4 枚のタイルだけ（NFR-002）。</text>
+</svg>
