@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-09-23 |
 
+> ※ 本 ADR の Decision 3 の [FR-023](../20_SRS.md#fr-023-解析パイプライン制御) の項（日本全土1次メッシュコードリストを直接読まない方針のため、除外メッシュリストも直接読まない）は、[ADR-SRS-060](ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)（2026-10-02）によって supersede された。[FR-023](../20_SRS.md#fr-023-解析パイプライン制御) は起動前提条件の検査のために両リストを読む。除外メッシュの警告とスキップを [FR-001](../20_SRS.md#fr-001-標高タイル事前取得)・[FR-004](../20_SRS.md#fr-004-33メッシュ結合解析オーケストレーション) で行うことは変わらない。
+
 ## Context
 
 [ADR-URD-005](ADR-URD-005-northern-territories-exclusion.md) の Decision 1 は、北方領土除外タイルリストをタイル中心点がポリゴン内に含まれるかどうかで列挙する方式を採用し、[ADR-SRS-018](ADR-SRS-018-northern-territories-skip-at-tile-fetch.md) はそのリストのタイルを取得段階で除外すると定めた。実測調査（[research](research/northern-territories-tile-exclusion-survey.md)）により、この中心点判定では海岸線付近のタイル（中心が海側にずれるタイル）が除外から漏れることが分かった。中心点判定の除外は Z15 で 6,502 枚だが、ADR-URD-005 の交差ベースの検証では 7,321 枚とされており、約 819 枚が漏れている。

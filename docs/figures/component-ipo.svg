@@ -64,7 +64,7 @@ text { font-size: 18px; fill: #111827; }
   <text x="954" y="418">標高タイル（ローカルキャッシュ）</text>
   <text x="954" y="444">　→ C4（解析の入力）</text>
   <text x="954" y="470">　→ C5（FR-009 は mtime のみ使用）</text>
-  <text x="954" y="496">　→ C3（前提検査）</text>
+  <text x="954" y="496">取得完了の記録 → C3（前提検査）</text>
   <line x1="500" y1="477" x2="538" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="477" x2="938" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
@@ -74,8 +74,8 @@ text { font-size: 18px; fill: #111827; }
   <text x="44" y="644">　（任意）・フェーズ指定）</text>
   <text x="44" y="670">各段の終了状態 ← C4・C5・C6</text>
   <text x="44" y="696">未確定リストのパス ← C5（FR-022）</text>
-  <text x="44" y="722">前提検査の対象: merged_peak.csv・</text>
-  <text x="44" y="748">merged_peak.geojson・タイルキャッシュ</text>
+  <text x="44" y="722">前提検査: 取得完了の記録 ← C2・日本全土と</text>
+  <text x="44" y="748">除外のメッシュリスト・merged_peak.csv など</text>
   <rect x="540" y="584" width="360" height="186" rx="6" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>
   <text x="554" y="618" class="b">C3 パイプライン制御コンポーネント</text>
   <text x="554" y="644">フェーズ2〜4｜shell スクリプト</text>
