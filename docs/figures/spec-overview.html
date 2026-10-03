@@ -29,7 +29,7 @@
     <main>
       <h1>findsummits — 全体像・入出力・処理フロー</h1>
       <p>標高タイルと既存サミットの情報から解析・確認を経て、申請書類と公開用データを作るまでの関係を示します。図をクリックすると SVG を開いて拡大できます。</p>
-      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#boundary">境界図</a> · <a href="#phase-flow">処理フロー俯瞰図</a> · <a href="#ipo">IPO 図</a> · <a href="#pipeline">処理フロー</a> · <a href="#analysis-grid">解析範囲標高グリッド</a> · <a href="#peak-scan">ピーク候補検出の走査</a> · <a href="#wide-analysis">広域解析</a></nav>
+      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#boundary">境界図</a> · <a href="#phase-flow">処理フロー俯瞰図</a> · <a href="#ipo">IPO 図</a> · <a href="#pipeline">処理フロー</a> · <a href="#analysis-grid">解析範囲標高グリッド</a> · <a href="#peak-scan">ピーク候補検出の走査</a> · <a href="#wide-analysis">広域解析</a> · <a href="#peak-zone">ピーク域ポリゴンの生成</a></nav>
       <p class="note">仕様の詳細は <a href="../20_SRS.md">SRS</a> と <a href="../30_HLD.md">HLD</a> の本文を参照してください。図は主要な関係の要約です。HLD の実行形態は設計を表し、現行プロトタイプの実装とは異なる場合があります。</p>
       <section id="context">
         <h2>全体コンテキスト図</h2>
@@ -86,6 +86,13 @@
         <figure>
           <a href="wide-analysis.svg"><img src="wide-analysis.svg" width="1400" height="920" alt="N=4、対象メッシュ 5135 の例。対象メッシュを窓の北西・北東・南西・南東の隅に置く 4 つのパターンと窓の範囲。Z15 の 2×2 の最大を Z14 の 1 画素にし、同じ値なら北の行、西の順に採り、対象ピークを含む 2×2 だけ採った画素の Z15 の座標を控える。パターンごとに省略の判定、タイルの検査、グリッドの生成、標高地形図、ピークとコル、per-mesh CSV、.meshset の順に行う"></a>
           <figcaption>出典: HLD §3.14.2、SRS FR-014、ADR-SRS-004・ADR-SRS-046・ADR-SRS-055。N=4、対象メッシュ 5135 の例です。窓の範囲は ADR-SRS-004 の例と同じです。</figcaption>
+        </figure>
+      </section>
+      <section id="peak-zone">
+        <h2>ピーク域ポリゴンの生成</h2>
+        <figure>
+          <a href="peak-zone.svg"><img src="peak-zone.svg" width="1400" height="1000" alt="ピークの画素から、範囲の中の陸地の画素だけを 8 近傍でたどって塗る。海面・NODATA・人工ボーダーは閾値が 0 でも塗らない。塗った画素の正方形を合わせた形の境界を画素の辺の上でたどり、閾値より低い窪みは穴の環にする。斜めにだけ接する画素も塗り、外周の環は角の 1 点で自分に接する。delete判定ゾーンの閾値が Key コルで決まるときは、コルの標高より高い画素だけを塗る。area_complete は、塗った画素の 8 近傍のうち範囲の外の画素が、人工ボーダー、--mesh で外したメッシュの埋めた画素、はみ出しの閾値を満たす陸地のどれかなら false で、日本全土リストに無いメッシュと北方領土除外メッシュでは途切れたとみなさない"></a>
+          <figcaption>出典: HLD §3.16.2、SRS FR-016、ADR-SRS-011・ADR-SRS-053。グリッドと地形の形は例です。輪郭の辺のつなぎ方の細部は LLD で決めます。</figcaption>
         </figure>
       </section>
       <p>サミット一覧（申請内容反映版）は申請エビデンス ZIP に同梱します。公開用ビューアは同じ ZIP から取り出した GeoJSON 5 本を利用者が無改変で配置して配信します。</p>

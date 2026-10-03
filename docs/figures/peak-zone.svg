@@ -1,0 +1,147 @@
+<svg width="1400" height="1000" viewBox="0 0 1400 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ピーク域ポリゴンの生成"><title>ピーク域ポリゴンの生成</title><desc>ピークの画素から、範囲の中の陸地の画素だけを 8 近傍でたどって塗り、塗った画素の正方形を合わせた形の境界を画素の辺の上でたどって外周の環と穴の環にする。delete判定ゾーンの閾値が Key コルで決まるときは、コルの標高より高い画素だけを塗る。area_complete は、塗った画素の 8 近傍のうち範囲の外の画素の種類で決める。HLD 3.16.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.s { font-size: 15px; } .m { font-size: 16px; } .p { font-size: 14px; fill: #374151; }
+.cap { font-size: 20px; font-weight: 700; fill: #1e3a8a; }
+.n { font-size: 15px; font-weight: 700; text-anchor: middle; }
+.c { text-anchor: middle; }
+.ng { fill: #b91c1c; font-weight: 700; } .ok { fill: #15803d; font-weight: 700; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#e5e7eb"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#6b7280" stroke-width="3"/>
+    </pattern>
+    <pattern id="redhatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#fee2e2"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#ef4444" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <text x="40" y="48" class="ttl">ピーク域ポリゴンの生成（FR-016）</text>
+
+  <!-- 1. 塗りと輪郭 -->
+  <text x="40" y="96" class="cap">1. 塗りと輪郭（範囲の中の陸地を 8 近傍で塗り、画素の辺をたどる）</text>
+  <g transform="translate(40,120)">
+    <!-- 10 x 8 grid, cell 40 -->
+    <rect x="0" y="0" width="400" height="320" fill="url(#hatch)" stroke="#6b7280" stroke-width="1"/>
+    <rect x="40" y="40" width="320" height="240" fill="#dcfce7"/>
+    <!-- sea -->
+    <rect x="320" y="40" width="40" height="240" fill="#bfdbfe"/>
+    <rect x="280" y="160" width="40" height="120" fill="#bfdbfe"/>
+    <!-- NODATA -->
+    <rect x="40" y="240" width="80" height="40" fill="#9ca3af"/>
+    <!-- filled zone -->
+    <rect x="120" y="80" width="120" height="120" fill="#4ade80"/>
+    <rect x="160" y="120" width="40" height="40" fill="#fef3c7"/>
+    <rect x="240" y="200" width="40" height="40" fill="#4ade80"/>
+    <!-- grid lines -->
+    <g stroke="#ffffff" stroke-width="2">
+      <line x1="40" y1="0" x2="40" y2="320"/><line x1="80" y1="0" x2="80" y2="320"/><line x1="120" y1="0" x2="120" y2="320"/><line x1="160" y1="0" x2="160" y2="320"/><line x1="200" y1="0" x2="200" y2="320"/><line x1="240" y1="0" x2="240" y2="320"/><line x1="280" y1="0" x2="280" y2="320"/><line x1="320" y1="0" x2="320" y2="320"/><line x1="360" y1="0" x2="360" y2="320"/>
+      <line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="80" x2="400" y2="80"/><line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="160" x2="400" y2="160"/><line x1="0" y1="200" x2="400" y2="200"/><line x1="0" y1="240" x2="400" y2="240"/><line x1="0" y1="280" x2="400" y2="280"/>
+    </g>
+    <!-- outer ring on pixel edges (touches itself at 240,200) -->
+    <path d="M120,80 L120,200 L240,200 L240,240 L280,240 L280,200 L240,200 L240,80 Z" fill="none" stroke="#14532d" stroke-width="4" stroke-linejoin="miter"/>
+    <!-- hole ring -->
+    <path d="M160,120 L200,120 L200,160 L160,160 Z" fill="none" stroke="#b45309" stroke-width="4" stroke-dasharray="8 5"/>
+    <!-- vertices at pixel corners -->
+    <g fill="#14532d"><circle cx="120" cy="80" r="5"/><circle cx="120" cy="200" r="5"/><circle cx="240" cy="200" r="7"/><circle cx="240" cy="240" r="5"/><circle cx="280" cy="240" r="5"/><circle cx="280" cy="200" r="5"/><circle cx="240" cy="80" r="5"/></g>
+    <!-- peak -->
+    <path d="M180,88 L192,110 L168,110 Z" fill="#d32f2f" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+  <!-- callouts for panel 1 -->
+  <line x1="300" y1="320" x2="476" y2="300" stroke="#334155" stroke-width="1.5" marker-start="url(#ah1)"/>
+  <text x="482" y="294" class="s">斜めにだけ接する画素も塗る（8 近傍）。</text>
+  <text x="482" y="314" class="s">外周の環は角の 1 点で自分に接する</text>
+  <line x1="232" y1="260" x2="476" y2="216" stroke="#334155" stroke-width="1.5" marker-start="url(#ah1)"/>
+  <text x="482" y="210" class="s">閾値より低い窪み（火口など）は</text>
+  <text x="482" y="230" class="s">塗らず、穴の環として出す</text>
+  <line x1="394" y1="250" x2="476" y2="382" stroke="#334155" stroke-width="1.5" marker-start="url(#ah1)"/>
+  <text x="482" y="378" class="s">海面・NODATA・人工ボーダーは</text>
+  <text x="482" y="398" class="s">閾値が 0 でも塗らない</text>
+  <line x1="160" y1="200" x2="476" y2="140" stroke="#334155" stroke-width="1.5" marker-start="url(#ah1)"/>
+  <text x="482" y="134" class="s">頂点は画素の角（中心ではない）。</text>
+  <text x="482" y="154" class="s">面が塗った画素の集合と一致する</text>
+
+  <!-- legend 1 -->
+  <g transform="translate(40,466)">
+    <rect x="0" y="0" width="22" height="18" fill="#4ade80"/><text x="30" y="15" class="p">塗った画素</text>
+    <rect x="120" y="0" width="22" height="18" fill="#dcfce7" stroke="#9ca3af"/><text x="150" y="15" class="p">陸地（条件を満たさない）</text>
+    <rect x="330" y="0" width="22" height="18" fill="#fef3c7" stroke="#9ca3af"/><text x="360" y="15" class="p">窪み</text>
+    <rect x="420" y="0" width="22" height="18" fill="#bfdbfe"/><text x="450" y="15" class="p">海面</text>
+    <rect x="510" y="0" width="22" height="18" fill="#9ca3af"/><text x="540" y="15" class="p">NODATA</text>
+    <rect x="0" y="30" width="22" height="18" fill="url(#hatch)"/><text x="30" y="45" class="p">人工ボーダー</text>
+    <line x1="120" y1="39" x2="142" y2="39" stroke="#14532d" stroke-width="4"/><text x="150" y="45" class="p">外周の環</text>
+    <line x1="240" y1="39" x2="262" y2="39" stroke="#b45309" stroke-width="4" stroke-dasharray="8 5"/><text x="270" y="45" class="p">穴の環</text>
+    <path d="M352,30 L362,48 L342,48 Z" fill="#d32f2f"/><text x="370" y="45" class="p">ピーク</text>
+  </g>
+
+  <!-- 2. Key コルの閾値 -->
+  <text x="800" y="96" class="cap">2. Key コルで決まる閾値（D70）</text>
+  <g transform="translate(800,140)">
+    <line x1="0" y1="300" x2="560" y2="300" stroke="#334155" stroke-width="1.5"/>
+    <!-- region beyond col (not adopted) -->
+    <polygon points="270,170 324,110 387,40 423,20 486,100 518,170" fill="url(#redhatch)"/>
+    <!-- delete zone (adopted) -->
+    <polygon points="92,170 144,90 180,70 225,120 270,170" fill="#4ade80"/>
+    <!-- terrain -->
+    <polyline points="0,280 72,200 144,90 180,70 225,120 270,170 324,110 387,40 423,20 486,100 560,260" fill="none" stroke="#78350f" stroke-width="3"/>
+    <!-- col elevation line -->
+    <line x1="0" y1="170" x2="560" y2="170" stroke="#1e3a8a" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="4" y="162" class="s" style="fill:#1e3a8a">コルの標高</text>
+    <path d="M180,58 L192,40 L168,40 Z" transform="rotate(180 180 49)" fill="#d32f2f"/>
+    <text x="180" y="30" class="m c b">ピーク</text>
+    <circle cx="270" cy="170" r="7" fill="#1565c0" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="270" y="200" class="m c b">Key コル</text>
+    <text x="423" y="10" class="m c b">高いピーク</text>
+  </g>
+  <text x="800" y="472" class="s">緑: delete判定ゾーン。コルの標高より高い画素だけを塗るので、</text>
+  <text x="800" y="492" class="s">合流の前のこのピークの成分に収まる。</text>
+  <text x="800" y="516" class="s">赤の斜線: 「以上」で塗るとコルを越えて広がる範囲（採らない）。</text>
+  <text x="800" y="540" class="p">「ピーク標高 − 250m」で決まるときとアクティベーションゾーンは「以上」</text>
+
+  <!-- 3. area_complete -->
+  <text x="40" y="604" class="cap">3. area_complete（塗った画素の 8 近傍のうち、範囲の外の画素の種類で決める。D73）</text>
+  <g transform="translate(40,630)">
+    <!-- grid with border -->
+    <rect x="0" y="0" width="600" height="330" fill="url(#hatch)" stroke="#6b7280"/>
+    <rect x="12" y="12" width="576" height="306" fill="#ecfccb"/>
+    <!-- bbox meshes -->
+    <rect x="50" y="40" width="166" height="125" fill="#dcfce7" stroke="#16a34a"/>
+    <rect x="216" y="40" width="166" height="125" fill="#dcfce7" stroke="#16a34a"/>
+    <rect x="382" y="40" width="166" height="125" fill="#9ca3af" stroke="#4b5563"/>
+    <rect x="50" y="165" width="166" height="125" fill="#d1d5db" stroke="#4b5563"/>
+    <rect x="216" y="165" width="166" height="125" fill="#dcfce7" stroke="#16a34a"/>
+    <rect x="382" y="165" width="166" height="125" fill="#dcfce7" stroke="#16a34a"/>
+    <rect x="50" y="40" width="498" height="250" fill="none" stroke="#111827" stroke-width="2" stroke-dasharray="10 6"/>
+    <text x="133" y="70" class="s c">解析対象</text><text x="299" y="70" class="s c">解析対象</text>
+    <text x="465" y="64" class="s c b">--mesh で外した</text><text x="465" y="84" class="s c">（NODATA で埋めた）</text>
+    <text x="133" y="250" class="s c b">リスト外（陸地なし）</text><text x="133" y="270" class="s c">（NODATA で埋めた）</text>
+    <text x="299" y="270" class="s c">解析対象</text><text x="465" y="270" class="s c">解析対象</text>
+    <text x="300" y="32" class="p c">破線: bounding box　黄緑: はみ出し（タイルの値が残る）　斜線: 人工ボーダー</text>
+    <!-- zones -->
+    <path d="M330,100 L382,100 L382,130 L340,130 Z" fill="#4ade80" stroke="#14532d" stroke-width="2"/>
+    <text x="352" y="122" class="n ng">×</text>
+    <path d="M440,200 L548,200 L548,230 L452,230 Z" fill="#4ade80" stroke="#14532d" stroke-width="2"/>
+    <path d="M548,205 L568,205 L568,225 L548,225 Z" fill="url(#redhatch)" stroke="#ef4444"/>
+    <text x="480" y="222" class="n ng">×</text>
+    <path d="M216,200 L270,200 L270,232 L216,232 Z" fill="#4ade80" stroke="#14532d" stroke-width="2"/>
+    <text x="243" y="222" class="n ok">○</text>
+  </g>
+  <g transform="translate(680,640)">
+    <text x="0" y="0" class="m b">範囲の外の隣の画素がどれかに当たれば false</text>
+    <text x="0" y="32" class="m"><tspan class="ng">×</tspan> 人工ボーダー（日本では範囲が接しないので起きない）</text>
+    <text x="0" y="62" class="m"><tspan class="ng">×</tspan> bounding box の中で NODATA で埋めた画素で、メッシュが</text>
+    <text x="28" y="84" class="m">日本全土リストにあり北方領土除外でない（--mesh で外した）</text>
+    <text x="0" y="114" class="m"><tspan class="ng">×</tspan> はみ出しの画素で、メッシュが日本全土リストにあり</text>
+    <text x="28" y="136" class="m">北方領土除外でなく、閾値を満たす陸地（赤の斜線）</text>
+    <text x="0" y="176" class="m b">次の画素で止まっても途切れたとみなさない</text>
+    <text x="0" y="208" class="m"><tspan class="ok">○</tspan> 日本全土リストに無いメッシュ（陸地が無い前提）</text>
+    <text x="0" y="238" class="m"><tspan class="ok">○</tspan> 北方領土除外メッシュ（ADR-SRS-053 で解析しない範囲）</text>
+    <text x="0" y="268" class="m"><tspan class="ok">○</tspan> 閾値を満たさない画素、海面、NODATA（上の × を除く）</text>
+    <text x="0" y="308" class="m b">どれにも当たらなければ area_complete=true</text>
+  </g>
+</svg>
