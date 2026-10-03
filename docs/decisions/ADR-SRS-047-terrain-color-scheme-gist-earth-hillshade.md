@@ -58,6 +58,7 @@ gist_earth標準方式（カラーマップ全体をgist_earthのみで完結さ
 なお、[FR-003](../20_SRS.md#fr-003-標高デコードnodata-処理)により海面・負標高・NODATAはすべて
 0mに統一されるため、白マスクの適用対象にはNODATA相当の画素も含まれる（NODATAの個別識別は
 本方式でも不可のまま）。
+（2026-10-03 追記: 2026-07-07 の [FR-003](../20_SRS.md#fr-003-標高デコードnodata-処理) 改訂で、NODATA は 0m に統一されず -9999m のまま区別して出力されるようになった。白マスクは 0m 以下に当てるので NODATA も白になり、識別不可の結論は変わらない。陰影の計算での NODATA の扱いは [HLD 3.15](../30_HLD.md#315-fr-015-標高地形図出力) の D66）
 
 実装（`src/mesh_analyze.c`の`elev_to_rgb()`改修）は本ADRの決定事項に含めず、
 [ADR-SRS-010](ADR-SRS-010-cpp-opencv-migration.md)（C++/OpenCV移行）のPhase 3へ委ねる。
