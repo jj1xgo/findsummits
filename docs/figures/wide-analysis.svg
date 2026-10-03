@@ -1,0 +1,118 @@
+<svg width="1400" height="920" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="広域解析のコーナーと縮約"><title>広域解析のコーナーと縮約</title><desc>N=4、対象メッシュ 5135 の例。対象メッシュを置く 4 つの隅（NW・NE・SW・SE）と窓の範囲、Z15 の 2×2 から Z14 の 1 画素への縮約（最大を採り、同じ値なら北の行、西の順）と、対象ピークを含む 2×2 だけ採った画素の Z15 の座標を控えること、パターンごとの処理。HLD 3.14.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "IPAexGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; }
+.m { font-size: 16px; } .p { font-size: 14px; fill: #374151; }
+.code { font-size: 22px; font-weight: 700; }
+.t { font-size: 14px; font-weight: 700; fill: #fff; }
+.cap { font-size: 20px; font-weight: 700; fill: #1e3a8a; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+  <text x="30" y="42" class="ttl">広域解析のコーナーと縮約（N=4 の例）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">HLD §3.14.2</text>
+  <text x="195" y="79">対象メッシュ 5135。NW→NE→SW→SE の順に試し、対象ピークがすべて確定したら残りを行わない</text>
+  <text x="70" y="124" class="cap">コーナーの置き方（対象メッシュを置く隅。北が上）</text>
+  <rect x="70" y="140" width="620" height="580" fill="#f1f5f9"/>
+  <g stroke="#2563eb" stroke-width="1.5" fill="#dbeafe">
+    <rect x="110" y="165" width="176" height="176"/>
+    <rect x="400" y="165" width="176" height="176"/>
+    <rect x="110" y="445" width="176" height="176"/>
+    <rect x="400" y="445" width="176" height="176"/>
+  </g>
+  <g stroke="#2563eb" stroke-width="1">
+    <path d="M154,165 V341 M198,165 V341 M242,165 V341 M110,209 H286 M110,253 H286 M110,297 H286"/>
+    <path d="M444,165 V341 M488,165 V341 M532,165 V341 M400,209 H576 M400,253 H576 M400,297 H576"/>
+    <path d="M154,445 V621 M198,445 V621 M242,445 V621 M110,489 H286 M110,533 H286 M110,577 H286"/>
+    <path d="M444,445 V621 M488,445 V621 M532,445 V621 M400,489 H576 M400,533 H576 M400,577 H576"/>
+  </g>
+  <g fill="#1d4ed8">
+    <rect x="110" y="165" width="44" height="44"/>
+    <rect x="532" y="165" width="44" height="44"/>
+    <rect x="110" y="577" width="44" height="44"/>
+    <rect x="532" y="577" width="44" height="44"/>
+  </g>
+  <text x="132" y="192" class="t" text-anchor="middle">5135</text>
+  <text x="554" y="192" class="t" text-anchor="middle">5135</text>
+  <text x="132" y="604" class="t" text-anchor="middle">5135</text>
+  <text x="554" y="604" class="t" text-anchor="middle">5135</text>
+  <text x="110" y="367" class="m b">NW（北西の隅）: 南と東へ</text>
+  <text x="110" y="391" class="m">窓 4835〜5138</text>
+  <text x="400" y="367" class="m b">NE（北東の隅）: 南と西へ</text>
+  <text x="400" y="391" class="m">窓 4832〜5135</text>
+  <text x="110" y="647" class="m b">SW（南西の隅）: 北と東へ</text>
+  <text x="110" y="671" class="m">窓 5135〜5438</text>
+  <text x="400" y="647" class="m b">SE（南東の隅）: 北と西へ</text>
+  <text x="400" y="671" class="m">窓 5132〜5435</text>
+  <text x="70" y="748" class="m">窓のメッシュのうち、日本全土1次メッシュコードリストにあり北方領土除外メッシュでないものを、解析対象メッシュにする。</text>
+  <text x="740" y="124" class="cap">Z15 の 2×2 から Z14 の 1 画素へ</text>
+  <rect x="740" y="140" width="630" height="580" fill="#f1f5f9"/>
+  <text x="790" y="162" class="p">Z15 の 2×2（数字は見る順）</text>
+  <g stroke="#64748b" stroke-width="1.5" fill="#ffffff">
+    <rect x="790" y="170" width="90" height="90"/>
+    <rect x="880" y="170" width="90" height="90"/>
+    <rect x="790" y="260" width="90" height="90"/>
+    <rect x="880" y="260" width="90" height="90"/>
+  </g>
+  <rect x="882" y="172" width="86" height="86" fill="none" stroke="#dc2626" stroke-width="4"/>
+  <text x="798" y="190" class="p">1</text>
+  <text x="888" y="190" class="p">2</text>
+  <text x="798" y="280" class="p">3</text>
+  <text x="888" y="280" class="p">4</text>
+  <text x="835" y="223" class="code" text-anchor="middle">812.4</text>
+  <text x="925" y="223" class="code" text-anchor="middle">815.0</text>
+  <text x="835" y="313" class="code" text-anchor="middle">815.0</text>
+  <text x="925" y="313" class="code" text-anchor="middle">809.9</text>
+  <line x1="980" y1="260" x2="1072" y2="260" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
+  <text x="1080" y="162" class="p">Z14 の 1 画素</text>
+  <rect x="1080" y="170" width="180" height="180" fill="#ffffff" stroke="#1d4ed8" stroke-width="3"/>
+  <text x="1170" y="268" class="code" text-anchor="middle">815.0</text>
+  <text x="1170" y="300" class="p" text-anchor="middle">座標は 2 の画素</text>
+  <text x="770" y="394" class="m">最大を採る。同じ値なら北の行を先に、</text>
+  <text x="770" y="418" class="m">同じ行は西を先に見る（2×2 の数字の順）</text>
+  <text x="770" y="450" class="m">NODATA（-9999）は有効な値に負け、</text>
+  <text x="770" y="474" class="m">4 画素とも NODATA のときだけ NODATA</text>
+  <text x="770" y="506" class="m b">対象ピークを含む 2×2 だけ、採った画素の</text>
+  <text x="770" y="530" class="m b">Z15 の座標を控える（D50）</text>
+  <text x="770" y="562" class="m">Z15 のタイル 256×256 → グリッドの 128×128 の区画</text>
+  <text x="770" y="586" class="m">幅は (x_max − x_min + 1) × 128 + 2 画素</text>
+  <text x="770" y="610" class="m">2×2 はタイルの中で閉じ、境目をまたがない</text>
+  <text x="770" y="634" class="m">外周 1 画素は海面（0m）</text>
+  <text x="30" y="790" class="cap">パターンごとの処理（D52・D53）</text>
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.5">
+    <rect x="30" y="806" width="170" height="60" rx="6"/>
+    <rect x="222" y="806" width="170" height="60" rx="6"/>
+    <rect x="414" y="806" width="170" height="60" rx="6"/>
+    <rect x="606" y="806" width="170" height="60" rx="6"/>
+    <rect x="798" y="806" width="170" height="60" rx="6"/>
+    <rect x="990" y="806" width="170" height="60" rx="6"/>
+    <rect x="1182" y="806" width="170" height="60" rx="6"/>
+  </g>
+  <g stroke="#334155" stroke-width="2" marker-end="url(#ah2)">
+    <line x1="200" y1="836" x2="220" y2="836"/>
+    <line x1="392" y1="836" x2="412" y2="836"/>
+    <line x1="584" y1="836" x2="604" y2="836"/>
+    <line x1="776" y1="836" x2="796" y2="836"/>
+    <line x1="968" y1="836" x2="988" y2="836"/>
+    <line x1="1160" y1="836" x2="1180" y2="836"/>
+  </g>
+  <text x="115" y="831" class="m b" text-anchor="middle">省略の判定</text>
+  <text x="115" y="854" class="p" text-anchor="middle">.meshset と比べる</text>
+  <text x="307" y="831" class="m b" text-anchor="middle">タイルの検査</text>
+  <text x="307" y="854" class="p" text-anchor="middle">解析対象メッシュ</text>
+  <text x="499" y="831" class="m b" text-anchor="middle">グリッドの生成</text>
+  <text x="499" y="854" class="p" text-anchor="middle">3.4 の手順＋縮約</text>
+  <text x="691" y="831" class="m b" text-anchor="middle">標高地形図</text>
+  <text x="691" y="854" class="p" text-anchor="middle">FR-015</text>
+  <text x="883" y="831" class="m b" text-anchor="middle">ピークとコル</text>
+  <text x="883" y="854" class="p" text-anchor="middle">FR-005・FR-006</text>
+  <text x="1075" y="831" class="m b" text-anchor="middle">per-mesh CSV</text>
+  <text x="1075" y="854" class="p" text-anchor="middle">FR-007（対象だけ）</text>
+  <text x="1267" y="831" class="m b" text-anchor="middle">.meshset を書く</text>
+  <text x="1267" y="854" class="p" text-anchor="middle">早期終了の判定</text>
+  <text x="30" y="900" class="m">省略したパターンと、出力に出なかった対象ピークは、確定を与えない（D53）。FR-016 は呼ばない。</text>
+</svg>
