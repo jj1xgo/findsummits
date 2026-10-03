@@ -4,6 +4,8 @@
 | 決定日 | 2026-06-30 |
 
 > **補足（2026-09-23）:** 存在メッシュからは北方領土除外メッシュを除く（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）。
+>
+> **補足（2026-10-03）:** スキップ判定に使う `.meshset` は、通常解析のものと、同じ対象メッシュの広域解析のものに限る（[ADR-SRS-063](ADR-SRS-063-meshset-skip-normal-or-same-target-mesh.md)）。
 
 ## Context
 

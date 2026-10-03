@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-09-23 |
 
+> **補足（2026-10-03）:** 広域モードでは [FR-007](../20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用) の一次フィルタを当てない。あわせて、警告一覧の条件から「一次フィルタ閾値以上」という下限を外し、広域で確定して最終フィルタで除外したピークをすべて一覧に出す（[ADR-SRS-062](ADR-SRS-062-wide-analysis-target-peaks-skip-primary-filter.md)）。
+
 ## Context
 
 [ADR-SRS-004](ADR-SRS-004-level14-max-pooling-isolated-peaks.md) は、広域解析の 2×2 max pooling により Key コルが実際より高く評価され、
