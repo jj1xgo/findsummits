@@ -1,0 +1,75 @@
+<svg width="1100" height="520" viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3×3 メッシュの窓"><title>3×3 メッシュの窓</title><desc>対象メッシュを中心にした 3×3 の 1 次メッシュの窓。抽象と、5239 を中心にした具体例。5140 は日本全土1次メッシュコードリストに無いので解析対象メッシュではなく、bounding box の中にあるのでタイルの有無によらず NODATA で埋める。SRS FR-004 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.w { fill: #fff; font-weight: 700; }
+.s { font-size: 15px; } .m { font-size: 16px; }
+.code { font-size: 22px; font-weight: 700; }
+.cap { font-size: 20px; font-weight: 700; fill: #1e3a8a; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="12" height="12" fill="#fee2e2"/>
+      <line x1="0" y1="0" x2="0" y2="12" stroke="#dc2626" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <text x="30" y="42" class="ttl">3×3 メッシュの窓（北が上・東が右）</text>
+  <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
+  <text x="105" y="79" class="w" text-anchor="middle">SRS FR-004</text>
+  <text x="195" y="79">対象メッシュを中心にした 3×3 の 1 次メッシュ（最大 9 メッシュ）</text>
+  <text x="60" y="130" class="cap">抽象</text>
+  <rect x="60" y="145" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="170" y="145" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="280" y="145" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="60" y="245" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="170" y="245" width="110" height="100" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="3"/>
+  <rect x="280" y="245" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="60" y="345" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="170" y="345" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="280" y="345" width="110" height="100" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="115" y="201" text-anchor="middle">隣接</text>
+  <text x="225" y="201" text-anchor="middle">隣接</text>
+  <text x="335" y="201" text-anchor="middle">隣接</text>
+  <text x="115" y="301" text-anchor="middle">隣接</text>
+  <text x="225" y="301" class="b" text-anchor="middle">対象</text>
+  <text x="335" y="301" text-anchor="middle">隣接</text>
+  <text x="115" y="401" text-anchor="middle">隣接</text>
+  <text x="225" y="401" text-anchor="middle">隣接</text>
+  <text x="335" y="401" text-anchor="middle">隣接</text>
+  <text x="470" y="130" class="cap">具体例（5239 を中心とした場合）</text>
+  <rect x="470" y="145" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="580" y="145" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="690" y="145" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="470" y="245" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="580" y="245" width="110" height="100" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="3"/>
+  <rect x="690" y="245" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="470" y="345" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="580" y="345" width="110" height="100" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="690" y="345" width="110" height="100" fill="url(#hatch)" stroke="#dc2626" stroke-width="1.5"/>
+  <rect x="470" y="145" width="330" height="300" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="12 6"/>
+  <text x="525" y="203" class="code" text-anchor="middle">5338</text>
+  <text x="635" y="203" class="code" text-anchor="middle">5339</text>
+  <text x="745" y="203" class="code" text-anchor="middle">5340</text>
+  <text x="525" y="303" class="code" text-anchor="middle">5238</text>
+  <text x="635" y="303" class="code" text-anchor="middle">5239</text>
+  <text x="745" y="303" class="code" text-anchor="middle">5240</text>
+  <text x="525" y="403" class="code" text-anchor="middle">5138</text>
+  <text x="635" y="403" class="code" text-anchor="middle">5139</text>
+  <rect x="700" y="365" width="90" height="60" rx="5" fill="#ffffff" opacity="0.92"/>
+  <text x="745" y="390" class="code" text-anchor="middle">5140</text>
+  <text x="745" y="414" class="s" text-anchor="middle">NODATA</text>
+  <rect x="840" y="150" width="28" height="22" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="3"/>
+  <text x="878" y="168" class="m">対象メッシュ（中心）</text>
+  <rect x="840" y="190" width="28" height="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="878" y="208" class="m">解析対象メッシュ</text>
+  <rect x="840" y="230" width="28" height="22" fill="url(#hatch)" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="878" y="248" class="m">解析対象でないメッシュ</text>
+  <text x="878" y="270" class="s">（リスト外・北方領土除外）</text>
+  <text x="878" y="290" class="s">NODATA で埋める</text>
+  <text x="878" y="310" class="s">（タイルの有無によらず）</text>
+  <line x1="840" y1="342" x2="868" y2="342" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="12 6"/>
+  <text x="878" y="348" class="m">解析範囲</text>
+  <text x="878" y="370" class="s">（解析対象メッシュを</text>
+  <text x="878" y="390" class="s">囲む最小の矩形）</text>
+  <text x="60" y="485" class="m">5140 は日本全土1次メッシュコードリストに無い（海域）ので、解析対象メッシュではない。</text>
+  <text x="60" y="510" class="m">解析範囲の中にあるので、タイルの有無によらず NODATA で埋めて解析する。</text>
+</svg>

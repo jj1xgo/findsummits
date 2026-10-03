@@ -29,7 +29,7 @@
     <main>
       <h1>findsummits — 全体像・入出力・処理フロー</h1>
       <p>標高タイルと既存サミットの情報から解析・確認を経て、申請書類と公開用データを作るまでの関係を示します。図をクリックすると SVG を開いて拡大できます。</p>
-      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#boundary">境界図</a> · <a href="#phase-flow">処理フロー俯瞰図</a> · <a href="#ipo">IPO 図</a> · <a href="#pipeline">処理フロー</a> · <a href="#analysis-grid">解析範囲標高グリッド</a> · <a href="#peak-scan">ピーク候補検出の走査</a> · <a href="#wide-analysis">広域解析</a> · <a href="#peak-zone">ピーク域ポリゴンの生成</a></nav>
+      <nav aria-label="図の目次"><a href="#context">全体コンテキスト図</a> · <a href="#boundary">境界図</a> · <a href="#phase-flow">処理フロー俯瞰図</a> · <a href="#ipo">IPO 図</a> · <a href="#pipeline">処理フロー</a> · <a href="#mesh-window">3×3 メッシュの窓</a> · <a href="#analysis-grid">解析範囲標高グリッド</a> · <a href="#peak-scan">ピーク候補検出の走査</a> · <a href="#wide-analysis">広域解析</a> · <a href="#peak-zone">ピーク域ポリゴンの生成</a></nav>
       <p class="note">仕様の詳細は <a href="../20_SRS.md">SRS</a> と <a href="../30_HLD.md">HLD</a> の本文を参照してください。図は主要な関係の要約です。HLD の実行形態は設計を表し、現行プロトタイプの実装とは異なる場合があります。</p>
       <section id="context">
         <h2>全体コンテキスト図</h2>
@@ -66,6 +66,13 @@
           <figcaption>出典: HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022。通常の通し実行（フェーズ2〜4）を示します。前処理・タイル取得、各フェーズの単独起動、ブラウザ側の操作は図の範囲外です。</figcaption>
         </figure>
         <p>未確定が N=6 まで残った場合も SOTA 突合へ進み、調査用の GeoJSON と XLSX を出力して不備ゲートで停止します。ビューア生成を起動するのは突合が正常終了した場合だけです。一般の入力欠落や例外時には調査用の出力を保証しません。</p>
+      </section>
+      <section id="mesh-window">
+        <h2>3×3 メッシュの窓</h2>
+        <figure>
+          <a href="mesh-window.svg"><img src="mesh-window.svg" width="1100" height="520" alt="対象メッシュを中心にした 3×3 の 1 次メッシュの窓。抽象と、5239 を中心にした具体例。5140 は日本全土1次メッシュコードリストに無いので解析対象メッシュではなく、解析範囲の中にあるのでタイルの有無によらず NODATA で埋める"></a>
+          <figcaption>出典: SRS FR-004、HLD §3.4.2（D47）、ADR-SRS-053。解析範囲標高グリッドの作り方の詳細は、次の図です。</figcaption>
+        </figure>
       </section>
       <section id="analysis-grid">
         <h2>解析範囲標高グリッドの作り方</h2>
