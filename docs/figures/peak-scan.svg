@@ -1,0 +1,123 @@
+<svg width="1400" height="940" viewBox="0 0 1400 940" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ピーク候補検出の走査"><title>ピーク候補検出の走査</title><desc>解析範囲標高グリッドの画素を、人工ボーダー・海面・NODATA・陸地に分け、陸地の画素だけを標高の高い順（同じ標高は番号の昇順）に並べて 1 画素ずつ処理する。8 近傍の成分の数が 0 なら新しい成分（ピーク候補）、1 ならその成分に入り、2 以上なら成分の合流で FR-006 の節に渡す。8 近傍に人工ボーダーがあれば成分に接触の印を付ける。HLD 3.5.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+text { font-size: 18px; fill: #111827; }
+.b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
+.s { font-size: 15px; } .m { font-size: 16px; } .p { font-size: 14px; fill: #374151; }
+.cap { font-size: 20px; font-weight: 700; fill: #1e3a8a; }
+.n { font-size: 15px; font-weight: 700; text-anchor: middle; }
+.c { text-anchor: middle; }]]></style>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#e5e7eb"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#6b7280" stroke-width="3"/>
+    </pattern>
+  </defs>
+
+  <text x="40" y="48" class="ttl">ピーク候補検出の走査（FR-005）</text>
+
+  <!-- 1. 走査の準備 -->
+  <text x="40" y="96" class="cap">1. 走査の準備</text>
+  <g transform="translate(40,116)">
+    <!-- 8 x 7 grid, cell 44 -->
+    <!-- border ring -->
+    <rect x="0" y="0" width="352" height="308" fill="url(#hatch)" stroke="#6b7280" stroke-width="1"/>
+    <!-- interior background land -->
+    <rect x="44" y="44" width="264" height="220" fill="#dcfce7"/>
+    <!-- sea cells (east side) -->
+    <rect x="264" y="44" width="44" height="220" fill="#bfdbfe"/>
+    <rect x="220" y="176" width="44" height="88" fill="#bfdbfe"/>
+    <!-- NODATA cells (south-west) -->
+    <rect x="44" y="220" width="88" height="44" fill="#9ca3af"/>
+    <!-- grid lines -->
+    <g stroke="#ffffff" stroke-width="2">
+      <line x1="44" y1="0" x2="44" y2="308"/><line x1="88" y1="0" x2="88" y2="308"/><line x1="132" y1="0" x2="132" y2="308"/><line x1="176" y1="0" x2="176" y2="308"/><line x1="220" y1="0" x2="220" y2="308"/><line x1="264" y1="0" x2="264" y2="308"/><line x1="308" y1="0" x2="308" y2="308"/>
+      <line x1="0" y1="44" x2="352" y2="44"/><line x1="0" y1="88" x2="352" y2="88"/><line x1="0" y1="132" x2="352" y2="132"/><line x1="0" y1="176" x2="352" y2="176"/><line x1="0" y1="220" x2="352" y2="220"/><line x1="0" y1="264" x2="352" y2="264"/>
+    </g>
+    <!-- elevations (m) for land cells -->
+    <text x="66" y="71" class="n">412</text><text x="110" y="71" class="n">530</text><text x="154" y="71" class="n">488</text><text x="198" y="71" class="n">301</text><text x="242" y="71" class="n">95</text>
+    <text x="66" y="115" class="n">455</text><text x="110" y="115" class="n">612</text><text x="154" y="115" class="n">540</text><text x="198" y="115" class="n">350</text><text x="242" y="115" class="n">120</text>
+    <text x="66" y="159" class="n">390</text><text x="110" y="159" class="n">501</text><text x="154" y="159" class="n">430</text><text x="198" y="159" class="n">560</text><text x="242" y="159" class="n">80</text>
+    <text x="66" y="203" class="n">210</text><text x="110" y="203" class="n">260</text><text x="154" y="203" class="n">380</text><text x="198" y="203" class="n">440</text>
+    <text x="154" y="247" class="n">150</text><text x="198" y="247" class="n">60</text>
+    <text x="286" y="159" class="n" fill="#1e3a8a">0</text>
+    <text x="88" y="247" class="n" fill="#ffffff">-9999</text>
+  </g>
+  <!-- legend -->
+  <g transform="translate(420,128)">
+    <rect x="0" y="0" width="28" height="28" fill="url(#hatch)" stroke="#6b7280"/>
+    <text x="40" y="20" class="m"><tspan class="b">人工ボーダー</tspan>（外周 1 画素。値は 0。位置で見分ける）</text>
+    <rect x="0" y="44" width="28" height="28" fill="#bfdbfe" stroke="#6b7280"/>
+    <text x="40" y="64" class="m"><tspan class="b">海面</tspan>（0m）</text>
+    <rect x="0" y="88" width="28" height="28" fill="#9ca3af" stroke="#6b7280"/>
+    <text x="40" y="108" class="m"><tspan class="b">NODATA</tspan>（-9999）</text>
+    <rect x="0" y="132" width="28" height="28" fill="#dcfce7" stroke="#6b7280"/>
+    <text x="40" y="152" class="m"><tspan class="b">陸地</tspan>（0m より高い。数字は標高の例）</text>
+    <text x="0" y="200" class="m">陸地でない 3 種類の画素には成分の番号を持たせない。</text>
+    <text x="0" y="224" class="m">8 近傍の成分の数に数えない（海に合流しない）。</text>
+    <text x="0" y="262" class="m"><tspan class="b">走査の順</tspan>：陸地の画素だけを、標高を 0.01m 単位の</text>
+    <text x="0" y="286" class="m">整数にした値で数え上げて並べる。標高の高い順で、</text>
+    <text x="0" y="310" class="m">同じ標高は画素の番号の昇順（北の行から南の行へ、</text>
+    <text x="0" y="334" class="m">同じ行は西から東へ）。</text>
+  </g>
+
+  <!-- 2. 1 画素の処理 -->
+  <text x="40" y="530" class="cap">2. 1 画素の処理（8 近傍の成分の数で分ける）</text>
+  <!-- case 0 -->
+  <g transform="translate(40,552)">
+    <rect x="0" y="0" width="132" height="132" fill="#f3f4f6" stroke="#9ca3af"/>
+    <rect x="44" y="44" width="44" height="44" fill="#16a34a"/>
+    <text x="66" y="72" class="n" fill="#ffffff">★</text>
+    <text x="150" y="28" class="b">0 個</text>
+    <text x="150" y="56" class="m">新しい成分を作る。</text>
+    <text x="150" y="80" class="m">この画素がピーク候補</text>
+    <text x="150" y="104" class="m">（作った順に番号を振る）</text>
+  </g>
+  <!-- case 1 -->
+  <g transform="translate(500,552)">
+    <rect x="0" y="0" width="132" height="132" fill="#f3f4f6" stroke="#9ca3af"/>
+    <rect x="0" y="0" width="88" height="44" fill="#fde68a"/>
+    <rect x="44" y="44" width="44" height="44" fill="#16a34a"/>
+    <text x="44" y="28" class="n">A</text>
+    <text x="150" y="28" class="b">1 個</text>
+    <text x="150" y="56" class="m">その成分（A）に入る。</text>
+    <text x="150" y="80" class="m">番号は成分の根を</text>
+    <text x="150" y="104" class="m">Union-Find で引く</text>
+  </g>
+  <!-- case >=2 -->
+  <g transform="translate(960,552)">
+    <rect x="0" y="0" width="132" height="132" fill="#f3f4f6" stroke="#9ca3af"/>
+    <rect x="0" y="0" width="44" height="44" fill="#fde68a"/>
+    <rect x="88" y="88" width="44" height="44" fill="#fbcfe8"/>
+    <rect x="44" y="44" width="44" height="44" fill="#16a34a"/>
+    <text x="22" y="28" class="n">A</text>
+    <text x="110" y="116" class="n">B</text>
+    <text x="150" y="28" class="b">2 個以上</text>
+    <text x="150" y="56" class="m">成分の合流。</text>
+    <text x="150" y="80" class="m">どれを残すか、コルと</text>
+    <text x="150" y="104" class="m">プロミネンスは FR-006 の節</text>
+  </g>
+  <!-- border contact -->
+  <g transform="translate(40,720)">
+    <rect x="0" y="0" width="132" height="132" fill="#f3f4f6" stroke="#9ca3af"/>
+    <rect x="0" y="0" width="132" height="44" fill="url(#hatch)"/>
+    <rect x="44" y="44" width="44" height="44" fill="#16a34a"/>
+    <text x="150" y="28" class="b">人工ボーダーへの接触</text>
+    <text x="150" y="56" class="m">8 近傍に人工ボーダーの画素があれば、この画素が入った成分に接触の印を付ける。</text>
+    <text x="150" y="80" class="m">合流したときは印を引き継ぐ。海面と NODATA への接触は印にしない。</text>
+    <text x="150" y="104" class="m">印は FR-006 の節が key_col_resolved の判定に使う。</text>
+  </g>
+  <!-- data -->
+  <g transform="translate(930,730)">
+    <rect x="0" y="0" width="440" height="196" rx="8" fill="#eff6ff" stroke="#1e3a8a"/>
+    <text x="16" y="30" class="b">メモリに持つもの</text>
+    <text x="16" y="60" class="s">画素ごと：標高 4 バイト、成分の番号 4 バイト</text>
+    <text x="16" y="86" class="s">陸地の画素だけ：走査の順（64 ビットの番号）8 バイト</text>
+    <text x="16" y="112" class="s">成分ごと：Union-Find の親、ピーク候補の位置と</text>
+    <text x="16" y="134" class="s">標高、人工ボーダーへの接触の印</text>
+    <text x="16" y="160" class="p">最大の窓（約 46.5 億画素）で、画素ごとと走査の順の分は</text>
+    <text x="16" y="182" class="p">陸地 6 割の例で約 55GiB、すべて陸地で約 69GiB</text>
+  </g>
+</svg>
