@@ -51,6 +51,7 @@ HEADING_RE = re.compile(r'^(#{1,6})\s+(.*?)\s*#*\s*$')
 HTML_ANCHOR_RE = re.compile(r'<a\s+(?:id|name)=["\']?([^"\'\s>]+)')
 LINK_RE = re.compile(r'\[([^\]]*)\]\(([^)\s#]*)(?:#([^)\s]+))?\)')
 INLINE_CODE_RE = re.compile(r'`[^`\n]+`')
+EXTERNAL_TARGET_RE = re.compile(r'^(?:[A-Za-z][A-Za-z0-9+.-]*:|/)')
 ID_LABEL_RE = re.compile(r'^(?:UR|FR|NFR)-\d+$')
 SECTION_LABEL_RE = re.compile(r'^(?:SRS §(\d+(?:\.\d+)*)|(\d+(?:\.\d+)+))$')
 UR_ID_RE = re.compile(r'^UR-\d+$')
@@ -162,7 +163,9 @@ def decl_ids(value, label_re, doc=None):
     ids = set()
     for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', value)):
         label, target, anchor = m.group(1), m.group(2), m.group(3)
-        if anchor and label_re.match(label) and (doc is None or os.path.normpath(unquote(target)) == doc):
+        if not anchor or not label_re.match(label):
+            continue
+        if doc is None or (not EXTERNAL_TARGET_RE.match(target) and os.path.normpath(unquote(target)) == doc):
             ids.add(label)
     return ids
 
