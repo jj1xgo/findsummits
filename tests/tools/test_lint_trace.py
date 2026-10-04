@@ -95,7 +95,11 @@ class SlugTest(unittest.TestCase):
         self.assertEqual(lt.github_slug('`make lint` の [対象](x.md)'), 'make-lint-の-対象')
 
     def test_duplicate_headings_get_suffix(self):
-        self.assertEqual(lt.anchors_of('# a\n\n# a\n'), {'a', 'a-1'})
+        self.assertEqual(set(lt.anchors_of('# a\n\n# a\n')), {'a', 'a-1'})
+
+    def test_anchor_keeps_section_number(self):
+        anchors = lt.anchors_of('# 3.11 a\n\n# 6. b\n\n# c\n')
+        self.assertEqual(anchors, {'311-a': '3.11', '6-b': '6', 'c': None})
 
     def test_html_anchor(self):
         self.assertIn('ur-001', lt.anchors_of('| <a id="ur-001"></a>x |\n'))
@@ -136,10 +140,34 @@ class LinkTest(TraceTestCase):
         self.assertIn('T2:docs/a.md->20_SRS.md#fr-001-一:label', keys)
         self.assertNotIn('T2:docs/a.md->20_SRS.md#32-主要コンポーネント構成:label', keys)
 
+    def test_section_label_keeps_dots(self):
+        text = '# 3.11 a\n\n# 3.1.1 b\n\n[3.1.1](#311-a) [3.11](#311-a) [3.1.1](#311-b)\n'
+        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
+        self.assertIn('T2:docs/a.md->#311-a:label', keys)
+        self.assertNotIn('T2:docs/a.md->#311-b:label', keys)
+
+    def test_plain_number_label_must_match_numbered_heading(self):
+        text = '# 6. a\n\n# 7. b\n\n[6](#7-b) [7](#7-b)\n'
+        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
+        self.assertEqual([k for k in keys if k.endswith(':label')], ['T2:docs/a.md->#7-b:label'])
+
     def test_external_links_are_ignored(self):
         files = dict(BASE, **{'docs/a.md': '[x](https://example.com/a#b)\n'})
         self.assertFalse([k for k in self.keys(files) if k.startswith('T2:docs/a.md')])
 
+
+
+class DuplicateTest(TraceTestCase):
+    def test_duplicate_requirement_heading(self):
+        srs = SRS.replace('### NFR-001: 非一', '#### FR-002: 二の重複\n\n### NFR-001: 非一')
+        self.assertIn('T1:FR-002:重複', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_duplicate_ur_anchor(self):
+        urd = URD + '| <a id="ur-001"></a>UR-001 | 一の重複 |\n'
+        self.assertIn('T1:UR-001:重複', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+    def test_no_duplicates_in_base(self):
+        self.assertFalse([k for k in self.keys(dict(BASE)) if k.endswith(':重複')])
 
 
 class StageTest(TraceTestCase):
@@ -353,6 +381,10 @@ class HldTest(TraceTestCase):
         self.assertNotIn('T3:HLD:FR-001', keys)
         self.assertNotIn('T3:HLD:FR-002', self.keys(self.files()))
 
+
+    def test_duplicate_section_number(self):
+        hld = HLD + '\n### 3.1 FR-001 二つ目\n'
+        self.assertIn('T1:HLD-3.1:重複', self.keys(self.files(hld)))
 
 LLD = '''# LLD
 

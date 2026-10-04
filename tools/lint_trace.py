@@ -57,7 +57,8 @@ HTML_ANCHOR_RE = re.compile(r'<a\s+(?:id|name)=["\']?([^"\'\s>]+)')
 LINK_RE = re.compile(r'\[([^\]]*)\]\(([^)\s#]*)(?:#([^)\s]+))?\)')
 INLINE_CODE_RE = re.compile(r'`[^`\n]+`')
 ID_LABEL_RE = re.compile(r'^(?:UR|FR|NFR)-\d+$')
-SECTION_LABEL_RE = re.compile(r'^(?:SRS §(\d+(?:\.\d+)*)|(\d+(?:\.\d+)+))$')
+SECTION_LABEL_RE = re.compile(r'^(?:SRS §(\d+(?:\.\d+)*)|(\d+(?:\.\d+)*))$')
+SECTION_NUMBER_RE = re.compile(r'^(\d+(?:\.\d+)*)\.?(?:\s|$)')
 UR_ID_RE = re.compile(r'^UR-\d+$')
 REQ_ID_RE = re.compile(r'^(?:FR|NFR)-\d+$')
 SRS_SECTION_LABEL_RE = re.compile(r'^SRS §\d+(?:\.\d+)*$')
@@ -134,27 +135,35 @@ def github_slug(text):
 
 
 def anchors_of(text):
-    found, seen = set(), Counter()
+    """アンカー → 見出しの節番号（番号の無い見出しと HTML のアンカーは None）"""
+    found, seen = {}, Counter()
     for _, line in iter_lines(text):
         m = HEADING_RE.match(line)
         if m:
             base = github_slug(m.group(2))
             n = seen[base]
             seen[base] += 1
-            found.add(base if n == 0 else f'{base}-{n}')
-        found.update(HTML_ANCHOR_RE.findall(line))
+            number = SECTION_NUMBER_RE.match(m.group(2))
+            found[base if n == 0 else f'{base}-{n}'] = number.group(1) if number else None
+        for a in HTML_ANCHOR_RE.findall(line):
+            found.setdefault(a, None)
     return found
 
+def label_mismatch(label, anchor, numbers):
+    """リンク文字列が ID（UR/FR/NFR）か節番号なら、アンカーがその要素を指すかを見る。
 
-def label_mismatch(label, anchor):
-    """リンク文字列が ID（UR/FR/NFR）か節番号（点を含むか SRS §）なら、アンカーがその要素を指すかを見る"""
+    節番号は点を残したまま、リンク先の見出しの番号と比べる（3.1.1 と 3.11 はアンカーの頭がどちらも 311- になる）。
+    点の無い番号が番号の無い見出しを指すときは見ない（「FR-005〜[007]」のような ID の略記のため）。
+    """
     if ID_LABEL_RE.match(label):
         prefix = label.lower()
         return not (anchor == prefix or anchor.startswith(prefix + '-'))
     m = SECTION_LABEL_RE.match(label)
     if m:
-        prefix = (m.group(1) or m.group(2)).replace('.', '')
-        return not anchor.startswith(prefix + '-')
+        number, heading = m.group(1) or m.group(2), numbers.get(anchor)
+        if heading is None and m.group(2) and '.' not in number:
+            return False
+        return heading != number
     return False
 
 
@@ -196,7 +205,7 @@ def check_links(repo):
                     if unquote(anchor) not in cache[dest]:
                         out.append(finding('T2', f'{path}->{target}#{anchor}', where,
                                            f'リンク先の見出し・アンカーがありません: {target}#{anchor}'))
-                    elif label_mismatch(label, unquote(anchor)):
+                    elif label_mismatch(label, unquote(anchor), cache[dest]):
                         out.append(finding('T2', f'{path}->{target}#{anchor}:label', where,
                                            f'リンク文字列 {label} とリンク先 #{anchor} が違う要素を指しています'))
     return out
@@ -251,6 +260,20 @@ def load_requirements(repo):
         if m:
             comps.add(m.group(1))
     return urs, reqs, comps
+
+
+def check_duplicates(repo, reqs):
+    """URD の UR のアンカーと SRS の FR/NFR の見出しの重複。重なると後ろの宣言だけが残り、片方が黙って消える"""
+    out = []
+    for n, count in sorted(Counter(UR_ANCHOR_RE.findall(repo.read(URD))).items()):
+        if count > 1:
+            out.append(finding('T1', f'UR-{n}:重複', URD, f'UR-{n} のアンカーが {count} 個あります'))
+    seen = set()
+    for r in reqs:
+        if r['key'] in seen:
+            out.append(finding('T1', f'{r["key"]}:重複', f'{SRS}:{r["line"]}', f'{r["key"]} の見出しが重複しています'))
+        seen.add(r['key'])
+    return out
 
 
 def check_numbering(ids, retired, repo):
@@ -441,8 +464,11 @@ def check_hld(repo, req_ids, comps, confirmed):
     out, covered, sections = [], set(), set()
     for s in section_decls(repo.read(HLD), HLD_SEC_RE):
         sec, d = s['key'], s['decl']
-        sections.add(sec)
         where = f'{HLD}:{s["line"]}'
+        if sec in sections:
+            out.append(finding('T1', f'HLD-{sec}:重複', where, f'節番号 {sec} の見出しが重複しています'))
+            continue
+        sections.add(sec)
         if '対応 SRS' not in d:
             out.append(finding('T1', f'HLD-{sec}:対応 SRS', where, f'{sec} に「対応 SRS」の宣言がありません'))
         else:
@@ -676,6 +702,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     urs, reqs, comps = load_requirements(repo)
     req_ids = {r['key'] for r in reqs}
     out += check_numbering(urs | req_ids, retired, repo)
+    out += check_duplicates(repo, reqs)
     srs_out, declared = check_srs(urs, reqs, confirmed)
     out += srs_out
     out += check_srs_matrix(repo, urs, declared)
