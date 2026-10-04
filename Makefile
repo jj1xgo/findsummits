@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall -pthread -I./src
+CFLAGS = -O2 -Wall -I./src
 LIBS = -lpng -lm
 BUILDDIR = build
 
