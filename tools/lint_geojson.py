@@ -23,11 +23,21 @@ def check_file(filepath):
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
         return [f"{filepath}: LOAD-ERROR: {e}"]
 
-    structure = geojson_validator.validate_structure(data)
+    # geojson_validator は扱えない入力（type の無い object、未対応の type 等）で
+    # ValueError を投げる。Traceback にせず STRUCTURE の違反として返す。
+    try:
+        structure = geojson_validator.validate_structure(data)
+    except ValueError as e:
+        return [f"{filepath}: STRUCTURE: {e}"]
     if structure:
         violations.append(f"{filepath}: STRUCTURE: {structure}")
 
-    geom = geojson_validator.validate_geometries(data)
+    try:
+        geom = geojson_validator.validate_geometries(data)
+    except ValueError as e:
+        if not structure:
+            violations.append(f"{filepath}: STRUCTURE: {e}")
+        return violations
     for rule, indices in geom.get('invalid', {}).items():
         violations.append(f"{filepath}: INVALID-{rule}: {len(indices)} feature(s)")
 
