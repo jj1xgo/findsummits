@@ -80,6 +80,7 @@ class Repo:
     def __init__(self, root, files):
         self.root = Path(root)
         self.files = {os.path.normpath(f) for f in files}
+        self.unreadable = {}
         self.dirs = set()
         for f in self.files:
             parent = Path(f).parent
@@ -95,7 +96,12 @@ class Repo:
         return rel in self.files or rel in self.dirs
 
     def read(self, rel):
-        return (self.root / rel).read_text(encoding='utf-8')
+        """読めないファイルは空として扱い、unreadable に残す（run_checks が T1 にする）"""
+        try:
+            return (self.root / rel).read_text(encoding='utf-8')
+        except (OSError, UnicodeDecodeError) as e:
+            self.unreadable.setdefault(os.path.normpath(rel), type(e).__name__)
+            return ''
 
     def md_files(self):
         return sorted(f for f in self.files if f.endswith('.md'))
@@ -697,7 +703,12 @@ def check_stages(repo, confirmed):
 def check_unexemptable(exemptions):
     return [finding('T1', f'exemption:{key}', 'tools/lint_trace.py',
                     f'{key} は EXEMPTIONS で外せません（外すと以降の検査が黙って止まります）')
-            for key in sorted(exemptions) if key.startswith(UNEXEMPTABLE)]
+            for key in sorted(exemptions) if key.startswith(UNEXEMPTABLE) or key.endswith(':read')]
+
+
+def read_errors(repo):
+    """読めなかったファイル。読めないとその文書・コードの検査が黙って外れるので、EXEMPTIONS を通さない"""
+    return [finding('T1', f'{p}:read', p, f'読めません（{e}）') for p, e in sorted(repo.unreadable.items())]
 
 
 def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
@@ -710,7 +721,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
              for p in missing if p not in reported]
     out = check_links(repo)
     if missing:
-        return apply_exemptions(out, exemptions, repo) + gate
+        return apply_exemptions(out, exemptions, repo) + gate + read_errors(repo)
     urs, reqs, comps = load_requirements(repo)
     req_ids = {r['key'] for r in reqs}
     out += check_numbering(urs | req_ids, retired, repo)
@@ -726,7 +737,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += case_out + check_cases(cases, req_ids, urs, modules, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)
     out += check_code(repo, modules, cases, confirmed)
-    return apply_exemptions(out, exemptions, repo) + gate
+    return apply_exemptions(out, exemptions, repo) + gate + read_errors(repo)
 
 
 def git_files(root):

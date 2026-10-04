@@ -170,6 +170,26 @@ class DuplicateTest(TraceTestCase):
         self.assertFalse([k for k in self.keys(dict(BASE)) if k.endswith(':重複')])
 
 
+class ReadErrorTest(unittest.TestCase):
+    def test_unreadable_files_are_findings(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        for rel, text in BASE.items():
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / rel).write_text(text, encoding='utf-8')
+        (root / 'tests/src').mkdir(parents=True)
+        (root / 'tests/src/bad.cpp').write_bytes(b'// \xff\n')
+        repo = lt.Repo(root, list(BASE) + ['tests/src/bad.cpp', 'docs/gone.md'])
+        keys = [f.key for f in lt.run_checks(repo, confirmed=frozenset(), retired={}, exemptions={})]
+        self.assertIn('T1:tests/src/bad.cpp:read', keys)
+        self.assertIn('T1:docs/gone.md:read', keys)
+
+    def test_read_error_cannot_be_exempted(self):
+        keys = [f.key for f in lt.check_unexemptable({'T1:docs/gone.md:read': 'docs/decisions/ADR-X.md'})]
+        self.assertEqual(keys, ['T1:exemption:T1:docs/gone.md:read'])
+
+
 class StageTest(TraceTestCase):
     ADR = 'docs/decisions/ADR-X.md'
 
