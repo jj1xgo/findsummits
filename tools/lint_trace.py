@@ -259,8 +259,13 @@ def table_rows(text, heading_re):
     return rows
 
 
+def ur_anchors(repo):
+    """URD のコードブロックの外にある UR のアンカーを (行番号, 番号) で返す"""
+    return [(no, n) for no, line in iter_lines(repo.read(URD)) for n in UR_ANCHOR_RE.findall(line)]
+
+
 def load_requirements(repo):
-    urs = {f'UR-{n}' for n in UR_ANCHOR_RE.findall(repo.read(URD))}
+    urs = {f'UR-{n}' for _, n in ur_anchors(repo)}
     srs_text = repo.read(SRS)
     reqs = section_decls(srs_text, SRS_REQ_RE)
     comps = set()
@@ -274,9 +279,11 @@ def load_requirements(repo):
 def check_duplicates(repo, reqs):
     """URD の UR のアンカーと SRS の FR/NFR の見出しの重複。重なると後ろの宣言だけが残り、片方が黙って消える"""
     out = []
-    for n, count in sorted(Counter(UR_ANCHOR_RE.findall(repo.read(URD))).items()):
-        if count > 1:
-            out.append(finding('T1', f'UR-{n}:重複', URD, f'UR-{n} のアンカーが {count} 個あります'))
+    seen_urs = set()
+    for no, n in ur_anchors(repo):
+        if n in seen_urs:
+            out.append(finding('T1', f'UR-{n}:重複', f'{URD}:{no}', f'UR-{n} のアンカーが重複しています'))
+        seen_urs.add(n)
     seen = set()
     for r in reqs:
         if r['key'] in seen:

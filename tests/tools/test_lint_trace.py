@@ -166,6 +166,19 @@ class DuplicateTest(TraceTestCase):
         urd = URD + '| <a id="ur-001"></a>UR-001 | 一の重複 |\n'
         self.assertIn('T1:UR-001:重複', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
 
+    def test_ur_anchor_example_in_backtick_fence_is_not_counted(self):
+        urd = URD + '\n```\n<a id="ur-001"></a>\n```\n'
+        self.assertNotIn('T1:UR-001:重複', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+    def test_ur_anchor_example_in_tilde_fence_is_not_counted(self):
+        urd = URD + '\n~~~\n<a id="ur-001"></a>\n~~~\n'
+        self.assertNotIn('T1:UR-001:重複', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+    def test_ur_anchor_in_fence_is_not_a_requirement(self):
+        urd = URD + '\n```\n<a id="ur-099"></a>\n```\n'
+        keys = self.keys(dict(BASE, **{'docs/10_URD.md': urd}))
+        self.assertFalse([k for k in keys if 'UR-099' in k])
+
     def test_no_duplicates_in_base(self):
         self.assertFalse([k for k in self.keys(dict(BASE)) if k.endswith(':重複')])
 
