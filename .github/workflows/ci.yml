@@ -1,0 +1,19 @@
+name: ci
+
+on:
+  push:
+    branches: [devel, main, 'release/**']
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Lint (Markdown, Python, GeoJSON, HTML, traceability)
+        run: make lint
+      - name: Test lint scripts
+        run: make test-scripts

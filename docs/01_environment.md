@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-09-28 |
+| 最終更新日 | 2026-10-04 |
 | ステータス | ドラフト |
 
 ## 目次
@@ -125,6 +125,7 @@ PyPI に届かないとき、pip は警告を出さずに、導入済みの版�
 - 過去の commit を当時と同じ版で lint するには、版を指定して入れ直す（例: `venv/bin/python3 -m pip install ruff==<版>`）。
 - geojson-validator は shapely と requests に依存するため、`make lint-latest` でこれらのランタイム依存が上がることがある。
 
+push（devel・main・`release/*`）と PR では、GitHub Actions（`.github/workflows/ci.yml`）が `make lint` と `make test-scripts` を実行する。
 GitHub Actions（`.github/workflows/lint-latest.yml`）が月 1 回と手動実行で `make lint-latest` を実行する。
 CI は Python 3.13 の新しい venv で動くため、手元と選ばれる版が異なりうる。schedule は既定ブランチで走る。実行条件は同ファイルを参照。
 

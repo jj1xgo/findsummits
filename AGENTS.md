@@ -19,7 +19,7 @@
 - 開始時に branch・差分・worktree を確認し、既存の変更を保持する。
 - ファイルを編集したら、そのターン内で `make lint` を実行し警告ゼロを確認してから次へ進む。
   新規ファイルは先に `git add` し、`git ls-files` による lint 対象に含める。
-- 変更に関係する検証を実行し、[CI 定義](.github/workflows/lint-latest.yml)の対象と実行条件を確認する。再現・回帰確認を優先し、未実行は `not run` と理由を記録する。
+- 変更に関係する検証を実行し、CI 定義（[push・PR](.github/workflows/ci.yml)・[月 1 回](.github/workflows/lint-latest.yml)）の対象と実行条件を確認する。再現・回帰確認を優先し、未実行は `not run` と理由を記録する。
   lint 成功とテスト実行・実環境の動作確認を区別する。テストの定義は [テスト方針書](docs/02_test_policy.md)。
 - `docs/` または `ref/SOURCES.md` の編集前に [文書管理ルール](docs/CLAUDE.md) を読む。
   採番・書式・ADR・相互参照・更新日の規則に従う。新しいデータソースの追加は用語集と SOURCES の両方を更新する。

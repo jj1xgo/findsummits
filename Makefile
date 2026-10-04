@@ -67,7 +67,7 @@ venv-rebuild:
 	$(MAKE) venv
 
 # 機械的チェックの集約エントリ。ツール追加時はここに依存を足す（例: lint: lint-md lint-c lint-py）
-lint: lint-md lint-py lint-geojson lint-html
+lint: lint-md lint-py lint-geojson lint-html lint-trace
 
 # Markdown lint（チェックのみ・ファイルは書き換えない）。
 # 既定対象: git 管理下の全 .md。
@@ -115,6 +115,15 @@ lint-html: venv
 	else targets=$$(git ls-files '*.html'); fi; \
 	venv/bin/python3 -m djlint $$targets --lint --profile html
 
+# 要求の追跡と整合の検査（docs/03_development.md「6. 要求の追跡と整合」）。
+# 文書をまたいで照合するため、LINT_*_PATHS に関係なく常にリポジトリ全体（git ls-files）を見る。
+lint-trace: venv
+	venv/bin/python3 scripts/lint_trace.py
+
+# scripts/ の検査のテスト（標準ライブラリの unittest）
+test-scripts: venv
+	venv/bin/python3 -m unittest discover -s tests/scripts -p 'test_*.py'
+
 # lint ツールを PyPI の最新の安定版へ上げてからチェック（既存 venv の更新 + CI 用）。
 # requirements.txt は lint ツールの版を固定しないため、実行後に venv を戻す必要はない。
 # make venv は導入済みの版を上げないので、既存 venv の lint ツールはこの target で上げる。
@@ -126,4 +135,4 @@ lint-latest: venv
 	venv/bin/python3 -m pip list --format=freeze | grep -iE '^(pymarkdownlnt|ruff|geojson[-_]validator|djlint)=='
 	@$(MAKE) lint
 
-.PHONY: all clean findsummits test_mesh_analyze test_analyze test_terrain_image terrain_colormap_demo venv venv-rebuild lint-md lint-py lint-geojson lint-html lint-latest
+.PHONY: all clean findsummits test_mesh_analyze test_analyze test_terrain_image terrain_colormap_demo venv venv-rebuild lint-md lint-py lint-geojson lint-html lint-trace test-scripts lint-latest
