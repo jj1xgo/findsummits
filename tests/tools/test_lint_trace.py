@@ -320,6 +320,19 @@ class StTest(TraceTestCase):
         self.assertNotIn('T2:ST-coverage:UR-001->ST-FR-001-03', keys)
 
 
+    def test_case_id_without_backquotes(self):
+        st = ST.replace('| `ST-FR-001-01` | a |', '| ST-FR-001-01 | a |')
+        self.assertIn('T1:ST-FR-001-01:コード表記', self.keys(dict(BASE, **{'docs/70_ST.md': st})))
+
+    def test_case_number_00(self):
+        st = ST.replace('`ST-NFR-001-01`', '`ST-NFR-001-00`')
+        self.assertIn('T1:ST-NFR-001-00', self.keys(dict(BASE, **{'docs/70_ST.md': st})))
+
+    def test_reversed_case_range(self):
+        st = ST.replace('| `ST-FR-001-01` |\n', '| `ST-FR-001-03`〜`01` |\n')
+        keys = self.keys(dict(BASE, **{'docs/70_ST.md': st}))
+        self.assertIn('T1:ST-coverage:UR-001:ST-FR-001-03〜01', keys)
+
 HLD = '''# HLD
 
 ## 2. アーキテクチャ

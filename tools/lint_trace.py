@@ -363,10 +363,11 @@ def apply_exemptions(findings, exemptions, repo):
 
 CASE_ROW_RE = re.compile(r'^\|\s*`((?:UT|IT|ST)-[^`]+)`([^|]*)\|')
 CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_-]+)(.*)$')
+BARE_CASE_ROW_RE = re.compile(r'^\|\s*((?:UT|IT|ST)-[A-Za-z0-9_-]+)')
 CASE_FORMAT = {
-    'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-\d{2}$'),
-    'IT': re.compile(r'^IT-([A-Za-z0-9_-]+)-\d{2}$'),
-    'ST': re.compile(r'^ST-((?:FR|NFR|UR)-\d{3})-\d{2}$'),
+    'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-(?:0[1-9]|[1-9]\d)$'),
+    'IT': re.compile(r'^IT-([A-Za-z0-9_-]+)-(?:0[1-9]|[1-9]\d)$'),
+    'ST': re.compile(r'^ST-((?:FR|NFR|UR)-\d{3})-(?:0[1-9]|[1-9]\d)$'),
 }
 ST_COVERAGE_HEAD_RE = re.compile(r'^## \d+\. URカバレッジ表')
 CASE_REF_RE = re.compile(r'`(ST-(?:FR|NFR|UR)-\d{3}-)(\d{2}|\*)`(?:〜`(\d{2})`)?')
@@ -379,7 +380,14 @@ def load_cases(repo):
             continue
         for no, line in iter_lines(repo.read(path)):
             m = CASE_ROW_RE.match(line) or CASE_HEAD_RE.match(line)
-            if not m or not m.group(1).startswith(level + '-'):
+            if not m:
+                bare = BARE_CASE_ROW_RE.match(line)
+                if bare and bare.group(1).startswith(level + '-'):
+                    out.append(finding('T1', f'{bare.group(1)}:コード表記', f'{path}:{no}',
+                                       f'テストケース ID {bare.group(1)} をコード表記（バッククォート）'
+                                       'で書いていません'))
+                continue
+            if not m.group(1).startswith(level + '-'):
                 continue
             cid = m.group(1)
             if cid in cases:
@@ -447,6 +455,10 @@ def check_st_matrix(repo, urs, declared, cases):
         if got != inverse[u]:
             out.append(finding('T4', f'ST-coverage:{u}', f'{path}:{no}',
                                f'{u} の行 {sorted(got)} が SRS の対応 UR の宣言 {sorted(inverse[u])} と違います'))
+        for prefix, start, end in CASE_REF_RE.findall(cells[3] if len(cells) > 3 else ''):
+            if end and start != '*' and int(end) < int(start):
+                out.append(finding('T1', f'ST-coverage:{u}:{prefix}{start}〜{end}', f'{path}:{no}',
+                                   f'{u} の行の範囲 {prefix}{start}〜{end} が逆順です'))
         for ref in unresolved_case_refs(cells[3] if len(cells) > 3 else '', cases):
             out.append(finding('T2', f'ST-coverage:{u}->{ref}', f'{path}:{no}',
                                f'{u} の行のテストケース {ref} は ST にありません'))
