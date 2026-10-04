@@ -141,5 +141,71 @@ class LinkTest(TraceTestCase):
         self.assertFalse([k for k in self.keys(files) if k.startswith('T2:docs/a.md')])
 
 
+
+class SrsTest(TraceTestCase):
+    def test_base_is_clean(self):
+        self.assertEqual(self.check(BASE), [])
+
+    def test_missing_declaration(self):
+        srs = SRS.replace('- **対応 UR**: [UR-002](10_URD.md#ur-002)\n\n', '', 1)
+        self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_declaration_without_link(self):
+        srs = SRS.replace('- **対応 UR**: [UR-002](10_URD.md#ur-002)', '- **対応 UR**: UR-002', 1)
+        self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_unknown_parent(self):
+        urd = URD.replace('| <a id="ur-002"></a>[UR-002](#ur-002) | 二 |\n', '')
+        self.assertIn('T2:FR-002->UR-002', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+    def test_gap_needs_retired_entry(self):
+        files = {k: v.replace('FR-002', 'FR-003').replace('fr-002', 'fr-003') for k, v in BASE.items()}
+        self.assertIn('T1:FR-002', self.keys(files))
+        adr = 'docs/decisions/ADR-X.md'
+        keys = self.keys(dict(files, **{adr: '# X\n'}), retired={'FR-002': adr})
+        self.assertNotIn('T1:FR-002', keys)
+        self.assertIn('T2:FR-002->' + adr, self.keys(files, retired={'FR-002': adr}))
+
+    def test_retired_id_still_present(self):
+        adr = 'docs/decisions/ADR-X.md'
+        keys = self.keys(dict(BASE, **{adr: '# X\n'}), retired={'FR-002': adr})
+        self.assertIn('T1:FR-002:retired', keys)
+
+    def test_uncovered_ur_only_when_srs_confirmed(self):
+        urd = URD + '| <a id="ur-003"></a>[UR-003](#ur-003) | 三 |\n'
+        files = dict(BASE, **{'docs/10_URD.md': urd})
+        self.assertIn('T3:SRS:UR-003', self.keys(files, confirmed={'SRS'}))
+        self.assertNotIn('T3:SRS:UR-003', self.keys(files))
+
+    def test_matrix_cell_mismatch(self):
+        srs = SRS.replace('| [FR-002](#fr-002-二) | 二 | | ✅ |', '| [FR-002](#fr-002-二) | 二 | ✅ | ✅ |')
+        self.assertIn('T4:SRS-matrix:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_matrix_row_missing(self):
+        srs = SRS.replace('| [NFR-001](#nfr-001-非一) | 非一 | ✅ | |\n', '')
+        self.assertIn('T4:SRS-matrix:NFR-001', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_matrix_columns_mismatch(self):
+        urd = URD + '| <a id="ur-003"></a>[UR-003](#ur-003) | 三 |\n'
+        self.assertIn('T4:SRS-matrix:columns', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+
+class ExemptionTest(TraceTestCase):
+    def test_exempted_with_adr(self):
+        urd = URD + '| <a id="ur-003"></a>[UR-003](#ur-003) | 三 |\n'
+        adr = 'docs/decisions/ADR-Y.md'
+        files = dict(BASE, **{'docs/10_URD.md': urd, adr: '# Y\n'})
+        keys = self.keys(files, confirmed={'SRS'}, exemptions={'T3:SRS:UR-003': adr})
+        self.assertNotIn('T3:SRS:UR-003', keys)
+
+    def test_exemption_without_adr(self):
+        urd = URD + '| <a id="ur-003"></a>[UR-003](#ur-003) | 三 |\n'
+        adr = 'docs/decisions/ADR-Y.md'
+        files = dict(BASE, **{'docs/10_URD.md': urd})
+        keys = self.keys(files, confirmed={'SRS'}, exemptions={'T3:SRS:UR-003': adr})
+        self.assertIn('T3:SRS:UR-003', keys)
+        self.assertIn('T2:exemption->' + adr, keys)
+
+
 if __name__ == '__main__':
     unittest.main()
