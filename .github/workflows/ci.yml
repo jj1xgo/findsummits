@@ -2,8 +2,11 @@ name: ci
 
 on:
   push:
-    branches: [devel, main, 'release/**']
+    branches: [devel, main, 'release/*']
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   lint:
