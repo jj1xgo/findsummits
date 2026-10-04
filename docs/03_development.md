@@ -86,7 +86,7 @@ make clean                                 # build/ を削除
 記録には対象版・実施日・6観点・判定者・条件を含め、レビュー参加者が確認できる課題または文書に保存する。
 確定した記録を書き換えず、補足・訂正は追記する。個人の台帳やツールがなくても同じ審査基準を適用する。
 
-判定が Go か条件付きGo なら、その段を `tools/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いと T1 で CI が止まる（[6](#6-要求の追跡と整合)）。
+判定が Go か条件付きGo なら、その段を `tools/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いとき、または上位の段（`STAGE_PARENT`。HLD は SRS、LLD は HLD、UT は LLD、IT は HLD、ST は SRS で、テスト方針書 §1 の V 字の対応）が入っていないとき、T1 で CI が止まる（[6](#6-要求の追跡と整合)）。
 
 ## 5. バージョンとタグ
 
@@ -119,13 +119,13 @@ make clean                                 # build/ を削除
 
 | 検査 | 止める条件 | 効き始める時期 |
 |---|---|---|
-| T1 | 宣言の欠落・書式違い、UR/FR/NFR の欠番が欠番の一覧（`RETIRED_IDS`）に無い、テストケース ID の書式違い・重複。`CONFIRMED_STAGES` の段の文書が無い、段の名前が不明、URD・SRS が無い | 文書があるとき（段・URD・SRS の欠落はいつでも） |
+| T1 | 宣言の欠落・書式違い、UR/FR/NFR の欠番が欠番の一覧（`RETIRED_IDS`）に無い、UR のアンカー・FR/NFR の見出し・HLD の節番号の重複、テストケース ID の書式違い・重複・コード表記でない・範囲の逆順。`CONFIRMED_STAGES` の段の文書が無い、段の名前が不明、上位の段が入っていない、URD・SRS が無い。git にあるファイルが読めない | 文書があるとき（段・URD・SRS の欠落と読めないファイルはいつでも） |
 | T2 | 宣言・リンク・テストのコードが指す ID・見出し・ファイルが無い。リンク文字列が ID（UR/FR/NFR）か節番号なのに、リンク先が別の要素 | 文書があるとき |
 | T3 | 上位の要素を指す下位が無い | 下位の段がフェーズゲートを通ったとき（`CONFIRMED_STAGES`） |
 | T4 | 追跡マトリクスが宣言と違う | 文書があるとき |
 | T5 | 製品のコード・テストのコードと文書が食い違う | LLD・UT・IT・ST の各段がフェーズゲートを通ったとき |
 
-- 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落の指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
+- 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落、上位の段、読めないファイルの指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
 - 欠番は `RETIRED_IDS` に、構造上の例外は `EXEMPTIONS` に、どちらも根拠の ADR と一緒に書く。ADR が無い項目は通らない。
 - 製品のコードは [HLD §2.8.2](30_HLD.md#282-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
 - 検査そのもののテストは `make test-tools` で走り、CI でも実行する。`tools/lint_trace.py` を直したときは、`make lint` に加えて `make test-tools` も実行する。

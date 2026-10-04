@@ -41,6 +41,9 @@ LLD = 'docs/40_LLD.md'
 CASE_DOCS = {'UT': 'docs/50_UT.md', 'IT': 'docs/60_IT.md', 'ST': 'docs/70_ST.md'}
 # 段の名前と文書の対応。CONFIRMED_STAGES の段はここにある名前に限る。パスの正本は上の定数
 STAGE_DOCS = {'SRS': SRS, 'HLD': HLD, 'LLD': LLD, **CASE_DOCS}
+# 各段の上位の段。テスト方針書（docs/02_test_policy.md §1）の V 字の対応で、各段の検査はこの段の文書を読む
+# （UT の T3 は LLD のモジュール、LLD の T3 は HLD の節、HLD・ST の T3 は SRS の FR/NFR）
+STAGE_PARENT = {'HLD': 'SRS', 'LLD': 'HLD', 'UT': 'LLD', 'IT': 'HLD', 'ST': 'SRS'}
 # EXEMPTIONS で外せない指摘。外すと以降の検査が黙って止まるため
 UNEXEMPTABLE = ('T1:stage:', 'T1:doc:')
 
@@ -690,16 +693,29 @@ def check_code(repo, modules, cases, confirmed):
 
 
 def check_stages(repo, confirmed):
-    """フェーズゲートを通った段の文書が git にあるか。無いと T3・T5 が黙って外れるため"""
+    """フェーズゲートを通った段の文書が git にあり、上位の段（たどった先まで）もすべて通っているか。
+
+    どちらかが欠けると、その段の T3・T5 が黙って外れる（下位の段の検査は上位の段の文書を読んで組み立てるため）。
+    """
     out = []
     for stage in sorted(confirmed):
         path = STAGE_DOCS.get(stage)
         if path is None:
             out.append(finding('T1', f'stage:{stage}', 'tools/lint_trace.py',
                                f'CONFIRMED_STAGES の段 {stage} は {"・".join(STAGE_DOCS)} のどれでもありません'))
-        elif not repo.has(path):
+            continue
+        if not repo.has(path):
             out.append(finding('T1', f'stage:{stage}', path,
                                f'フェーズゲートを通った段 {stage} の文書が git にありません'))
+        upper, s = [], STAGE_PARENT.get(stage)
+        while s:
+            if s not in confirmed:
+                upper.append(s)
+            s = STAGE_PARENT.get(s)
+        if upper:
+            out.append(finding('T1', f'stage:{stage}:order', 'tools/lint_trace.py',
+                               f'段 {stage} を確定扱いにするには、上位の段 {"・".join(upper)} '
+                               'も CONFIRMED_STAGES に入れます'))
     return out
 
 

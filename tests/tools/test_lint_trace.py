@@ -231,6 +231,17 @@ class StageTest(TraceTestCase):
         self.assertIn('T1:exemption:T1:stage:HLD', keys)
 
 
+    def test_stage_needs_its_upper_stages(self):
+        keys = self.keys(dict(BASE, **{'docs/50_UT.md': UT}), confirmed={'SRS', 'UT'})
+        self.assertIn('T1:stage:UT:order', keys)
+
+    def test_st_needs_only_srs(self):
+        self.assertNotIn('T1:stage:ST:order', self.keys(dict(BASE), confirmed={'SRS', 'ST'}))
+
+    def test_stage_with_its_upper_stages_is_in_order(self):
+        files = dict(BASE, **{'docs/30_HLD.md': HLD})
+        self.assertNotIn('T1:stage:HLD:order', self.keys(files, confirmed={'SRS', 'HLD'}))
+
 class SrsTest(TraceTestCase):
     def test_base_is_clean(self):
         self.assertEqual(self.check(BASE), [])
@@ -450,7 +461,8 @@ class LldTest(TraceTestCase):
         return files
 
     def test_clean_when_confirmed(self):
-        self.assertEqual(self.check(self.files(), confirmed={'LLD', 'UT'}), [])
+        keys = self.keys(self.files(), confirmed={'LLD', 'UT'})
+        self.assertEqual([k for k in keys if not k.startswith('T1:stage:')], [])
 
     def test_missing_file_field(self):
         lld = LLD.replace('- **ファイル**: `src/one.cpp`\n', '')
