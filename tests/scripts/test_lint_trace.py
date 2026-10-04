@@ -453,6 +453,14 @@ class ParserHardeningTest(TraceTestCase):
             srs = SRS.replace('[UR-002](10_URD.md#ur-002)', f'[UR-002]({target}#ur-002)', 1)
             self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})), target)
 
+    def test_srs_declaration_target_must_be_exactly_the_document(self):
+        targets = ('?x/../10_URD.md', '\\//example.invalid/../../10_URD.md',
+                   'https&colon;//example.invalid/../../10_URD.md', '10_urd.md', '10_URD.md?x',
+                   'a/../10_URD.md', '%31%30_URD.md', '10_URD.md ', './/10_URD.md')
+        for target in targets:
+            srs = SRS.replace('[UR-002](10_URD.md#ur-002)', f'[UR-002]({target}#ur-002)', 1)
+            self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})), target)
+
     def test_srs_declaration_to_dot_relative_path_is_a_parent(self):
         srs = SRS.replace('[UR-002](10_URD.md#ur-002)', '[UR-002](./10_URD.md#ur-002)', 1)
         self.assertNotIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
