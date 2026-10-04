@@ -294,6 +294,10 @@ class StageTest(TraceTestCase):
         keys = self.keys(dict(BASE, **{'docs/50_UT.md': UT}), confirmed={'SRS', 'UT'})
         self.assertIn('T1:stage:UT:order', keys)
 
+    def test_stage_needs_all_upper_stages_not_only_the_direct_one(self):
+        keys = self.keys(dict(BASE, **{'docs/50_UT.md': UT}), confirmed={'SRS', 'LLD', 'UT'})
+        self.assertIn('T1:stage:UT:order', keys)
+
     def test_st_needs_only_srs(self):
         self.assertNotIn('T1:stage:ST:order', self.keys(dict(BASE), confirmed={'SRS', 'ST'}))
 
