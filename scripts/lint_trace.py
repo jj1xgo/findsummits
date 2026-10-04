@@ -156,12 +156,13 @@ def label_mismatch(label, anchor):
 def decl_ids(value, label_re, doc=None):
     """宣言や表のセルの値から、コード表記の外にある、アンカー付きの完全なリンクのリンク文字列を取り出す。
 
-    doc を渡すと、リンク先のファイル名もその文書でなければ数えない。
+    doc を渡すと、リンク先が（宣言のある文書と同じ docs/ の）その文書そのものでなければ数えない。
+    外部 URL・別のディレクトリのパスは数えない。
     """
     ids = set()
     for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', value)):
         label, target, anchor = m.group(1), m.group(2), m.group(3)
-        if anchor and label_re.match(label) and (doc is None or os.path.basename(target) == doc):
+        if anchor and label_re.match(label) and (doc is None or os.path.normpath(unquote(target)) == doc):
             ids.add(label)
     return ids
 
