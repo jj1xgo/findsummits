@@ -142,6 +142,44 @@ class LinkTest(TraceTestCase):
 
 
 
+class StageTest(TraceTestCase):
+    ADR = 'docs/decisions/ADR-X.md'
+
+    def without(self, path):
+        return {k: v for k, v in BASE.items() if k != path}
+
+    def test_confirmed_stage_without_document(self):
+        self.assertIn('T1:stage:HLD', self.keys(dict(BASE), confirmed={'SRS', 'HLD'}))
+
+    def test_unconfirmed_stage_without_document_is_silent(self):
+        self.assertEqual(self.check(dict(BASE), confirmed={'SRS'}), [])
+
+    def test_unknown_stage_name(self):
+        keys = self.keys(dict(BASE), confirmed={'SRS', 'HDL', 'URD'})
+        self.assertIn('T1:stage:HDL', keys)
+        self.assertIn('T1:stage:URD', keys)
+
+    def test_confirmed_srs_missing_is_a_finding_not_a_crash(self):
+        keys = self.keys(self.without('docs/20_SRS.md'), confirmed={'SRS'})
+        self.assertIn('T1:stage:SRS', keys)
+        self.assertNotIn('T1:doc:docs/20_SRS.md', keys)
+
+    def test_missing_urd_is_a_finding_not_a_crash(self):
+        self.assertIn('T1:doc:docs/10_URD.md', self.keys(self.without('docs/10_URD.md')))
+
+    def test_missing_base_document_cannot_be_exempted(self):
+        files = dict(self.without('docs/10_URD.md'), **{self.ADR: '# X\n'})
+        keys = self.keys(files, exemptions={'T1:doc:docs/10_URD.md': self.ADR})
+        self.assertIn('T1:doc:docs/10_URD.md', keys)
+        self.assertIn('T1:exemption:T1:doc:docs/10_URD.md', keys)
+
+    def test_missing_stage_document_cannot_be_exempted(self):
+        files = dict(BASE, **{self.ADR: '# X\n'})
+        keys = self.keys(files, confirmed={'SRS', 'HLD'}, exemptions={'T1:stage:HLD': self.ADR})
+        self.assertIn('T1:stage:HLD', keys)
+        self.assertIn('T1:exemption:T1:stage:HLD', keys)
+
+
 class SrsTest(TraceTestCase):
     def test_base_is_clean(self):
         self.assertEqual(self.check(BASE), [])

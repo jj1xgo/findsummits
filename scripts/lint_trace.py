@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """要求の追跡と整合の検査（docs/03_development.md「6. 要求の追跡と整合」、ADR-URD-020）
 
-T1: 宣言の欠落・書式違い・欠番
+T1: 宣言の欠落・書式違い・欠番、確定した段の文書の欠落
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクスと宣言の照合
@@ -39,6 +39,10 @@ SRS = 'docs/20_SRS.md'
 HLD = 'docs/30_HLD.md'
 LLD = 'docs/40_LLD.md'
 CASE_DOCS = {'UT': 'docs/50_UT.md', 'IT': 'docs/60_IT.md', 'ST': 'docs/70_ST.md'}
+# 段の名前と文書の対応。CONFIRMED_STAGES の段はここにある名前に限る。パスの正本は上の定数
+STAGE_DOCS = {'SRS': SRS, 'HLD': HLD, 'LLD': LLD, **CASE_DOCS}
+# EXEMPTIONS で外せない指摘。外すと以降の検査が黙って止まるため
+UNEXEMPTABLE = ('T1:stage:', 'T1:doc:')
 
 NO_PARENT = 'なし（横断の設計）'
 ALL_COMPONENTS = '全体'
@@ -637,8 +641,37 @@ def check_code(repo, modules, cases, confirmed):
     return out
 
 
+def check_stages(repo, confirmed):
+    """フェーズゲートを通った段の文書が git にあるか。無いと T3・T5 が黙って外れるため"""
+    out = []
+    for stage in sorted(confirmed):
+        path = STAGE_DOCS.get(stage)
+        if path is None:
+            out.append(finding('T1', f'stage:{stage}', 'scripts/lint_trace.py',
+                               f'CONFIRMED_STAGES の段 {stage} は {"・".join(STAGE_DOCS)} のどれでもありません'))
+        elif not repo.has(path):
+            out.append(finding('T1', f'stage:{stage}', path,
+                               f'フェーズゲートを通った段 {stage} の文書が git にありません'))
+    return out
+
+
+def check_unexemptable(exemptions):
+    return [finding('T1', f'exemption:{key}', 'scripts/lint_trace.py',
+                    f'{key} は EXEMPTIONS で外せません（外すと以降の検査が黙って止まります）')
+            for key in sorted(exemptions) if key.startswith(UNEXEMPTABLE)]
+
+
 def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
+    # 段・URD・SRS の欠落は EXEMPTIONS を通さない
+    gate = check_stages(repo, confirmed) + check_unexemptable(exemptions)
+    # URD・SRS は以降のすべての検査が読む。無ければ指摘して止める（段の指摘と重ねない）
+    reported = {STAGE_DOCS.get(s) for s in confirmed}
+    missing = [p for p in (URD, SRS) if not repo.has(p)]
+    gate += [finding('T1', f'doc:{p}', p, '文書が git にありません（以降の検査を止めます）')
+             for p in missing if p not in reported]
     out = check_links(repo)
+    if missing:
+        return apply_exemptions(out, exemptions, repo) + gate
     urs, reqs, comps = load_requirements(repo)
     req_ids = {r['key'] for r in reqs}
     out += check_numbering(urs | req_ids, retired, repo)
@@ -653,7 +686,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += case_out + check_cases(cases, req_ids, urs, modules, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)
     out += check_code(repo, modules, cases, confirmed)
-    return apply_exemptions(out, exemptions, repo)
+    return apply_exemptions(out, exemptions, repo) + gate
 
 
 def git_files(root):
