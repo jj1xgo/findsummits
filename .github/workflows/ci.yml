@@ -15,5 +15,5 @@ jobs:
           python-version: '3.13'
       - name: Lint (Markdown, Python, GeoJSON, HTML, traceability)
         run: make lint
-      - name: Test lint scripts
-        run: make test-scripts
+      - name: Test lint tools
+        run: make test-tools

@@ -48,7 +48,8 @@ NO_PARENT = 'なし（横断の設計）'
 ALL_COMPONENTS = '全体'
 MANUAL_MARK = '（手動）'
 PRODUCT_DIRS = ('src/', 'scripts/')
-TEST_DIRS = ('tests/',)
+# テストのコードは製品のテスト（HLD §2.8.2 D18）。tests/tools/ の道具のテストと、tests/ 直下の試作は数えない
+TEST_DIRS = ('tests/src/', 'tests/scripts/')
 CODE_SUFFIXES = ('.c', '.h', '.cpp', '.hpp', '.py', '.sh')
 
 HEADING_RE = re.compile(r'^(#{1,6})\s+(.*?)\s*#*\s*$')
@@ -262,14 +263,14 @@ def check_numbering(ids, retired, repo):
         for n in range(1, max(present) + 1):
             rid = f'{prefix}-{n:03d}'
             if n not in present and rid not in retired:
-                out.append(finding('T1', rid, 'scripts/lint_trace.py',
+                out.append(finding('T1', rid, 'tools/lint_trace.py',
                                    f'{rid} が欠番ですが、欠番の一覧（RETIRED_IDS）にありません'))
     for rid, adr in sorted(retired.items()):
         if rid in ids:
-            out.append(finding('T1', f'{rid}:retired', 'scripts/lint_trace.py',
+            out.append(finding('T1', f'{rid}:retired', 'tools/lint_trace.py',
                                f'{rid} は欠番の一覧にありますが、文書に残っています'))
         if not repo.has(adr):
-            out.append(finding('T2', f'{rid}->{adr}', 'scripts/lint_trace.py',
+            out.append(finding('T2', f'{rid}->{adr}', 'tools/lint_trace.py',
                                f'{rid} の根拠の ADR がありません: {adr}'))
     return out
 
@@ -331,7 +332,7 @@ def apply_exemptions(findings, exemptions, repo):
     out = [f for f in findings if not (f.key in exemptions and repo.has(exemptions[f.key]))]
     for key, adr in sorted(exemptions.items()):
         if not repo.has(adr):
-            out.append(finding('T2', f'exemption->{adr}', 'scripts/lint_trace.py',
+            out.append(finding('T2', f'exemption->{adr}', 'tools/lint_trace.py',
                                f'{key} の根拠の ADR がありません: {adr}'))
     return out
 
@@ -647,7 +648,7 @@ def check_stages(repo, confirmed):
     for stage in sorted(confirmed):
         path = STAGE_DOCS.get(stage)
         if path is None:
-            out.append(finding('T1', f'stage:{stage}', 'scripts/lint_trace.py',
+            out.append(finding('T1', f'stage:{stage}', 'tools/lint_trace.py',
                                f'CONFIRMED_STAGES の段 {stage} は {"・".join(STAGE_DOCS)} のどれでもありません'))
         elif not repo.has(path):
             out.append(finding('T1', f'stage:{stage}', path,
@@ -656,7 +657,7 @@ def check_stages(repo, confirmed):
 
 
 def check_unexemptable(exemptions):
-    return [finding('T1', f'exemption:{key}', 'scripts/lint_trace.py',
+    return [finding('T1', f'exemption:{key}', 'tools/lint_trace.py',
                     f'{key} は EXEMPTIONS で外せません（外すと以降の検査が黙って止まります）')
             for key in sorted(exemptions) if key.startswith(UNEXEMPTABLE)]
 

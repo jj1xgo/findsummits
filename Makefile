@@ -85,7 +85,7 @@ lint-md: venv
 	fi; \
 	targets="$$targets $$ops_targets"; ropt=""; fi; \
 	venv/bin/python3 -m pymarkdown -c .pymarkdown scan $$ropt $$targets; s1=$$?; \
-	venv/bin/python3 scripts/lint_docs.py $$targets; s2=$$?; \
+	venv/bin/python3 tools/lint_docs.py $$targets; s2=$$?; \
 	exit $$([ $$s1 -ge $$s2 ] && echo $$s1 || echo $$s2)
 
 # Python lint（チェックのみ・ファイルは書き換えない）。
@@ -104,7 +104,7 @@ LINT_GEOJSON_PATHS ?=
 lint-geojson: venv
 	@if [ -n "$(LINT_GEOJSON_PATHS)" ]; then targets="$(LINT_GEOJSON_PATHS)"; \
 	else targets=$$(git ls-files '*.geojson'); fi; \
-	venv/bin/python3 scripts/lint_geojson.py $$targets
+	venv/bin/python3 tools/lint_geojson.py $$targets
 
 # HTML lint（チェックのみ・ファイルは書き換えない）。
 # 既定対象: git 管理下の全 .html。
@@ -118,11 +118,11 @@ lint-html: venv
 # 要求の追跡と整合の検査（docs/03_development.md「6. 要求の追跡と整合」）。
 # 文書をまたいで照合するため、LINT_*_PATHS に関係なく常にリポジトリ全体（git ls-files）を見る。
 lint-trace: venv
-	venv/bin/python3 scripts/lint_trace.py
+	venv/bin/python3 tools/lint_trace.py
 
-# scripts/ の検査のテスト（標準ライブラリの unittest）
-test-scripts: venv
-	venv/bin/python3 -m unittest discover -s tests/scripts -p 'test_*.py'
+# tools/ の道具のテスト（標準ライブラリの unittest）
+test-tools: venv
+	venv/bin/python3 -m unittest discover -s tests/tools -p 'test_*.py'
 
 # lint ツールを PyPI の最新の安定版へ上げてからチェック（既存 venv の更新 + CI 用）。
 # requirements.txt は lint ツールの版を固定しないため、実行後に venv を戻す必要はない。
@@ -135,4 +135,4 @@ lint-latest: venv
 	venv/bin/python3 -m pip list --format=freeze | grep -iE '^(pymarkdownlnt|ruff|geojson[-_]validator|djlint)=='
 	@$(MAKE) lint
 
-.PHONY: all clean findsummits test_mesh_analyze test_analyze test_terrain_image terrain_colormap_demo venv venv-rebuild lint-md lint-py lint-geojson lint-html lint-trace test-scripts lint-latest
+.PHONY: all clean findsummits test_mesh_analyze test_analyze test_terrain_image terrain_colormap_demo venv venv-rebuild lint-md lint-py lint-geojson lint-html lint-trace test-tools lint-latest

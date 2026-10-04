@@ -59,7 +59,7 @@ make clean                                 # build/ を削除
 - lint ツールの構成・版の扱い・最新版への更新方法は
   [01_environment.md「Python パッケージ」](01_environment.md#python-パッケージrequirementstxt-で管理) に従う。
 - docs の表記揺れをレビューで同種のものについて2回以上修正した場合、機械化できる規則は
-  `scripts/lint_docs.py` の検査E規則テーブルに追加する。1回限りの揺れは追加不要。
+  `tools/lint_docs.py` の検査E規則テーブルに追加する。1回限りの揺れは追加不要。
 - 文書の詳細規則は [docs/CLAUDE.md](CLAUDE.md) に一元化する。文書を編集した日はヘッダーの最終更新日も更新する。
 
 ## 4. フェーズゲート
@@ -86,7 +86,7 @@ make clean                                 # build/ を削除
 記録には対象版・実施日・6観点・判定者・条件を含め、レビュー参加者が確認できる課題または文書に保存する。
 確定した記録を書き換えず、補足・訂正は追記する。個人の台帳やツールがなくても同じ審査基準を適用する。
 
-判定が Go か条件付きGo なら、その段を `scripts/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いと T1 で CI が止まる（[6](#6-要求の追跡と整合)）。
+判定が Go か条件付きGo なら、その段を `tools/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いと T1 で CI が止まる（[6](#6-要求の追跡と整合)）。
 
 ## 5. バージョンとタグ
 
@@ -115,7 +115,7 @@ make clean                                 # build/ を削除
 
 ### 6.2 検査
 
-`scripts/lint_trace.py`（`make lint-trace`）が次を検査する。`make lint` と CI（`.github/workflows/ci.yml`）で走る。
+`tools/lint_trace.py`（`make lint-trace`）が次を検査する。`make lint` と CI（`.github/workflows/ci.yml`）で走る。
 
 | 検査 | 止める条件 | 効き始める時期 |
 |---|---|---|
@@ -127,8 +127,8 @@ make clean                                 # build/ を削除
 
 - 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落の指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
 - 欠番は `RETIRED_IDS` に、構造上の例外は `EXEMPTIONS` に、どちらも根拠の ADR と一緒に書く。ADR が無い項目は通らない。
-- 製品のコードは [HLD §2.8.2](30_HLD.md#282-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。T5 を効かせる前に、開発用の道具を `tools/` へ移す。
-- 検査そのもののテストは `make test-scripts` で走り、CI でも実行する。`scripts/lint_trace.py` を直したときは、`make lint` に加えて `make test-scripts` も実行する。
+- 製品のコードは [HLD §2.8.2](30_HLD.md#282-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
+- 検査そのもののテストは `make test-tools` で走り、CI でも実行する。`tools/lint_trace.py` を直したときは、`make lint` に加えて `make test-tools` も実行する。
 
 ### 6.3 変更するときの手順
 

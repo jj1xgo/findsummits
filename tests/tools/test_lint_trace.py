@@ -1,10 +1,10 @@
-"""scripts/lint_trace.py のテスト（標準ライブラリの unittest）"""
+"""tools/lint_trace.py のテスト（標準ライブラリの unittest）"""
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 import lint_trace as lt  # noqa: E402
 
 URD = '''# URD
@@ -453,6 +453,12 @@ class LldTest(TraceTestCase):
         lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/table.json`')
         files = self.files(**{'docs/40_LLD.md': lld, 'src/table.json': '{}\n'})
         self.assertIn('T5:LLD-one->src/table.json', self.keys(files, confirmed={'LLD'}))
+
+    def test_tool_tests_and_prototype_tests_are_not_test_code(self):
+        files = self.files(**{'tests/tools/test_t.py': 'x = 1\n', 'tests/test_proto.c': 'int x;\n'})
+        keys = self.keys(files, confirmed={'UT'})
+        self.assertNotIn('T5:tests/tools/test_t.py', keys)
+        self.assertNotIn('T5:tests/test_proto.c', keys)
 
     def test_untraced_test_file_when_tests_confirmed(self):
         files = self.files(**{'tests/src/helper.cpp': 'int helper;\n'})

@@ -2,8 +2,8 @@
 """docs/ 内の FR/UR/NFR 裸参照を Markdown リンクに一括変換する。
 
 使用方法:
-  python3 scripts/fix_bare_refs.py            # 本実行
-  python3 scripts/fix_bare_refs.py --dry-run  # 変更プレビューのみ
+  python3 tools/fix_bare_refs.py            # 本実行
+  python3 tools/fix_bare_refs.py --dry-run  # 変更プレビューのみ
 """
 
 import argparse
