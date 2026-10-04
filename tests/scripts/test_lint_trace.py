@@ -207,5 +207,49 @@ class ExemptionTest(TraceTestCase):
         self.assertIn('T2:exemption->' + adr, keys)
 
 
+class StTest(TraceTestCase):
+    def test_coverage_table_mismatch(self):
+        st = ST.replace(', [NFR-001](20_SRS.md#nfr-001-非一)', '')
+        self.assertIn('T4:ST-coverage:UR-001', self.keys(dict(BASE, **{'docs/70_ST.md': st})))
+
+    def test_coverage_row_missing(self):
+        st = ST.replace('| [UR-002](10_URD.md#ur-002) | 二 | [FR-002](20_SRS.md#fr-002-二) | `ST-FR-002-01` |\n', '')
+        self.assertIn('T4:ST-coverage:UR-002', self.keys(dict(BASE, **{'docs/70_ST.md': st})))
+
+    def test_unknown_parent(self):
+        st = ST.replace('| `ST-NFR-001-01` | c |', '| `ST-NFR-001-01` | c |\n| `ST-FR-009-01` | d |')
+        self.assertIn('T2:ST-FR-009-01', self.keys(dict(BASE, **{'docs/70_ST.md': st})))
+
+    def test_bad_format_and_duplicate(self):
+        st = ST.replace('| `ST-NFR-001-01` | c |',
+                        '| `ST-NFR-001-01` | c |\n| `ST-FR-1-1` | d |\n| `ST-FR-001-01` | e |')
+        keys = self.keys(dict(BASE, **{'docs/70_ST.md': st}))
+        self.assertIn('T1:ST-FR-1-1', keys)
+        self.assertIn('T1:ST-FR-001-01:重複', keys)
+
+    def test_requirement_without_st_only_when_confirmed(self):
+        st = ST.replace('| `ST-FR-002-01`（異常系） | b |\n', '')
+        files = dict(BASE, **{'docs/70_ST.md': st})
+        self.assertIn('T3:ST:FR-002', self.keys(files, confirmed={'ST'}))
+        self.assertNotIn('T3:ST:FR-002', self.keys(files))
+
+    def test_coverage_case_refs_resolve(self):
+        row_end = '| `ST-FR-001-01` |\n'
+        for ref, expected in (('`ST-FR-001-09`', 'ST-FR-001-09'), ('`ST-FR-009-*`', 'ST-FR-009-*'),
+                              ('`ST-FR-001-01`〜`03`', 'ST-FR-001-03')):
+            st = ST.replace(row_end, f'| {ref} |\n')
+            keys = self.keys(dict(BASE, **{'docs/70_ST.md': st}))
+            self.assertIn(f'T2:ST-coverage:UR-001->{expected}', keys)
+        st = ST.replace(row_end, '| `ST-FR-001-*`, `ST-NFR-001-01` |\n')
+        self.assertEqual(self.check(dict(BASE, **{'docs/70_ST.md': st})), [])
+
+    def test_coverage_range_checks_every_number(self):
+        st = ST.replace('| `ST-FR-001-01` | a |', '| `ST-FR-001-01` | a |\n| `ST-FR-001-03` | a3 |')
+        st = st.replace('| `ST-FR-001-01` |\n', '| `ST-FR-001-01`〜`03` |\n')
+        keys = self.keys(dict(BASE, **{'docs/70_ST.md': st}))
+        self.assertIn('T2:ST-coverage:UR-001->ST-FR-001-02', keys)
+        self.assertNotIn('T2:ST-coverage:UR-001->ST-FR-001-03', keys)
+
+
 if __name__ == '__main__':
     unittest.main()

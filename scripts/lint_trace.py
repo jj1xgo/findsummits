@@ -304,6 +304,100 @@ def apply_exemptions(findings, exemptions, repo):
 
 
 
+CASE_ROW_RE = re.compile(r'^\|\s*`((?:UT|IT|ST)-[^`]+)`([^|]*)\|')
+CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_-]+)(.*)$')
+CASE_FORMAT = {
+    'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-\d{2}$'),
+    'IT': re.compile(r'^IT-([A-Za-z0-9_-]+)-\d{2}$'),
+    'ST': re.compile(r'^ST-((?:FR|NFR|UR)-\d{3})-\d{2}$'),
+}
+ST_COVERAGE_HEAD_RE = re.compile(r'^## \d+\. URカバレッジ表')
+CASE_REF_RE = re.compile(r'`(ST-(?:FR|NFR|UR)-\d{3}-)(\d{2}|\*)`(?:〜`(\d{2})`)?')
+
+
+def load_cases(repo):
+    cases, out = {}, []
+    for level, path in CASE_DOCS.items():
+        if not repo.has(path):
+            continue
+        for no, line in iter_lines(repo.read(path)):
+            m = CASE_ROW_RE.match(line) or CASE_HEAD_RE.match(line)
+            if not m or not m.group(1).startswith(level + '-'):
+                continue
+            cid = m.group(1)
+            if cid in cases:
+                out.append(finding('T1', f'{cid}:重複', f'{path}:{no}', f'テストケース ID {cid} が重複しています'))
+                continue
+            cases[cid] = {'level': level, 'path': path, 'line': no, 'manual': MANUAL_MARK in m.group(2)}
+    return cases, out
+
+
+def check_cases(cases, req_ids, urs, modules, confirmed):
+    out, st_parents, ut_modules = [], set(), set()
+    for cid, c in sorted(cases.items()):
+        where = f'{c["path"]}:{c["line"]}'
+        m = CASE_FORMAT[c['level']].match(cid)
+        if not m:
+            out.append(finding('T1', cid, where,
+                               f'テストケース ID {cid} の書式が規則（02_test_policy.md §6）と違います'))
+            continue
+        if c['level'] == 'ST':
+            st_parents.add(m.group(1))
+            if m.group(1) not in req_ids | urs:
+                out.append(finding('T2', cid, where, f'{cid} の対象 {m.group(1)} は URD・SRS にありません'))
+        elif c['level'] == 'UT':
+            ut_modules.add(f'LLD-{m.group(1)}')
+            if modules is not None and f'LLD-{m.group(1)}' not in modules:
+                out.append(finding('T2', cid, where, f'{cid} の対象 LLD-{m.group(1)} は LLD にありません'))
+    if 'ST' in confirmed:
+        for rid in sorted(req_ids - st_parents):
+            out.append(finding('T3', f'ST:{rid}', CASE_DOCS['ST'], f'{rid} の ST がありません'))
+    if 'UT' in confirmed and modules is not None:
+        for mid in sorted(set(modules) - ut_modules):
+            out.append(finding('T3', f'UT:{mid}', CASE_DOCS['UT'], f'{mid} の UT がありません'))
+    return out
+
+
+def unresolved_case_refs(cell, cases):
+    """`ST-FR-001-02`・`ST-FR-006-*`・`ST-NFR-001-02`〜`05` の形の参照のうち、実在するケースに解決しないもの"""
+    out = []
+    for prefix, start, end in CASE_REF_RE.findall(cell):
+        if start == '*':
+            if not any(c.startswith(prefix) for c in cases):
+                out.append(prefix + '*')
+            continue
+        numbers = [start] if not end else [f'{n:02d}' for n in range(int(start), int(end) + 1)]
+        out += [prefix + n for n in numbers if prefix + n not in cases]
+    return out
+
+
+def check_st_matrix(repo, urs, declared, cases):
+    path = CASE_DOCS['ST']
+    if not repo.has(path):
+        return []
+    inverse = defaultdict(set)
+    for rid, parents in declared.items():
+        for u in parents:
+            inverse[u].add(rid)
+    out, seen = [], set()
+    for no, cells in table_rows(repo.read(path), ST_COVERAGE_HEAD_RE):
+        m = UR_LINK_RE.search(cells[0]) if cells else None
+        if not m or len(cells) < 3:
+            continue
+        u = m.group(1)
+        seen.add(u)
+        got = set(REQ_LINK_RE.findall(cells[2]))
+        if got != inverse[u]:
+            out.append(finding('T4', f'ST-coverage:{u}', f'{path}:{no}',
+                               f'{u} の行 {sorted(got)} が SRS の対応 UR の宣言 {sorted(inverse[u])} と違います'))
+        for ref in unresolved_case_refs(cells[3] if len(cells) > 3 else '', cases):
+            out.append(finding('T2', f'ST-coverage:{u}->{ref}', f'{path}:{no}',
+                               f'{u} の行のテストケース {ref} は ST にありません'))
+    for u in sorted(urs - seen):
+        out.append(finding('T4', f'ST-coverage:{u}', path, f'URカバレッジ表に {u} の行がありません'))
+    return out
+
+
 def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
     out = check_links(repo)
     urs, reqs, comps = load_requirements(repo)
@@ -312,6 +406,9 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     srs_out, declared = check_srs(urs, reqs, confirmed)
     out += srs_out
     out += check_srs_matrix(repo, urs, declared)
+    cases, case_out = load_cases(repo)
+    out += case_out + check_cases(cases, req_ids, urs, None, confirmed)
+    out += check_st_matrix(repo, urs, declared, cases)
     return apply_exemptions(out, exemptions, repo)
 
 
