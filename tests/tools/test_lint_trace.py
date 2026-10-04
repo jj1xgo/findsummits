@@ -190,6 +190,47 @@ class ReadErrorTest(unittest.TestCase):
         self.assertEqual(keys, ['T1:exemption:T1:docs/gone.md:read'])
 
 
+class GapTest(TraceTestCase):
+    """#114: 分岐ごとの負例"""
+
+    def lld_files(self, lld):
+        return dict(BASE, **{'docs/30_HLD.md': HLD, 'docs/40_LLD.md': lld, 'src/one.cpp': '// trace: LLD-one\n'})
+
+    def test_hld_points_to_unknown_requirement(self):
+        hld = HLD.replace('[FR-001]', '[FR-099]')
+        self.assertIn('T2:HLD-3.1->FR-099', self.keys(dict(BASE, **{'docs/30_HLD.md': hld})))
+
+    def test_lld_id_format(self):
+        lld = LLD.replace('- **ID**: LLD-one', '- **ID**: LLD one')
+        self.assertIn('T1:LLD:7:ID', self.keys(self.lld_files(lld)))
+
+    def test_lld_duplicate_id(self):
+        lld = LLD + '\n### 1.2 二つ目\n\n- **ID**: LLD-one\n'
+        self.assertIn('T1:LLD-one:重複', self.keys(self.lld_files(lld)))
+
+    def test_lld_without_hld_declaration(self):
+        lld = '\n'.join(x for x in LLD.split('\n') if not x.startswith('- **対応 HLD**'))
+        self.assertIn('T1:LLD-one:対応 HLD', self.keys(self.lld_files(lld)))
+
+    def test_srs_matrix_missing(self):
+        srs = SRS.replace('## 12. 要求追跡マトリクス', '## 12. 別の表')
+        self.assertIn('T4:SRS-matrix:table', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_srs_matrix_row_without_declaration(self):
+        srs = SRS.replace('#### FR-002: 二\n\n- **対応 UR**', '#### FR-002: 二\n\n- **別のラベル**')
+        self.assertIn('T4:SRS-matrix:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_python_that_does_not_tokenize_falls_back_to_lines(self):
+        files = dict(BASE, **{'tests/scripts/test_bad.py': "x = '''\n# trace: UT-one-09\n"})
+        self.assertIn('T2:tests/scripts/test_bad.py->UT-one-09', self.keys(files))
+
+    def test_manual_mark_must_follow_the_id(self):
+        ut = UT.replace('| `UT-one-01` | a |', '| `UT-one-01` 説明（手動） | a |')
+        files = self.lld_files(LLD)
+        files.update({'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// trace: UT-one-02\n'})
+        self.assertIn('T5:UT-one-01', self.keys(files, confirmed={'SRS', 'HLD', 'LLD', 'UT'}))
+
+
 class StageTest(TraceTestCase):
     ADR = 'docs/decisions/ADR-X.md'
 

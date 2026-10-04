@@ -402,7 +402,8 @@ def load_cases(repo):
             if cid in cases:
                 out.append(finding('T1', f'{cid}:重複', f'{path}:{no}', f'テストケース ID {cid} が重複しています'))
                 continue
-            cases[cid] = {'level': level, 'path': path, 'line': no, 'manual': MANUAL_MARK in m.group(2)}
+            cases[cid] = {'level': level, 'path': path, 'line': no,
+                          'manual': m.group(2).lstrip().startswith(MANUAL_MARK)}
     return cases, out
 
 
