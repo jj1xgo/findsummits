@@ -40,7 +40,7 @@ DEM10b と同じ解像度で [FR-002](../20_SRS.md#fr-002-dem-階層フォール
 
 却下。上記の食い違いが残り、[FR-002](../20_SRS.md#fr-002-dem-階層フォールバック) の入力契約とも合わない。
 
-**(B) SRS の記述だけを ADR-SRS-004 に合わせる（DEM ごとに標高で pooling）**
+**(B) SRS の記述だけを [ADR-SRS-004](ADR-SRS-004-level14-max-pooling-isolated-peaks.md) に合わせる（DEM ごとに標高で pooling）**
 
 却下。入力契約の食い違いは解消するが、フォールバックの食い違いは残る。
 

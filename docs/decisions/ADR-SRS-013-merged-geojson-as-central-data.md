@@ -20,7 +20,7 @@
 
 2. **中心データのイメージ乖離**: ユーザーの本来のイメージは「バッチ処理完了時に全結果が集約した 1 つの中心データが出来ていて、HTML ビューアはそれを表示するだけ」というものだったが、現設計では 2 ファイルを [FR-013](../20_SRS.md#fr-013-html-ビューア生成) で統合するまで中心データが存在しなかった
 
-3. **不備フラグの格納場所**: ADR-SRS-011 では不備フラグを merged.csv 列に追加するとしていたが、中心 GeoJSON を中心とするなら metadata プロパティに持つ方が自然
+3. **不備フラグの格納場所**: [ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md) では不備フラグを merged.csv 列に追加するとしていたが、中心 GeoJSON を中心とするなら metadata プロパティに持つ方が自然
 
 4. **dominant ケースの 2 行問題**: dominant ピーク 1 エントリは申請書 XLSX で「追加（dominant）」と「削除（既存サミット）」の 2 行に展開され、それぞれ異なる根拠（※2 と ※4）が必要。Point フィーチャが独立していれば各フィーチャに rationale を持たせることで自然に解決できる
 
@@ -88,7 +88,7 @@ dominant 行は申請書 XLSX で 2 行（追加 + 削除）に展開される�
 
 | セクション | 変更内容 |
 |---|---|
-| **3.2 主要コンポーネント構成** | 統合・突合コンポーネントの主要出力を `merged_summit.geojson` に一本化 |
+| **[3.2 主要コンポーネント構成](../20_SRS.md#32-主要コンポーネント構成)** | 統合・突合コンポーネントの主要出力を `merged_summit.geojson` に一本化 |
 | **3.3 フェーズ俯瞰** | フェーズ3 末尾を「`merged_summit.geojson`（中心）+ `merged.csv`（派生エビデンス）」に書き換え |
 | **[FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合)** | 出力を「内部 work CSV」と位置付け |
 | **[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)** | 出力を `merged_summit.geojson` として記述。※2/※4/※5 テンプレート集約。rationale 生成要件追加 |
@@ -100,11 +100,11 @@ dominant 行は申請書 XLSX で 2 行（追加 + 削除）に展開される�
 
 ### 既存 ADR への波及
 
-- **ADR-SRS-011**（delete-zone-polygon）: Consequences の「不備フラグ列は merged.csv に追加」記述を「不備フラグは `merged_summit.geojson` のフィーチャプロパティ（metadata）に格納し、merged.csv（派生エビデンス）には含めない」に補足追記
-- **ADR-SRS-030**（rename-central-geojson-merged-summit）: 本 ADR 決定時のファイル名 `merged.geojson` を `merged_summit.geojson`（和名「突合済み統合 GeoJSON」）へリネームした。本 ADR の本文は最新名に更新済み
-- **ADR-SRS-033**（defect-confirmation-via-xlsx）: 本 ADR で決定した「不備フラグを `merged_summit.geojson` metadata に格納する」設計を改訂。top-level boolean 不備フラグは metadata から削除し、不備確認の責務を `merged_summit.xlsx`（per-row 表示）へ移行する。per-feature プロパティ（`key_col_resolved`・`area_complete`）は維持する。
-- **ADR-SRS-004 / ADR-SRS-010**: 影響なし（per-mesh 段階の出力フォーマットは変更不要）
-- **ADR-URD-019**: [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の GeoJSON 埋め込み方式を「固定テンプレート + 別ファイルのデータ」に改訂
+- **[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md)**（delete-zone-polygon）: Consequences の「不備フラグ列は merged.csv に追加」記述を「不備フラグは `merged_summit.geojson` のフィーチャプロパティ（metadata）に格納し、merged.csv（派生エビデンス）には含めない」に補足追記
+- **[ADR-SRS-030](ADR-SRS-030-rename-central-geojson-merged-summit.md)**（rename-central-geojson-merged-summit）: 本 ADR 決定時のファイル名 `merged.geojson` を `merged_summit.geojson`（和名「突合済み統合 GeoJSON」）へリネームした。本 ADR の本文は最新名に更新済み
+- **[ADR-SRS-033](ADR-SRS-033-defect-confirmation-via-xlsx.md)**（defect-confirmation-via-xlsx）: 本 ADR で決定した「不備フラグを `merged_summit.geojson` metadata に格納する」設計を改訂。top-level boolean 不備フラグは metadata から削除し、不備確認の責務を `merged_summit.xlsx`（per-row 表示）へ移行する。per-feature プロパティ（`key_col_resolved`・`area_complete`）は維持する。
+- **[ADR-SRS-004](ADR-SRS-004-level14-max-pooling-isolated-peaks.md) / [ADR-SRS-010](ADR-SRS-010-cpp-opencv-migration.md)**: 影響なし（per-mesh 段階の出力フォーマットは変更不要）
+- **[ADR-URD-019](ADR-URD-019-public-viewer-served-from-evidence-geojson.md)**: [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の GeoJSON 埋め込み方式を「固定テンプレート + 別ファイルのデータ」に改訂
 
 ### 関連 ISSUE への影響
 

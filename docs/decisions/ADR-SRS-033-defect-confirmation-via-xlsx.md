@@ -92,5 +92,5 @@ geojson のみに持ち、xlsx には追加しない案。問題 2・3 が解消
 - **SRS [FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)（xlsx カラム定義）**: `area_complete` 列を追加、`match_status` 値域に `delete`/`unmatched` を追記
 - **SRS 6.5（サミット一覧（突合後）仕様）**: 同上の変更を反映
 - **SRS [FR-013](../20_SRS.md#fr-013-html-ビューア生成)（metadata 一覧）**: boolean 不備フラグ群の記述を削除（per-feature プロパティは残す）
-- **ADR-SRS-011 Consequences**: 「不備フラグは `merged_summit.geojson` のメタデータプロパティに格納」を本 ADR 決定に更新
-- **ADR-SRS-013**: 「不備フラグを metadata に」という旧決定を本 ADR 決定で上書きと追記
+- **[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md) Consequences**: 「不備フラグは `merged_summit.geojson` のメタデータプロパティに格納」を本 ADR 決定に更新
+- **[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)**: 「不備フラグを metadata に」という旧決定を本 ADR 決定で上書きと追記

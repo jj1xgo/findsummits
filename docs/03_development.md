@@ -92,7 +92,7 @@ make clean                                 # build/ を削除
 
 正本は git の annotated tag。`VERSION` ファイルや文書内の番号表は作らない。
 
-- 採番規則の要約: 正式リリース前は `v0.x.y`。x は SRS §6 の外部 I/F・§2.2.1 の設定項目・CLI 引数の
+- 採番規則の要約: 正式リリース前は `v0.x.y`。x は SRS §6 の外部 I/F・[§2.2.1](20_SRS.md#221-設定可能項目) の設定項目・CLI 引数の
   非追加的変更か新 FR の実装で上げ、y はそれ以外。`1.0.0` の到達条件と互換性保証対象、詳細な採番規則は
   [ADR-OPS-001](decisions/ADR-OPS-001-semver-tagging-and-release-versioning.md) を参照。
 - 手順: `release/*` → main をマージした後、main のマージコミットで `git tag -a vX.Y.Z -m "<要約>"` を打ち、

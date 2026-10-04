@@ -87,7 +87,7 @@
 |---|---|---|
 | `merged_summit.geojson`（[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)） | フィーチャ構成表が peak.match_status 軸 | 全フィーチャに `category` プロパティ付与。フィーチャ構成表を申請カテゴリ別に再編 |
 | `merged_summit.xlsx` / `merged_summit_revised.xlsx`（[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)） | `match_status` 列のみ（値域が行種別で異なり直読困難） | `category` 列を追加（`match_status` 列は残す） |
-| ビューアカテゴリフィルター（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信)） | 消費側が実行時に `feature_type`/`match_status`/`is_band_change_candidate` から導出（ADR-SRS-035） | 格納済み `category` プロパティを読む（導出ロジックを廃止） |
+| ビューアカテゴリフィルター（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)/[FR-020](../20_SRS.md#fr-020-公開用ビューア配信)） | 消費側が実行時に `feature_type`/`match_status`/`is_band_change_candidate` から導出（[ADR-SRS-035](ADR-SRS-035-viewer-category-filter-feature-mapping.md)） | 格納済み `category` プロパティを読む（導出ロジックを廃止） |
 | 申請エビデンス ZIP 分割（[FR-021](../20_SRS.md#fr-021-申請エビデンス-zip-生成)） | new/dominant/changed/unchanged.geojson（4ファイル、delete サミットは dominant に同梱） | add/band_change/no_change/delete/review.geojson（5ファイル、ファイル名は category 値に厳密準拠、削除独立・要確認同梱） |
 
 ### FR-021 ZIP への `review.geojson` 同梱

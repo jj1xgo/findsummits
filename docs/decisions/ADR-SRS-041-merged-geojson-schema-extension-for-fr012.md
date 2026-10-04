@@ -6,7 +6,7 @@
 ## Context
 
 [FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成)（サミット一覧（申請内容反映版）生成）は HTML ビューア（[FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様)）内でブラウザ生成される。
-[FR-013](../20_SRS.md#fr-013-html-ビューア生成) が埋め込む入力は `merged_summit.geojson` のみであり（ADR-SRS-013）、[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) が参照できるのも
+[FR-013](../20_SRS.md#fr-013-html-ビューア生成) が埋め込む入力は `merged_summit.geojson` のみであり（[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)）、[FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) が参照できるのも
 この geojson だけである。
 
 一方、SRS が [FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の出力として要求するカラムのうち、以下の 6 項目が
@@ -35,7 +35,7 @@ geojson への追加が必要である。
 
 - [FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) が `merged_summit.geojson` のみを入力として全出力カラムを生成できるようになる
 - merged_summit.geojson と merged_summit.xlsx のカラム統一が維持される
-- [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の geojson 埋め込み方式（ADR-SRS-013）は変更不要（2026-09-19 に ADR-URD-019 で改訂）
+- [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の geojson 埋め込み方式（[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)）は変更不要（2026-09-19 に [ADR-URD-019](ADR-URD-019-public-viewer-served-from-evidence-geojson.md) で改訂）
 
 ## Alternatives
 
@@ -53,5 +53,5 @@ geojson への追加が必要である。
 - [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) スキーマ正本（SRS [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の各フィーチャ・プロパティ表）に 6 プロパティを追加する（SRS 更新）
 - [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の実装でこれらの値を geojson フィーチャに格納するよう追従が必要（実装フェーズ）
 - [FR-012](../20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の実装は geojson から全カラムを読み出せる前提で構築できる
-- [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の geojson 埋め込みは変更不要（geojson を丸ごと埋め込む方式のため。2026-09-19 に ADR-URD-019 で改訂）
+- [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の geojson 埋め込みは変更不要（geojson を丸ごと埋め込む方式のため。2026-09-19 に [ADR-URD-019](ADR-URD-019-public-viewer-served-from-evidence-geojson.md) で改訂）
 - merged_summit.geojson のサイズがプロパティ追加分だけ増加するが、診断情報のため許容できる

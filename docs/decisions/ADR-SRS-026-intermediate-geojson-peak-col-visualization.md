@@ -10,7 +10,7 @@
 これを受けた [NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化) は中間 GeoJSON を地理院地図へのドラッグ&ドロップで確認できることを仕様化したが、
 「ピーク・コルの対応関係の精密な可視化（コル位置の地図表示）は保証範囲外」と明示し、本 ADR に委ねていた（[ADR-SRS-025](ADR-SRS-025-observability-nfr-ur013-srs-scope.md) 参照）。
 
-現行の中間 GeoJSON（ADR-SRS-022 の join 方式）は以下のフィーチャのみを持つ:
+現行の中間 GeoJSON（[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の join 方式）は以下のフィーチャのみを持つ:
 
 - Polygon: activation_zone / delete_zone（ゾーンの形状）
 - properties: `peak_lat`/`peak_lon`/`feature_type`/`area_complete`（join キー 4 フィールド）
@@ -65,9 +65,9 @@ merged_peak.geojson が非ポリゴンフィーチャ（Point・LineString）を
 
 ### ADR-SRS-022 との関係
 
-本 ADR は ADR-SRS-022（join 方式）と矛盾しない。追加する point/LineString フィーチャは**幾何・表現**のための
+本 ADR は [ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md)（join 方式）と矛盾しない。追加する point/LineString フィーチャは**幾何・表現**のための
 フィーチャであり、プロミネンス・標高等の**データ属性の二重管理**ではない。
-ADR-SRS-022 の 4 プロパティ（`peak_lat`/`peak_lon`/`feature_type`/`area_complete`）の設計は不変。
+[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の 4 プロパティ（`peak_lat`/`peak_lon`/`feature_type`/`area_complete`）の設計は不変。
 
 ## Alternatives
 
@@ -95,5 +95,5 @@ GeoJSON の properties に `col_lat`/`col_lon` を追加するだけで点・線
   （独立峰の確定コルも含む）。コード追従: merge.py の GeoJSON 統合処理追従（HLD/COD）
 - **[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)**: point-in-polygon を `feature_type ∈ {activation_zone, delete_zone}` のポリゴンに絞る注記を追加。コード追従: HLD/COD
 - **[NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化)**: 「保証範囲外」の記述を削除し、本 ADR を参照してスコープ内に改訂
-- **ADR-SRS-022**: Consequences に本 ADR への前方リンクを追加
+- **[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md)**: Consequences に本 ADR への前方リンクを追加
 - コード追従（mesh_analyze.c・merge.py・[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) のポリゴン絞り込み）は HLD/COD ステージ（todo.md 転記済み）

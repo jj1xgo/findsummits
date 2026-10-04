@@ -1,7 +1,7 @@
 # ADR-SRS-019: 陸地最高峰の Key コル確定方式
 
 | 状態 | 採用・未実装 |
-| 決定日 | 2026-06-12（2026-06-18 層2の実施箇所を [FR-022](../20_SRS.md#fr-022-コル充足判定) → [FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) に改訂。ADR-SRS-027） |
+| 決定日 | 2026-06-12（2026-06-18 層2の実施箇所を [FR-022](../20_SRS.md#fr-022-コル充足判定) → [FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) に改訂。[ADR-SRS-027](ADR-SRS-027-fr022-purification-fr023-pipeline-control.md)） |
 
 > ※ **層2（陸地最高峰の手動確定を [FR-022](../20_SRS.md#fr-022-コル充足判定) が行う）** とした本 ADR Decision の箇所は、[ADR-SRS-027](ADR-SRS-027-fr022-purification-fr023-pipeline-control.md)（2026-06-18）によって supersede された。陸地最高峰の海面確定は **[FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) が `merged_peak.csv` 生成時に毎回適用**する（案B）。
 >

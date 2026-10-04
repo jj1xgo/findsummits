@@ -24,7 +24,7 @@ URD に追加されたが、SRS 側に受け皿が無く [UR-013](../10_URD.md#u
 
 足りていたのは「なぜこれを物理出力するか・ループ内再入が必要か」を裏付ける根拠（URD/SRS レベルの要件）だけであった。
 
-② は別途設計検討が必要（ADR-SRS-022 の見直しを伴う可能性がある。[ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md) で対応済み）。
+② は別途設計検討が必要（[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の見直しを伴う可能性がある。[ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md) で対応済み）。
 
 ## Decision
 
@@ -46,7 +46,7 @@ NFR として扱う根拠: ① は「特定のフィーチャを追加する」�
 
 **(c) ピーク↔コル対応の可視化（②）はスコープ分割し [ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md) で対応**
 
-② は ADR-SRS-022 の join 方式（GeoJSON にコル座標を持たない設計）と緊張する設計判断を含む。
+② は [ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の join 方式（GeoJSON にコル座標を持たない設計）と緊張する設計判断を含む。
 本 ADR のスコープ外とし、実データ検証を経た上で別セッションで方式決定する。
 
 ## Alternatives
@@ -60,9 +60,9 @@ NFR として扱う根拠: ① は「特定のフィーチャを追加する」�
 **2. ピーク↔コル対応を同時解決する案（却下）**
 
 ① と ② を本 ADR で一括して扱い、コル情報付与方式まで決定する案。
-② は ADR-SRS-022 の join 方式見直しの可能性を含む重い設計判断であり、実データで
+② は [ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の join 方式見直しの可能性を含む重い設計判断であり、実データで
 「コルが見えないと実際どこまで困るか」を確認してから決めるべき。
-リスクが高い判断を急ぐと ADR-SRS-022 の手戻りが発生するため却下。
+リスクが高い判断を急ぐと [ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md) の手戻りが発生するため却下。
 
 **3. 専用の「中間可視化コンポーネント」FR を新設する案（却下）**
 
@@ -75,4 +75,4 @@ per-mesh GeoJSON・merged_peak.geojson を一括で扱う専用 FR を新設す�
 - [UR-013](../10_URD.md#ur-013) → [NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化) → [FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成)/[FR-018](../20_SRS.md#fr-018-per-mesh-ピーク候補-geojson-統合) のトレースが SRS 内で閉じる
 - [FR-018](../20_SRS.md#fr-018-per-mesh-ピーク候補-geojson-統合) のループ内再入設計（[ADR-SRS-024](ADR-SRS-024-fr018-loop-reentry-and-peak-filter.md)）の根拠が URD/SRS 両レベルで確立する
 - [NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化) の保証範囲外（コル座標の地図表示）は [ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md) として明示し、スコープの曖昧さを解消する
-- ② の設計が固まった時点で本 ADR を更新するか、新規 ADR-SRS-026 で補完する
+- ② の設計が固まった時点で本 ADR を更新するか、新規 [ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md) で補完する

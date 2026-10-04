@@ -50,9 +50,9 @@ C++ の RAII（コンストラクタ／デストラクタによる自動メモ�
 
 ### 現行 ADR との関係
 
-ADR-SRS-001（C + Python ハイブリッドアーキテクチャ）は「C エンジン + Python スクリプト」という分業を定めている。本 ADR は **C エンジン部分を C++ に置き換える**ものであり、ハイブリッド原則（性能要求は C/C++、出力フォーマットは Python）は維持される。ADR-SRS-001 の状態を「ADR-SRS-010 により部分置換予定」に更新する。
+[ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md)（C + Python ハイブリッドアーキテクチャ）は「C エンジン + Python スクリプト」という分業を定めている。本 ADR は **C エンジン部分を C++ に置き換える**ものであり、ハイブリッド原則（性能要求は C/C++、出力フォーマットは Python）は維持される。[ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md) の状態を「ADR-SRS-010 により部分置換予定」に更新する。
 
-ADR-SRS-002（DEM 階層フォールバック）・ADR-SRS-004（L14 max pooling 広域再解析）等の他の ADR は、いずれも C エンジン内部の実装方針を定めるもので、本 ADR とは独立。C++ 移行後も同じ方針を継承する。
+[ADR-SRS-002](ADR-SRS-002-dem-hierarchy-fallback.md)（DEM 階層フォールバック）・[ADR-SRS-004](ADR-SRS-004-level14-max-pooling-isolated-peaks.md)（L14 max pooling 広域再解析）等の他の ADR は、いずれも C エンジン内部の実装方針を定めるもので、本 ADR とは独立。C++ 移行後も同じ方針を継承する。
 
 ## Decision
 
@@ -63,7 +63,7 @@ ADR-SRS-002（DEM 階層フォールバック）・ADR-SRS-004（L14 max pooling
    - リサイズ（`cv::resize`）
    - Flood Fill（`cv::floodFill`）
    - 輪郭抽出（`cv::findContours`、lossless 出力のため `CHAIN_APPROX_SIMPLE` モードを使用。形状を変える簡略化は採用しない）
-3. **ADR-SRS-001 のハイブリッド原則を維持**: 性能要求のある処理は C++、出力フォーマット要求は Python の境界は変えない。per-mesh CSV と per-mesh GeoJSON が境界ファイルとなる
+3. **[ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md) のハイブリッド原則を維持**: 性能要求のある処理は C++、出力フォーマット要求は Python の境界は変えない。per-mesh CSV と per-mesh GeoJSON が境界ファイルとなる
 4. **段階的移行を採用**: 各 Phase 完了時点で既存テスト全通過＋実メッシュでの動作同値性を検証してから次へ進む
 
 ### 段階実行プラン
@@ -91,9 +91,9 @@ Phase 1〜2 は既存機能の動作維持が目的であり、新機能追加�
 |---|---|
 | C のまま自前実装で [FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成) を完成させる | 境界追跡・輪郭抽出のエッジケース実装コストが高く、バグリスクも大。[FR-014](../20_SRS.md#fr-014-広域結合解析オーケストレーション) や将来の画像処理拡張のたびに同様の自作が必要になる |
 | [FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成) のみを C++ モジュール化（折衷案） | C から呼ぶための `extern "C"` ラッパーが煩雑。OpenCV の戻り値型（`std::vector<std::vector<cv::Point>>` 等）を C 側で扱うのが現実的でない。結局フル C++ 化したくなる |
-| Python 単体実装に回帰（findsummits4sotaja 方式） | 大規模メッシュでのメモリ・速度要件を満たせない懸念から ADR-SRS-001 で却下済み。本判断でもその前提は維持 |
+| Python 単体実装に回帰（findsummits4sotaja 方式） | 大規模メッシュでのメモリ・速度要件を満たせない懸念から [ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md) で却下済み。本判断でもその前提は維持 |
 | OpenCV を採用せず別の C++ 画像処理ライブラリ（CImg, GIL 等）を採用 | 採用例・コミュニティ規模・ドキュメント量で OpenCV が圧倒的。Terrain-RGB の用途で他ライブラリを選ぶ理由がない |
-| matplotlib を C++ から呼ぶ（Python embedding / `matplotlib-cpp`） | ADR-SRS-001 のハイブリッド分担原則（C エンジンと Python スクリプトは別プロセスとして分離する）に反する。`matplotlib-cpp` は C エンジンのプロセス内部に Python インタプリタを embedding する仕組みであり、性能要求のある処理を担うはずの C エンジンのプロセス境界を壊す。加えて `plot()` 等のグラフ描画 API のラッパーに過ぎず、`LightSource` のような陰影合成 API には対応していない |
+| matplotlib を C++ から呼ぶ（Python embedding / `matplotlib-cpp`） | [ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md) のハイブリッド分担原則（C エンジンと Python スクリプトは別プロセスとして分離する）に反する。`matplotlib-cpp` は C エンジンのプロセス内部に Python インタプリタを embedding する仕組みであり、性能要求のある処理を担うはずの C エンジンのプロセス境界を壊す。加えて `plot()` 等のグラフ描画 API のラッパーに過ぎず、`LightSource` のような陰影合成 API には対応していない |
 | Rust への移行（`opencv` クレートまたは Rust ネイティブ画像処理。2026-07-11 検討・却下） | 実行性能は C++ と同等でありパフォーマンス面の移行動機がない。OpenCV 利用は FFI バインディング（`opencv` クレート）経由となり、ビルド複雑性（clang/bindgen 依存・OpenCV 本体とのバージョン整合）を抱える。Rust ネイティブ代替（image/imageproc 等）は [FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成) が要求する lossless 輪郭抽出の同値性が未検証。将来の解析方式転換（[URD 将来スコープ](../10_URD.md#7-将来スコープv20候補)・[ADR-SRS-003](ADR-SRS-003-3x3-mesh-analysis.md) の 2026-07-11 追記参照）も C++ で成立し（タイル分割＋境界マージの先行実装 RichDEM は C++）、言語切替を強制されるシナリオがない。メモリ安全性の主要な痛点（malloc/free 手動管理）は本 ADR の RAII 限定方針で解消済み。個人開発における borrow checker の学習コストも大きい。gccrs は 2026-07 時点で実用段階になく判断に影響しない。詳細: [`research/rust-cpp-and-scalable-analysis-research.md`](research/rust-cpp-and-scalable-analysis-research.md) §A〜C |
 
 ## Consequences
@@ -132,8 +132,8 @@ Phase 1〜4 の詳細手順・検証手順は採用後に各 ISSUE として登�
 
 ### 既存ドキュメントへの波及
 
-- **ADR-SRS-001**: 状態を「採用・実装済み（ADR-SRS-010 により C 部分が C++ に置換予定）」に更新
-- **SRS（20_SRS.md）のアーキテクチャ概要（3.2/3.3）**: 論理コンポーネント名で記述するため、本 ADR の言語変更による影響を受けない。実装言語・ファイル名の決定は本 ADR で完結し、HLD/LLD で具体的なビルド構成を扱う。
+- **[ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md)**: 状態を「採用・実装済み（ADR-SRS-010 により C 部分が C++ に置換予定）」に更新
+- **SRS（[20_SRS.md](../20_SRS.md)）のアーキテクチャ概要（[3.2](../20_SRS.md#32-主要コンポーネント構成)/[3.3](../20_SRS.md#33-フェーズ分割)）**: 論理コンポーネント名で記述するため、本 ADR の言語変更による影響を受けない。実装言語・ファイル名の決定は本 ADR で完結し、HLD/LLD で具体的なビルド構成を扱う。
 - **公開の環境・ビルド文書**（`docs/01_environment.md`、`README.md`）: 「依存: libpng, libm, pthread（GCC / C99）」を「依存: OpenCV, libm, pthread（g++ / C++17）」に更新（Phase 1 着手時に実施）（2026-09-30 追記: 言語規格は [HLD 2.6.3](../30_HLD.md#263-設計判断) の D9 で、動作確認環境の GCC が安定と扱う最新の規格（現時点は C++20）に改めた。ここの「C++17」と、調査資料の Makefile の規格指定（`-std=c++17`）は C++20 に読み替える）
 
 ### 既存課題への影響

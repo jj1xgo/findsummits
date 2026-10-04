@@ -5,7 +5,7 @@
 
 > **本 ADR は [ADR-SRS-043](ADR-SRS-043-matched-peak-as-delete-reference.md) により supersede された（2026-06-29）。**
 > シナリオD（AZ1+delete_zone1 同一ピーク）で削除申請データを取りこぼす過剰補正であったため。
-> 現行仕様は ADR-SRS-043 を参照すること。
+> 現行仕様は [ADR-SRS-043](ADR-SRS-043-matched-peak-as-delete-reference.md) を参照すること。
 
 ## Context
 

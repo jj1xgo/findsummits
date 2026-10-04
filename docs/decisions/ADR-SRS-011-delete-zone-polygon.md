@@ -104,8 +104,8 @@ Union-Find を拡張し、暫定 `col_elev` で暫定ポリゴンを生成する
 
 ### 影響を受ける文書・実装
 
-- **ADR-URD-007** (peak-match-status-terminology): 「コル等高線内」表記を「delete判定ゾーン内」に更新
-- **ADR-SRS-008** (dominant-peak-identification): 「コル等高線ポリゴン」「feature_type=key_col_boundary」表記を delete判定ゾーン関連に更新（アルゴリズム本体は維持）
+- **[ADR-URD-007](ADR-URD-007-peak-match-status-terminology.md)** (peak-match-status-terminology): 「コル等高線内」表記を「delete判定ゾーン内」に更新
+- **[ADR-SRS-008](ADR-SRS-008-dominant-peak-identification.md)** (dominant-peak-identification): 「コル等高線ポリゴン」「feature_type=key_col_boundary」表記を delete判定ゾーン関連に更新（アルゴリズム本体は維持）
 - **[FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成)**: コル等高線ポリゴン仕様を削除し、delete判定ゾーンポリゴン仕様を追加
 - **[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)**: `summit.match_status` に `unmatched` 追加、エラー停止仕様追加
 - **[FR-013](../20_SRS.md#fr-013-html-ビューア生成)**: dominant/new フィーチャ構成のポリゴン種別を変更
@@ -116,9 +116,9 @@ Union-Find を拡張し、暫定 `col_elev` で暫定ポリゴンを生成する
 - **output_geojson.py**: dominant フィーチャ構成変更
 - **params/config.ini.example**: `delete_zone_max_drop` パラメータ追加
 
-> **補足（ADR-SRS-013 採用後）**: 不備フラグは `merged.csv` の列ではなく `merged_summit.geojson` のメタデータプロパティに格納する（詳細は [ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)）。`merged.csv` は `merged_summit.geojson` から派生するエビデンス CSV であり不備フラグは含めない。
+> **補足（[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md) 採用後）**: 不備フラグは `merged.csv` の列ではなく `merged_summit.geojson` のメタデータプロパティに格納する（詳細は [ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)）。`merged.csv` は `merged_summit.geojson` から派生するエビデンス CSV であり不備フラグは含めない。
 >
-> **補足（ADR-SRS-033 採用後）**: top-level boolean 不備フラグ（`is_unmatched_summit`/`is_area_incomplete`/`is_key_col_unresolved`）は `merged_summit.geojson` の metadata からも削除し、不備確認の責務を `merged_summit.xlsx`（per-row 表示）へ移行する。per-feature プロパティ（`key_col_resolved`・`area_complete`）は維持する（詳細は [ADR-SRS-033](ADR-SRS-033-defect-confirmation-via-xlsx.md)）。
+> **補足（[ADR-SRS-033](ADR-SRS-033-defect-confirmation-via-xlsx.md) 採用後）**: top-level boolean 不備フラグ（`is_unmatched_summit`/`is_area_incomplete`/`is_key_col_unresolved`）は `merged_summit.geojson` の metadata からも削除し、不備確認の責務を `merged_summit.xlsx`（per-row 表示）へ移行する。per-feature プロパティ（`key_col_resolved`・`area_complete`）は維持する（詳細は [ADR-SRS-033](ADR-SRS-033-defect-confirmation-via-xlsx.md)）。
 
 ### 未確定事項
 
