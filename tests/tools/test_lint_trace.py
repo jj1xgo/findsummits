@@ -141,10 +141,15 @@ class LinkTest(TraceTestCase):
         self.assertNotIn('T2:docs/a.md->20_SRS.md#32-主要コンポーネント構成:label', keys)
 
     def test_section_label_keeps_dots(self):
-        text = '# 3.11 a\n\n# 3.1.1 b\n\n[3.1.1](#311-a) [3.11](#311-a) [3.1.1](#311-b)\n'
-        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
-        self.assertIn('T2:docs/a.md->#311-a:label', keys)
+        heads = '# 3.11 a\n\n# 3.1.1 b\n\n'
+        keys = self.keys(dict(BASE, **{
+            'docs/a.md': heads + '[3.11](#311-a) [3.1.1](#311-b)\n',
+            'docs/b.md': heads + '[3.1.1](#311-a) [3.11](#311-b)\n',
+        }))
+        self.assertNotIn('T2:docs/a.md->#311-a:label', keys)
         self.assertNotIn('T2:docs/a.md->#311-b:label', keys)
+        self.assertIn('T2:docs/b.md->#311-a:label', keys)
+        self.assertIn('T2:docs/b.md->#311-b:label', keys)
 
     def test_plain_number_label_must_match_numbered_heading(self):
         text = '# 6. a\n\n# 7. b\n\n[6](#7-b) [7](#7-b)\n'
