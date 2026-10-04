@@ -524,8 +524,10 @@ def check_hld(repo, req_ids, comps, confirmed):
 LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
 ANY_HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*$')
 CODE_SPAN_RE = re.compile(r'`([^`]+)`')
-# コメント行（//、#、/* や * で始まる行）の trace: だけを拾う。文字列リテラルの中の trace: は拾わない
-TRACE_RE = re.compile(r'^\s*(?://+|#+|/?\*+)\s*trace:\s*((?:LLD|UT|IT|ST)-[A-Za-z0-9_-]+)', re.M)
+TRACE_ID = r'(?:LLD|UT|IT|ST)-[A-Za-z0-9_-]+'
+# コメントの trace: だけを拾う。Python と C/C++ は行末のコメントも、bash は行頭の # の行だけ（comment_texts）。
+# 1 つのコメントに複数の ID を「,」で並べられる。文字列リテラルの中の trace: は拾わない
+TRACE_RE = re.compile(rf'^\s*(?://+|#+|/?\*+)\s*trace:\s*({TRACE_ID}(?:\s*,\s*{TRACE_ID})*)', re.M)
 MODULE_LABELS = {'ID', '対応 HLD', 'ファイル'}
 
 
@@ -644,7 +646,8 @@ def code_traces(repo, dirs):
     out = {}
     for f in sorted(repo.files):
         if f.startswith(dirs) and f.endswith(CODE_SUFFIXES):
-            out[f] = {i for c in comment_texts(f, repo.read(f)) for i in TRACE_RE.findall(c)}
+            out[f] = {i for c in comment_texts(f, repo.read(f)) for ids in TRACE_RE.findall(c)
+                      for i in re.split(r'\s*,\s*', ids)}
     return out
 
 

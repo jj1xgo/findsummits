@@ -536,6 +536,19 @@ class LldTest(TraceTestCase):
         self.assertIn('T3:UT:LLD-one', self.keys(files, confirmed={'UT'}))
 
 
+    def test_several_ids_in_one_trace_comment(self):
+        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-01, UT-one-09\n'})
+        keys = self.keys(files, confirmed={'UT'})
+        self.assertIn('T2:tests/src/test_one.cpp->UT-one-09', keys)
+        self.assertNotIn('T5:UT-one-01', keys)
+
+    def test_trailing_comment_counts_except_in_bash(self):
+        files = self.files(**{'tests/scripts/test_e.py': 'x = 1  # trace: UT-one-09\n',
+                              'tests/scripts/t.sh': 'echo a  # trace: UT-one-08\n'})
+        keys = self.keys(files)
+        self.assertIn('T2:tests/scripts/test_e.py->UT-one-09', keys)
+        self.assertNotIn('T2:tests/scripts/t.sh->UT-one-08', keys)
+
 class ParserHardeningTest(TraceTestCase):
     """実装完了時のレビュー（Codex）の指摘: 宣言・コメント・フェンスの解析の抜け"""
 
