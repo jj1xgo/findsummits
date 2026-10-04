@@ -53,6 +53,10 @@ LINK_RE = re.compile(r'\[([^\]]*)\]\(([^)\s#]*)(?:#([^)\s]+))?\)')
 INLINE_CODE_RE = re.compile(r'`[^`\n]+`')
 ID_LABEL_RE = re.compile(r'^(?:UR|FR|NFR)-\d+$')
 SECTION_LABEL_RE = re.compile(r'^(?:SRS §(\d+(?:\.\d+)*)|(\d+(?:\.\d+)+))$')
+UR_ID_RE = re.compile(r'^UR-\d+$')
+REQ_ID_RE = re.compile(r'^(?:FR|NFR)-\d+$')
+SRS_SECTION_LABEL_RE = re.compile(r'^SRS §\d+(?:\.\d+)*$')
+HLD_SECTION_LABEL_RE = re.compile(r'^\d+\.\d+(?:\.\d+)*$')
 
 
 class Finding(NamedTuple):
@@ -91,15 +95,25 @@ class Repo:
         return sorted(f for f in self.files if f.endswith('.md'))
 
 
+FENCE_RE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
+
+
 def iter_lines(text):
-    """コードブロックの外の行を (行番号, 行) で返す"""
-    in_code = False
+    """コードブロックの外の行を (行番号, 行) で返す。
+
+    フェンスは ``` と ~~~。閉じるには、開いたのと同じ文字で、同じ長さ以上で、説明の無い行が要る
+    （4 個のフェンスの中に 3 個のフェンスの例を書ける）。
+    """
+    fence = None
     for no, line in enumerate(text.split('\n'), 1):
-        if line.lstrip().startswith('```'):
-            in_code = not in_code
-            continue
-        if not in_code:
+        m = FENCE_RE.match(line)
+        if fence is None:
+            if m and not (m.group(1)[0] == '`' and '`' in m.group(2)):
+                fence = m.group(1)
+                continue
             yield no, line
+        elif m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) and not m.group(2).strip():
+            fence = None
 
 
 def github_slug(text):
@@ -139,6 +153,19 @@ def label_mismatch(label, anchor):
     return False
 
 
+def decl_ids(value, label_re, doc=None):
+    """宣言や表のセルの値から、コード表記の外にある、アンカー付きの完全なリンクのリンク文字列を取り出す。
+
+    doc を渡すと、リンク先のファイル名もその文書でなければ数えない。
+    """
+    ids = set()
+    for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', value)):
+        label, target, anchor = m.group(1), m.group(2), m.group(3)
+        if anchor and label_re.match(label) and (doc is None or os.path.basename(target) == doc):
+            ids.add(label)
+    return ids
+
+
 def check_links(repo):
     out, cache = [], {}
     for path in repo.md_files():
@@ -171,8 +198,6 @@ def check_links(repo):
 UR_ANCHOR_RE = re.compile(r'<a\s+id="ur-(\d+)"')
 SRS_REQ_RE = re.compile(r'^#{3,4}\s+((?:FR|NFR)-\d+)')
 DECL_RE = re.compile(r'^- \*\*([^*]+)\*\*:\s*(.*)$')
-UR_LINK_RE = re.compile(r'\[(UR-\d+)\]\(')
-REQ_LINK_RE = re.compile(r'\[((?:FR|NFR)-\d+)\]\(')
 COMPONENT_ROW_RE = re.compile(r'^\|\s*(C\d+)\s*\|')
 ID_NUM_RE = re.compile(r'^(UR|FR|NFR)-(\d+)$')
 SRS_MATRIX_HEAD_RE = re.compile(r'^## \d+\. 要求追跡マトリクス')
@@ -250,7 +275,7 @@ def check_srs(urs, reqs, confirmed):
             out.append(finding('T1', rid, f'{SRS}:{r["line"]}', f'{rid} に「対応 UR」の宣言がありません'))
             continue
         no, value = r['decl']['対応 UR']
-        parents = set(UR_LINK_RE.findall(value))
+        parents = decl_ids(value, UR_ID_RE, '10_URD.md')
         if not parents:
             out.append(finding('T1', rid, f'{SRS}:{no}', f'{rid} の「対応 UR」に UR へのリンクがありません'))
         for p in sorted(parents - urs):
@@ -271,8 +296,7 @@ def check_srs_matrix(repo, urs, declared):
     head_no, head = rows[0]
     cols = []
     for cell in head[2:]:
-        m = UR_LINK_RE.search(cell)
-        cols.append(m.group(1) if m else None)
+        cols.append(next(iter(decl_ids(cell, UR_ID_RE)), None))
     col_set = {c for c in cols if c}
     if col_set != urs:
         out.append(finding('T4', 'SRS-matrix:columns', f'{SRS}:{head_no}',
@@ -280,10 +304,10 @@ def check_srs_matrix(repo, urs, declared):
                            f'余分 {sorted(col_set - urs)}）'))
     seen = set()
     for no, cells in rows[1:]:
-        m = REQ_LINK_RE.search(cells[0]) if cells else None
-        if not m:
+        ids = decl_ids(cells[0], REQ_ID_RE) if cells else set()
+        if not ids:
             continue
-        rid = m.group(1)
+        rid = next(iter(ids))
         seen.add(rid)
         marks = {cols[j] for j, c in enumerate(cells[2:]) if j < len(cols) and cols[j] and '✅' in c}
         if rid not in declared:
@@ -383,12 +407,12 @@ def check_st_matrix(repo, urs, declared, cases):
             inverse[u].add(rid)
     out, seen = [], set()
     for no, cells in table_rows(repo.read(path), ST_COVERAGE_HEAD_RE):
-        m = UR_LINK_RE.search(cells[0]) if cells else None
-        if not m or len(cells) < 3:
+        ur_ids = decl_ids(cells[0], UR_ID_RE) if cells else set()
+        if not ur_ids or len(cells) < 3:
             continue
-        u = m.group(1)
+        u = next(iter(ur_ids))
         seen.add(u)
-        got = set(REQ_LINK_RE.findall(cells[2]))
+        got = decl_ids(cells[2], REQ_ID_RE)
         if got != inverse[u]:
             out.append(finding('T4', f'ST-coverage:{u}', f'{path}:{no}',
                                f'{u} の行 {sorted(got)} が SRS の対応 UR の宣言 {sorted(inverse[u])} と違います'))
@@ -401,7 +425,6 @@ def check_st_matrix(repo, urs, declared, cases):
 
 
 HLD_SEC_RE = re.compile(r'^### ([234]\.\d+) ')
-SRS_SEC_LINK_RE = re.compile(r'\[SRS §([\d.]+)\]\(')
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -416,8 +439,9 @@ def check_hld(repo, req_ids, comps, confirmed):
             out.append(finding('T1', f'HLD-{sec}:対応 SRS', where, f'{sec} に「対応 SRS」の宣言がありません'))
         else:
             no, value = d['対応 SRS']
-            ids = set(REQ_LINK_RE.findall(value))
-            if value != NO_PARENT and not ids and not SRS_SEC_LINK_RE.search(value):
+            ids = decl_ids(value, REQ_ID_RE, '20_SRS.md')
+            has_section = bool(decl_ids(value, SRS_SECTION_LABEL_RE, '20_SRS.md'))
+            if value != NO_PARENT and not ids and not has_section:
                 out.append(finding('T1', f'HLD-{sec}:対応 SRS', f'{HLD}:{no}',
                                    f'{sec} の「対応 SRS」に FR/NFR か SRS の節へのリンクがありません'
                                    f'（上位が無い節は「{NO_PARENT}」）'))
@@ -447,7 +471,6 @@ def check_hld(repo, req_ids, comps, confirmed):
 
 LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
 ANY_HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*$')
-HLD_LINK_RE = re.compile(r'\[(\d+\.\d+)(?:\.\d+)*\]\(30_HLD\.md#')
 CODE_SPAN_RE = re.compile(r'`([^`]+)`')
 # コメント行（//、#、/* や * で始まる行）の trace: だけを拾う。文字列リテラルの中の trace: は拾わない
 TRACE_RE = re.compile(r'^\s*(?://+|#+|/?\*+)\s*trace:\s*((?:LLD|UT|IT|ST)-[A-Za-z0-9_-]+)', re.M)
@@ -480,7 +503,8 @@ def check_lld(repo, hld_sections, confirmed):
             out.append(finding('T1', f'{mid}:対応 HLD', where, f'{mid} に「対応 HLD」の宣言がありません'))
         else:
             hno, value = d['対応 HLD']
-            secs = set(HLD_LINK_RE.findall(value))
+            secs = {'.'.join(label.split('.')[:2])
+                    for label in decl_ids(value, HLD_SECTION_LABEL_RE, '30_HLD.md')}
             if not secs:
                 out.append(finding('T1', f'{mid}:対応 HLD', f'{LLD}:{hno}',
                                    f'{mid} の「対応 HLD」に HLD の節へのリンクがありません'))
@@ -507,12 +531,54 @@ def check_lld(repo, hld_sections, confirmed):
     return out, modules
 
 
-def comment_texts(path, text):
-    """Python は tokenize で本物のコメントだけを取り出す（三重引用符の文字列の中の行を数えないため）。
+C_SUFFIXES = ('.c', '.h', '.cpp', '.hpp')
+RAW_OPEN_RE = re.compile(r'"([^ ()\\\t\n]{0,16})\(')
 
-    C/C++ の文字列は改行をまたげないので、それ以外は行ごとに見る。bash の heredoc の中で # から始まる行は
-    コメントとして数えてしまう（既知の制限。テストのコードに heredoc で trace: を書かない）。
+
+def skip_quoted(text, i):
+    """i の引用符（" か '）で始まる文字列・文字の、閉じの次の位置を返す（改行で打ち切る）"""
+    quote = text[i]
+    j = i + 1
+    while j < len(text) and text[j] not in (quote, '\n'):
+        j += 2 if text[j] == '\\' else 1
+    return j + 1
+
+
+def c_comments(text):
+    """C/C++ のコメントだけを返す。文字列・文字・raw 文字列（R"x( … )x"）の中は含めない"""
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c, two = text[i], text[i:i + 2]
+        if two == '//':
+            j = text.find('\n', i)
+            j = n if j < 0 else j
+            out.append(text[i:j])
+            i = j
+        elif two == '/*':
+            j = text.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            out.append(text[i:j])
+            i = j
+        elif c == '"' and i > 0 and text[i - 1] == 'R' and RAW_OPEN_RE.match(text, i):
+            delim = RAW_OPEN_RE.match(text, i).group(1)
+            end = text.find(')' + delim + '"', i)
+            i = n if end < 0 else end + len(delim) + 2
+        elif c == '"' or (c == "'" and not (i > 0 and text[i - 1].isalnum())):
+            i = skip_quoted(text, i)
+        else:
+            i += 1
+    return out
+
+
+def comment_texts(path, text):
+    """本物のコメントだけを取り出す。文字列リテラルの中の trace: を数えないため。
+
+    Python は tokenize（三重引用符の中も除く）、C/C++ は c_comments。それ以外（bash）は行ごとに見るので、
+    heredoc の中で # から始まる行はコメントとして数えてしまう（既知の制限。テストのコードに heredoc で
+    trace: を書かない）。
     """
+    if path.endswith(C_SUFFIXES):
+        return c_comments(text)
     if not path.endswith('.py'):
         return text.split('\n')
     try:

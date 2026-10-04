@@ -424,5 +424,79 @@ class LldTest(TraceTestCase):
         self.assertIn('T3:UT:LLD-one', self.keys(files, confirmed={'UT'}))
 
 
+class ParserHardeningTest(TraceTestCase):
+    """実装完了時のレビュー（Codex）の指摘: 宣言・コメント・フェンスの解析の抜け"""
+
+    def hld_files(self, hld):
+        return dict(BASE, **{'docs/30_HLD.md': hld})
+
+    def test_srs_declaration_in_code_span_is_not_a_parent(self):
+        srs = SRS.replace('- **対応 UR**: [UR-002](10_URD.md#ur-002)',
+                          '- **対応 UR**: `[UR-002](10_URD.md#ur-002)`', 1)
+        self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_srs_declaration_without_anchor_is_not_a_parent(self):
+        srs = SRS.replace('[UR-002](10_URD.md#ur-002)', '[UR-002](10_URD.md)', 1)
+        self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_srs_declaration_to_wrong_document_is_not_a_parent(self):
+        srs = SRS.replace('[UR-002](10_URD.md#ur-002)', '[UR-002](20_SRS.md#ur-002)', 1)
+        self.assertIn('T1:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
+
+    def test_hld_declaration_in_code_span_is_not_a_parent(self):
+        hld = HLD.replace('- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+                          '- **対応 SRS**: `[FR-001](20_SRS.md#fr-001-一)`')
+        self.assertIn('T1:HLD-3.1:対応 SRS', self.keys(self.hld_files(hld)))
+
+    def test_hld_section_label_without_anchor_is_not_a_parent(self):
+        hld = HLD.replace('[SRS §3.2](20_SRS.md#32-主要コンポーネント構成)', '[SRS §3.2](20_SRS.md)')
+        self.assertIn('T1:HLD-2.1:対応 SRS', self.keys(self.hld_files(hld)))
+
+    def test_lld_declaration_in_code_span_is_not_a_parent(self):
+        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '`[3.1](30_HLD.md#31-fr-001-一)`')
+        files = dict(BASE, **{'docs/30_HLD.md': HLD, 'docs/40_LLD.md': lld})
+        self.assertIn('T1:LLD-one:対応 HLD', self.keys(files))
+
+    def test_four_backtick_fence_may_contain_three_backtick_example(self):
+        text = ('````markdown\n```text\n[x](nothing.md)\n```\n[y](nothing2.md)\n````\n'
+                '[z](nothing3.md)\n')
+        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
+        self.assertIn('T2:docs/a.md->nothing3.md', keys)
+        self.assertNotIn('T2:docs/a.md->nothing.md', keys)
+        self.assertNotIn('T2:docs/a.md->nothing2.md', keys)
+
+    def test_tilde_fence_is_a_code_block(self):
+        text = '~~~\n[x](nothing.md)\n~~~\n[z](nothing3.md)\n'
+        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
+        self.assertIn('T2:docs/a.md->nothing3.md', keys)
+        self.assertNotIn('T2:docs/a.md->nothing.md', keys)
+
+    def test_fence_closing_needs_matching_char_and_no_info_string(self):
+        text = '```text\n```python\n[x](nothing.md)\n```\n[z](nothing3.md)\n'
+        keys = self.keys(dict(BASE, **{'docs/a.md': text}))
+        self.assertIn('T2:docs/a.md->nothing3.md', keys)
+        self.assertNotIn('T2:docs/a.md->nothing.md', keys)
+
+    def files_with_cpp(self, source):
+        return dict(BASE, **{'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD, 'docs/50_UT.md': UT,
+                             'src/one.cpp': '// trace: LLD-one\n', 'tests/src/test_raw.cpp': source})
+
+    def test_trace_in_cpp_raw_string_is_ignored(self):
+        keys = self.keys(self.files_with_cpp('const char* s = R"(\n// trace: UT-one-09\n)";\n'))
+        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-09', keys)
+
+    def test_trace_in_cpp_raw_string_with_delimiter_is_ignored(self):
+        keys = self.keys(self.files_with_cpp('auto s = R"x(\n)"\n// trace: UT-one-09\n)x";\n'))
+        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-09', keys)
+
+    def test_trace_in_cpp_string_and_block_comment(self):
+        source = ('const char* u = "http://x"; // trace: UT-one-07\n'
+                  '/* x\n * trace: UT-one-08\n */\n'
+                  "int k = 1'000; // trace: UT-one-06\n")
+        keys = self.keys(self.files_with_cpp(source))
+        for case_id in ('UT-one-07', 'UT-one-08', 'UT-one-06'):
+            self.assertIn(f'T2:tests/src/test_raw.cpp->{case_id}', keys)
+
+
 if __name__ == '__main__':
     unittest.main()
