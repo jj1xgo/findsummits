@@ -73,7 +73,7 @@ lint: lint-md lint-py lint-geojson lint-html lint-trace
 # 既定対象: git 管理下の全 .md。
 # .claude/ は別途管理されるため本体の git ls-files では拾えず、
 # git -C .claude ls-files で個別に列挙し .claude/ プレフィックスを付与して連結する。
-# archives/ は凍結スナップショット、spec-findings/ は spec-panel レビュー成果物のため除外。
+# archives/ は凍結スナップショット、spec-findings/ は spec-panel レビュー成果物、plans/ は docs/ の本文を逐語で写すため相対リンクが計画の置き場から解決できない（findsummits-ops#54）ので除外。
 # LINT_MD_PATHS を指定した場合はそのパスを再帰走査する（override、この場合 .claude/ 側は対象外）。
 LINT_MD_PATHS ?=
 lint-md: venv
@@ -81,7 +81,7 @@ lint-md: venv
 	else targets=$$(git -c core.quotepath=false ls-files '*.md'); \
 	ops_targets=""; \
 	if [ -e .claude/.git ]; then \
-	  ops_targets=$$(git -C .claude ls-files '*.md' ':!:archives/**' ':!:spec-findings/**' | sed 's#^#.claude/#'); \
+	  ops_targets=$$(git -C .claude ls-files '*.md' ':!:archives/**' ':!:spec-findings/**' ':!:plans/**' | sed 's#^#.claude/#'); \
 	fi; \
 	targets="$$targets $$ops_targets"; ropt=""; fi; \
 	venv/bin/python3 -m pymarkdown -c .pymarkdown scan $$ropt $$targets; s1=$$?; \
