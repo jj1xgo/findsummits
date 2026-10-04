@@ -313,5 +313,116 @@ class HldTest(TraceTestCase):
         self.assertNotIn('T3:HLD:FR-002', self.keys(self.files()))
 
 
+LLD = '''# LLD
+
+## 1. モジュール
+
+### 1.1 一のモジュール
+
+- **ID**: LLD-one
+- **対応 HLD**: [3.1](30_HLD.md#31-fr-001-一)
+- **ファイル**: `src/one.cpp`
+'''
+
+UT = '''# UT
+
+| ID | 手順 |
+|---|---|
+| `UT-one-01` | a |
+| `UT-one-02`（手動） | b |
+'''
+
+
+class LldTest(TraceTestCase):
+    def files(self, **over):
+        files = dict(BASE, **{
+            'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD, 'docs/50_UT.md': UT,
+            'src/one.cpp': '// trace: LLD-one\nint one() { return 1; }\n',
+            'tests/src/test_one.cpp': '// trace: UT-one-01\n',
+        })
+        files.update(over)
+        return files
+
+    def test_clean_when_confirmed(self):
+        self.assertEqual(self.check(self.files(), confirmed={'LLD', 'UT'}), [])
+
+    def test_missing_file_field(self):
+        lld = LLD.replace('- **ファイル**: `src/one.cpp`\n', '')
+        self.assertIn('T1:LLD-one:ファイル', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+
+    def test_file_not_in_git(self):
+        lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/two.cpp`')
+        self.assertIn('T2:LLD-one->src/two.cpp', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+
+    def test_unknown_hld_section(self):
+        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '[3.9](30_HLD.md#31-fr-001-一)')
+        self.assertIn('T2:LLD-one->3.9', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+
+    def test_untraced_product_file_only_when_lld_confirmed(self):
+        files = self.files(**{'scripts/tool.py': 'print(1)\n'})
+        self.assertIn('T5:scripts/tool.py', self.keys(files, confirmed={'LLD'}))
+        self.assertNotIn('T5:scripts/tool.py', self.keys(files))
+
+    def test_trace_not_in_file_field(self):
+        files = self.files(**{'src/extra.cpp': '// trace: LLD-one\n'})
+        self.assertIn('T5:src/extra.cpp->LLD-one', self.keys(files, confirmed={'LLD'}))
+
+    def test_file_field_without_trace(self):
+        files = self.files(**{'src/one.cpp': 'int one() { return 1; }\n'})
+        self.assertIn('T5:LLD-one->src/one.cpp', self.keys(files, confirmed={'LLD'}))
+
+    def test_unknown_lld_in_code(self):
+        files = self.files(**{'src/one.cpp': '// trace: LLD-one\n// trace: LLD-two\n'})
+        self.assertIn('T2:src/one.cpp->LLD-two', self.keys(files, confirmed={'LLD'}))
+
+    def test_hld_section_without_lld_when_confirmed(self):
+        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '[2.1](30_HLD.md#21-全体)')
+        self.assertIn('T3:LLD:3.1', self.keys(self.files(**{'docs/40_LLD.md': lld}), confirmed={'LLD'}))
+
+    def test_unimplemented_automated_case(self):
+        files = self.files(**{'tests/src/test_one.cpp': '// 空\n'})
+        keys = self.keys(files, confirmed={'UT'})
+        self.assertIn('T5:UT-one-01', keys)
+        self.assertNotIn('T5:UT-one-02', keys)
+
+    def test_unknown_case_in_test_code(self):
+        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-01\n// trace: UT-one-09\n'})
+        self.assertIn('T2:tests/src/test_one.cpp->UT-one-09', self.keys(files))
+
+    def test_ut_for_unknown_module(self):
+        ut = UT + '| `UT-two-01` | c |\n'
+        self.assertIn('T2:UT-two-01', self.keys(self.files(**{'docs/50_UT.md': ut})))
+
+    def test_trace_in_string_literal_is_ignored(self):
+        files = self.files(**{'tests/scripts/test_x.py': "X = '// trace: UT-one-09'\n"})
+        self.assertNotIn('T2:tests/scripts/test_x.py->UT-one-09', self.keys(files))
+
+    def test_trace_in_multiline_string_is_ignored(self):
+        files = self.files(**{'tests/scripts/test_y.py': "X = '''\n# trace: UT-one-09\n'''\n",
+                              'tests/scripts/test_z.py': "# trace: UT-one-08\n"})
+        keys = self.keys(files)
+        self.assertNotIn('T2:tests/scripts/test_y.py->UT-one-09', keys)
+        self.assertIn('T2:tests/scripts/test_z.py->UT-one-08', keys)
+
+    def test_missing_id_in_module_section(self):
+        lld = LLD.replace('- **ID**: LLD-one\n', '')
+        self.assertIn('T1:LLD:5:ID', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+
+    def test_file_outside_code_scope(self):
+        lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/table.json`')
+        files = self.files(**{'docs/40_LLD.md': lld, 'src/table.json': '{}\n'})
+        self.assertIn('T5:LLD-one->src/table.json', self.keys(files, confirmed={'LLD'}))
+
+    def test_untraced_test_file_when_tests_confirmed(self):
+        files = self.files(**{'tests/src/helper.cpp': 'int helper;\n'})
+        self.assertIn('T5:tests/src/helper.cpp', self.keys(files, confirmed={'UT'}))
+        self.assertNotIn('T5:tests/src/helper.cpp', self.keys(files))
+
+    def test_module_without_ut_when_confirmed(self):
+        ut = UT.replace('| `UT-one-01` | a |\n| `UT-one-02`（手動） | b |\n', '')
+        files = self.files(**{'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// 空\n'})
+        self.assertIn('T3:UT:LLD-one', self.keys(files, confirmed={'UT'}))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -7,10 +7,12 @@ T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクスと宣言の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
+import io
 import os
 import re
 import subprocess
 import sys
+import tokenize
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -443,6 +445,129 @@ def check_hld(repo, req_ids, comps, confirmed):
     return out, sections
 
 
+LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
+ANY_HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*$')
+HLD_LINK_RE = re.compile(r'\[(\d+\.\d+)(?:\.\d+)*\]\(30_HLD\.md#')
+CODE_SPAN_RE = re.compile(r'`([^`]+)`')
+# コメント行（//、#、/* や * で始まる行）の trace: だけを拾う。文字列リテラルの中の trace: は拾わない
+TRACE_RE = re.compile(r'^\s*(?://+|#+|/?\*+)\s*trace:\s*((?:LLD|UT|IT|ST)-[A-Za-z0-9_-]+)', re.M)
+MODULE_LABELS = {'ID', '対応 HLD', 'ファイル'}
+
+
+def check_lld(repo, hld_sections, confirmed):
+    if not repo.has(LLD):
+        return [], None
+    out, modules = [], {}
+    for s in section_decls(repo.read(LLD), ANY_HEADING_RE):
+        d = s['decl']
+        if not MODULE_LABELS & set(d):
+            continue
+        if 'ID' not in d:
+            out.append(finding('T1', f'LLD:{s["line"]}:ID', f'{LLD}:{s["line"]}',
+                               'モジュールの節に「ID」の宣言がありません'))
+            continue
+        no, mid = d['ID']
+        where = f'{LLD}:{no}'
+        if not LLD_ID_RE.match(mid):
+            out.append(finding('T1', f'LLD:{no}:ID', where,
+                               f'LLD の ID「{mid}」の書式が LLD-<モジュール名> と違います'))
+            continue
+        if mid in modules:
+            out.append(finding('T1', f'{mid}:重複', where, f'LLD の ID {mid} が重複しています'))
+            continue
+        secs, files = set(), set()
+        if '対応 HLD' not in d:
+            out.append(finding('T1', f'{mid}:対応 HLD', where, f'{mid} に「対応 HLD」の宣言がありません'))
+        else:
+            hno, value = d['対応 HLD']
+            secs = set(HLD_LINK_RE.findall(value))
+            if not secs:
+                out.append(finding('T1', f'{mid}:対応 HLD', f'{LLD}:{hno}',
+                                   f'{mid} の「対応 HLD」に HLD の節へのリンクがありません'))
+            for sec in sorted(secs - hld_sections):
+                out.append(finding('T2', f'{mid}->{sec}', f'{LLD}:{hno}',
+                                   f'{mid} の対応 HLD {sec} は HLD にありません'))
+        if 'ファイル' not in d:
+            out.append(finding('T1', f'{mid}:ファイル', where, f'{mid} に「ファイル」の宣言がありません'))
+        else:
+            fno, value = d['ファイル']
+            files = set(CODE_SPAN_RE.findall(value))
+            if not files:
+                out.append(finding('T1', f'{mid}:ファイル', f'{LLD}:{fno}',
+                                   f'{mid} の「ファイル」にコード表記のパスがありません'))
+            for f in sorted(files):
+                if not repo.has(f):
+                    out.append(finding('T2', f'{mid}->{f}', f'{LLD}:{fno}',
+                                       f'{mid} のファイル {f} は git にありません'))
+        modules[mid] = {'files': files, 'hld': secs, 'where': where}
+    if 'LLD' in confirmed:
+        covered = set().union(*(m['hld'] for m in modules.values()))
+        for sec in sorted(x for x in hld_sections if x.startswith(('3.', '4.')) and x not in covered):
+            out.append(finding('T3', f'LLD:{sec}', LLD, f'HLD {sec} を対応 HLD に持つ LLD のモジュールがありません'))
+    return out, modules
+
+
+def comment_texts(path, text):
+    """Python は tokenize で本物のコメントだけを取り出す（三重引用符の文字列の中の行を数えないため）。
+
+    C/C++ の文字列は改行をまたげないので、それ以外は行ごとに見る。bash の heredoc の中で # から始まる行は
+    コメントとして数えてしまう（既知の制限。テストのコードに heredoc で trace: を書かない）。
+    """
+    if not path.endswith('.py'):
+        return text.split('\n')
+    try:
+        return [tok.string for tok in tokenize.generate_tokens(io.StringIO(text).readline)
+                if tok.type == tokenize.COMMENT]
+    except (tokenize.TokenError, SyntaxError):
+        return text.split('\n')
+
+
+def code_traces(repo, dirs):
+    out = {}
+    for f in sorted(repo.files):
+        if f.startswith(dirs) and f.endswith(CODE_SUFFIXES):
+            out[f] = {i for c in comment_texts(f, repo.read(f)) for i in TRACE_RE.findall(c)}
+    return out
+
+
+def check_code(repo, modules, cases, confirmed):
+    out = []
+    if modules is not None and 'LLD' in confirmed:
+        traces = code_traces(repo, PRODUCT_DIRS)
+        for f, ids in traces.items():
+            lld_ids = {i for i in ids if i.startswith('LLD-')}
+            if not lld_ids:
+                out.append(finding('T5', f, f, 'どの LLD モジュールも名乗っていません（trace: LLD-…）'))
+            for i in sorted(lld_ids):
+                if i not in modules:
+                    out.append(finding('T2', f'{f}->{i}', f, f'{i} は LLD にありません'))
+                elif f not in modules[i]['files']:
+                    out.append(finding('T5', f'{f}->{i}', f, f'{i} の「ファイル」欄に {f} がありません'))
+        for mid, m in sorted(modules.items()):
+            for f in sorted(m['files']):
+                if f not in traces:
+                    out.append(finding('T5', f'{mid}->{f}', m['where'],
+                                       f'{f} は製品のコードの対象（src/・scripts/ の .c・.h・.cpp・.hpp・.py・.sh）'
+                                       'ではありません'))
+                elif mid not in traces[f]:
+                    out.append(finding('T5', f'{mid}->{f}', m['where'], f'{f} に trace: {mid} がありません'))
+    implemented = set()
+    tests_confirmed = bool(confirmed & {'UT', 'IT', 'ST'})
+    for f, ids in code_traces(repo, TEST_DIRS).items():
+        case_ids = {i for i in ids if not i.startswith('LLD-')}
+        if tests_confirmed and not case_ids:
+            out.append(finding('T5', f, f, 'どのテストケースも名乗っていません（trace: <テストケース ID>）'))
+        for i in sorted(case_ids):
+            implemented.add(i)
+            if i not in cases:
+                out.append(finding('T2', f'{f}->{i}', f, f'テストケース {i} はテスト文書にありません'))
+    for cid, c in sorted(cases.items()):
+        if c['level'] in confirmed and not c['manual'] and cid not in implemented:
+            out.append(finding('T5', cid, f'{c["path"]}:{c["line"]}',
+                               f'{cid} を実装したテストのコードがありません（trace: {cid}）'))
+    return out
+
+
 def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
     out = check_links(repo)
     urs, reqs, comps = load_requirements(repo)
@@ -453,9 +578,12 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += check_srs_matrix(repo, urs, declared)
     hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
     out += hld_out
+    lld_out, modules = check_lld(repo, hld_sections, confirmed)
+    out += lld_out
     cases, case_out = load_cases(repo)
-    out += case_out + check_cases(cases, req_ids, urs, None, confirmed)
+    out += case_out + check_cases(cases, req_ids, urs, modules, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)
+    out += check_code(repo, modules, cases, confirmed)
     return apply_exemptions(out, exemptions, repo)
 
 
