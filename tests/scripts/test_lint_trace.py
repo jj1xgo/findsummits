@@ -167,6 +167,9 @@ class StageTest(TraceTestCase):
     def test_missing_urd_is_a_finding_not_a_crash(self):
         self.assertIn('T1:doc:docs/10_URD.md', self.keys(self.without('docs/10_URD.md')))
 
+    def test_missing_srs_without_confirming_it_is_a_finding(self):
+        self.assertIn('T1:doc:docs/20_SRS.md', self.keys(self.without('docs/20_SRS.md')))
+
     def test_missing_base_document_cannot_be_exempted(self):
         files = dict(self.without('docs/10_URD.md'), **{self.ADR: '# X\n'})
         keys = self.keys(files, exemptions={'T1:doc:docs/10_URD.md': self.ADR})

@@ -86,7 +86,7 @@ make clean                                 # build/ を削除
 記録には対象版・実施日・6観点・判定者・条件を含め、レビュー参加者が確認できる課題または文書に保存する。
 確定した記録を書き換えず、補足・訂正は追記する。個人の台帳やツールがなくても同じ審査基準を適用する。
 
-判定が Go か条件付きGo なら、その段を `scripts/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いと検査が止まる（[6](#6-要求の追跡と整合)）。
+判定が Go か条件付きGo なら、その段を `scripts/lint_trace.py` の `CONFIRMED_STAGES` に足す。段の名前は `STAGE_DOCS` にあるもので、その段の文書が git に無いと T1 で CI が止まる（[6](#6-要求の追跡と整合)）。
 
 ## 5. バージョンとタグ
 
@@ -125,7 +125,7 @@ make clean                                 # build/ を削除
 | T4 | 追跡マトリクスが宣言と違う | 文書があるとき |
 | T5 | 製品のコード・テストのコードと文書が食い違う | LLD・UT・IT・ST の各段がフェーズゲートを通ったとき |
 
-- 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落の指摘は `EXEMPTIONS` で外せない。
+- 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落の指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
 - 欠番は `RETIRED_IDS` に、構造上の例外は `EXEMPTIONS` に、どちらも根拠の ADR と一緒に書く。ADR が無い項目は通らない。
 - 製品のコードは [HLD §2.8.2](30_HLD.md#282-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。T5 を効かせる前に、開発用の道具を `tools/` へ移す。
 - 検査そのもののテストは `make test-scripts` で走り、CI でも実行する。`scripts/lint_trace.py` を直したときは、`make lint` に加えて `make test-scripts` も実行する。
