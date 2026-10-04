@@ -398,6 +398,51 @@ def check_st_matrix(repo, urs, declared, cases):
     return out
 
 
+HLD_SEC_RE = re.compile(r'^### ([234]\.\d+) ')
+SRS_SEC_LINK_RE = re.compile(r'\[SRS §([\d.]+)\]\(')
+
+
+def check_hld(repo, req_ids, comps, confirmed):
+    if not repo.has(HLD):
+        return [], set()
+    out, covered, sections = [], set(), set()
+    for s in section_decls(repo.read(HLD), HLD_SEC_RE):
+        sec, d = s['key'], s['decl']
+        sections.add(sec)
+        where = f'{HLD}:{s["line"]}'
+        if '対応 SRS' not in d:
+            out.append(finding('T1', f'HLD-{sec}:対応 SRS', where, f'{sec} に「対応 SRS」の宣言がありません'))
+        else:
+            no, value = d['対応 SRS']
+            ids = set(REQ_LINK_RE.findall(value))
+            if value != NO_PARENT and not ids and not SRS_SEC_LINK_RE.search(value):
+                out.append(finding('T1', f'HLD-{sec}:対応 SRS', f'{HLD}:{no}',
+                                   f'{sec} の「対応 SRS」に FR/NFR か SRS の節へのリンクがありません'
+                                   f'（上位が無い節は「{NO_PARENT}」）'))
+            for rid in sorted(ids - req_ids):
+                out.append(finding('T2', f'HLD-{sec}->{rid}', f'{HLD}:{no}',
+                                   f'{sec} の対応 SRS {rid} は SRS にありません'))
+            covered |= ids & req_ids
+        if '担当コンポーネント' not in d:
+            out.append(finding('T1', f'HLD-{sec}:担当コンポーネント', where,
+                               f'{sec} に「担当コンポーネント」の宣言がありません'))
+        else:
+            no, value = d['担当コンポーネント']
+            if value != ALL_COMPONENTS:
+                names = [v.strip() for v in value.split('・') if v.strip()]
+                if not names:
+                    out.append(finding('T1', f'HLD-{sec}:担当コンポーネント', f'{HLD}:{no}',
+                                       f'{sec} の「担当コンポーネント」が空です'))
+                for n in names:
+                    if n not in comps:
+                        out.append(finding('T2', f'HLD-{sec}->{n}', f'{HLD}:{no}',
+                                           f'{sec} の担当コンポーネント {n} は SRS §3.2 にありません'))
+    if 'HLD' in confirmed:
+        for rid in sorted(req_ids - covered):
+            out.append(finding('T3', f'HLD:{rid}', HLD, f'{rid} を対応 SRS に持つ HLD の節がありません'))
+    return out, sections
+
+
 def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
     out = check_links(repo)
     urs, reqs, comps = load_requirements(repo)
@@ -406,6 +451,8 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     srs_out, declared = check_srs(urs, reqs, confirmed)
     out += srs_out
     out += check_srs_matrix(repo, urs, declared)
+    hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
+    out += hld_out
     cases, case_out = load_cases(repo)
     out += case_out + check_cases(cases, req_ids, urs, None, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)

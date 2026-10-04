@@ -251,5 +251,67 @@ class StTest(TraceTestCase):
         self.assertNotIn('T2:ST-coverage:UR-001->ST-FR-001-03', keys)
 
 
+HLD = '''# HLD
+
+## 2. アーキテクチャ
+
+### 2.1 全体
+
+- **対応 SRS**: [SRS §3.2](20_SRS.md#32-主要コンポーネント構成)
+- **担当コンポーネント**: 全体
+
+### 2.2 横断
+
+- **対応 SRS**: なし（横断の設計）
+- **担当コンポーネント**: C1・C2
+
+## 3. FR 設計
+
+### 3.1 FR-001 一
+
+- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
+- **担当コンポーネント**: C1
+
+#### 3.1.1 目的と範囲
+
+本文。
+'''
+
+
+class HldTest(TraceTestCase):
+    def files(self, hld=HLD):
+        return dict(BASE, **{'docs/30_HLD.md': hld})
+
+    def test_clean(self):
+        self.assertEqual(self.check(self.files()), [])
+
+    def test_missing_component(self):
+        hld = HLD.replace('- **担当コンポーネント**: C1\n', '')
+        self.assertIn('T1:HLD-3.1:担当コンポーネント', self.keys(self.files(hld)))
+
+    def test_unknown_component(self):
+        hld = HLD.replace('C1・C2', 'C1・C9')
+        self.assertIn('T2:HLD-2.2->C9', self.keys(self.files(hld)))
+
+    def test_declaration_without_link(self):
+        hld = HLD.replace('- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)', '- **対応 SRS**: FR-001')
+        self.assertIn('T1:HLD-3.1:対応 SRS', self.keys(self.files(hld)))
+
+    def test_declaration_after_subheading_is_not_counted(self):
+        hld = HLD.replace(
+            '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n\n#### 3.1.1 目的と範囲\n',
+            '#### 3.1.1 目的と範囲\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n')
+        keys = self.keys(self.files(hld))
+        self.assertIn('T1:HLD-3.1:対応 SRS', keys)
+        self.assertIn('T1:HLD-3.1:担当コンポーネント', keys)
+
+    def test_uncovered_requirement_only_when_hld_confirmed(self):
+        keys = self.keys(self.files(), confirmed={'HLD'})
+        self.assertIn('T3:HLD:FR-002', keys)
+        self.assertIn('T3:HLD:NFR-001', keys)
+        self.assertNotIn('T3:HLD:FR-001', keys)
+        self.assertNotIn('T3:HLD:FR-002', self.keys(self.files()))
+
+
 if __name__ == '__main__':
     unittest.main()
