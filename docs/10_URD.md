@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-10-04 |
+| 最終更新日 | 2026-10-05 |
 | ステータス | 確定 |
 
 ---
@@ -58,7 +58,7 @@ SOTA日本支部への更新申請に必要な成果物を生成する支援ツ�
 
 ## 5. 前提・制約
 
-- 標高データは国土地理院タイルのみ使用（DEM5a / DEM5b / DEM5c / DEM10b の優先順）
+- 解析の標高データは国土地理院タイルのみ使用（DEM5a / DEM5b / DEM5c / DEM10b の優先順）。HTML ビューアの等高線は DEM1a も使う（[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）
 - サミット判定基準はSOTAルール（プロミネンス≥150m）に従う
 - 申請書フォーマットはSOTA日本支部が指定するXLSXテンプレートに従う
 - 日本の land 1次メッシュは総数176（参照: [ref/SOURCES.md](../ref/SOURCES.md) — 第1次地域区画定義）。うち竹島を含む5531を除いた175メッシュを処理範囲とする
@@ -75,7 +75,7 @@ SOTA日本支部への更新申請に必要な成果物を生成する支援ツ�
 - 北方領土に所在するピーク（SOTA日本支部の管轄外のため。除外方法はSRSで規定。根拠: [ADR-URD-005](decisions/ADR-URD-005-northern-territories-exclusion.md)）
 - 竹島に所在するピーク（韓国 SOTA サミット HL/GB-430 として登録済み。SOTA日本支部の管轄外。根拠: [ADR-URD-009](decisions/ADR-URD-009-takeshima-exclusion.md)）
 - 新規サミットの山岳名取得（解析結果から自動取得する手段がなく技術的に困難なため対象外。HTML ビューアで OSM・国土地理院地図を参照しながら人間系で確認・記入すること）。既存サミットの山岳名JP は SOTA 山名 GeoJSON（geojson_v{N}）から自動取得する
-- DEM1a（データ量がDEM5の25倍、精度向上が僅少なため採用しない。根拠: [ADR-SRS-002](decisions/ADR-SRS-002-dem-hierarchy-fallback.md)。v2.0候補として[将来スコープ（§7）](#7-将来スコープv20候補)を参照）
+- 解析への DEM1a（データ量がDEM5の25倍、精度向上が僅少なため採用しない。HTML ビューアの等高線は除く（[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）。根拠: [ADR-SRS-002](decisions/ADR-SRS-002-dem-hierarchy-fallback.md)。v2.0候補として[将来スコープ（§7）](#7-将来スコープv20候補)を参照）
 - SOTA申請書の提出・承認プロセス（ツールは申請書生成まで。提出は手動）
 - サーバー側リアルタイム処理（解析・GeoJSON・CSV 生成はバッチ処理。申請書 XLSX は HTML ビューアでの操作によりクライアントサイドで生成）
 - 地形の現地確認（目視確認は GeoJSON または HTML ビューアを使って地図上で行う）

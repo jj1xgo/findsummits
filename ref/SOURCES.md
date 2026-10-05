@@ -47,11 +47,11 @@
 | 項目 | 内容 |
 |---|---|
 | 提供元 | 国土地理院 |
-| データ種別 | DEM5a / DEM5b / DEM5c（ズームレベル 15）、DEM10b（ズームレベル 14） |
+| データ種別 | DEM5a / DEM5b / DEM5c（ズームレベル 15）、DEM10b（ズームレベル 14）、DEM1a（ズームレベル 17。HTML ビューアの等高線だけ） |
 | 参照 URL | <https://maps.gsi.go.jp/development/ichiran.html> |
 | 利用規約 | 国土地理院コンテンツ利用規約（https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html） |
 | 帰属表示義務 | 利用成果物に「国土地理院」の帰属表示が必要 |
-| 本プロジェクトでの利用形態 | タイルをローカルキャッシュとして保存して標高解析に使用。タイルデータ自体はリポジトリに含めない（.gitignore）。生成する HTML ビューアの帰属表示に `© 国土地理院` を含める。 |
+| 本プロジェクトでの利用形態 | タイルをローカルキャッシュとして保存して標高解析に使用。タイルデータ自体はリポジトリに含めない（.gitignore）。生成する HTML ビューアの帰属表示に `© 国土地理院` を含める。HTML ビューアの等高線オーバーレイは、表示範囲の DEM1a・DEM5a〜5c・DEM10b をブラウザから実行時取得する（[ADR-SRS-015](../docs/decisions/ADR-SRS-015-contour-overlay.md)・[ADR-SRS-067](../docs/decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）。 |
 
 ---
 
@@ -153,4 +153,4 @@
 | 整備 | 総務省統計局 |
 | 運用管理 | 独立行政法人統計センター |
 | 参照URL | <https://www.e-stat.go.jp/pdf/gis/primary_mesh_jouhou.pdf> |
-| 備考 | 解析に使用する1次メッシュコード（4桁）の地理的範囲の定義元。 |
+| 備考 | 解析に使用する1次メッシュコード（4桁）の地理的範囲の定義元。HTML ビューアの 1 次メッシュのグリッドは、この一覧の 176 件（竹島を含む 5531 を含む）を描く。解析の一覧は 5531 を除く（[ADR-URD-009](../docs/decisions/ADR-URD-009-takeshima-exclusion.md)）。 |

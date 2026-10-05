@@ -165,7 +165,7 @@
 本システムは以下の外部要素と接続する。
 
 - **外部データソース**
-  - 国土地理院 標高タイル（DEM5a/5b/5c/DEM10b、PNG。ズームレベル15、DEM10b はズームレベル14）
+  - 国土地理院 標高タイル（DEM5a/5b/5c/DEM10b、PNG。ズームレベル15、DEM10b はズームレベル14。HTML ビューアの等高線は DEM1a（ズームレベル17）も使う。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）
   - 国土交通省 国土数値情報 N03 行政区域 ZIP（ユーザーが手動配置。[7.2.3 参照](#723-n03-行政区域-zip)）
   - SOTA データベース summitslist.csv（ユーザーが手動配置。[7.2.4 参照](#724-sota-サミットリスト-csv)）
   - ジオサミットでひとこえ SOTA 既存サミット GeoJSON（ユーザーが手動配置。[7.2.5 参照](#725-sota-既存サミット-geojsongeojson_vn)）
@@ -1225,7 +1225,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | 除外判断ファイル | ユーザー入力 | 任意 | 読み込み操作なし。現在の台帳を維持 | [7.2.8](#728-除外判断ファイル) の明示読込・置換。ブラウザ保存もない場合の初期台帳は空 |
 | 突合済み統合 GeoJSON（`merged_summit.geojson`） | 外部I/F | 必須 | — | 作業用ビューアデータファイルとして読み込み済み（[FR-013](#fr-013-html-ビューア生成) 出力） |
 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 外部I/F | 必須 | — | 基図としていずれか1つを常時表示し切替可（既定: 国土地理院標準地図。[6.2.5](#625-作業用-html-ビューア) 参照）。ブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
-| 地理院標高タイル（dem5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
+| 地理院標高タイル（dem1a/5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（dem1a は大きいズームだけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)。出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
 | 地理院基準点タイル | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 基準点レイヤー ON 時にブラウザから実行時取得（出典・利用形態: [SOURCES.md](../ref/SOURCES.md)） |
 | ライブラリ（Leaflet・SheetJS・JSZip） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§9](#9-外部システム依存関係環境)）。取得失敗時の扱いは本 FR の異常系 |
 | localStorage 編集内容 | 内部データ | 任意 | 初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート） | 再訪時に読み込む。未編集（localStorage 空）の場合は初期値を使用 |
@@ -1281,7 +1281,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - 地理院タイル更新日（提供元）（`gsi_tile_latest_date`）（UTC）: パイプラインがローカルキャッシュタイルの mtime 最大値として `merged_summit.geojson` の `metadata` に格納する（根拠: [ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)）。表示時は `(UTC)` を付記する
     - 解析実行日時（`generated_at`）
     - 解析ソフトウェアバージョン（`software_version`）
-  - **等高線オーバーレイ**: 地理院標高タイル（dem5a/dem5b/dem5c/dem10b）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）。簡易的な描画のため、地理院地図の等高線と位置がずれることがある。地形のおおまかな確認に使う目安であり、標高・コル位置の根拠には使わない。レイヤー名等で目安であることを利用者に示す（表記は HLD。[ADR-SRS-015](decisions/ADR-SRS-015-contour-overlay.md)）
+  - **等高線オーバーレイ**: 地理院標高タイル（dem1a/dem5a/dem5b/dem5c/dem10b。dem1a は大きいズームだけで使い、無い地域は dem5a〜dem5c・dem10b で描く。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）。簡易的な描画のため、地理院地図の等高線と位置がずれることがある。地形のおおまかな確認に使う目安であり、標高・コル位置の根拠には使わない。レイヤー名等で目安であることを利用者に示す（表記は HLD。[ADR-SRS-015](decisions/ADR-SRS-015-contour-overlay.md)）
   - **補助参照レイヤー**（いずれもレイヤーコントロールから ON/OFF・デフォルト OFF）:
     - **1次メッシュグリッド**: 日本国土の1次メッシュ境界を表示する（一定ズーム以上でメッシュコードのラベルを表示）。解析単位の確認用
     - **基準点レイヤー**: 国土地理院の基準点（電子基準点・一等／二等／三等三角点）を表示する。種別ごとに配色し、点名・基準点種別・基準点コードを popup 表示する。データは地理院基準点タイル（`https://cyberjapandata.gsi.go.jp/xyz/cp/{z}/{x}/{y}.geojson`）をブラウザから実行時取得する（出典・利用形態は [SOURCES.md](../ref/SOURCES.md) 参照。採用経緯: [ADR-SRS-034](decisions/ADR-SRS-034-viewer-reference-layers.md)）
@@ -1534,7 +1534,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 |---|---|---|---|---|
 | 公開用データ（申請エビデンス GeoJSON） | ユーザー入力 | 必須 | — | [7.2.7 参照](#727-公開用データ申請エビデンス-geojson)。ZIP 同梱の 5 本をファイル名を変えず配置 |
 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 外部I/F | 必須 | — | [FR-019](#fr-019-html-ビューア機能仕様) と同じ。ブラウザから実行時取得（[6.1](#61-外部if一覧) No.10） |
-| 地理院標高タイル（dem5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（[6.1](#61-外部if一覧) No.9） |
+| 地理院標高タイル（dem1a/5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（dem1a は大きいズームだけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)。[6.1](#61-外部if一覧) No.9） |
 | 地理院基準点タイル | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 基準点レイヤー ON 時にブラウザから実行時取得（[6.1](#61-外部if一覧) No.11） |
 | ライブラリ（Leaflet） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§9](#9-外部システム依存関係環境)） |
 
@@ -1914,11 +1914,11 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 項目 | 仕様 |
 |---|---|
 | 形式 | PNG（RGB エンコード） |
-| ズームレベル | DEM5a/5b/5c: 15 / DEM10b: 14 |
+| ズームレベル | DEM5a/5b/5c: 15 / DEM10b: 14 / DEM1a: 17（ビューアの等高線だけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)） |
 | タイルサイズ | 256×256 px |
 | 標高算出式 | `elev = (R×65536 + G×256 + B) / 100.0`（RGB ピクセル値から標高（m）を計算） |
 | 無効値（NODATA）の定義 | R=128, G=0, B=0 のピクセルは標高値なし（海・データ未整備等）を示し、-9999.0m として扱う |
-| タイル URL | ベース: `https://cyberjapandata.gsi.go.jp/xyz/{サービス名}/{z}/{x}/{y}.png`<br>サービス名: DEM5a=`dem5a_png` / DEM5b=`dem5b_png` / DEM5c=`dem5c_png` / DEM10b=`dem_png` |
+| タイル URL | ベース: `https://cyberjapandata.gsi.go.jp/xyz/{サービス名}/{z}/{x}/{y}.png`<br>サービス名: DEM5a=`dem5a_png` / DEM5b=`dem5b_png` / DEM5c=`dem5c_png` / DEM10b=`dem_png` / DEM1a=`dem1a_png`（ビューアの等高線だけ） |
 
 #### 6.2.10 除外判断 JSON
 
@@ -2217,7 +2217,7 @@ no_change・review・保留組・担当者指定 delete は対象外。元のバ
 
 URD セクション 5 に基づき（SRS で詳細化）:
 
-- 標高データは国土地理院タイルのみ使用（DEM5a/5b/5c/DEM10b の優先順）
+- 解析の標高データは国土地理院タイルのみ使用（DEM5a/5b/5c/DEM10b の優先順）。HTML ビューアの等高線は DEM1a も使う（[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）
 - サミット判定基準は SOTA ルール（プロミネンス ≥ 150m）に従う
 - 申請書フォーマットは SOTA 日本支部指定の XLSX テンプレートに従う
 - 日本の land 1 次メッシュは総数 176 メッシュ（参照: [`ref/SOURCES.md`](../ref/SOURCES.md) — 第1次地域区画定義）。うち竹島を含む 5531 を除いた 175 メッシュを処理範囲とする
@@ -2243,7 +2243,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
 - 既存サミットの**名称変更**申請（名称はピーク解析と無関係なため自動識別しない）
 - 既存サミットの**座標変更**申請（座標は概ね正しいと判断し自動識別しない）
 - **バンドをまたがない標高変動**（Points 値が変わらないため SOTA 本部にとって意味のない変更）
-- DEM1a（データ量が DEM5 の 25 倍、精度向上が僅少なため採用しない。根拠: [ADR-SRS-002](decisions/ADR-SRS-002-dem-hierarchy-fallback.md)。v2.0候補として将来スコープ（[URD §7](10_URD.md#7-将来スコープv20候補)）を参照）
+- 解析への DEM1a（データ量が DEM5 の 25 倍、精度向上が僅少なため採用しない。HTML ビューアの等高線は除く（[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）。根拠: [ADR-SRS-002](decisions/ADR-SRS-002-dem-hierarchy-fallback.md)。v2.0候補として将来スコープ（[URD §7](10_URD.md#7-将来スコープv20候補)）を参照）
 - SOTA 申請書の提出・承認プロセス（ツールは申請書生成まで。提出は手動）
 - サーバー側リアルタイム処理（解析・GeoJSON・CSV 生成はバッチ処理。申請書 XLSX は HTML ビューアでの操作によりクライアントサイドで生成）
 - 地形の現地確認（目視確認は GeoJSON または HTML ビューアを使って地図上で行う）
