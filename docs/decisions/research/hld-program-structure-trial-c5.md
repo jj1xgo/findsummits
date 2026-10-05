@@ -1,5 +1,7 @@
 # 設計調査資料: HLD をプログラム構造の形にする試作（C5）
 
+（本文は ADR-HLD-001・ADR-HLD-002 の決定の前の試作で、章の番号は 2026-10-05 の章の付け替えの前のもの（対応は ADR-HLD-002 の表）。「付随文書へ移す」方針は ADR-HLD-002 でやめた。現行の章の並びと名前の決まりは [ADR-HLD-001](../ADR-HLD-001-program-structure-chapter-and-two-tier-it.md)・[ADR-HLD-002](../ADR-HLD-002-hld-chapter-order-program-structure-first.md) と [HLD 第 3 章](../../30_HLD.md#3-プログラム構造)。）
+
 作成日: 2026-10-05  
 用途: HLD にプログラム構造の章（5 章）を足す計画の入力。持ち主が形を確かめた C5 だけの試作。整形なしの検討資料で、正式な仕様ではない。
 
