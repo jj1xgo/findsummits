@@ -216,7 +216,7 @@ class GapTest(TraceTestCase):
 
     def test_hld_points_to_unknown_requirement(self):
         hld = HLD.replace('[FR-001]', '[FR-099]')
-        self.assertIn('T2:HLD-3.1->FR-099', self.keys(dict(BASE, **{'docs/30_HLD.md': hld})))
+        self.assertIn('T2:HLD-4.1->FR-099', self.keys(dict(BASE, **{'docs/30_HLD.md': hld})))
 
     def test_lld_id_format(self):
         lld = LLD.replace('- **ID**: LLD-one', '- **ID**: LLD one')
@@ -441,25 +441,34 @@ HLD = '''# HLD
 - **対応 SRS**: なし（横断の設計）
 - **担当コンポーネント**: C1・C2
 
-## 3. FR 設計
+## 4. FR 設計
 
-### 3.1 FR-001 一
+### 4.1 FR-001 一
 
 - **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
 - **担当コンポーネント**: C1
 
-#### 3.1.1 目的と範囲
+#### 4.1.1 目的と範囲
 
 本文。
 '''
 
-HLD5 = HLD + '''
-## 5. プログラム構造
+HLD_PROGRAM = HLD.replace('## 4. FR 設計', '''## 3. プログラム構造
 
-### 5.1 C1 一
+### 3.1 C1 一
 
 - **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
 - **担当コンポーネント**: C1
+
+## 4. FR 設計''')
+
+HLD_NFR = HLD + '''
+## 5. NFR 設計
+
+### 5.1 NFR-001 非一
+
+- **対応 SRS**: [NFR-001](20_SRS.md#nfr-001-非一)
+- **担当コンポーネント**: 全体
 '''
 
 
@@ -472,7 +481,7 @@ class HldTest(TraceTestCase):
 
     def test_missing_component(self):
         hld = HLD.replace('- **担当コンポーネント**: C1\n', '')
-        self.assertIn('T1:HLD-3.1:担当コンポーネント', self.keys(self.files(hld)))
+        self.assertIn('T1:HLD-4.1:担当コンポーネント', self.keys(self.files(hld)))
 
     def test_unknown_component(self):
         hld = HLD.replace('C1・C2', 'C1・C9')
@@ -480,15 +489,15 @@ class HldTest(TraceTestCase):
 
     def test_declaration_without_link(self):
         hld = HLD.replace('- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)', '- **対応 SRS**: FR-001')
-        self.assertIn('T1:HLD-3.1:対応 SRS', self.keys(self.files(hld)))
+        self.assertIn('T1:HLD-4.1:対応 SRS', self.keys(self.files(hld)))
 
     def test_declaration_after_subheading_is_not_counted(self):
         hld = HLD.replace(
-            '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n\n#### 3.1.1 目的と範囲\n',
-            '#### 3.1.1 目的と範囲\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n')
+            '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n\n#### 4.1.1 目的と範囲\n',
+            '#### 4.1.1 目的と範囲\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n')
         keys = self.keys(self.files(hld))
-        self.assertIn('T1:HLD-3.1:対応 SRS', keys)
-        self.assertIn('T1:HLD-3.1:担当コンポーネント', keys)
+        self.assertIn('T1:HLD-4.1:対応 SRS', keys)
+        self.assertIn('T1:HLD-4.1:担当コンポーネント', keys)
 
     def test_uncovered_requirement_only_when_hld_confirmed(self):
         keys = self.keys(self.files(), confirmed={'HLD'})
@@ -499,22 +508,25 @@ class HldTest(TraceTestCase):
 
 
     def test_duplicate_section_number(self):
-        hld = HLD + '\n### 3.1 FR-001 二つ目\n'
-        self.assertIn('T1:HLD-3.1:重複', self.keys(self.files(hld)))
+        hld = HLD + '\n### 4.1 FR-001 二つ目\n'
+        self.assertIn('T1:HLD-4.1:重複', self.keys(self.files(hld)))
 
-    def test_chapter5_section_is_clean(self):
-        self.assertEqual(self.check(self.files(HLD5)), [])
+    def test_program_chapter_section_is_clean(self):
+        self.assertEqual(self.check(self.files(HLD_PROGRAM)), [])
 
-    def test_chapter5_section_needs_declarations(self):
-        hld = HLD + '\n## 5. プログラム構造\n\n### 5.1 C1 一\n\n本文。\n'
+    def test_program_chapter_section_needs_declarations(self):
+        hld = HLD.replace('## 4. FR 設計', '## 3. プログラム構造\n\n### 3.1 C1 一\n\n本文。\n\n## 4. FR 設計')
         keys = self.keys(self.files(hld))
-        self.assertIn('T1:HLD-5.1:対応 SRS', keys)
-        self.assertIn('T1:HLD-5.1:担当コンポーネント', keys)
+        self.assertIn('T1:HLD-3.1:対応 SRS', keys)
+        self.assertIn('T1:HLD-3.1:担当コンポーネント', keys)
 
-    def test_chapter5_declaration_does_not_cover_requirement(self):
-        hld = HLD5.replace('### 5.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
-                           '### 5.1 C1 一\n\n- **対応 SRS**: [FR-002](20_SRS.md#fr-002-二)')
+    def test_program_chapter_declaration_does_not_cover_requirement(self):
+        hld = HLD_PROGRAM.replace('### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+                                  '### 3.1 C1 一\n\n- **対応 SRS**: [FR-002](20_SRS.md#fr-002-二)')
         self.assertIn('T3:HLD:FR-002', self.keys(self.files(hld), confirmed={'HLD'}))
+
+    def test_nfr_chapter_declaration_covers_requirement(self):
+        self.assertNotIn('T3:HLD:NFR-001', self.keys(self.files(HLD_NFR), confirmed={'HLD'}))
 
 LLD = '''# LLD
 
@@ -523,7 +535,7 @@ LLD = '''# LLD
 ### 1.1 一のモジュール
 
 - **ID**: LLD-one
-- **対応 HLD**: [3.1](30_HLD.md#31-fr-001-一)
+- **対応 HLD**: [4.1](30_HLD.md#41-fr-001-一)
 - **ファイル**: `src/one.cpp`
 '''
 
@@ -559,8 +571,8 @@ class LldTest(TraceTestCase):
         self.assertIn('T2:LLD-one->src/two.cpp', self.keys(self.files(**{'docs/40_LLD.md': lld})))
 
     def test_unknown_hld_section(self):
-        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '[3.9](30_HLD.md#31-fr-001-一)')
-        self.assertIn('T2:LLD-one->3.9', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+        lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)', '[4.9](30_HLD.md#41-fr-001-一)')
+        self.assertIn('T2:LLD-one->4.9', self.keys(self.files(**{'docs/40_LLD.md': lld})))
 
     def test_untraced_product_file_only_when_lld_confirmed(self):
         files = self.files(**{'scripts/tool.py': 'print(1)\n'})
@@ -580,20 +592,20 @@ class LldTest(TraceTestCase):
         self.assertIn('T2:src/one.cpp->LLD-two', self.keys(files, confirmed={'LLD'}))
 
     def test_hld_section_without_lld_when_confirmed(self):
-        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '[2.1](30_HLD.md#21-全体)')
-        self.assertIn('T3:LLD:3.1', self.keys(self.files(**{'docs/40_LLD.md': lld}), confirmed={'LLD'}))
+        lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)', '[2.1](30_HLD.md#21-全体)')
+        self.assertIn('T3:LLD:4.1', self.keys(self.files(**{'docs/40_LLD.md': lld}), confirmed={'LLD'}))
 
-    def test_lld_can_point_to_chapter5(self):
-        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)',
-                          '[3.1](30_HLD.md#31-fr-001-一)・[5.1](30_HLD.md#51-c1-一)')
-        files = self.files(**{'docs/30_HLD.md': HLD5, 'docs/40_LLD.md': lld})
+    def test_lld_can_point_to_program_chapter(self):
+        lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)',
+                          '[4.1](30_HLD.md#41-fr-001-一)・[3.1](30_HLD.md#31-c1-一)')
+        files = self.files(**{'docs/30_HLD.md': HLD_PROGRAM, 'docs/40_LLD.md': lld})
         keys = self.keys(files, confirmed={'LLD', 'UT'})
         self.assertEqual([k for k in keys if not k.startswith('T1:stage:')], [])
 
-    def test_chapter5_section_without_lld_when_confirmed(self):
-        files = self.files(**{'docs/30_HLD.md': HLD5})
-        self.assertIn('T3:LLD:5.1', self.keys(files, confirmed={'LLD'}))
-        self.assertNotIn('T3:LLD:5.1', self.keys(files))
+    def test_program_chapter_section_without_lld_when_confirmed(self):
+        files = self.files(**{'docs/30_HLD.md': HLD_PROGRAM})
+        self.assertIn('T3:LLD:3.1', self.keys(files, confirmed={'LLD'}))
+        self.assertNotIn('T3:LLD:3.1', self.keys(files))
 
     def test_unimplemented_automated_case(self):
         files = self.files(**{'tests/src/test_one.cpp': '// 空\n'})
@@ -703,14 +715,14 @@ class ParserHardeningTest(TraceTestCase):
     def test_hld_declaration_in_code_span_is_not_a_parent(self):
         hld = HLD.replace('- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
                           '- **対応 SRS**: `[FR-001](20_SRS.md#fr-001-一)`')
-        self.assertIn('T1:HLD-3.1:対応 SRS', self.keys(self.hld_files(hld)))
+        self.assertIn('T1:HLD-4.1:対応 SRS', self.keys(self.hld_files(hld)))
 
     def test_hld_section_label_without_anchor_is_not_a_parent(self):
         hld = HLD.replace('[SRS §3.2](20_SRS.md#32-主要コンポーネント構成)', '[SRS §3.2](20_SRS.md)')
         self.assertIn('T1:HLD-2.1:対応 SRS', self.keys(self.hld_files(hld)))
 
     def test_lld_declaration_in_code_span_is_not_a_parent(self):
-        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '`[3.1](30_HLD.md#31-fr-001-一)`')
+        lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)', '`[4.1](30_HLD.md#41-fr-001-一)`')
         files = dict(BASE, **{'docs/30_HLD.md': HLD, 'docs/40_LLD.md': lld})
         self.assertIn('T1:LLD-one:対応 HLD', self.keys(files))
 

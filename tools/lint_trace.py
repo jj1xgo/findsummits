@@ -485,6 +485,8 @@ def check_st_matrix(repo, urs, declared, cases):
 
 
 HLD_SEC_RE = re.compile(r'^### ([2345]\.\d+) ')
+# プログラム構造の章（ADR-HLD-001・ADR-HLD-002）。この章の宣言は T3 に数えない
+HLD_PROGRAM_CHAPTER = '3.'
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -511,8 +513,8 @@ def check_hld(repo, req_ids, comps, confirmed):
             for rid in sorted(ids - req_ids):
                 out.append(finding('T2', f'HLD-{sec}->{rid}', f'{HLD}:{no}',
                                    f'{sec} の対応 SRS {rid} は SRS にありません'))
-            # 5 章（プログラム構造）の宣言は、処理方式の節（2〜4 章）の代わりに数えない
-            if not sec.startswith('5.'):
+            # 3 章（プログラム構造）の宣言は、処理方式の節（2・4・5 章）の代わりに数えない
+            if not sec.startswith(HLD_PROGRAM_CHAPTER):
                 covered |= ids & req_ids
         if '担当コンポーネント' not in d:
             out.append(finding('T1', f'HLD-{sec}:担当コンポーネント', where,
