@@ -1,4 +1,4 @@
-<svg width="1400" height="920" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="広域解析のコーナーと縮約"><title>広域解析のコーナーと縮約</title><desc>N=4、対象メッシュ 5135 の例。対象メッシュを置く 4 つの隅（NW・NE・SW・SE）と窓の範囲、Z15 の 2×2 から Z14 の 1 画素への縮約（最大を採り、同じ値なら北の行、西の順）と、対象ピークを含む 2×2 だけ採った画素の Z15 の座標を控えること、パターンごとの処理。HLD 3.14.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "IPAexGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
+<svg width="1400" height="920" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="広域解析のコーナーと縮約"><title>広域解析のコーナーと縮約</title><desc>N=4、対象メッシュ 5135 の例。対象メッシュを置く 4 つの隅（NW・NE・SW・SE）と窓の範囲、Z15 の 2×2 から Z14 の 1 画素への縮約（最大を採り、同じ値なら北の行、西の順）と、対象ピークを含む 2×2 だけ採った画素の Z15 の座標を控えること、パターンごとの処理。HLD 4.14.2 を参照。</desc><style><![CDATA[svg { font-family: "Noto Sans CJK JP", "Noto Sans JP", "IPAexGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif; background: #fff; }
 text { font-size: 18px; fill: #111827; }
 .b { font-weight: 700; } .ttl { font-size: 26px; font-weight: 700; }
 .w { fill: #fff; font-weight: 700; }
@@ -14,7 +14,7 @@ text { font-size: 18px; fill: #111827; }
   </defs>
   <text x="30" y="42" class="ttl">広域解析のコーナーと縮約（N=4 の例）</text>
   <rect x="30" y="56" width="150" height="32" rx="4" fill="#334155"/>
-  <text x="105" y="79" class="w" text-anchor="middle">HLD §3.14.2</text>
+  <text x="105" y="79" class="w" text-anchor="middle">HLD §4.14.2</text>
   <text x="195" y="79">対象メッシュ 5135。NW→NE→SW→SE の順に試し、対象ピークがすべて確定したら残りを行わない</text>
   <text x="70" y="124" class="cap">コーナーの置き方（対象メッシュを置く隅。北が上）</text>
   <rect x="70" y="140" width="620" height="580" fill="#f1f5f9"/>

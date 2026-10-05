@@ -71,35 +71,35 @@
         <h2>3×3 メッシュの窓</h2>
         <figure>
           <a href="mesh-window.svg"><img src="mesh-window.svg" width="1100" height="520" alt="対象メッシュを中心にした 3×3 の 1 次メッシュの窓。抽象と、5239 を中心にした具体例。5140 は日本全土1次メッシュコードリストに無いので解析対象メッシュではなく、解析範囲の中にあるのでタイルの有無によらず NODATA で埋める"></a>
-          <figcaption>出典: SRS FR-004、HLD §3.4.2（D47）、ADR-SRS-053。解析範囲標高グリッドの作り方の詳細は、次の図です。</figcaption>
+          <figcaption>出典: SRS FR-004、HLD §4.4.2（D47）、ADR-SRS-053。解析範囲標高グリッドの作り方の詳細は、次の図です。</figcaption>
         </figure>
       </section>
       <section id="analysis-grid">
         <h2>解析範囲標高グリッドの作り方</h2>
         <figure>
           <a href="analysis-grid.svg"><img src="analysis-grid.svg" width="1400" height="1040" alt="3×3 の窓の例。解析対象メッシュを囲む bounding box の中で、リスト外のメッシュの範囲を NODATA で埋め、外側のはみ出しはタイルの値を残し、外周 1 画素を海面にする。DEM10b は Z14 の 1 画素を Z15 の 2×2 画素に当て、タイルの位置ごとに読んでフォールバックとデコードをしてからグリッドへ書く"></a>
-          <figcaption>出典: HLD §3.4.2、SRS FR-004・FR-002・FR-003、ADR-SRS-053・ADR-SRS-061。3×3 の窓の例です。広域解析も同じ手順でタイルの位置ごとに標高を求め、縮約してから Z14 のグリッドに書きます（Z15 の結合画像全体は作りません）。</figcaption>
+          <figcaption>出典: HLD §4.4.2、SRS FR-004・FR-002・FR-003、ADR-SRS-053・ADR-SRS-061。3×3 の窓の例です。広域解析も同じ手順でタイルの位置ごとに標高を求め、縮約してから Z14 のグリッドに書きます（Z15 の結合画像全体は作りません）。</figcaption>
         </figure>
       </section>
       <section id="peak-scan">
         <h2>ピーク候補検出の走査</h2>
         <figure>
           <a href="peak-scan.svg"><img src="peak-scan.svg" width="1400" height="940" alt="解析範囲標高グリッドの画素を、外周 1 画素の人工ボーダー、海面、NODATA、陸地に分ける。陸地でない画素は成分の番号を持たず、8 近傍の成分に数えない。陸地の画素だけを、標高を 0.01m 単位の整数にした値で数え上げ、標高の高い順、同じ標高は画素の番号の昇順に並べる。1 画素ずつ、8 近傍の成分の数が 0 なら新しい成分（ピーク候補）、1 ならその成分に入り、2 以上なら成分の合流。8 近傍に人工ボーダーがあれば成分に接触の印を付ける"></a>
-          <figcaption>出典: HLD §3.5.2、SRS FR-005・FR-006、ADR-SRS-053。グリッドの標高の数字は例です。合流でどの成分を残すか、コルとプロミネンスは FR-006 の節で決めます。</figcaption>
+          <figcaption>出典: HLD §4.5.2、SRS FR-005・FR-006、ADR-SRS-053。グリッドの標高の数字は例です。合流でどの成分を残すか、コルとプロミネンスは FR-006 の節で決めます。</figcaption>
         </figure>
       </section>
       <section id="wide-analysis">
         <h2>広域解析のコーナーと縮約</h2>
         <figure>
           <a href="wide-analysis.svg"><img src="wide-analysis.svg" width="1400" height="920" alt="N=4、対象メッシュ 5135 の例。対象メッシュを窓の北西・北東・南西・南東の隅に置く 4 つのパターンと窓の範囲。Z15 の 2×2 の最大を Z14 の 1 画素にし、同じ値なら北の行、西の順に採り、対象ピークを含む 2×2 だけ採った画素の Z15 の座標を控える。パターンごとに省略の判定、タイルの検査、グリッドの生成、標高地形図、ピークとコル、per-mesh CSV、.meshset の順に行う"></a>
-          <figcaption>出典: HLD §3.14.2、SRS FR-014、ADR-SRS-004・ADR-SRS-046・ADR-SRS-055。N=4、対象メッシュ 5135 の例です。窓の範囲は ADR-SRS-004 の例と同じです。</figcaption>
+          <figcaption>出典: HLD §4.14.2、SRS FR-014、ADR-SRS-004・ADR-SRS-046・ADR-SRS-055。N=4、対象メッシュ 5135 の例です。窓の範囲は ADR-SRS-004 の例と同じです。</figcaption>
         </figure>
       </section>
       <section id="peak-zone">
         <h2>ピーク域ポリゴンの生成</h2>
         <figure>
           <a href="peak-zone.svg"><img src="peak-zone.svg" width="1400" height="1000" alt="ピークの画素から、範囲の中の陸地の画素だけを 8 近傍でたどって塗る。海面・NODATA・人工ボーダーは閾値が 0 でも塗らない。塗った画素の正方形を合わせた形の境界を画素の辺の上でたどり、閾値より低い窪みは穴の環にする。斜めにだけ接する画素も塗り、輪郭はその角で分けて 2 つの Polygon（MultiPolygon）にする。delete判定ゾーンの閾値が Key コルで決まるときは、コルの標高より高い画素だけを塗る。area_complete は、塗った画素の 8 近傍のうち範囲の外の画素が、人工ボーダー、--mesh で外したメッシュの埋めた画素、はみ出しの閾値を満たす陸地のどれかなら false で、日本全土リストに無いメッシュと北方領土除外メッシュでは途切れたとみなさない"></a>
-          <figcaption>出典: HLD §3.16.2、SRS FR-016、ADR-SRS-011・ADR-SRS-053。グリッドと地形の形は例で、色と記号は説明用です（出力のスタイルは HLD §3.16.2 の表）。輪郭の辺のつなぎ方の細部は LLD で決めます。</figcaption>
+          <figcaption>出典: HLD §4.16.2、SRS FR-016、ADR-SRS-011・ADR-SRS-053。グリッドと地形の形は例で、色と記号は説明用です（出力のスタイルは HLD §4.16.2 の表）。輪郭の辺のつなぎ方の細部は LLD で決めます。</figcaption>
         </figure>
       </section>
       <p>サミット一覧（申請内容反映版）は申請エビデンス ZIP に同梱します。公開用ビューアは同じ ZIP から取り出した GeoJSON 5 本を利用者が無改変で配置して配信します。</p>

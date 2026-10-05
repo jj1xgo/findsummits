@@ -3,7 +3,7 @@
 | 状態 | 採用・モックアップ実装済み |
 | 決定日 | 2026-06-02 |
 
-> ※ 本 ADR の dem1a の扱い（Decision の「dem1a…は…現時点では採用しない。HLD で改めて評価する」と Consequences の「dem1a（z=17）の採用可否は HLD フェーズで再評価する」）は、[ADR-SRS-067](ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md) で評価し、ズーム 17 以上で使うと改めた（2026-10-05）。ズームごとのタイルの選び方、描画パラメータの最終値は [HLD 3.19](../30_HLD.md#319-fr-019-html-ビューア機能仕様) の D143 で定めた。
+> ※ 本 ADR の dem1a の扱い（Decision の「dem1a…は…現時点では採用しない。HLD で改めて評価する」と Consequences の「dem1a（z=17）の採用可否は HLD フェーズで再評価する」）は、[ADR-SRS-067](ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md) で評価し、ズーム 17 以上で使うと改めた（2026-10-05）。ズームごとのタイルの選び方、描画パラメータの最終値は [HLD 4.19](../30_HLD.md#419-fr-019-html-ビューア機能仕様) の D143 で定めた。
 
 ## Context
 
