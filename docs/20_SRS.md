@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-10-04 |
+| 最終更新日 | 2026-10-05 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -1890,7 +1890,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 項目 | 仕様 |
 |---|---|
 | 生成方式 | 作業用 HTML ビューア（`merged_viewer.html`）の「申請エビデンス」ボタンによるブラウザダウンロード（[FR-021](#fr-021-申請エビデンス-zip-生成)） |
-| ファイル名 | `sota_evidence_YYYYMMDD.zip`（`YYYYMMDD` は `metadata.generated_at` の日付部分。完全仕様は HLD に委ねる） |
+| ファイル名 | `sota_evidence_YYYYMMDD.zip`（`YYYYMMDD` はエクスポートした日（「申請エビデンス」ボタンを押した時点）の端末の現地時刻の年月日。[ADR-SRS-065](decisions/ADR-SRS-065-evidence-zip-filename-export-date.md)。完全仕様は HLD に委ねる） |
 
 **同梱ファイル一覧**:
 
