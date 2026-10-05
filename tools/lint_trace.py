@@ -484,7 +484,7 @@ def check_st_matrix(repo, urs, declared, cases):
     return out
 
 
-HLD_SEC_RE = re.compile(r'^### ([234]\.\d+) ')
+HLD_SEC_RE = re.compile(r'^### ([2345]\.\d+) ')
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -511,7 +511,9 @@ def check_hld(repo, req_ids, comps, confirmed):
             for rid in sorted(ids - req_ids):
                 out.append(finding('T2', f'HLD-{sec}->{rid}', f'{HLD}:{no}',
                                    f'{sec} の対応 SRS {rid} は SRS にありません'))
-            covered |= ids & req_ids
+            # 5 章（プログラム構造）の宣言は、処理方式の節（2〜4 章）の代わりに数えない
+            if not sec.startswith('5.'):
+                covered |= ids & req_ids
         if '担当コンポーネント' not in d:
             out.append(finding('T1', f'HLD-{sec}:担当コンポーネント', where,
                                f'{sec} に「担当コンポーネント」の宣言がありません'))
@@ -591,7 +593,7 @@ def check_lld(repo, hld_sections, confirmed):
         modules[mid] = {'files': files, 'hld': secs, 'where': where}
     if 'LLD' in confirmed:
         covered = set().union(*(m['hld'] for m in modules.values()))
-        for sec in sorted(x for x in hld_sections if x.startswith(('3.', '4.')) and x not in covered):
+        for sec in sorted(x for x in hld_sections if x.startswith(('3.', '4.', '5.')) and x not in covered):
             out.append(finding('T3', f'LLD:{sec}', LLD, f'HLD {sec} を対応 HLD に持つ LLD のモジュールがありません'))
     return out, modules
 

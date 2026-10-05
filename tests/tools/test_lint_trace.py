@@ -453,6 +453,15 @@ HLD = '''# HLD
 本文。
 '''
 
+HLD5 = HLD + '''
+## 5. プログラム構造
+
+### 5.1 C1 一
+
+- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
+- **担当コンポーネント**: C1
+'''
+
 
 class HldTest(TraceTestCase):
     def files(self, hld=HLD):
@@ -492,6 +501,20 @@ class HldTest(TraceTestCase):
     def test_duplicate_section_number(self):
         hld = HLD + '\n### 3.1 FR-001 二つ目\n'
         self.assertIn('T1:HLD-3.1:重複', self.keys(self.files(hld)))
+
+    def test_chapter5_section_is_clean(self):
+        self.assertEqual(self.check(self.files(HLD5)), [])
+
+    def test_chapter5_section_needs_declarations(self):
+        hld = HLD + '\n## 5. プログラム構造\n\n### 5.1 C1 一\n\n本文。\n'
+        keys = self.keys(self.files(hld))
+        self.assertIn('T1:HLD-5.1:対応 SRS', keys)
+        self.assertIn('T1:HLD-5.1:担当コンポーネント', keys)
+
+    def test_chapter5_declaration_does_not_cover_requirement(self):
+        hld = HLD5.replace('### 5.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+                           '### 5.1 C1 一\n\n- **対応 SRS**: [FR-002](20_SRS.md#fr-002-二)')
+        self.assertIn('T3:HLD:FR-002', self.keys(self.files(hld), confirmed={'HLD'}))
 
 LLD = '''# LLD
 
@@ -559,6 +582,18 @@ class LldTest(TraceTestCase):
     def test_hld_section_without_lld_when_confirmed(self):
         lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)', '[2.1](30_HLD.md#21-全体)')
         self.assertIn('T3:LLD:3.1', self.keys(self.files(**{'docs/40_LLD.md': lld}), confirmed={'LLD'}))
+
+    def test_lld_can_point_to_chapter5(self):
+        lld = LLD.replace('[3.1](30_HLD.md#31-fr-001-一)',
+                          '[3.1](30_HLD.md#31-fr-001-一)・[5.1](30_HLD.md#51-c1-一)')
+        files = self.files(**{'docs/30_HLD.md': HLD5, 'docs/40_LLD.md': lld})
+        keys = self.keys(files, confirmed={'LLD', 'UT'})
+        self.assertEqual([k for k in keys if not k.startswith('T1:stage:')], [])
+
+    def test_chapter5_section_without_lld_when_confirmed(self):
+        files = self.files(**{'docs/30_HLD.md': HLD5})
+        self.assertIn('T3:LLD:5.1', self.keys(files, confirmed={'LLD'}))
+        self.assertNotIn('T3:LLD:5.1', self.keys(files))
 
     def test_unimplemented_automated_case(self):
         files = self.files(**{'tests/src/test_one.cpp': '// 空\n'})
