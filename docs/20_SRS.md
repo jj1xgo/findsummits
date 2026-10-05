@@ -1914,10 +1914,10 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 項目 | 仕様 |
 |---|---|
 | 形式 | PNG（RGB エンコード） |
-| ズームレベル | DEM5a/5b/5c: 15 / DEM10b: 14 / DEM1a: 17（ビューアの等高線だけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)） |
+| ズームレベル | 解析: DEM5a/5b/5c: 15 / DEM10b: 14。ビューアの等高線: DEM1a: 17、DEM5a/5b/5c: 15、DEM10b: 14 以下（地図のズームによる。拡大と選び方は HLD。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)） |
 | タイルサイズ | 256×256 px |
-| 標高算出式 | `elev = (R×65536 + G×256 + B) / 100.0`（RGB ピクセル値から標高（m）を計算） |
-| 無効値（NODATA）の定義 | R=128, G=0, B=0 のピクセルは標高値なし（海・データ未整備等）を示し、-9999.0m として扱う |
+| 標高算出式 | `elev = (R×65536 + G×256 + B) / 100.0`（RGB ピクセル値から標高（m）を計算。2^23 より大きい中間値の負の標高の扱いは [FR-003](#fr-003-標高デコードnodata-処理)） |
+| 無効値（NODATA）の定義 | R=128, G=0, B=0 のピクセルは標高値なし（海・データ未整備等）を示す。解析は -9999.0m として扱う。ビューアの等高線での持ち方は HLD |
 | タイル URL | ベース: `https://cyberjapandata.gsi.go.jp/xyz/{サービス名}/{z}/{x}/{y}.png`<br>サービス名: DEM5a=`dem5a_png` / DEM5b=`dem5b_png` / DEM5c=`dem5c_png` / DEM10b=`dem_png` / DEM1a=`dem1a_png`（ビューアの等高線だけ） |
 
 #### 6.2.10 除外判断 JSON
