@@ -3786,7 +3786,7 @@ C5 は 4 本のプログラムからなる（D4「C5 は FR ごとの起動口�
 | 突き合わせ | `match_activation_zones` | サミットを AZ と突き合わせ、`matched`・`ambiguous` を決める | サミットの並び、ピークの表、AZ とその索引 | サミットごとの「含まれる AZ のピーク」、ピークごとの AZ の中のサミットと `matched`・`ambiguous` の別、警告に並べるもの | [3.9.2](#392-処理の流れ) の 5 |
 | 突き合わせ | `match_delete_zones` | AZ に含まれないサミットを delete判定ゾーンと突き合わせ、主ピークを選ぶ。AZ にサミットが無いピークを `dominant`・`new` に分ける | AZ に含まれないサミットの並び、ピークの表、`match_activation_zones` の返したピークごとの結果、delete判定ゾーンとその索引 | サミットごとの `delete`・`unmatched` の別と主ピークと距離、AZ にサミットが無いピークごとの `dominant`・`new` の別 | [3.9.2](#392-処理の流れ) の 6 |
 | 照合と採番 | `locate_regions` | 点を地域と市区町村に照合する | 点の並び（ピーク、陸のコル、サミット）、地域と市区町村とその索引 | 点ごとの地域（`assoc`・`area_code`・`region_name`）と `municipality`、どれにも入らなかった点の並び | [3.9.2](#392-処理の流れ) の 7 |
-| 照合と採番 | `assign_provisional_codes` | 仮サミットコードを付ける | `new`・`dominant` のピークとその地域、`provisional_code_max_prefix` | ピークごとの仮サミットコード | [3.9.2](#392-処理の流れ) の 8 |
+| 照合と採番 | `assign_provisional_codes` | 仮サミットコードを付ける | `new`・`dominant` のピークとその地域、`provisional_code_max_prefix`、`read_boundaries` の返した地域 GeoJSON の有無（無いために上限を超えたときは、そのことをメッセージに書くため） | ピークごとの仮サミットコード | [3.9.2](#392-処理の流れ) の 8 |
 | 組み立て | `read_sota_names` | SOTA 既存サミット GeoJSON から山岳名を読む | `$DATA_DIR/ref/` のパス、`sota_geojson_version` | SummitCode から山岳名への表、警告に並べるもの | [3.9.2](#392-処理の流れ) の「出力の組み立て」の 1 |
 | 組み立て | `derive_attributes` | `points`・`is_band_change_candidate`・`category`・確認用の属性を求める | ここまでの判定の結果、山岳名の表 | ピークとサミットごとの属性の値 | [3.9.2](#392-処理の流れ) の「出力の組み立て」の 2 |
 | 組み立て | `build_rationale` | rationale の文字列を作る | ピークかサミット 1 つの値と属性 | 文字列 | [3.9.2](#392-処理の流れ) の「出力の組み立て」の 2 |
