@@ -241,7 +241,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 |---|---|---|
 | URD | User Requirements Document | ユーザー要件定義書。利用者視点での「何ができるべきか」を記述（`docs/10_URD.md`）。要件識別子: `UR-XXX` |
 | SRS | Software Requirements Specification | ソフトウェア要件仕様書。システム視点での機能・非機能要件を記述（`docs/20_SRS.md`）。識別子: 機能要件 `FR-XXX` / 非機能要件 `NFR-XXX` |
-| HLD | High-Level Design | 概要設計。アーキテクチャ、FR/NFR ごとの処理方式、プログラム構造（プログラム・関数の一覧・共通部品・結合のつなぎ目）を記述（`docs/30_HLD.md`） |
+| HLD | High-Level Design | 概要設計。アーキテクチャ、プログラム構造（プログラム・関数の一覧・共通部品・結合のつなぎ目）、FR/NFR ごとの処理方式を記述（`docs/30_HLD.md`） |
 | LLD | Low-Level Design | 詳細設計。関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を記述（`docs/40_LLD.md`、未作成） |
 | COD | Coding | 実装フェーズ。成果物: `src/*.c`・`scripts/*.py` |
 | UT | Unit Test | 単体テスト（`docs/50_UT.md`、未作成） |
@@ -276,6 +276,6 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
     - 次の URD: `ADR-URD-021-...`
     - 次の SRS: `ADR-SRS-068-...`
     - 次の OPS: `ADR-OPS-002-...`
-    - 次の HLD: `ADR-HLD-002-...`（まだ ADR の無いステージは 001 から）
+    - 次の HLD: `ADR-HLD-003-...`（まだ ADR の無いステージは 001 から）
 
 例: `ADR-URD-005-northern-territories-exclusion.md`（スコープ判断）、`ADR-SRS-001-hybrid-c-python-architecture.md`（アーキテクチャ判断）、`ADR-HLD-001-program-structure-chapter-and-two-tier-it.md`（設計文書の構造の判断）
