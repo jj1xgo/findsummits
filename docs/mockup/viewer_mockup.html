@@ -267,7 +267,7 @@ const GEOJSON_DATA = {
       properties: { feature_type: "peak", match_status: "new", category: "add", summit_code: "JA/ZZ-A01",
                     peak_elev: 580, prominence: 165, stability: "confirmed", key_col_resolved: true,
                     points: 2,
-                    rationale: "国土地理院標高タイルで解析\n35.31000,138.68000\n所在地：山梨県 南部町\nコル標高：415m\nプロミネンス：165m",
+                    rationale: "国土地理院標高タイルで解析\n35.31000,138.68000\n所在地：山梨県 南部町\nコル位置：35.29000,138.66000\nコル標高：415m\nプロミネンス：165m",
                     analysis_count: 2, expected_count: 2, municipality: "南部町", region_name: "山梨県" } },
     { type: "Feature", geometry: { type: "Polygon", coordinates: [[[138.670,35.300],[138.690,35.300],[138.690,35.320],[138.670,35.320],[138.670,35.300]]] },
       properties: { feature_type: "activation_zone", category: "add", summit_code: "JA/ZZ-A01", area_complete: true, points: 2 } },
@@ -284,7 +284,7 @@ const GEOJSON_DATA = {
       properties: { feature_type: "peak", match_status: "new", category: "add", summit_code: "JA/ZZ-A02",
                     peak_elev: 820, prominence: 820, stability: "confirmed",
                     key_col_resolved: true, points: 6,
-                    rationale: "国土地理院標高タイルで解析\n35.22000,138.92000\n所在地：東京都 大島町\nコル標高：海面（0m）\nプロミネンス：820m",
+                    rationale: "国土地理院標高タイルで解析\n35.22000,138.92000\n所在地：東京都 大島町\nコル位置：海面\nコル標高：海面（0m）\nプロミネンス：820m",
                     analysis_count: 2, expected_count: 2, municipality: "大島町", region_name: "東京都" } },
     { type: "Feature", geometry: { type: "Polygon", coordinates: [[[138.910,35.210],[138.930,35.210],[138.930,35.230],[138.910,35.230],[138.910,35.210]]] },
       properties: { feature_type: "activation_zone", category: "add", summit_code: "JA/ZZ-A02", area_complete: true, points: 6 } },
@@ -338,7 +338,7 @@ const GEOJSON_DATA = {
                     summit_code: "JA/YN-A00", summit_name: "", summit_name_jp: "",
                     peak_elev: 1050, prominence: 320, stability: "confirmed", key_col_resolved: true,
                     points: 8,
-                    rationale: "国土地理院標高タイルで解析\n35.25000,138.65000\n所在地：神奈川県 相模原市\nコル標高：730m\nプロミネンス：320m",
+                    rationale: "国土地理院標高タイルで解析\n35.25000,138.65000\n所在地：神奈川県 相模原市\nコル位置：35.23000,138.63000\nコル標高：730m\nプロミネンス：320m",
                     analysis_count: 2, expected_count: 2, municipality: "相模原市", region_name: "神奈川県" } },
     { type: "Feature", geometry: { type: "Polygon", coordinates: [[[138.646,35.246],[138.654,35.246],[138.654,35.254],[138.646,35.254],[138.646,35.246]]] },
       properties: { feature_type: "activation_zone", category: "add", summit_code: "JA/YN-A00", area_complete: true, points: 8 } },
@@ -1046,7 +1046,8 @@ function renderFeatures() {
 
       if (p.match_status === "new") {
         const colElevStr = colF ? `${colF.properties.col_elev}m` : domLabel ? '海面（0m）' : '（コル未確定）';
-        const initNotes = `国土地理院標高タイルで解析\n${pkLat},${pkLon}\n所在地：\nコル標高：${colElevStr}\nプロミネンス：${p.prominence !== null ? p.prominence + 'm' : '未確定'}`;
+        const colPosStr = colF ? `${colF.geometry.coordinates[1].toFixed(5)},${colF.geometry.coordinates[0].toFixed(5)}` : domLabel ? '海面' : '未確定';
+        const initNotes = `国土地理院標高タイルで解析\n${pkLat},${pkLon}\n所在地：\nコル位置：${colPosStr}\nコル標高：${colElevStr}\nプロミネンス：${p.prominence !== null ? p.prominence + 'm' : '未確定'}`;
         marker.bindPopup(`
           <div class="popup-title"><i class="fa-solid fa-caret-up" style="color:${color}"></i> 新規ピーク<span class="popup-badge">new</span>${domBadge}</div>
           <div class="popup-row"><label>仮コード</label>${p.summit_code}</div>
@@ -1104,7 +1105,8 @@ function renderFeatures() {
         }
       } else {
         const colElevStr = colF ? `${colF.properties.col_elev}m` : domLabel ? '海面（0m）' : '（コル未確定）';
-        const initNotes = `国土地理院標高タイルで解析\n${pkLat},${pkLon}\n所在地：\nコル標高：${colElevStr}\nプロミネンス：${p.prominence !== null ? p.prominence + 'm' : '未確定'}`;
+        const colPosStr = colF ? `${colF.geometry.coordinates[1].toFixed(5)},${colF.geometry.coordinates[0].toFixed(5)}` : domLabel ? '海面' : '未確定';
+        const initNotes = `国土地理院標高タイルで解析\n${pkLat},${pkLon}\n所在地：\nコル位置：${colPosStr}\nコル標高：${colElevStr}\nプロミネンス：${p.prominence !== null ? p.prominence + 'm' : '未確定'}`;
         marker.bindPopup(`
           <div class="popup-title"><i class="fa-solid fa-caret-up" style="color:${color}"></i> ${p.summit_name_jp || p.summit_name}<span class="popup-badge">dominant</span>${domBadge}</div>
           <div class="popup-row"><label>コード</label>${p.summit_code}</div>
