@@ -6,6 +6,7 @@
 検査C: 内部トラッカーID（ISSUE-NNN/BUG-NNN）および mgmt/ パス参照の混入検出
 検査D: FR/UR/NFR 裸参照（リンクでもコード表記でもない参照）の検出
 検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止）
+検査F: HLD の設計判断（D）の題（定義の題の長さ、付録 A の題、本文の参照に添えた題）
 """
 import os
 import re
@@ -54,6 +55,16 @@ NOTATION_RULES = [
 
 # 検査C・D 対象外ファイル（ルール自体の経緯を記録したメタドキュメントが将来追加された場合の受け皿）。
 CHECK_CD_EXEMPT_FILES = set()
+
+# 検査F: HLD の設計判断（D）の題（docs/CLAUDE.md「HLD の記号の書き方」）
+HLD_PATH_SUFFIX = os.sep + os.path.join('docs', '30_HLD.md')
+D_DEF_RE = re.compile(r'^- (D\d+)（(.+?)）: ')
+D_INDEX_HEADING = '## 付録 A '
+D_INDEX_RE = re.compile(r'^\| (D\d+) \| (.+?) \| ')
+D_REF_RE = re.compile(r'(?<![A-Za-z0-9_\-])(D\d+)(?![0-9])')
+# 題の照合から外す範囲: コード表記と「」の中（他の D の題の中の D、引用）
+D_MASK_RE = re.compile(r'`[^`\n]+`|「[^」\n]*」')
+D_TITLE_MAX = 30
 
 
 def _get_known_refs():
@@ -185,6 +196,78 @@ def check_file(filepath):
                         f"{filepath}:{i + 1}: NOTATION-{rule_name}: {message}"
                     )
 
+    # 検査F: docs/30_HLD.md だけに適用する（ファイル全体の D の定義と照合するため、行の検査の後に行う）
+    if abs_filepath.endswith(HLD_PATH_SUFFIX):
+        violations.extend(check_hld_decisions(filepath, lines))
+
+    return violations
+
+
+def check_hld_decisions(filepath, lines):
+    """D の定義の題の長さ、付録 A の題、本文の参照に添えた題を照合する"""
+    violations = []
+    defs = {}
+    in_code_block = False
+    for i, raw in enumerate(lines):
+        if raw.lstrip().startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        m = D_DEF_RE.match(raw)
+        if in_code_block or not m:
+            continue
+        d, title = m.groups()
+        if d in defs:
+            violations.append(f"{filepath}:{i + 1}: HLD-D-DUP: {d} の定義が重複しています")
+        defs[d] = title
+        if len(title.replace('`', '')) > D_TITLE_MAX:
+            violations.append(
+                f"{filepath}:{i + 1}: HLD-D-LONG: {d} の題が {D_TITLE_MAX} 字を超えています"
+                f"（バッククォートを除いて数える）"
+            )
+    indexed = set()
+    in_code_block = False
+    in_index = False
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        if line.lstrip().startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        if line.startswith('#'):
+            if line.startswith('## '):
+                in_index = line.startswith(D_INDEX_HEADING)
+            continue
+        m = D_INDEX_RE.match(line) if in_index else None
+        if m:
+            d, title = m.groups()
+            indexed.add(d)
+            if defs.get(d) != title:
+                violations.append(
+                    f"{filepath}:{i + 1}: HLD-D-INDEX: 付録 A の {d} の題が定義と一致しません"
+                )
+            continue
+        m = D_DEF_RE.match(line)
+        start = m.end() if m else 0
+        masked = '\0' * start + D_MASK_RE.sub(lambda x: '\0' * len(x.group()), line[start:])
+        for r in D_REF_RE.finditer(masked):
+            d = r.group(1)
+            rest = line[r.end():]
+            end = rest.find('」')
+            if d not in defs:
+                violations.append(f"{filepath}:{i + 1}: HLD-D-UNKNOWN: {d} の定義がありません")
+            elif not rest.startswith('「'):
+                violations.append(
+                    f"{filepath}:{i + 1}: HLD-D-BARE: {d} に題を添えてください（{d}「{defs[d]}」）"
+                )
+            elif end < 0:
+                violations.append(f"{filepath}:{i + 1}: HLD-D-TITLE: {d} の題が行の中で閉じていません")
+            elif rest[1:end] != defs[d]:
+                violations.append(
+                    f"{filepath}:{i + 1}: HLD-D-TITLE: {d} の題が定義と一致しません（{d}「{defs[d]}」）"
+                )
+    for d in sorted(set(defs) - indexed, key=lambda x: int(x[1:])):
+        violations.append(f"{filepath}: HLD-D-INDEX: {d} が付録 A にありません")
     return violations
 
 
