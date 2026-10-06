@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-28 |
-| 最終更新日 | 2026-10-06 |
+| 最終更新日 | 2026-10-07 |
 | ステータス | ドラフト |
 | 参照 SRS | [`20_SRS.md`](20_SRS.md) |
 
@@ -2247,7 +2247,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
    - `points` は、ピークでは `peak_elev` の小数点以下を切り捨てた整数 m を、サミットでは `AltM` を、[標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) に当てて求める（サミットのものが `sota_points`）。コルと AZ の `points` はピークのものとする。`is_band_change_candidate` は、`matched` のピークでは、ピークの `points` と AZ の中のサミットの `sota_points` が違えば true、同じなら false とし、ほかのピークでは null とする。
    - `dominant_peak_dist_m` は、4.9.2 の 6 で求めた距離を小数点以下 1 桁にして書く。
    - `category` と確認用の属性は、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当ての規則で決める。`review_group_id` の SummitCode の並びと、以下の `SummitCode` の順は、文字列の順（Unicode の符号位置の順）とする。`review_decision`・`review_note`・`application_exclusion`・`exclusion_note` はすべて空文字にする（[SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson)）。
-   - rationale は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の ※2・※4・※5 の書式で作る。`{peak_lat}`・`{peak_lon}`・`{col_elev}`・`{prominence}` には `merged_peak.csv` の文字列をそのまま入れ（D104「入力から来る数は 10 進の値を変えずに書く」）、`key_col_resolved=false` のピークでは `{col_elev}m`・`{prominence}m` を単位ごと「未確定」にする（`コル標高：未確定`）。海面で確定したピークの `{col_elev}` は `0.00` になる。`{floor(peak_elev)}` は `points` を求めたのと同じ切り捨ての整数、`{sota_alt_m}` は `AltM` とする。所在地の `{都道府県または振興局名}`・`{市区町村名}` は、※2・※5 ともピークの点の 4.9.2 の 7 の `region_name`・`municipality` で、空文字なら空のまま入れる。
+   - rationale は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の ※2・※4・※5 の書式で作る。`{peak_lat}`・`{peak_lon}`・`{col_lat}`・`{col_lon}`・`{col_elev}`・`{prominence}` には `merged_peak.csv` の文字列をそのまま入れ（D104「入力から来る数は 10 進の値を変えずに書く」）、`key_col_resolved=false` のピークでは `{col_lat},{col_lon}` を「未確定」に、`{col_elev}m`・`{prominence}m` を単位ごと「未確定」にする（`コル位置：未確定`・`コル標高：未確定`）。海面で確定したピーク（D100「海面で確定したコルは点にせず、XLSX でも空欄にする」の条件）では `{col_lat},{col_lon}` を「海面」にし（`コル位置：海面`。[ADR-SRS-068](decisions/ADR-SRS-068-col-position-in-add-rationale.md)）、`{col_elev}` は `0.00` になる。`{floor(peak_elev)}` は `points` を求めたのと同じ切り捨ての整数、`{sota_alt_m}` は `AltM` とする。所在地の `{都道府県または振興局名}`・`{市区町村名}` は、※2・※5 ともピークの点の 4.9.2 の 7 の `region_name`・`municipality` で、空文字なら空のまま入れる。
 3. metadata を作る。`summitslist_date` は 4.9.2 の 3 で読んだ基準日を `YYYY-MM-DD` で、`generated_at` は出力を組み立てた時刻を UTC の `YYYY-MM-DDTHH:MM:SSZ` で書く。`gsi_tile_latest_date` は、`$DATA_DIR/tiles/` の下のすべての `.png` のファイルの mtime の最大を、同じ UTC の形で書く（[ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)、D33「`Last-Modified` が無い応答では止める」）。PNG が 1 枚も無いか、ディレクトリをたどれなければ、空文字にして警告する。`software_version` は、C5（統合・突合）のスクリプトがあるリポジトリで `git describe --tags --dirty --always` を実行した結果とし、失敗したら `unknown` にして警告する（D98「版の文字列は出力を組み立てるときに git から取る」）。`attribution`・`source_url`・`license_url` は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の固定の文字列とする。
 4. `merged_summit.geojson` を組み立てる（D96「フィーチャはピークごとに CSV の行の順に並べる」）。最上位は `type`（`FeatureCollection`）、`metadata`、`features` とする。フィーチャは次の順に並べる。
    - 保留組に入らないピークを `merged_peak.csv` の行の順に並べ、ピークごとに、ピークの点、コルの点、AZ、delete判定ゾーン、ピークとコルを結ぶ線、AZ の中のサミットの点とそれへの線、そのピークを主ピークとする `delete` のサミットの点とそれへの線（`SummitCode` の順）を置く。
