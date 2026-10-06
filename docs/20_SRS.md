@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-10-05 |
+| 最終更新日 | 2026-10-07 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -956,9 +956,12 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
       国土地理院標高タイルで解析
       {peak_lat},{peak_lon}
       所在地：{都道府県または振興局名} {市区町村名}
+      コル位置：{col_lat},{col_lon}
       コル標高：{col_elev}m
       プロミネンス：{prominence}m
       ```
+
+      Key コルが海面で確定したピーク（`key_col_resolved=true` で `col_lat`/`col_lon` が 0.0。[FR-006](#fr-006-コル検出プロミネンス計算) の海面確定規則）は、`コル位置：海面` とする。0.0 は位置を持たない印で、未確定のピークも同じ値を持つため、海面か未確定かは `key_col_resolved` で見分ける。行の並びは、SOTA 日本支部の山岳データ登録変更リストの新規追加の詳細の列（位置・所在地・コル位置・コル標高・プロミネンス。比較SOTA-ID は扱わない）に合わせる（[ADR-SRS-068](decisions/ADR-SRS-068-col-position-in-add-rationale.md)）
 
     - **※4 削除根拠フォーマット**（バッチ生成時の category=delete の既存 SOTA サミット Point に付与。全 review は空文字）:
 
@@ -975,7 +978,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
       座標: {peak_lat},{peak_lon}（{都道府県または振興局名} {市区町村名}）
       ```
 
-    - `key_col_resolved=false` のピークは `col_elev`・`prominence` が確定していないため、※2 の該当箇所を「未確定」と表示する
+    - `key_col_resolved=false` のピークは `col_lat`/`col_lon`・`col_elev`・`prominence` が確定していないため、※2 の該当箇所を「未確定」と表示する（`コル位置：未確定`）
     - rationale はビューア上の textarea で**編集可能**。編集後の値が [FR-011](#fr-011-申請書-xlsx-生成) の XLSX 列 I に反映される（編集前は上記フォーマットの自動生成値が初期値）。永続化方式・編集値マージロジックの詳細は HLD 範疇
   - **異常系**: 不備ゲートと異常終了制御（[ADR-SRS-033](decisions/ADR-SRS-033-defect-confirmation-via-xlsx.md)）。本 FR は**全サミット評価完了後**に以下の不備条件を検査し、いずれかに該当する場合は**不備ゲート**として**意図的に異常終了**する（即時停止ではなく全判定後にまとめて検査。入力欠落・例外によるハードクラッシュとは区別する）:
     - 既存サミット行で `summit.match_status="unmatched"` の件数が **要確認サミット件数しきい値**（[データ辞書参照](#221-設定可能項目)）を超える（解析異常の疑い。しきい値以下の `unmatched` は要確認として続行し停止しない。[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）
