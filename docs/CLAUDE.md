@@ -103,7 +103,7 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 ## 参照する規格
 
-`docs/` の文書と開発のプロセスは、開発プロセスと文書の構成について、[ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) に記録した国際規格を参照する（意味は [用語集「参照規格」](00_GLOSSARY.md#参照規格)）。データ形式・通信・数値表現の規格（ISO 8601、RFC 7946 など）は、この節の対象外とする。
+`docs/` の文書と開発のプロセスは、開発プロセスと文書の構成について、[ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) に記録した国際規格を参照する（意味は [用語集「参照規格」](00_GLOSSARY.md#参照規格)）。データ形式・座標系・通信・数値表現の規格（ISO 8601、RFC 7946、EPSG など）は、この節の対象外とする。
 
 - 規格に対して「準拠」と書かない（規格の要求をすべて満たすとは主張しない）。規格以外の文書や規則に従う意味の「準拠」は、この対象外とする。
 - 開発プロセスや文書の構成の規格を名指しするときは、ADR-OPS-002 の版で書く。
