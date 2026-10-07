@@ -284,5 +284,5 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 
 | 用語 | 説明 |
 |---|---|
-| 参照（規格の） | 規格の本文を持たずに、公開の目録・規格の範囲の記述・無料で読める資料で分かる範囲で、文書の構成と用語を規格に合わせること。参照する規格と版、意図して外す点は [ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md)、目録は [SOURCES](../ref/SOURCES.md#開発プロセスの参照規格) を参照。 |
+| 参照（規格の） | 規格の本文を持たずに、公開の目録・規格の範囲の記述・無料で読める資料で分かる範囲で、文書の構成と用語を規格に合わせること。参照する規格と版、意図して保つ形は [ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md)、目録は [SOURCES](../ref/SOURCES.md#開発プロセスの参照規格) を参照。 |
 | 準拠（conformance、規格の） | 規格の要求をすべて満たすと主張すること。本プロジェクトは規格の本文を持たないため、開発プロセスと文書の構成の規格には準拠を宣言しない（[ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md)）。データ形式・座標系・通信・数値表現の規格と、規格以外の文書や規則に従う意味の「準拠」（[FR-011](20_SRS.md#fr-011-申請書-xlsx-生成) 準拠など）は、この意味に含めない。 |

@@ -159,7 +159,7 @@
 
 ### 開発プロセスの参照規格
 
-開発文書とプロセスが参照する規格の目録。どれを何に使うか、「参照」と「準拠」の違い、意図して外す点は [ADR-OPS-002](../docs/decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) が正本。規格の版の正本も ADR-OPS-002 の表で、下の表の題の版は、その写しである。規格の本文は持っていない。
+開発文書とプロセスが参照する規格の目録。どれを何に使うか、「参照」と「準拠」の違い、意図して保つ形は [ADR-OPS-002](../docs/decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) が正本。規格の版の正本も ADR-OPS-002 の表で、下の表に記載する版は、その写しである。規格の本文は持っていない。
 
 | 規格 | 題 | 目録 |
 |---|---|---|
