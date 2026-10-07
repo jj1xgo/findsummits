@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-10-05 |
+| 最終更新日 | 2026-10-07 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -275,7 +275,14 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-021-...`
     - 次の SRS: `ADR-SRS-068-...`
-    - 次の OPS: `ADR-OPS-002-...`
+    - 次の OPS: `ADR-OPS-003-...`
     - 次の HLD: `ADR-HLD-003-...`（まだ ADR の無いステージは 001 から）
 
 例: `ADR-URD-005-northern-territories-exclusion.md`（スコープ判断）、`ADR-SRS-001-hybrid-c-python-architecture.md`（アーキテクチャ判断）、`ADR-HLD-001-program-structure-chapter-and-two-tier-it.md`（設計文書の構造の判断）
+
+### 参照規格
+
+| 用語 | 説明 |
+|---|---|
+| 参照（規格の） | 規格の本文を持たずに、公開の目録・規格の範囲の記述・無料で読める資料で分かる範囲で、文書の構成と用語を規格に合わせること。参照する規格と版、意図して外す点は [ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md)、目録は [SOURCES](../ref/SOURCES.md#開発プロセスの参照規格) を参照。 |
+| 準拠（conformance、規格の） | 規格の要求をすべて満たすと主張すること。本プロジェクトは規格の本文を持たないため、どの規格にも準拠を宣言しない（[ADR-OPS-002](decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md)）。規格以外の文書や規則に従う意味の「準拠」（[FR-011](20_SRS.md#fr-011-申請書-xlsx-生成) 準拠など）は、この意味に含めない。 |

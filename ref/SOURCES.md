@@ -154,3 +154,26 @@
 | 運用管理 | 独立行政法人統計センター |
 | 参照URL | <https://www.e-stat.go.jp/pdf/gis/primary_mesh_jouhou.pdf> |
 | 備考 | 解析に使用する1次メッシュコード（4桁）の地理的範囲の定義元。HTML ビューアの 1 次メッシュのグリッドは、この一覧の 176 件（竹島を含む 5531 を含む）を描く。解析の一覧は 5531 を除く（[ADR-URD-009](../docs/decisions/ADR-URD-009-takeshima-exclusion.md)）。 |
+
+---
+
+### 開発プロセスの参照規格
+
+開発文書とプロセスが参照する規格の目録。どれを何に使うか、「参照」と「準拠」の違い、意図して外す点は [ADR-OPS-002](../docs/decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) が正本。規格の本文は持っていない。
+
+| 規格 | 題 | 目録 |
+|---|---|---|
+| ISO/IEC/IEEE 12207:2026 | Systems and software engineering — Software life cycle processes | <https://www.iso.org/standard/90219.html> |
+| ISO/IEC/IEEE 29148:2018 | Systems and software engineering — Life cycle processes — Requirements engineering | <https://www.iso.org/standard/72089.html> |
+| ISO/IEC/IEEE 42010:2022 | Software, systems and enterprise — Architecture description | <https://www.iso.org/standard/74393.html> |
+| ISO/IEC/IEEE 29119-1:2022 | Software and systems engineering — Software testing — Part 1: General concepts | <https://www.iso.org/standard/81291.html> |
+| ISO/IEC/IEEE 29119-2:2021 | Software and systems engineering — Software testing — Part 2: Test processes | <https://www.iso.org/standard/79428.html> |
+| ISO/IEC/IEEE 29119-3:2021 | Software and systems engineering — Software testing — Part 3: Test documentation | <https://www.iso.org/standard/79429.html> |
+| ISO/IEC 25010:2023 | Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model | <https://www.iso.org/standard/78176.html> |
+| ISO/IEC/IEEE 24765:2017 | Systems and software engineering — Vocabulary | <https://www.iso.org/standard/71952.html>（オンライン版の SEVOCAB: <https://www.computer.org/sevocab>） |
+| ISTQB CTFL シラバス v4.0.1 | Certified Tester Foundation Level Syllabus v4.0.1 | <https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf> |
+| ISTQB 用語集 | ISTQB Glossary（オンライン版、版を固定しない） | <https://glossary.istqb.org/> |
+| 二次資料: 29148:2018 に基づくとする SRS の雛形 | ISO/IEC/IEEE 29148:2018 Software Requirements Specification（第三者の公開の雛形。規格の本文ではない） | <https://github.com/G7DAO/idea-submission-guidelines/blob/main/SRS-Template.md> |
+
+- 確認日: 2026-10-07。ISO の目録ページの題・版・状態を、Web 検索の結果に出た目録ページで確かめた（作業環境から iso.org へ直接は接続できなかった）。
+- 改訂の動き（2026-10-07 時点）: 12207:2026 は 12207:2017 を置き換えた。29148 は次の版の委員会原案が、24765 は第 3 版の国際規格案（DIS）が進行中。
