@@ -133,7 +133,7 @@ HLD（`30_HLD.md`）は、§2 に横断の規約、§3 にプログラム構造�
 - プログラムと関数の名前は HLD §3 で確定する。LLD・コード・テストは同じ名前を使い、変えるときは HLD を先に直す。
 - UT は LLD に、IT は HLD §3 の結合のつなぎ目に対応する（[テスト方針書 §2](02_test_policy.md#2-テストレベル定義と役割分担)）。
 - この章の並びを最終形とし、§4・§5 を付随文書へ移さない（[ADR-HLD-002](decisions/ADR-HLD-002-hld-chapter-order-program-structure-first.md)）。
-- HLD に節を足すか、節の受け持ちを変えるときは、§2.11.2 の関心事の表の「答える節」と §2.11.3 の表も直す（[ADR-HLD-003](decisions/ADR-HLD-003-stakeholders-concerns-and-views-section.md)）。
+- HLD に節を足すか、節の受け持ちを変えるときは、§2.11.2 の関心事の表の「答える節」と §2.11.3 の表と照らし、古くなる行を直す（[ADR-HLD-003](decisions/ADR-HLD-003-stakeholders-concerns-and-views-section.md)）。
 
 ## HLD の記号の書き方
 
