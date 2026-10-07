@@ -36,3 +36,4 @@ HLD の第 2 章の節（2.1〜2.10）へのリンクは、HLD の中に約 790 
 - [用語集「参照規格」](../00_GLOSSARY.md#参照規格)に、ステークホルダー・関心事・ビューポイント・ビューを足した。
 - [文書管理ルール「HLD と LLD の書き分け」](../CLAUDE.md#hld-と-lld-の書き分け)に 2.11 の置き場と、節を足すときに 2.11 の表と照らして直すことを書いた。
 - 42010 の本文で確かめていない点（ビューポイントに書くべき項目、モデルの種類、対応関係の規則）は、[ADR-OPS-002](ADR-OPS-002-reference-standards-and-intended-deviations.md) の Decision 4 に従い保留し、2.11 の未決事項に置いた。
+- 2026-10-08: URD がステークホルダーを挙げた（[ADR-URD-021](ADR-URD-021-stakeholders-user-characteristics-and-operational-flow.md)）。Decision 3 のとおり、2.11.2 の重なる行を URD 3.1 を指す形に改め、2.11.4 の 1 を URD 3.1 が変わったときに照らす規則にした。
