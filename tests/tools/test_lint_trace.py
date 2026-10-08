@@ -43,16 +43,36 @@ SRS = '''# SRS
 | [FR-001](#fr-001-一) | 一 | ✅ | |
 | [FR-002](#fr-002-二) | 二 | | ✅ |
 | [NFR-001](#nfr-001-非一) | 非一 | ✅ | |
+
+## 13. 検証
+
+| FR/NFR | 検証方法 | 検証先 |
+|:---|:---|:---|
+| [FR-001](#fr-001-一) | 試験 | [ST の FR-001](70_ST.md#fr-001-一) |
+| [FR-002](#fr-002-二) | 試験・実演 | [ST の FR-002](70_ST.md#fr-002-二) |
+| [NFR-001](#nfr-001-非一) | 分析 | [ST §3.8](70_ST.md#38-非機能要件) |
 '''
 
 ST = '''# ST
 
 ## 3. 第1部
 
+#### FR-001: 一
+
 | ID | 手順 |
 |---|---|
 | `ST-FR-001-01` | a |
+
+#### FR-002: 二
+
+| ID | 手順 |
+|---|---|
 | `ST-FR-002-01`（異常系） | b |
+
+### 3.8 非機能要件
+
+| ID | 手順 |
+|---|---|
 | `ST-NFR-001-01` | c |
 
 ## 4. 第2部
@@ -351,6 +371,98 @@ class SrsTest(TraceTestCase):
     def test_matrix_columns_mismatch(self):
         urd = URD + '| <a id="ur-003"></a>[UR-003](#ur-003) | 三 |\n'
         self.assertIn('T4:SRS-matrix:columns', self.keys(dict(BASE, **{'docs/10_URD.md': urd})))
+
+
+class VerifyTest(TraceTestCase):
+    ROW_FR1 = '| [FR-001](#fr-001-一) | 試験 | [ST の FR-001](70_ST.md#fr-001-一) |\n'
+    ROW_NFR1 = '| [NFR-001](#nfr-001-非一) | 分析 | [ST §3.8](70_ST.md#38-非機能要件) |\n'
+
+    def srs(self, old, new):
+        self.assertIn(old, SRS)
+        return dict(BASE, **{'docs/20_SRS.md': SRS.replace(old, new, 1)})
+
+    def texts(self, files, key):
+        return [f.text for f in self.check(files) if f.key == key]
+
+    def assert_text(self, files, key, part):
+        texts = self.texts(files, key)
+        self.assertTrue(any(part in t for t in texts), texts)
+
+    def test_table_missing(self):
+        files = dict(BASE, **{'docs/20_SRS.md': SRS.split('## 13. 検証')[0]})
+        self.assertIn('T4:SRS-verify:table', self.keys(files))
+
+    def test_row_missing(self):
+        self.assert_text(self.srs(self.ROW_NFR1, ''), 'T4:SRS-verify:NFR-001', '行がありません')
+
+    def test_row_duplicated(self):
+        files = self.srs(self.ROW_FR1, self.ROW_FR1 + self.ROW_FR1)
+        self.assert_text(files, 'T4:SRS-verify:FR-001', '2 つ以上')
+
+    def test_row_without_heading(self):
+        row = '| [FR-009](#fr-001-一) | 試験 | [ST の FR-001](70_ST.md#fr-001-一) |\n'
+        files = self.srs(self.ROW_NFR1, self.ROW_NFR1 + row)
+        self.assert_text(files, 'T4:SRS-verify:FR-009', '見出しがありません')
+
+    def test_row_not_link(self):
+        row = '| FR-001 | 試験 | [ST の FR-001](70_ST.md#fr-001-一) |\n'
+        files = self.srs(self.ROW_NFR1, self.ROW_NFR1 + row)
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
+    def test_row_extra_column(self):
+        files = self.srs(self.ROW_FR1, self.ROW_FR1.replace(' |\n', ' | 余分 |\n'))
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
+    def test_row_two_ids(self):
+        files = self.srs('| [FR-001](#fr-001-一) | 試験 |', '| [FR-001](#fr-001-一)・[FR-002](#fr-002-二) | 試験 |')
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
+    def test_row_same_id_twice(self):
+        files = self.srs('| [FR-001](#fr-001-一) | 試験 |', '| [FR-001](#fr-001-一)[FR-001](#fr-001-一) | 試験 |')
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
+    def test_unknown_method(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '| 確認 | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_empty_method(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '|  | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_wrong_separator(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '| 試験、実演 | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_wrong_order(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '| 実演・試験 | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_duplicate_method(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '| 試験・試験・実演 | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_spaced_method(self):
+        files = self.srs('| 試験・実演 | [ST の FR-002]', '| 試験 ・ 実演 | [ST の FR-002]')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
+
+    def test_combined_methods_pass(self):
+        self.assertNotIn('T4:SRS-verify:FR-002', self.keys(BASE))
+
+    def test_target_not_st(self):
+        files = self.srs('[ST の FR-002](70_ST.md#fr-002-二)', '[UR-002](10_URD.md#ur-002)')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', 'アンカー付き')
+
+    def test_target_without_anchor(self):
+        files = self.srs('[ST の FR-002](70_ST.md#fr-002-二)', '[ST の FR-002](70_ST.md)')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', 'アンカー付き')
+
+    def test_target_other_fr(self):
+        files = self.srs('[ST の FR-002](70_ST.md#fr-002-二)', '[ST の FR-001](70_ST.md#fr-001-一)')
+        self.assert_text(files, 'T4:SRS-verify:FR-002', 'テストケースを持つ ST の節')
+
+    def test_nfr_target_other_section(self):
+        files = self.srs('[ST §3.8](70_ST.md#38-非機能要件)', '[ST §4](70_ST.md#4-第2部)')
+        self.assert_text(files, 'T4:SRS-verify:NFR-001', 'テストケースを持つ ST の節')
 
 
 class ExemptionTest(TraceTestCase):

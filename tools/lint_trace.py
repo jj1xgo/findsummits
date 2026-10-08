@@ -4,7 +4,7 @@
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
-T4: 追跡マトリクスと宣言の照合
+T4: 追跡マトリクスと宣言の照合、SRS の検証の表の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
 import io
@@ -227,6 +227,12 @@ DECL_RE = re.compile(r'^- \*\*([^*]+)\*\*:\s*(.*)$')
 COMPONENT_ROW_RE = re.compile(r'^\|\s*(C\d+)\s*\|')
 ID_NUM_RE = re.compile(r'^(UR|FR|NFR)-(\d+)$')
 SRS_MATRIX_HEAD_RE = re.compile(r'^## \d+\. 要求追跡マトリクス')
+SRS_VERIFY_HEAD_RE = re.compile(r'^## \d+\. 検証\s*$')
+# 検証方法の言葉と、並べる順（docs/00_GLOSSARY.md「要求の検証」、ADR-SRS-070）
+VERIFY_METHODS = ('試験', '分析', '検査', '実演')
+ST_LINK_TARGETS = (os.path.basename(CASE_DOCS['ST']), './' + os.path.basename(CASE_DOCS['ST']))
+ST_CASE_REQ_RE = re.compile(r'^\|\s*`ST-((?:FR|NFR)-\d+)-')
+SEPARATOR_CELL_RE = re.compile(r'^:?-+:?$')
 
 
 def section_decls(text, start_re):
@@ -364,6 +370,79 @@ def check_srs_matrix(repo, urs, declared):
                                f'{rid} の行 {sorted(marks)} が対応 UR の宣言 {sorted(declared[rid])} と違います'))
     for rid in sorted(set(declared) - seen):
         out.append(finding('T4', f'SRS-matrix:{rid}', SRS, f'要求追跡マトリクスに {rid} の行がありません'))
+    return out
+
+
+def st_case_sections(repo):
+    """ST で、FR/NFR ごとに、そのテストケースの行を持つ見出しのアンカーを集める"""
+    found, seen, cur = defaultdict(set), Counter(), None
+    st = CASE_DOCS['ST']
+    if not repo.has(st):
+        return found
+    for _, line in iter_lines(repo.read(st)):
+        m = HEADING_RE.match(line)
+        if m:
+            base = github_slug(m.group(2))
+            cur = base if seen[base] == 0 else f'{base}-{seen[base]}'
+            seen[base] += 1
+            continue
+        c = ST_CASE_REQ_RE.match(line)
+        if c and cur:
+            found[c.group(1)].add(cur)
+    return found
+
+
+def method_ok(method):
+    """検証方法が、決めた言葉をこの順に重複なく「・」で並べたものか"""
+    parts = method.split('・')
+    if not all(p in VERIFY_METHODS for p in parts):
+        return False
+    return len(set(parts)) == len(parts) and parts == sorted(parts, key=VERIFY_METHODS.index)
+
+
+def check_srs_verification(repo, req_ids):
+    """SRS の検証の表が FR/NFR を 1 行ずつ持ち、検証方法と検証先が決まりどおりかを見る（ADR-SRS-070）"""
+    rows = table_rows(repo.read(SRS), SRS_VERIFY_HEAD_RE)
+    if not rows:
+        return [finding('T4', 'SRS-verify:table', SRS, '検証の表（SRS の「検証」の節）がありません')]
+    sections = st_case_sections(repo)
+    out, seen = [], set()
+    for no, cells in rows[1:]:
+        where = f'{SRS}:{no}'
+        if all(SEPARATOR_CELL_RE.match(c) for c in cells):
+            continue
+        ids = decl_ids(cells[0], REQ_ID_RE) if cells else set()
+        links = list(LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[0]))) if cells else []
+        if len(cells) != 3 or len(links) != 1 or len(ids) != 1:
+            out.append(finding('T4', 'SRS-verify:row', where,
+                               '検証の表の行は 3 列で、1 列目に FR/NFR への'
+                               'リンクを 1 つだけ置きます'))
+            continue
+        rid = next(iter(ids))
+        key = f'SRS-verify:{rid}'
+        if rid in seen:
+            out.append(finding('T4', key, where, f'検証の表に {rid} の行が 2 つ以上あります'))
+            continue
+        seen.add(rid)
+        if rid not in req_ids:
+            out.append(finding('T4', key, where, f'{rid} の行がありますが、FR/NFR の見出しがありません'))
+            continue
+        if not method_ok(cells[1]):
+            out.append(finding('T4', key, where,
+                               f'{rid} の検証方法「{cells[1]}」は、試験・分析・検査・'
+                               '実演をこの順に重複なく「・」で並べたものではありません'))
+        anchors = {unquote(m.group(3)) for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[2]))
+                   if m.group(2) in ST_LINK_TARGETS and m.group(3)}
+        if not anchors:
+            out.append(finding('T4', key, where,
+                               f'{rid} の検証先に、ST の節へのリンク'
+                               '（アンカー付き）がありません'))
+        elif not anchors & sections.get(rid, set()):
+            out.append(finding('T4', key, where,
+                               f'{rid} の検証先が、{rid} のテストケースを'
+                               '持つ ST の節を指していません'))
+    for rid in sorted(req_ids - seen):
+        out.append(finding('T4', f'SRS-verify:{rid}', SRS, f'検証の表に {rid} の行がありません'))
     return out
 
 
@@ -760,6 +839,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     srs_out, declared = check_srs(urs, reqs, confirmed)
     out += srs_out
     out += check_srs_matrix(repo, urs, declared)
+    out += check_srs_verification(repo, req_ids)
     hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
     out += hld_out
     lld_out, modules = check_lld(repo, hld_sections, confirmed)
