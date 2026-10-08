@@ -4,7 +4,7 @@
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
-T4: 追跡マトリクスと宣言の照合、SRS の検証の表の照合
+T4: 追跡マトリクスと宣言の照合、SRS の検証の表と品質特性の表の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
 import io
@@ -233,6 +233,15 @@ VERIFY_METHODS = ('試験', '分析', '検査', '実演')
 ST_LINK_TARGETS = (os.path.basename(CASE_DOCS['ST']), './' + os.path.basename(CASE_DOCS['ST']))
 ST_CASE_REQ_RE = re.compile(r'^\|\s*`ST-((?:FR|NFR)-\d+)-')
 SEPARATOR_CELL_RE = re.compile(r'^:?-+:?$')
+SRS_NFR_HEAD_RE = re.compile(r'^## \d+\. 非機能要件\s*$')
+# 25010:2023 の製品品質モデルの 9 特性（ADR-SRS-071）
+QUALITY_CHARACTERISTICS = (
+    'Functional suitability', 'Performance efficiency', 'Compatibility', 'Interaction capability',
+    'Reliability', 'Security', 'Maintainability', 'Flexibility', 'Safety',
+)
+QUALITY_NAME_RE = re.compile(r'（([A-Za-z ]+)）')
+QUALITY_HEAD = ['特性', '対応する副特性と NFR', 'NFR を持たない理由']
+NO_VALUE = '—'
 
 
 def section_decls(text, start_re):
@@ -444,6 +453,56 @@ def check_srs_verification(repo, req_ids):
                                '持つ ST の節を指していません'))
     for rid in sorted(req_ids - seen):
         out.append(finding('T4', f'SRS-verify:{rid}', SRS, f'検証の表に {rid} の行がありません'))
+    return out
+
+
+def check_srs_quality(repo, req_ids):
+    """SRS §5 の品質特性の表が 9 特性を 1 行ずつ持ち、どの NFR も対応づけるかを見る（ADR-SRS-071）"""
+    rows = table_rows(repo.read(SRS), SRS_NFR_HEAD_RE)
+    if not rows:
+        return [finding('T4', 'SRS-quality:table', SRS, '非機能要件の節に品質特性の表がありません')]
+    out, seen, mapped = [], set(), set()
+    if rows[0][1] != QUALITY_HEAD:
+        out.append(finding('T4', 'SRS-quality:head', f'{SRS}:{rows[0][0]}',
+                           '品質特性の表の頭は「特性 | 対応する副特性と NFR | NFR を持たない理由」にします'))
+    for no, cells in rows[1:]:
+        where = f'{SRS}:{no}'
+        if all(SEPARATOR_CELL_RE.match(c) for c in cells):
+            continue
+        m = QUALITY_NAME_RE.search(cells[0]) if cells else None
+        name = m.group(1) if m else None
+        if len(cells) != 3 or name not in QUALITY_CHARACTERISTICS:
+            out.append(finding('T4', 'SRS-quality:row', where,
+                               '品質特性の表の行は 3 列で、1 列目に 25010:2023 の'
+                               '特性の英語名を括弧で書きます'))
+            continue
+        key = f'SRS-quality:{name}'
+        if name in seen:
+            out.append(finding('T4', key, where, f'品質特性の表に {name} の行が 2 つ以上あります'))
+            continue
+        seen.add(name)
+        links = [x for x in LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[1]))
+                 if REQ_ID_RE.match(x.group(1)) and x.group(1).startswith('NFR-')]
+        if any(x.group(2) or not x.group(3) for x in links):
+            out.append(finding('T4', key, where,
+                               f'{name} の行の NFR は、SRS の見出しへのリンク'
+                               '（ファイル名なし）で書きます'))
+        nfrs = {x.group(1) for x in links if not x.group(2) and x.group(3)}
+        for i in sorted(nfrs - req_ids):
+            out.append(finding('T4', key, where, f'{name} の行の {i} は SRS にありません'))
+        mapped |= nfrs
+        if nfrs and cells[2] != NO_VALUE:
+            out.append(finding('T4', key, where,
+                               f'{name} の行は NFR を持つので、理由の列は「—」にします'))
+        if not nfrs and (cells[1] != NO_VALUE or cells[2] in ('', NO_VALUE)):
+            out.append(finding('T4', key, where,
+                               f'{name} の行は NFR を持たないので、2 列目を「—」にし、'
+                               '理由を書きます'))
+    for name in QUALITY_CHARACTERISTICS:
+        if name not in seen:
+            out.append(finding('T4', f'SRS-quality:{name}', SRS, f'品質特性の表に {name} の行がありません'))
+    for i in sorted(r for r in req_ids if r.startswith('NFR-') and r not in mapped):
+        out.append(finding('T4', f'SRS-quality:{i}', SRS, f'{i} が品質特性の表のどの行にもありません'))
     return out
 
 
@@ -841,6 +900,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += srs_out
     out += check_srs_matrix(repo, urs, declared)
     out += check_srs_verification(repo, req_ids)
+    out += check_srs_quality(repo, req_ids)
     hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
     out += hld_out
     lld_out, modules = check_lld(repo, hld_sections, confirmed)

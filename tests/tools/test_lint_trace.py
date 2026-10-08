@@ -32,6 +32,20 @@ SRS = '''# SRS
 
 - **対応 UR**: [UR-002](10_URD.md#ur-002)
 
+## 5. 非機能要件
+
+| 特性 | 対応する副特性と NFR | NFR を持たない理由 |
+|---|---|---|
+| 機能適合性（Functional suitability） | 機能正確性（functional correctness）: [NFR-001](#nfr-001-非一) | — |
+| 性能効率性（Performance efficiency） | — | 理由 |
+| 互換性（Compatibility） | — | 理由 |
+| 相互作用能力（Interaction capability） | — | 理由 |
+| 信頼性（Reliability） | — | 理由 |
+| セキュリティ（Security） | — | 理由 |
+| 保守性（Maintainability） | — | 理由 |
+| 柔軟性（Flexibility） | — | 理由 |
+| 安全性（Safety） | — | 理由 |
+
 ### NFR-001: 非一
 
 - **対応 UR**: [UR-001](10_URD.md#ur-001)
@@ -482,6 +496,75 @@ class VerifyTest(TraceTestCase):
     def test_nfr_target_other_section(self):
         files = self.srs('[ST §3.8](70_ST.md#38-非機能要件)', '[ST §4](70_ST.md#4-第2部)')
         self.assert_text(files, 'T4:SRS-verify:NFR-001', 'テストケースを持つ ST の節')
+
+
+class QualityTest(TraceTestCase):
+    FS_ROW = ('| 機能適合性（Functional suitability） | 機能正確性（functional correctness）: '
+              '[NFR-001](#nfr-001-非一) | — |\n')
+    SAFETY_ROW = '| 安全性（Safety） | — | 理由 |\n'
+
+    def srs(self, old, new):
+        self.assertIn(old, SRS)
+        return dict(BASE, **{'docs/20_SRS.md': SRS.replace(old, new, 1)})
+
+    def assert_text(self, files, key, part):
+        texts = [f.text for f in self.check(files) if f.key == key]
+        self.assertTrue(any(part in t for t in texts), texts)
+
+    def test_table_missing(self):
+        head = '| 特性 | 対応する副特性と NFR | NFR を持たない理由 |\n'
+        start = SRS.index(head)
+        end = SRS.index(self.SAFETY_ROW) + len(self.SAFETY_ROW)
+        files = dict(BASE, **{'docs/20_SRS.md': SRS[:start] + SRS[end:]})
+        self.assertIn('T4:SRS-quality:table', self.keys(files))
+
+    def test_row_missing(self):
+        self.assert_text(self.srs(self.SAFETY_ROW, ''), 'T4:SRS-quality:Safety', '行がありません')
+
+    def test_row_duplicated(self):
+        files = self.srs(self.SAFETY_ROW, self.SAFETY_ROW + self.SAFETY_ROW)
+        self.assert_text(files, 'T4:SRS-quality:Safety', '2 つ以上')
+
+    def test_unknown_characteristic(self):
+        files = self.srs('互換性（Compatibility）', '使用性（Usability）')
+        self.assertIn('T4:SRS-quality:row', self.keys(files))
+
+    def test_row_extra_column(self):
+        files = self.srs(self.SAFETY_ROW, self.SAFETY_ROW.replace(' |\n', ' | 余分 |\n'))
+        self.assertIn('T4:SRS-quality:row', self.keys(files))
+
+    def test_nfr_unmapped(self):
+        files = self.srs(self.FS_ROW, '| 機能適合性（Functional suitability） | — | 理由 |\n')
+        self.assert_text(files, 'T4:SRS-quality:NFR-001', 'どの行にもありません')
+
+    def test_unknown_nfr(self):
+        files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](#nfr-001-非一)・[NFR-009](#nfr-001-非一) | — |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'SRS にありません')
+
+    def test_reason_with_nfr(self):
+        files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](#nfr-001-非一) | 理由 |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', '「—」にします')
+
+    def test_no_nfr_no_reason(self):
+        files = self.srs(self.SAFETY_ROW, '| 安全性（Safety） | — | — |\n')
+        self.assert_text(files, 'T4:SRS-quality:Safety', '理由を書きます')
+
+    def test_no_nfr_cell2_text(self):
+        files = self.srs(self.SAFETY_ROW, '| 安全性（Safety） | 何か | 理由 |\n')
+        self.assert_text(files, 'T4:SRS-quality:Safety', '理由を書きます')
+
+    def test_header_changed(self):
+        head = '| 特性 | 対応する副特性と NFR | NFR を持たない理由 |'
+        files = self.srs(head, '| NFR を持たない理由 | 特性 | 対応する副特性と NFR |')
+        self.assertIn('T4:SRS-quality:head', self.keys(files))
+
+    def test_nfr_link_other_file(self):
+        files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](https://example.com/#x) | — |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
+
+    def test_nfr_only_in_reason(self):
+        files = self.srs(self.FS_ROW, '| 機能適合性（Functional suitability） | — | [NFR-001](#nfr-001-非一) |\n')
+        self.assert_text(files, 'T4:SRS-quality:NFR-001', 'どの行にもありません')
 
 
 class ExemptionTest(TraceTestCase):
