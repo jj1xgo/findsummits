@@ -413,9 +413,9 @@ def check_srs_verification(repo, req_ids):
             continue
         ids = decl_ids(cells[0], REQ_ID_RE) if cells else set()
         links = list(LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[0]))) if cells else []
-        if len(cells) != 3 or len(links) != 1 or len(ids) != 1:
+        if len(cells) != 3 or len(links) != 1 or len(ids) != 1 or links[0].group(2):
             out.append(finding('T4', 'SRS-verify:row', where,
-                               '検証の表の行は 3 列で、1 列目に FR/NFR への'
+                               '検証の表の行は 3 列で、1 列目に SRS の FR/NFR の見出しへの'
                                'リンクを 1 つだけ置きます'))
             continue
         rid = next(iter(ids))

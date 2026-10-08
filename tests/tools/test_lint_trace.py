@@ -421,6 +421,10 @@ class VerifyTest(TraceTestCase):
         files = self.srs('| [FR-001](#fr-001-一) | 試験 |', '| [FR-001](#fr-001-一)[FR-001](#fr-001-一) | 試験 |')
         self.assertIn('T4:SRS-verify:row', self.keys(files))
 
+    def test_row_link_other_file(self):
+        files = self.srs('| [FR-001](#fr-001-一) | 試験 |', '| [FR-001](70_ST.md#fr-001-一) | 試験 |')
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
     def test_unknown_method(self):
         files = self.srs('| 試験・実演 | [ST の FR-002]', '| 確認 | [ST の FR-002]')
         self.assert_text(files, 'T4:SRS-verify:FR-002', '検証方法')
