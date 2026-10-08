@@ -275,7 +275,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-022-...`
     - 次の SRS: `ADR-SRS-070-...`
-    - 次の OPS: `ADR-OPS-004-...`
+    - 次の OPS: `ADR-OPS-005-...`
     - 次の HLD: `ADR-HLD-004-...`（まだ ADR の無いステージは 001 から）
 
 例: `ADR-URD-005-northern-territories-exclusion.md`（スコープ判断）、`ADR-SRS-001-hybrid-c-python-architecture.md`（アーキテクチャ判断）、`ADR-HLD-001-program-structure-chapter-and-two-tier-it.md`（設計文書の構造の判断）
