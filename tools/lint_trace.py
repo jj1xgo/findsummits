@@ -437,7 +437,7 @@ def check_srs_verification(repo, req_ids):
             out.append(finding('T4', key, where,
                                f'{rid} の検証先に、ST の節へのリンク'
                                '（アンカー付き）がありません'))
-        elif not anchors & sections.get(rid, set()):
+        elif not anchors <= sections.get(rid, set()):
             out.append(finding('T4', key, where,
                                f'{rid} の検証先が、{rid} のテストケースを'
                                '持つ ST の節を指していません'))
