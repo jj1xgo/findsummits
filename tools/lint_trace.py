@@ -27,6 +27,7 @@ CONFIRMED_STAGES = frozenset({'SRS'})
 
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
+    'UR-006': 'docs/decisions/ADR-URD-022-split-ur-006-into-geojson-and-two-viewers.md',
     'UR-009': 'docs/decisions/ADR-URD-020-requirement-traceability-and-consistency.md',
     'FR-010': 'docs/decisions/ADR-SRS-028-nationwide-batch-matching-fr010-removal.md',
 }
