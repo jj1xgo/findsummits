@@ -2305,7 +2305,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
 
 各 FR/NFR を何で検証するか（検証方法）と、テストケースの置き場（検証先）を示す。検証方法の言葉の意味と決め方は [用語集「要求の検証」](00_GLOSSARY.md#要求の検証) に従う。
 
-テストケースは [ST](70_ST.md) に置く。UT/IT で行うケースも、合否は ST に記録する（[ST §2](70_ST.md#2-テストケース記述規約)）。検証先は、その FR/NFR のテストケースを持つ ST の節にする。NFR のテストケースは ST §3.8 の 1 つの表にまとまっているので、NFR の行は §3.8 を指す。FR/NFR を足す・消すときは、この表も同じ変更で直す（`make lint` が照合する）。決定は [ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)。
+テストケースは [ST](70_ST.md) に置く。UT/IT で行うケースも、合否は ST に記録する（[ST §2](70_ST.md#2-テストケース記述規約)）。検証先は、その FR/NFR のテストケースを持つ ST の節にする。NFR のテストケースは ST §3.8 の 1 つの表にまとまっているので、NFR の行は §3.8 を指す。FR-010 は [ADR-SRS-028](decisions/ADR-SRS-028-nationwide-batch-matching-fr010-removal.md) により削除済みのため、行を置かない。FR/NFR を足す・消すときは、この表も同じ変更で直す（`make lint` が照合する）。決定は [ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)。
 
 | FR/NFR | 検証方法 | 検証先 |
 |:---|:---|:---|
