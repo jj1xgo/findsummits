@@ -1568,6 +1568,20 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 ## 5. 非機能要件
 
+NFR を ISO/IEC 25010:2023 の製品品質モデルの 9 特性に対応づける（[ADR-SRS-071](decisions/ADR-SRS-071-nfr-quality-characteristics-mapping.md)）。特性と副特性の名前は規格の英語名に本書の訳を添える。一覧は二次資料で確かめ、規格の本文では確かめていない（[SOURCES「開発プロセスの参照規格」](../ref/SOURCES.md#開発プロセスの参照規格)）。NFR を持たない特性には理由を書き、その関心を扱っている箇所があれば、それも書く。NFR を足す・消すときは、この表も同じ変更で直す（`make lint` が照合する）。
+
+| 特性 | 対応する副特性と NFR | NFR を持たない理由 |
+|---|---|---|
+| 機能適合性（Functional suitability） | 機能正確性（functional correctness）・機能完全性（functional completeness）: [NFR-001](#nfr-001-精度プロミネンス判定) | — |
+| 性能効率性（Performance efficiency） | 時間効率性（time behaviour）: [NFR-005](#nfr-005-処理時間目標)・[NFR-008](#nfr-008-ui-レスポンス)・[NFR-010](#nfr-010-描画応答性連続操作の滑らかさ)。資源効率性（resource utilization）: [NFR-002](#nfr-002-メモリ使用量) | — |
+| 互換性（Compatibility） | 共存性（co-existence）: [NFR-004](#nfr-004-アクセスマナー) | — |
+| 相互作用能力（Interaction capability） | 習得性（learnability）: [NFR-011](#nfr-011-手順文書による環境構築成果物生成の完遂性) | — |
+| 信頼性（Reliability） | — | 常時稼働するサービスではなく、利用者が起動するバッチと手元で開くビューアである。失敗時の停止・継続・再試行は各 FR の異常系、異常時の対処の手順は [NFR-011](#nfr-011-手順文書による環境構築成果物生成の完遂性) が扱う |
+| セキュリティ（Security） | — | 1 人の利用者が手元で動かすツールで、利用者の区別や認証を持たない。公開用ビューアは閲覧だけの静的な配信である（[FR-020](#fr-020-公開用ビューア配信)） |
+| 保守性（Maintainability） | 試験性（testability）: [NFR-003](#nfr-003-再現性決定論的出力)。解析性（analysability）: [NFR-007](#nfr-007-ログ出力)・[NFR-009](#nfr-009-観測可能性中間成果物の可視化) | — |
+| 柔軟性（Flexibility） | 適応性（adaptability）: [NFR-006](#nfr-006-可搬性環境)。設置性（installability）: [NFR-011](#nfr-011-手順文書による環境構築成果物生成の完遂性) | — |
+| 安全性（Safety） | — | 人の身体・財産・環境に危害を与えうる制御を持たない。申請の誤りなど業務への影響は、機能適合性（[NFR-001](#nfr-001-精度プロミネンス判定)）と各 FR の異常系で扱う |
+
 <a id="nfr-001-精度プロミネンス判定"></a>
 
 ### NFR-001: 精度・検出網羅性

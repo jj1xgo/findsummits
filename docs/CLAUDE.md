@@ -167,6 +167,7 @@ HLD（`30_HLD.md`）で同じ決定を複数の箇所に書き写すと、直し
 - コードとテストのコードの `trace:` は、コメント（`//`・`#`・`/*`・`*` で始まるもの）に書く。C/C++ と Python は行末のコメントも数え、bash は行頭の `#` の行だけを数える。1 つのコメントに複数の ID を `,` で並べられる（`// trace: UT-a-01, UT-a-02`）。文字列リテラルの中は数えない。
 - テスト文書で手動で行うケースは、ID の直後に `（手動）` を付ける。
 - SRS の FR/NFR を足す・消すときは、[SRS §13](20_SRS.md#13-検証) の検証の表の行も同じ変更で足す・消す。検証方法は[用語集「要求の検証」](00_GLOSSARY.md#要求の検証)の決め方で決める（[ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)）。
+- SRS の NFR を足す・消すときは、[SRS §5](20_SRS.md#5-非機能要件) の品質特性の表も同じ変更で直す（[ADR-SRS-071](decisions/ADR-SRS-071-nfr-quality-characteristics-mapping.md)）。
 
 ## ADR 管理ルール
 
