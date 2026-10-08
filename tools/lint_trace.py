@@ -270,7 +270,10 @@ def table_rows(text, heading_re):
             inside = bool(heading_re.match(line))
             continue
         if inside and line.startswith('|'):
-            rows.append((no, [c.strip() for c in line.strip().strip('|').split('|')]))
+            body = line.strip()[1:]
+            if body.endswith('|'):
+                body = body[:-1]
+            rows.append((no, [c.strip() for c in body.split('|')]))
     return rows
 
 
@@ -469,8 +472,8 @@ def check_srs_quality(repo, req_ids):
         where = f'{SRS}:{no}'
         if all(SEPARATOR_CELL_RE.match(c) for c in cells):
             continue
-        m = QUALITY_NAME_RE.search(cells[0]) if cells else None
-        name = m.group(1) if m else None
+        names = QUALITY_NAME_RE.findall(cells[0]) if cells else []
+        name = names[0] if len(names) == 1 else None
         if len(cells) != 3 or name not in QUALITY_CHARACTERISTICS:
             out.append(finding('T4', 'SRS-quality:row', where,
                                '品質特性の表の行は 3 列で、1 列目に 25010:2023 の'
@@ -483,12 +486,12 @@ def check_srs_quality(repo, req_ids):
         seen.add(name)
         links = [x for x in LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[1]))
                  if REQ_ID_RE.match(x.group(1)) and x.group(1).startswith('NFR-')]
-        bare = re.findall(r'NFR-\d+', LINK_RE.sub('', cells[1]))
-        if bare or any(x.group(2) or not x.group(3) for x in links):
+        valid = [x for x in links if not x.group(2) and x.group(3)]
+        if len(re.findall(r'NFR-\d+', cells[1])) != len(valid):
             out.append(finding('T4', key, where,
                                f'{name} の行の NFR は、SRS の見出しへのリンク'
                                '（ファイル名なし）で書きます'))
-        nfrs = {x.group(1) for x in links if not x.group(2) and x.group(3)}
+        nfrs = {x.group(1) for x in valid}
         for i in sorted(nfrs - req_ids):
             out.append(finding('T4', key, where, f'{name} の行の {i} は SRS にありません'))
         mapped |= nfrs

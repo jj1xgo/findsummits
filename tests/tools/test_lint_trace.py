@@ -418,6 +418,10 @@ class VerifyTest(TraceTestCase):
         files = self.srs(self.ROW_NFR1, self.ROW_NFR1 + row)
         self.assert_text(files, 'T4:SRS-verify:FR-009', '見出しがありません')
 
+    def test_row_pipes_doubled(self):
+        files = self.srs(self.ROW_FR1, '|' + self.ROW_FR1.rstrip('\n') + '|\n')
+        self.assertIn('T4:SRS-verify:row', self.keys(files))
+
     def test_row_not_link(self):
         row = '| FR-001 | 試験 | [ST の FR-001](70_ST.md#fr-001-一) |\n'
         files = self.srs(self.ROW_NFR1, self.ROW_NFR1 + row)
@@ -565,6 +569,29 @@ class QualityTest(TraceTestCase):
     def test_nfr_code_span(self):
         files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](#nfr-001-非一)・`NFR-001` | — |')
         self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
+
+    def test_nfr_code_span_link(self):
+        old = '[NFR-001](#nfr-001-非一) | — |'
+        files = self.srs(old, '[NFR-001](#nfr-001-非一)・`[NFR-001](#nfr-001-非一)` | — |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
+
+    def test_nfr_link_extra_label(self):
+        old = '[NFR-001](#nfr-001-非一) | — |'
+        files = self.srs(old, '[NFR-001](#nfr-001-非一)・[NFR-001 補足](https://example.com/) | — |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
+
+    def test_two_names_in_first_column(self):
+        files = self.srs(self.SAFETY_ROW, '| 安全性（Safety）・使用性（Usability） | — | 理由 |\n')
+        self.assertIn('T4:SRS-quality:row', self.keys(files))
+
+    def test_header_pipes_doubled(self):
+        head = '| 特性 | 対応する副特性と NFR | NFR を持たない理由 |'
+        files = self.srs(head, '|' + head + '|')
+        self.assertIn('T4:SRS-quality:head', self.keys(files))
+
+    def test_row_pipes_doubled(self):
+        files = self.srs(self.SAFETY_ROW, '|| 安全性（Safety） | — | 理由 ||\n')
+        self.assertIn('T4:SRS-quality:row', self.keys(files))
 
     def test_nfr_only_in_reason(self):
         files = self.srs(self.FS_ROW, '| 機能適合性（Functional suitability） | — | [NFR-001](#nfr-001-非一) |\n')
