@@ -274,7 +274,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 既存 ADR（URD: 005/007/009/014、SRS: 001/002/003/004/006/008/010/011/012/013）は前回刷新時の経緯で全体通し番号を維持しているため、ステージ別に見ると番号に欠番がある
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-023-...`
-    - 次の SRS: `ADR-SRS-072-...`
+    - 次の SRS: `ADR-SRS-073-...`
     - 次の OPS: `ADR-OPS-005-...`
     - 次の HLD: `ADR-HLD-004-...`（まだ ADR の無いステージは 001 から）
 
@@ -294,7 +294,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 
 ### 要求の検証
 
-SRS の FR/NFR を何で検証するかを表す言葉と、その決め方。[SRS §13](20_SRS.md#13-検証) で使う。要求の検証の方法として test・analysis・inspection・demonstration の 4 つを挙げる例に倣った。この分類の出典と、29148:2018 の本文にこの分類があるかは確かめていない（[ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)）。
+SRS の FR/NFR を何で検証するかを表す言葉と、その決め方。[SRS §9](20_SRS.md#9-検証) で使う。要求の検証の方法として test・analysis・inspection・demonstration の 4 つを挙げる例に倣った。この分類の出典と、29148:2018 の本文にこの分類があるかは確かめていない（[ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)）。
 
 | 用語 | 説明 |
 |---|---|

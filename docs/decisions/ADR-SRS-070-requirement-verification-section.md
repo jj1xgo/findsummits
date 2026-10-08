@@ -31,7 +31,7 @@
 
 ## Consequences
 
-- [SRS §13](../20_SRS.md#13-検証) を設けた。
+- [SRS §9](../20_SRS.md#9-検証) を設けた。
 - [用語集「要求の検証」](../00_GLOSSARY.md#要求の検証)に 4 つの言葉と決め方を置いた。
 - [ADR-OPS-002](ADR-OPS-002-reference-standards-and-intended-deviations.md) の Decision 3 の表に、優先度と根拠の 2 行を足した。
 - [文書管理ルール「追跡の宣言」](../CLAUDE.md#追跡の宣言)と[開発ガイド §6](../03_development.md#6-要求の追跡と整合)に、検証の表の扱いと検査を足した。
