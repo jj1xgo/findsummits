@@ -562,6 +562,10 @@ class QualityTest(TraceTestCase):
         files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](https://example.com/#x) | — |')
         self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
 
+    def test_nfr_code_span(self):
+        files = self.srs('[NFR-001](#nfr-001-非一) | — |', '[NFR-001](#nfr-001-非一)・`NFR-001` | — |')
+        self.assert_text(files, 'T4:SRS-quality:Functional suitability', 'ファイル名なし')
+
     def test_nfr_only_in_reason(self):
         files = self.srs(self.FS_ROW, '| 機能適合性（Functional suitability） | — | [NFR-001](#nfr-001-非一) |\n')
         self.assert_text(files, 'T4:SRS-quality:NFR-001', 'どの行にもありません')

@@ -483,7 +483,8 @@ def check_srs_quality(repo, req_ids):
         seen.add(name)
         links = [x for x in LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[1]))
                  if REQ_ID_RE.match(x.group(1)) and x.group(1).startswith('NFR-')]
-        if any(x.group(2) or not x.group(3) for x in links):
+        bare = re.findall(r'NFR-\d+', LINK_RE.sub('', cells[1]))
+        if bare or any(x.group(2) or not x.group(3) for x in links):
             out.append(finding('T4', key, where,
                                f'{name} の行の NFR は、SRS の見出しへのリンク'
                                '（ファイル名なし）で書きます'))
