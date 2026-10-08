@@ -469,6 +469,16 @@ class VerifyTest(TraceTestCase):
         files = self.srs(old, old[:-2] + '[ST の FR-002](70_ST.md#fr-002-二) |')
         self.assert_text(files, 'T4:SRS-verify:FR-001', 'テストケースを持つ ST の節')
 
+    def test_target_mixed_with_non_st_link(self):
+        old = '[ST の FR-001](70_ST.md#fr-001-一) |'
+        files = self.srs(old, old[:-2] + '・[UR-002](10_URD.md#ur-002) |')
+        self.assert_text(files, 'T4:SRS-verify:FR-001', 'アンカー付き')
+
+    def test_target_mixed_with_anchorless_link(self):
+        old = '[ST の FR-001](70_ST.md#fr-001-一) |'
+        files = self.srs(old, old[:-2] + '・[ST](70_ST.md) |')
+        self.assert_text(files, 'T4:SRS-verify:FR-001', 'アンカー付き')
+
     def test_nfr_target_other_section(self):
         files = self.srs('[ST §3.8](70_ST.md#38-非機能要件)', '[ST §4](70_ST.md#4-第2部)')
         self.assert_text(files, 'T4:SRS-verify:NFR-001', 'テストケースを持つ ST の節')

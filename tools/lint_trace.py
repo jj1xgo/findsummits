@@ -431,12 +431,13 @@ def check_srs_verification(repo, req_ids):
             out.append(finding('T4', key, where,
                                f'{rid} の検証方法「{cells[1]}」は、試験・分析・検査・'
                                '実演をこの順に重複なく「・」で並べたものではありません'))
-        anchors = {unquote(m.group(3)) for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[2]))
-                   if m.group(2) in ST_LINK_TARGETS and m.group(3)}
-        if not anchors:
+        target_links = list(LINK_RE.finditer(INLINE_CODE_RE.sub('', cells[2])))
+        st_links = [m for m in target_links if m.group(2) in ST_LINK_TARGETS and m.group(3)]
+        anchors = {unquote(m.group(3)) for m in st_links}
+        if not st_links or len(st_links) != len(target_links):
             out.append(finding('T4', key, where,
-                               f'{rid} の検証先に、ST の節へのリンク'
-                               '（アンカー付き）がありません'))
+                               f'{rid} の検証先には、ST の節へのリンク（アンカー付き）を置き、'
+                               'それ以外のリンクは置きません'))
         elif not anchors <= sections.get(rid, set()):
             out.append(finding('T4', key, where,
                                f'{rid} の検証先が、{rid} のテストケースを'
