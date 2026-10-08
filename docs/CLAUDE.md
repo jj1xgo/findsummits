@@ -33,7 +33,7 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 - `docs/00_GLOSSARY.md` — 用語集（全文書から参照）
 - `docs/01_environment.md` — 環境定義
-- `docs/02_test_policy.md` — テスト方針書（UT/IT/ST横断のテストレベル定義・合否判定基準）
+- `docs/02_test_policy.md` — テスト方針書（UT/IT/ST横断のテストレベル定義・開始基準・合否判定基準）
 - `docs/03_development.md` — 共通開発規則の詳細（依存管理・検証・フェーズゲート・バージョン・要求の追跡・課題とレビュー）
 - `ref/SOURCES.md` — 参照資料の出典一覧
 - `docs/decisions/ADR-*.md` — アーキテクチャ決定記録
