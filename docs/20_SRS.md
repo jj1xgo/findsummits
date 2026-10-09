@@ -198,7 +198,7 @@
 | C5 | 統合・突合コンポーネント | per-mesh 成果物を統合し SOTA リストと突合、rationale 生成・不備フラグ判定・exit code 制御 | per-mesh CSV／GeoJSON、SOTA リスト CSV、SOTA 既存サミット GeoJSON、N03 前処理済み GeoJSON 群（地域・市区町村）、北方領土除外メッシュリスト | **merged_summit.geojson**（中心データ）、merged_summit.xlsx（サミット一覧（突合後））、merged_peak.csv（内部 work CSV）、merged_peak.geojson（内部中間） |
 | C6 | 可視化生成コンポーネント | merged_summit.geojson から HTML ビューアを生成 | merged_summit.geojson | merged_viewer.html・merged_viewer_data.js |
 | C7 | 申請書生成 UI | HTML ビューア内でユーザー操作に応じて申請書 XLSX を生成 | ユーザー操作（HTML ビューア上） | 申請書 XLSX・サミット一覧（申請内容反映版）・申請エビデンス ZIP |
-| C8 | 公開用ビューア | 静的ホスティング上で公開用データ（申請エビデンス GeoJSON）を閲覧専用表示 | 公開用データ（申請エビデンス GeoJSON）・テンプレート | 公開用ビューア（HTML + GeoJSON） |
+| C8 | 公開用ビューア | 静的ホスティング上で公開用データ（申請エビデンス GeoJSON）を閲覧専用表示 | 公開用データ（申請エビデンス GeoJSON）・テンプレート | 公開用ビューア（HTML + GeoJSON + JSON） |
 
 ### 3.3 フェーズ分割
 
@@ -545,6 +545,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
 | 日本全土1次メッシュコードリスト | 内部データ | 必須 | — | [8.1 参照](#81-内部データ一覧)。4 コーナーパターン生成時の存在メッシュ判定（無効パターンスキップ・bounding box 解析範囲決定）に使用 |
 | 北方領土除外メッシュリスト | 内部データ | 必須 | — | [FR-017](#fr-017-n03-行政区域前処理データ準備) が生成。存在メッシュ判定から除外メッシュを除くために使用。詳細仕様は [8.2.1](#821-n03-前処理済みファイル詳細仕様) 参照 |
 | 標高タイル（ローカルキャッシュ） | 内部データ | 必須 | — | [FR-001](#fr-001-標高タイル事前取得) が事前取得済みであること（保存先は [8.1 参照](#81-内部データ一覧)）。タイルが存在しない領域は NODATA として扱う |
+| 書き終えた per-mesh ピーク候補 CSV | 内部データ | 任意 | — | 本 FR が同じ起動の中で書き終えた広域 per-mesh CSV（[8.1 参照](#81-内部データ一覧) の No.8）。早期終了の判定のために、パターンごとに読み戻して、対象ピークが `key_col_resolved=true` で出たかを確かめる。最初のパターンでは書き終えたものが無いので任意（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 解析済みウィンドウメッシュ集合 | 内部データ | 必須 | — | [FR-004](#fr-004-33メッシュ結合解析オーケストレーション)/本 FR が生成した `.meshset` ファイル（[8.1 参照](#81-内部データ一覧)）のうち、通常解析のものと同じ対象メッシュの広域解析のもの（ファイル名の解析識別子で選ぶ）。各コーナー試行前に読み込み、部分集合判定で無効パターンをスキップする（[ADR-SRS-046](decisions/ADR-SRS-046-analyzed-window-meshset-skip.md)・[ADR-SRS-063](decisions/ADR-SRS-063-meshset-skip-normal-or-same-target-mesh.md)） |
 
 **出力**:
@@ -776,7 +777,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
 #### FR-016: ピーク域ポリゴン生成
 
 - **対応 UR**: [UR-003](10_URD.md#ur-003), [UR-016](10_URD.md#ur-016), [UR-013](10_URD.md#ur-013)
-- **概要**: 各ピークについてアクティベーションゾーン（ピークから **アクティベーションゾーン標高差**（[データ辞書参照](#221-設定可能項目)）以内）と delete判定ゾーン（プロミネンスと **delete判定ゾーン比高上限** の小さい方）のポリゴンを Flood Fill で生成し、per-mesh GeoJSON として出力する。
+- **概要**: 各ピークについてアクティベーションゾーン（ピークから **アクティベーションゾーン標高差**（[データ辞書参照](#221-設定可能項目)）以内）と delete判定ゾーン（プロミネンスと **delete判定ゾーン比高上限** の小さい方）のポリゴンを Flood Fill で生成し、per-mesh GeoJSON として出力する。 出力するゾーンは、突合済み統合 GeoJSON と申請エビデンス GeoJSON（目視確認用 GeoJSON。[UR-016](10_URD.md#ur-016)）の材料になるので、[UR-016](10_URD.md#ur-016) を対応 UR に宣言する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。
 
 **入力**:
 
@@ -866,7 +867,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 #### FR-018: per-mesh ピーク候補 GeoJSON 統合
 
 - **対応 UR**: [UR-003](10_URD.md#ur-003), [UR-016](10_URD.md#ur-016), [UR-013](10_URD.md#ur-013)
-- **概要**: per-mesh GeoJSON を同一ピーク座標で統合し、`area_complete=true` を採用して中間 GeoJSON を生成する。統合ピーク候補 work CSV（`merged_peak.csv`）に存在するピークのみに絞り込み、最終ピーク集合とポリゴン集合を一致させる。
+- **概要**: per-mesh GeoJSON を同一ピーク座標で統合し、`area_complete=true` を採用して中間 GeoJSON を生成する。統合ピーク候補 work CSV（`merged_peak.csv`）に存在するピークのみに絞り込み、最終ピーク集合とポリゴン集合を一致させる。 出力するゾーンは、突合済み統合 GeoJSON と申請エビデンス GeoJSON（目視確認用 GeoJSON。[UR-016](10_URD.md#ur-016)）の材料になるので、[UR-016](10_URD.md#ur-016) を対応 UR に宣言する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。
 
 **入力**:
 
@@ -1449,7 +1450,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 `no_change`・`review` は XLSX 行を出力しない（`no_change` は変更申請不要。`review` は担当者が手動判断）。名称変更・座標変更等（[UR-004](10_URD.md#ur-004) の「その他」アクション）は自動識別対象外（[UR-003](10_URD.md#ur-003)）のためエクスポート対象外。
 
-  - **※1**: HTML ビューアの入力フィールドで記入する（[FR-019 参照](#fr-019-html-ビューア機能仕様)）。山岳名JP は必須・山岳名EN は任意（未入力時は警告のうえ続行可。[FR-019](#fr-019-html-ビューア機能仕様) の山岳名入力 UI・[ADR-SRS-036](decisions/ADR-SRS-036-new-peak-name-input-requirement.md) 参照）
+  - **※1**: HTML ビューアの入力フィールドで記入する（[FR-019 参照](#fr-019-html-ビューア機能仕様)）。山岳名JP は必須・山岳名EN は任意（山岳名JP が未入力のピークがあれば、エクスポート時に警告のうえ続行可。山岳名EN は未入力でも警告しない。[FR-019](#fr-019-html-ビューア機能仕様) の山岳名入力 UI・[ADR-SRS-036](decisions/ADR-SRS-036-new-peak-name-input-requirement.md) 参照）
   - **※2**: [FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成する `rationale` プロパティ値（追加根拠）をそのまま転記する。HTML ビューアで編集した場合は編集後の値を使用する。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)
   - **※3**: summit_name_jp（geojson_v{N} から自動取得）。空文字の場合は空欄のまま続行可（C 列は補助情報。支部担当者は D 列 `summit_name` と B 列 SummitCode で削除対象を確認する）
   - **※4**: 担当者指定削除は [FR-019](#fr-019-html-ビューア機能仕様) の専用テンプレートから生成した現在の `rationale` を転記する（親ピーク情報は使わない）。通常削除は [FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成する `rationale` プロパティ値（削除根拠）をそのまま転記する。HTML ビューアで編集した場合は編集後の値を使用する。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)
@@ -1588,7 +1589,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 | データ名 | 種別 | 必須/任意 | デフォルト（任意時） | 備考 |
 |---|---|---|---|---|
-| 公開用データ（申請エビデンス GeoJSON） | ユーザー入力 | 必須 | — | [7.2.7 参照](#727-公開用データ申請エビデンス-geojson)。ZIP 同梱の 5 本をファイル名を変えず配置 |
+| 公開用データ（申請エビデンス GeoJSON） | ユーザー入力 | 任意 | 0 本（配置が無くても、テンプレートだけを配信する） | [7.2.7 参照](#727-公開用データ申請エビデンス-geojson)。ZIP 同梱の 5 本をファイル名を変えず配置。配置するときは 5 本そろえる。0 本のときは、画面が全 5 本を取得できない場合として示す（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 外部I/F | 必須 | — | [FR-019](#fr-019-html-ビューア機能仕様) と同じ。ブラウザから実行時取得（[6.1](#61-外部if一覧) No.10） |
 | 地理院標高タイル（dem1a/5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（dem1a は大きいズームだけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)。[6.1](#61-外部if一覧) No.9） |
 | 地理院基準点タイル | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 基準点レイヤー ON 時にブラウザから実行時取得（[6.1](#61-外部if一覧) No.11） |
@@ -1598,7 +1599,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 | データ名 | 種別 | 形式 | 備考 |
 |---|---|---|---|
-| 公開用ビューア | 外部I/F | HTML + GeoJSON | ホスティング配信。GeoJSON は配置した公開用データ5本を無改変で配信したもの。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照 |
+| 公開用ビューア | 外部I/F | HTML + GeoJSON + JSON | ホスティング配信。GeoJSON は配置した公開用データ5本を無改変で配信したもの。JSON は版の区分を示す `site.json`（組み立てが書く。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照 |
 
 **説明**:
 
@@ -1746,7 +1747,7 @@ NFR を ISO/IEC 25010:2023 の製品品質モデルの 9 特性に対応づけ�
 
 - **対応 UR**: [UR-013](10_URD.md#ur-013)
 - 解析パイプラインが各段階で生成する中間成果物（per-mesh ピーク候補 GeoJSON（[FR-016](#fr-016-ピーク域ポリゴン生成)）・統合ピーク候補 GeoJSON `merged_peak.geojson`（[FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合)））を、生成されたタイミングで物理ファイルとして出力し、地理院地図等の地図ソフトにドラッグ&ドロップして、ピーク・コル・ゾーン（アクティベーション/削除判定）の位置とそれらの**対応関係**の妥当性を目視確認できること
-- 中間 GeoJSON は申請成果物の目視確認用 GeoJSON（[UR-016](10_URD.md#ur-016)）ではなく、開発・テスト・運用時の妥当性検証を目的とする。デバッグ・差分検査のため物理出力を残す（[FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) の `merged_peak.geojson` は世代ごとに上書き再生成）
+- 中間 GeoJSON は、申請成果物の目視確認用 GeoJSON（[UR-016](10_URD.md#ur-016)）のゾーンの材料であるだけでなく、開発・テスト・運用時の妥当性検証にも使う（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。デバッグ・差分検査のため物理出力を残す（[FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) の `merged_peak.geojson` は世代ごとに上書き再生成）
 - 各中間 GeoJSON にはゾーンポリゴンに加え、ピーク Point（`feature_type="peak"`）・コル Point（`feature_type="key_col"`・コル確定済みのみ）・peak→col 接続線（`feature_type="peak_col_link"`）を同梱する。地理院地図スタイル属性を付与し、ドラッグ&ドロップ 1 回で全フィーチャを確認できる（凡例規約は [ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md) を踏襲。設計詳細: [ADR-SRS-026](decisions/ADR-SRS-026-intermediate-geojson-peak-col-visualization.md)）
 - 詳細・設計判断: [ADR-SRS-025](decisions/ADR-SRS-025-observability-nfr-ur013-srs-scope.md)
 
@@ -1841,7 +1842,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 4 | 突合済み統合 GeoJSON | 出力 | GeoJSON | [FR-009](#fr-009-sotaリスト突合match_status-判定) | [6.2.4 参照](#624-突合済み統合-geojson) |
 | 5 | 作業用 HTML ビューア | 出力 | HTML + JavaScript | [FR-013](#fr-013-html-ビューア生成) | `merged_viewer.html` と `merged_viewer_data.js` の 2 ファイル。[6.2.5 参照](#625-作業用-html-ビューア) |
 | 6 | サミット一覧（突合後）| 出力 | XLSX | [FR-009](#fr-009-sotaリスト突合match_status-判定) | [6.2.6 参照](#626-サミット一覧突合後) |
-| 7 | 公開用ビューア（閲覧専用・静的ホスティング配信）| 出力 | HTML + GeoJSON | [FR-020](#fr-020-公開用ビューア配信) | ホスティング配信。GeoJSON は配置した公開用データ5本を無改変で配信したもの。[6.2.7 参照](#627-公開用ビューア閲覧専用静的ホスティング配信) |
+| 7 | 公開用ビューア（閲覧専用・静的ホスティング配信）| 出力 | HTML + GeoJSON + JSON | [FR-020](#fr-020-公開用ビューア配信) | ホスティング配信。GeoJSON は配置した公開用データ5本を無改変で配信したもの。JSON は版の区分を示す `site.json`（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。[6.2.7 参照](#627-公開用ビューア閲覧専用静的ホスティング配信) |
 | 8 | 申請エビデンス ZIP（パッケージング仕様）| 出力 | ZIP | [FR-021](#fr-021-申請エビデンス-zip-生成) | [6.2.8 参照](#628-申請エビデンス-zipパッケージング仕様) |
 | 9 | 地理院標高タイル | 入力 | PNG（RGB エンコード） | [FR-001](#fr-001-標高タイル事前取得) / [FR-019](#fr-019-html-ビューア機能仕様) / [FR-020](#fr-020-公開用ビューア配信) | [6.2.9 参照](#629-地理院標高タイル)（[FR-001](#fr-001-標高タイル事前取得) は事前取得しローカルキャッシュ（内部データ）に保存。[FR-019](#fr-019-html-ビューア機能仕様)・[FR-020](#fr-020-公開用ビューア配信) は等高線オーバーレイ用に実行時取得。[FR-004](#fr-004-33メッシュ結合解析オーケストレーション)/[FR-014](#fr-014-広域結合解析オーケストレーション) はローカルキャッシュ（内部データ）を参照） |
 | 10 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 入力 | PNG | [FR-019](#fr-019-html-ビューア機能仕様) / [FR-020](#fr-020-公開用ビューア配信) | ブラウザから実行時取得。基図としていずれか1つを常時表示。出典・利用形態: [SOURCES.md](../ref/SOURCES.md) |
@@ -1949,7 +1950,8 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | テンプレート | テンプレートファイル（ソースコードに同梱。作業用との共通化は HLD） |
 | 使用ライブラリ | Leaflet（CDN 経由） |
 | 背景タイル | 国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap（切り替え可能。既定: 国土地理院標準地図） |
-| GeoJSON 参照方式 | 公開用データの GeoJSON 5 本をそのまま配信し表示する（配置したファイルとバイト単位で同一。読み込み機構は HLD） |
+| GeoJSON 参照方式 | 公開用データの GeoJSON 5 本をそのまま配信し表示する（配置したファイルとバイト単位で同一。読み込み機構は HLD）。公開用データが 0 本でも配信する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
+| 版の区分 | 組み立てが版の区分（リリース版か開発版か）、ブランチの名前、commit の ID を持つ `site.json` を書いて配信し、画面はそれで版の区分を示す（キーの名前と読み方は HLD。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 提供機能 | [FR-019](#fr-019-html-ビューア機能仕様) の閲覧系機能のうち編集 UI・エクスポート・localStorage・除外台帳の管理/読込を除く全て（「全データ」popup を含む）。詳細は [FR-020](#fr-020-公開用ビューア配信) 参照 |
 | メタデータ表示 | 各 GeoJSON に複製された `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時・解析ソフトウェアバージョンを画面表示 |
 | 帰属表示 | `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を基図選択によらず常時表示。OSM 選択時は `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を併記。「加工して作成」の旨を明示する（[UR-011](10_URD.md#ur-011)） |
@@ -2092,7 +2094,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 項目 | 仕様 |
 |---|---|
 | 内容 | 申請エビデンス ZIP（[FR-021](#fr-021-申請エビデンス-zip-生成)）同梱の `add.geojson` / `delete.geojson` / `band_change.geojson` / `no_change.geojson` / `review.geojson`。ファイル名を変えず、内容を改変しない |
-| 提供方法 | 申請に添える ZIP から取り出し、リポジトリの公開用データ置き場に配置する。5 本は同一 ZIP のものを一組として配置・更新する（一部だけの差し替えはしない。反映手順とリリース版・開発版の分け方は HLD・運用手順） |
+| 提供方法 | 申請に添える ZIP から取り出し、リポジトリの公開用データ置き場に配置する。5 本は同一 ZIP のものを一組として配置・更新する（一部だけの差し替えはしない。配置が無い（0 本の）状態でも配信する。反映手順とリリース版・開発版の分け方は HLD・運用手順） |
 | 更新契機 | 申請エビデンス ZIP を生成し直したとき |
 | 参照 FR | [FR-020](#fr-020-公開用ビューア配信) |
 
@@ -2127,7 +2129,7 @@ FR が生成・参照する内部データ。メモリ上・一時ファイル�
 | 5 | 標高タイル（ローカルキャッシュ） | `$DATA_DIR/tiles/{サービス名}/{z}/{x}/{y}.png`<br>サービス名: DEM5a=`dem5a_png` / DEM5b=`dem5b_png` / DEM5c=`dem5c_png` / DEM10b=`dem_png` | [FR-001](#fr-001-標高タイル事前取得) | [FR-001](#fr-001-標高タイル事前取得) / [FR-004](#fr-004-33メッシュ結合解析オーケストレーション) / [FR-014](#fr-014-広域結合解析オーケストレーション) / [FR-009](#fr-009-sotaリスト突合match_status-判定)（mtime のみ） | |
 | 6 | 統合ピーク候補 work CSV（`merged_peak.csv`） | 内部 work ファイル。ファイル名: `$DATA_DIR/results/merged_peak.csv` | [FR-008](#fr-008-per-mesh-csv-統合)（陸地最高峰海面確定込み） | [FR-009](#fr-009-sotaリスト突合match_status-判定) / [FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) / [FR-022](#fr-022-コル充足判定) / [FR-023](#fr-023-解析パイプライン制御) | |
 | 7 | コル未確定ピーク座標リスト（`key_col_unresolved_peaks-<N>.csv`） | 一時ファイル。ファイル名: `$DATA_DIR/results/key_col_unresolved_peaks-<N>.csv`（N = 生成段階タグ：3×3 後は `-3`、4×4 後は `-4`、5×5 後は `-5`、6×6 後は `-6`） | [FR-022](#fr-022-コル充足判定) | [FR-014](#fr-014-広域結合解析オーケストレーション) / [FR-023](#fr-023-解析パイプライン制御) | [FR-022](#fr-022-コル充足判定) が各段階で生成し、[FR-023](#fr-023-解析パイプライン制御) の制御により [FR-014](#fr-014-広域結合解析オーケストレーション) 呼び出し時にパスとして渡す |
-| 8 | per-mesh ピーク候補 CSV | 一時ファイル。ファイル名: `$DATA_DIR/results/csv/<解析識別子>.csv`（通常: `3-<meshcode>.csv`、広域: `<N>-<meshcode>-<コーナー>.csv`） | [FR-007](#fr-007-per-mesh-csv-出力プロミネンス閾値適用) | [FR-008](#fr-008-per-mesh-csv-統合) | カラム定義は [FR-007](#fr-007-per-mesh-csv-出力プロミネンス閾値適用) 出力仕様参照。通常 per-mesh と広域 per-mesh はファイル名のプレフィックスで区別する。[FR-008](#fr-008-per-mesh-csv-統合) は `$DATA_DIR/results/csv/` 配下を読み込む（読み込み範囲は `1次メッシュコードリスト` で制御） |
+| 8 | per-mesh ピーク候補 CSV | 一時ファイル。ファイル名: `$DATA_DIR/results/csv/<解析識別子>.csv`（通常: `3-<meshcode>.csv`、広域: `<N>-<meshcode>-<コーナー>.csv`） | [FR-007](#fr-007-per-mesh-csv-出力プロミネンス閾値適用) | [FR-008](#fr-008-per-mesh-csv-統合) / [FR-014](#fr-014-広域結合解析オーケストレーション)（広域は同じ起動の中で読み戻す） | カラム定義は [FR-007](#fr-007-per-mesh-csv-出力プロミネンス閾値適用) 出力仕様参照。通常 per-mesh と広域 per-mesh はファイル名のプレフィックスで区別する。[FR-008](#fr-008-per-mesh-csv-統合) は `$DATA_DIR/results/csv/` 配下を読み込む（読み込み範囲は `1次メッシュコードリスト` で制御） |
 | 9 | per-mesh ピーク候補 GeoJSON | 一時ファイル。ファイル名: `$DATA_DIR/results/csv/3-<meshcode>.geojson` | [FR-016](#fr-016-ピーク域ポリゴン生成) | [FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) | AZ + delete 判定ゾーン。通常 per-mesh のみ（広域モードは GeoJSON を生成しない） |
 | 10 | 陸地最高峰リスト | `params/` 直下（ファイル名は HLD で定義） | — | [FR-008](#fr-008-per-mesh-csv-統合) | テキストファイル（1行1件。ヘッダー行あり。列: `name,peak_lat,peak_lon`）。初期リスト: 富士山・旭岳・中岳（九重）の 3 件。`merged_peak.csv` 生成時に陸地最高峰の海面確定（`key_col_resolved=true`・Key コル = 0m）に使用。検証方針は [ADR-SRS-019](decisions/ADR-SRS-019-land-summit-highest-peak-handling.md) 参照 |
 | 11 | 統合ピーク候補 GeoJSON（`merged_peak.geojson`） | 内部中間ファイル。ファイル名: `$DATA_DIR/results/merged_peak.geojson` | [FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) | [FR-009](#fr-009-sotaリスト突合match_status-判定) / [FR-023](#fr-023-解析パイプライン制御) | デバッグ・差分検査用に物理出力を残す |
