@@ -75,7 +75,7 @@ ITEM_HEADING_RE = re.compile(r'^#{1,6} ')
 # 題の直後は「。」か、本文の続き（`（` `→` `：`）、行末
 ITEM_RE = re.compile(r'^(\d+)\. (?:\*\*([^*\n]+)\*\*(?:。|(?=（| →|：)|$))?')
 # 照合した参照の後ろに、題の無い番号が続く形（`の 3「題」 と 4`、`の 1「題」（注記）・9`）
-ITEM_CONT_RE = re.compile(r'(?:（[^）\n]*）)?(?: ?と |・)\d')
+ITEM_CONT_RE = re.compile(r'(?:（[^）\n]*）)?(?: ?と[、,]? ?|・)\d')
 ITEM_RANGE_MAX = 1000
 ITEM_LABEL_RE = re.compile(r'^\*\*([^*\n]+)\*\*')
 ITEM_CODE_RE = re.compile(r'`[^`\n]+`')

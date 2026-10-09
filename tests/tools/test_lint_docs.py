@@ -211,6 +211,8 @@ class CheckHldItemRefsTest(unittest.TestCase):
         self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
         text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3「代表行を選ぶ」 と 4 の各段に従う。\n'
         self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
+        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3「代表行を選ぶ」と、4「`.csv` を読む」に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
 
     def test_huge_range_is_cheap(self):
         text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 1〜1000000000 に従う。\n'
