@@ -3,7 +3,7 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-05-21 |
 
-> ※ 本 ADR の Decision の delete判定ゾーンの Flood Fill 閾値 `max(col_elev, …)` 以上は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、Key コルの標高で決まるときはコルの標高を含めず（コルの標高より高い画素だけを塗る）、「ピーク標高 − delete判定ゾーン比高上限」で決まるときは以上と読む、と改めた（2026-10-09）。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D70「Key コルで決まる閾値はコルの標高を含めない」で定めた。
+> ※ 本 ADR の Decision の delete判定ゾーンの Flood Fill 閾値 `max(col_elev, …)` 以上は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、Key コルの標高で決まるとき（「ピーク標高 − delete判定ゾーン比高上限」と等しいときを含む）はコルの標高を含めず（コルの標高より高い画素だけを塗る）、「ピーク標高 − delete判定ゾーン比高上限」で決まるときは以上と読む、と改めた（2026-10-09）。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D70「Key コルで決まる閾値はコルの標高を含めない」で定めた。
 
 ## 2026-09-21 追補
 

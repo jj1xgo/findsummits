@@ -4,6 +4,8 @@
 | 決定日 | 2026-06-29 |
 
 > ※ 本 ADR のゾーンを指す Polygon の字句は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、Polygon か MultiPolygon と読む、と改めた（2026-10-09）。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D71「輪郭は塗った画素の境界をたどる」で定めた。
+>
+> ※ 本 ADR の表の `area_complete` の列の「このピーク」は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、このピークの AZ から取る、と読む（2026-10-09）。現行の取り元の表は [SRS FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の行生成モデルで、[HLD 4.12.4](../30_HLD.md#4124-設計判断) の D110「列の値は行を生む点と鍵で結んだフィーチャから取る」で定めた。
 
 ## 2026-09-21 追補
 
