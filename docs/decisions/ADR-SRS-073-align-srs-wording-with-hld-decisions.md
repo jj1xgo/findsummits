@@ -69,3 +69,9 @@
 - **(c) 試験仕様（ST）も同時に直す**: 量が倍になる。SRS の字句が固まってから ST を書く方が手戻りが無い。
 
 ## Consequences
+
+- [SRS](../20_SRS.md)（[FR-001](../20_SRS.md#fr-001-標高タイル事前取得) を除く FR、[NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化)、§3・§6・§7・§8）、[用語集](../00_GLOSSARY.md)の標高バンド・delete判定ゾーン・ピーク候補、URD の注記（[ADR-URD-023](ADR-URD-023-ur-018-publish-wording.md)）の字句を直した。[FR-001](../20_SRS.md#fr-001-標高タイル事前取得) の入力の表と §8.1 の No.5 の参照 FR には、標高タイル（ローカルキャッシュ）がすでにあった。
+- 次の ADR の状態と決定日の表の直後に、改めた決定や字句を示す注を置いた: [ADR-SRS-010](ADR-SRS-010-cpp-opencv-migration.md)、[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md)、[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)、[ADR-SRS-019](ADR-SRS-019-land-summit-highest-peak-handling.md)、[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md)、[ADR-SRS-024](ADR-SRS-024-fr018-loop-reentry-and-peak-filter.md)、[ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md)、[ADR-SRS-032](ADR-SRS-032-gsi-tile-latest-date-provenance.md)、[ADR-SRS-033](ADR-SRS-033-defect-confirmation-via-xlsx.md)、[ADR-SRS-045](ADR-SRS-045-summit-xlsx-row-aggregation-model.md)、[ADR-URD-022](ADR-URD-022-split-ur-006-into-geojson-and-two-viewers.md)。
+- [HLD](../30_HLD.md) の各節の「未決事項と後続」の改訂の候補の項目を、番号と題を残して「本 ADR で直した」の形に縮めた。食い違いを現在形で書いていた D の理由などの文は、決定の時点の記録として残し、文の末尾に直したことを添えた。
+- 試験仕様（ST）の改訂候補は、HLD の各節の「ST の改訂の機会」の項目として残し、別に追う。
+- [HLD](../30_HLD.md) の決定そのものは変えていない。
