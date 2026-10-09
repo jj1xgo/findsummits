@@ -7,11 +7,13 @@
 検査D: FR/UR/NFR 裸参照（リンクでもコード表記でもない参照）の検出
 検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止）
 検査F: HLD の設計判断（D）の題（定義の題の長さ、付録 A の題、本文の参照に添えた題）
+検査G: HLD の手順と未決事項の項目の題（指される項目の題、参照に添えた題）
 """
 import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 # 検査Bで対象とする太字ラベル単独行（入力/出力/説明 等）
 BOLD_SECTION_RE = re.compile(
@@ -65,6 +67,22 @@ D_REF_RE = re.compile(r'(?<![A-Za-z0-9_\-])(D\d+)(?![0-9])')
 # 題の照合から外す範囲: コード表記と「」の中（他の D の題の中の D、引用）
 D_MASK_RE = re.compile(r'`[^`\n]+`|「[^」\n]*」')
 D_TITLE_MAX = 30
+
+
+# 検査G: HLD の手順と未決事項の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）
+ITEM_SECTION_RE = re.compile(r'^#{2,6} \d+(?:\.\d+)+ (?:処理の流れ|未決事項と後続)')
+ITEM_HEADING_RE = re.compile(r'^#{1,6} ')
+ITEM_RE = re.compile(r'^(\d+)\. (?:\*\*([^*\n]+)\*\*。)?')
+ITEM_LABEL_RE = re.compile(r'^\*\*([^*\n]+)\*\*')
+ITEM_CODE_RE = re.compile(r'`[^`\n]+`')
+# `[4.8.2](#482-処理の流れ) の「名前」の 6「題」`・`の 2「題」・5「題」`・`の 1〜5`。
+# 番号の後に数を表す語が続くもの（`の 5 種類`、`の 60 行`）は項目の参照ではない
+ITEM_REF_RE = re.compile(
+    r'\]\(#([^)\s]+)\) の(?:「([^」\n]+)」の)? (\d+)(?!\d)'
+    r'(?! ?(?:種類|行|件|個|つ|本|字|秒|回|列|桁|色|枚|倍|画素))'
+    r'(?:〜(\d+)|((?:「[^」\n]*」)?(?:・\d+(?:「[^」\n]*」)?)*))'
+)
+ITEM_ELEM_RE = re.compile(r'(\d+)(?:「([^」\n]*)」)?')
 
 
 def _get_known_refs():
@@ -196,9 +214,10 @@ def check_file(filepath):
                         f"{filepath}:{i + 1}: NOTATION-{rule_name}: {message}"
                     )
 
-    # 検査F: docs/30_HLD.md だけに適用する（ファイル全体の D の定義と照合するため、行の検査の後に行う）
+    # 検査F・G: docs/30_HLD.md だけに適用する（ファイル全体の定義と照合するため、行の検査の後に行う）
     if abs_filepath.endswith(HLD_PATH_SUFFIX):
         violations.extend(check_hld_decisions(filepath, lines))
+        violations.extend(check_hld_item_refs(filepath, lines))
 
     return violations
 
@@ -268,6 +287,108 @@ def check_hld_decisions(filepath, lines):
                 )
     for d in sorted(set(defs) - indexed, key=lambda x: int(x[1:])):
         violations.append(f"{filepath}: HLD-D-INDEX: {d} が付録 A にありません")
+    return violations
+
+
+def hld_item_lists(lines):
+    """処理の流れと未決事項と後続の小節から、番号付きの項目と題を集める
+
+    返り値は ({(アンカー, 名前): {番号: (行番号, 題か None)}}, [(行番号, 種別, 説明)])。
+    対象の小節はすべて名前 '' で登録する（箇条が無ければ空）。小節の最初の箇条は名前 '' で引ける。
+    `**名前**` で始まる段落のすぐ後の箇条は、その名前でも引ける。字下げした箇条は数えない。
+    """
+    from lint_trace import github_slug
+    lists = {}
+    problems = []
+    anchor = None
+    label, in_list, first, cur = None, False, True, None
+    in_code_block = False
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        if line.lstrip().startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        if ITEM_HEADING_RE.match(line):
+            anchor = github_slug(line.lstrip('#')) if ITEM_SECTION_RE.match(line) else None
+            if anchor is not None:
+                # 箇条が 1 つも無い小節も、指されたら UNKNOWN にできるよう先に登録する
+                lists[(anchor, '')] = {}
+            label, in_list, first, cur = None, False, True, None
+            continue
+        if anchor is None or not line.strip() or line[0] in ' \t':
+            continue
+        m = ITEM_RE.match(line)
+        if m:
+            if not in_list:
+                cur = lists[(anchor, '')] if first else {}
+                if label:
+                    if (anchor, label) in lists:
+                        problems.append((i + 1, 'HLD-ITEM-DUP', f'名前「{label}」の箇条が小節の中に 2 つあります'))
+                    lists[(anchor, label)] = cur
+                label, in_list, first = None, True, False
+            n, title = int(m.group(1)), m.group(2)
+            if n in cur:
+                problems.append((i + 1, 'HLD-ITEM-DUP', f'項目 {n} が箇条の中に 2 つあります'))
+            cur[n] = (i + 1, title)
+            if title is not None and len(title.replace('`', '')) > D_TITLE_MAX:
+                problems.append((i + 1, 'HLD-ITEM-LONG',
+                                 f'項目 {n} の題が {D_TITLE_MAX} 字を超えています（バッククォートを除いて数える）'))
+            continue
+        in_list = False
+        m = ITEM_LABEL_RE.match(line)
+        label = m.group(1) if m else None
+    return lists, problems
+
+
+def check_hld_item_refs(filepath, lines):
+    """手順と未決事項の項目を指す参照（`[4.8.2](#482-処理の流れ) の 6「題」`）を、項目の題と照合する"""
+    lists, problems = hld_item_lists(lines)
+    violations = [f"{filepath}:{n}: {kind}: {msg}" for n, kind, msg in problems]
+    anchors = {a for a, _ in lists}
+    in_code_block = False
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        if line.lstrip().startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block or line.startswith('#'):
+            continue
+        masked = ITEM_CODE_RE.sub(lambda x: '\0' * len(x.group()), line)
+        where = f"{filepath}:{i + 1}"
+        for r in ITEM_REF_RE.finditer(masked):
+            anchor = unquote(r.group(1))
+            if anchor not in anchors:
+                continue
+            name = line[r.start(2):r.end(2)] if r.group(2) else ''
+            items = lists.get((anchor, name))
+            if items is None:
+                violations.append(f"{where}: HLD-ITEM-UNKNOWN: #{anchor} に名前「{name}」の箇条がありません")
+                continue
+            if r.group(4):
+                lo, hi = int(r.group(3)), int(r.group(4))
+                if lo >= hi:
+                    violations.append(f"{where}: HLD-ITEM-RANGE: 範囲 {lo}〜{hi} は始まりが終わりより小さくありません")
+                for n in range(lo, hi + 1):
+                    if n not in items:
+                        violations.append(f"{where}: HLD-ITEM-UNKNOWN: #{anchor} に項目 {n} がありません")
+                continue
+            for e in ITEM_ELEM_RE.finditer(line[r.start(3):r.end()]):
+                n, title = int(e.group(1)), e.group(2)
+                if n not in items:
+                    violations.append(f"{where}: HLD-ITEM-UNKNOWN: #{anchor} に項目 {n} がありません")
+                elif items[n][1] is None:
+                    violations.append(
+                        f"{where}: HLD-ITEM-NOTITLE: #{anchor} の項目 {n} に題がありません"
+                        f"（{items[n][0]} 行目を `{n}. **題**。本文` の形にしてください）"
+                    )
+                elif title is None:
+                    violations.append(f"{where}: HLD-ITEM-BARE: 項目 {n} に題を添えてください（{n}「{items[n][1]}」）")
+                elif title != items[n][1]:
+                    violations.append(
+                        f"{where}: HLD-ITEM-TITLE: 項目 {n} の題が項目と一致しません（{n}「{items[n][1]}」）"
+                    )
     return violations
 
 
