@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-05-28 |
 
+> ※ 本 ADR のゾーンを指す Polygon の字句は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、Polygon か MultiPolygon と読む、と改めた（2026-10-09）。斜めにだけ接する画素で外周が分かれるときに MultiPolygon になる。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D71「輪郭は塗った画素の境界をたどる」で定めた。
+
 ## Context
 
 ### 現状の 2 ファイル分割構造

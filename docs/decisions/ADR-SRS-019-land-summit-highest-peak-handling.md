@@ -6,6 +6,8 @@
 > ※ **層2（陸地最高峰の手動確定を [FR-022](../20_SRS.md#fr-022-コル充足判定) が行う）** とした本 ADR Decision の箇所は、[ADR-SRS-027](ADR-SRS-027-fr022-purification-fr023-pipeline-control.md)（2026-06-18）によって supersede された。陸地最高峰の海面確定は **[FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) が `merged_peak.csv` 生成時に毎回適用**する（案B）。
 >
 > **補足（2026-09-23）:** 存在メッシュからは北方領土除外メッシュを除く（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）。
+>
+> ※ 本 ADR の「近傍一致するピークを海面確定に更新する」は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、当たったピークがすでに陸のコルで確定している（`key_col_resolved=true` で `col_lat`・`col_lon` が 0.0 でない）ときは書き換えずに警告する、と改めた（2026-10-09）。[HLD 4.8.4](../30_HLD.md#484-設計判断) の D81「陸のコルで確定したピークは陸地最高峰リストで書き換えない」で定めた。
 
 ## Context
 

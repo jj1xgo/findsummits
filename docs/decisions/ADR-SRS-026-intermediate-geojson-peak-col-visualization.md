@@ -3,6 +3,8 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-06-18 |
 
+> ※ 本 ADR の次の字句は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、次のように改めた（2026-10-09）。(1) ゾーンを指す Polygon は、Polygon か MultiPolygon と読む（[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D71「輪郭は塗った画素の境界をたどる」）。(2) 「既存の 4 プロパティ・ポリゴン設計は変更しない」は、地理院地図のスタイルの属性を数えない（D74「ゾーンのポリゴンにも地理院地図のスタイルを付ける」）。(3) 凡例は、中間 GeoJSON では形ではなく色と大きさでフィーチャを区別し、`merged_peak.geojson` ではコル未確定のピークの点の色を変える（D74、[HLD 4.18.4](../30_HLD.md#4184-設計判断) の D77「コル未確定のピークの点は色を変える」）。
+
 ## Context
 
 [UR-013](../10_URD.md#ur-013)（[ADR-URD-016](ADR-URD-016-observability-intermediate-visualization-ur.md)）は、解析パイプラインの

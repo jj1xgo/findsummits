@@ -7,6 +7,8 @@
 | 調査資料 | [`research/cpp-opencv-migration-research.md`](research/cpp-opencv-migration-research.md) |
 | 調査資料 | [`research/rust-cpp-and-scalable-analysis-research.md`](research/rust-cpp-and-scalable-analysis-research.md) |
 
+> ※ 本 ADR の Decision 2 と Phase 4 が挙げる `cv::floodFill`・`cv::findContours` は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、使わないと改めた（2026-10-09）。ゾーンの塗りと輪郭は自前で行う。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の D71「輪郭は塗った画素の境界をたどる」で定めた。
+
 ---
 
 ## Context
