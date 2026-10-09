@@ -52,7 +52,7 @@ NO_PARENT = 'なし（横断の設計）'
 ALL_COMPONENTS = '全体'
 MANUAL_MARK = '（手動）'
 PRODUCT_DIRS = ('src/', 'scripts/')
-# テストのコードは製品のテスト（HLD §2.8.2 D18）。tests/tools/ の道具のテストと、tests/ 直下の試作は数えない
+# テストのコードは製品のテスト（HLD §2.6.4 D18）。tests/tools/ の道具のテストと、tests/ 直下の試作は数えない
 TEST_DIRS = ('tests/src/', 'tests/scripts/')
 CODE_SUFFIXES = ('.c', '.h', '.cpp', '.hpp', '.py', '.sh')
 

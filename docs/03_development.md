@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-15 |
-| 最終更新日 | 2026-10-08 |
+| 最終更新日 | 2026-10-09 |
 | ステータス | 確定 |
 
 ## 目次
@@ -147,7 +147,7 @@ make clean                                 # build/ を削除
 
 - 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落、上位の段、読めないファイルの指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
 - 欠番は `RETIRED_IDS` に、構造上の例外は `EXEMPTIONS` に、どちらも根拠の ADR と一緒に書く。ADR が無い項目は通らない。
-- 製品のコードは [HLD §2.8.2](30_HLD.md#282-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
+- 製品のコードは [HLD §2.6.4](30_HLD.md#264-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
 - 検査そのもののテストは `make test-tools` で走り、CI でも実行する。`tools/lint_trace.py` を直したときは、`make lint` に加えて `make test-tools` も実行する。
 
 ### 6.3 変更するときの手順

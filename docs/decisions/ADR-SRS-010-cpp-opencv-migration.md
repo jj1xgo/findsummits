@@ -134,7 +134,7 @@ Phase 1〜4 の詳細手順・検証手順は採用後に各 ISSUE として登�
 
 - **[ADR-SRS-001](ADR-SRS-001-hybrid-c-python-architecture.md)**: 状態を「採用・実装済み（ADR-SRS-010 により C 部分が C++ に置換予定）」に更新
 - **SRS（[20_SRS.md](../20_SRS.md)）のアーキテクチャ概要（[3.2](../20_SRS.md#32-主要コンポーネント構成)/[3.3](../20_SRS.md#33-フェーズ分割)）**: 論理コンポーネント名で記述するため、本 ADR の言語変更による影響を受けない。実装言語・ファイル名の決定は本 ADR で完結し、HLD/LLD で具体的なビルド構成を扱う。
-- **公開の環境・ビルド文書**（`docs/01_environment.md`、`README.md`）: 「依存: libpng, libm, pthread（GCC / C99）」を「依存: OpenCV, libm, pthread（g++ / C++17）」に更新（Phase 1 着手時に実施）（2026-09-30 追記: 言語規格は [HLD 2.6.3](../30_HLD.md#263-設計判断) の D9 で、動作確認環境の GCC が安定と扱う最新の規格（現時点は C++20）に改めた。ここの「C++17」と、調査資料の Makefile の規格指定（`-std=c++17`）は C++20 に読み替える）
+- **公開の環境・ビルド文書**（`docs/01_environment.md`、`README.md`）: 「依存: libpng, libm, pthread（GCC / C99）」を「依存: OpenCV, libm, pthread（g++ / C++17）」に更新（Phase 1 着手時に実施）（2026-09-30 追記: 言語規格は [HLD 2.6.6](../30_HLD.md#266-設計判断) の D9 で、動作確認環境の GCC が安定と扱う最新の規格（現時点は C++20）に改めた。ここの「C++17」と、調査資料の Makefile の規格指定（`-std=c++17`）は C++20 に読み替える）
 
 ### 既存課題への影響
 
