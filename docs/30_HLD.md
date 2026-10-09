@@ -3009,6 +3009,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
    - 付け先：`summit_name_jp` は、すべてのサミット（`unmatched` を含む）にコードで引いて付け、見つからなければ空文字にする。`matched` のピークの `summit_name_jp` は、AZ の中のサミットのものとする。
 2. **値を求める**。
    - `points` は、ピークでは `peak_elev` の小数点以下を切り捨てた整数 m を、サミットでは `AltM` を、[標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) に当てて求める（サミットのものが `sota_points`）。コルと AZ の `points` はピークのものとする。`is_band_change_candidate` は、`matched` のピークでは、ピークの `points` と AZ の中のサミットの `sota_points` が違えば true、同じなら false とし、ほかのピークでは null とする。
+   - 算出表に無い標高：標高が算出表に無い（150m 未満）ときは、`points`（サミットでは `sota_points`）を null にする（D170「算出表に無い標高のポイントは null にする」）。`matched` のピークで、ピークの `points` か AZ の中のサミットの `sota_points` が null なら、`is_band_change_candidate` を false にする（`category` は `no_change`、rationale は作らない）。null にしたピークとサミットは警告に挙げる。
    - `dominant_peak_dist_m` は、4.9.2 の 6 で求めた距離を小数点以下 1 桁にして書く。
    - `category` と確認用の属性は、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当ての規則で決める。`review_group_id` の SummitCode の並びと、以下の `SummitCode` の順は、文字列の順（Unicode の符号位置の順）とする。`review_decision`・`review_note`・`application_exclusion`・`exclusion_note` はすべて空文字にする（[SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson)）。
    - rationale の書式：[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の ※2・※4・※5 の書式で作る。
@@ -3060,6 +3061,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
 | `unmatched` のサミットがある（数が `unmatched_summit_threshold` 以下） | 0 | 警告して続ける（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)） |
 | 1 つの AZ に 2 件以上の登録がある | 0 | 警告して続ける（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)。複数登録の組数・登録件数では止めない） |
 | `key_col_resolved=false` のピークの AZ が重なり、2 つ以上の AZ に含まれるサミットがある | 0 | [4.9.2](#492-処理の流れ) の 5「AZ と突き合わせる」のとおり 1 つの AZ に含め、警告して続ける（不備ゲートで止まる。D93「入力の誤りは書かずに止め、不備ゲートは書いて止める」） |
+| 標高が算出表に無い（150m 未満）ピークかサミットがある | 0 | `points` か `sota_points` を null にし、警告して続ける（D170「算出表に無い標高のポイントは null にする」） |
 | SOTA 既存サミット GeoJSON が使えないか不完全（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 1「SOTA 既存サミット GeoJSON を読む」の不備） | 0 | 使える分だけ使い、残りの `summit_name_jp` を空文字にして、警告して続ける（D99「SOTA 既存サミット GeoJSON の不備では止めない」） |
 | `software_version` か `gsi_tile_latest_date` が求められない | 0 | `software_version` は `unknown`、`gsi_tile_latest_date` は空文字を書き、警告して続ける（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」。`software_version` は D98「版の文字列は出力を組み立てるときに git から取る」） |
 
@@ -3089,6 +3091,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
 | C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`unmatched` のサミットがある（`WARNING:` で始める） | 0 | `unmatched` のサミットすべてのコード・名前・緯度経度と件数（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)。件数が `unmatched_summit_threshold` を超えれば不備ゲートの行も出る） |
 | C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、1 つのアクティベーションゾーンに 2 件以上の登録がある（`WARNING:` で始める） | 0 | [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の「複数登録の警告ログ・出力順序」の項目（組の数、AZ 内の登録の数、主ピークへの依存で保留した AZ 外の削除候補の数、組ごとの `review_group_id`・ピークの座標・AZ 内のコードの一覧・保留した削除候補の一覧。[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)） |
 | C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`key_col_resolved=false` のピークの AZ が重なり、2 つ以上の AZ に含まれるサミットがある（`WARNING:` で始める） | 0 | 当たったサミットのコードと緯度経度、当たったピークすべての緯度経度と `key_col_resolved`、含めた AZ のピーク（D93「入力の誤りは書かずに止め、不備ゲートは書いて止める」。続く不備ゲートで止まる） |
+| C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、標高が算出表に無いピークかサミットがある（`WARNING:` で始める） | 0 | 当たったピークの緯度経度と `peak_elev`、サミットのコードと `AltM`、`is_band_change_candidate` を false にした `matched` のピーク（D170「算出表に無い標高のポイントは null にする」。[4.9.3](#493-異常系)） |
 | C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、SOTA 既存サミット GeoJSON が使えないか不完全（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 1「SOTA 既存サミット GeoJSON を読む」の不備）（`WARNING:` で始める） | 0 | 当たった場面ごとに、ファイルのパス、飛ばした Feature の件数、山岳名を空にしたコードとその山岳名（D99「SOTA 既存サミット GeoJSON の不備では止めない」。[4.9.3](#493-異常系)） |
 | C5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`software_version` か `gsi_tile_latest_date` が求められない（`WARNING:` で始める） | 0 | 求められなかった項目と理由、代わりに書いた値（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」。[4.9.3](#493-異常系)） |
 
@@ -3161,6 +3164,11 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
   - 却下: 数を丸めて書く案（標高を整数 m にするなど）。手動解決で写す座標がずれ、一覧と根拠の文の値が食い違いうる。
   - 却下: rationale だけ標高とプロミネンスを整数 m に切り捨てる案と、海面で確定したコルだけ `0m` と書く案。SOTA のリストの標高（整数）と見た目はそろうが、一覧の値と根拠の文の字句が変わり、書き方の規則が増える（持ち主の判断、2026-10-04）。
 
+- D170（算出表に無い標高のポイントは null にする）: 標高が算出表に無いときの `points`・`sota_points`・`is_band_change_candidate` の値は、[4.9.2](#492-処理の流れ) の「出力の組み立て」の 2「値を求める」のとおり。
+  - 理由: [標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) は 150m 未満を定めない。ここに来るのは、プロミネンスの一次フィルタだけを通った `key_col_resolved=false` のピーク（[4.8.2](#482-処理の流れ) の 6「最終フィルタを当てる」で落ちない）か、SOTA サミットリスト CSV の `AltM` が 150 未満のサミットである。前者は不備ゲートで止まるが、後者は確定したピークの AZ の中にあれば申請の経路に乗る。表に無い値を 1 点などに寄せると、根拠の無い点数が一覧と根拠の文に入る。`is_band_change_candidate` を false にすれば、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の値の範囲（`matched` のピークでは真偽値）と `category` の割り当ての規則のまま `no_change` になり、変更の根拠（※5）も作らない。警告で担当者が気づける。
+  - 却下: 表に無い標高を最も低いバンド（1 点）に寄せる案。根拠の無い点数が申請の根拠に入る（持ち主の判断、2026-10-09）。
+  - 却下: `is_band_change_candidate` も null にする案。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の `category` の割り当ての規則に当たらず、`category` が決まらない（持ち主の判断、2026-10-09）。
+
 #### 4.9.5 未決事項と後続
 
 1. **出力を使う側へ渡したこと**。次のとおり、出力を使う側の節で決めた。
@@ -3180,6 +3188,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
    - D104「入力から来る数は 10 進の値を変えずに書く」（rationale の桁）: [FR-019](20_SRS.md#fr-019-html-ビューア機能仕様) のピークの popup の「申請書の根拠 ※2 の『コル標高：0m』と一致させる」を、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の ※2 が `merged_peak.csv` の小数 2 桁（`0.00m`）で書くことと合う字句に直す
    - D102「`merged_summit.xlsx` にも出典のシート」（出典のシート）: [SRS §6.2.6](20_SRS.md#626-サミット一覧突合後) と [SRS §6.2.2](20_SRS.md#622-サミット一覧申請内容反映版) の「単一シート・データ表」を、最後に出典のシートを持つと読める字句に直す（[FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の出典シートと合わせる）
    - D98「版の文字列は出力を組み立てるときに git から取る」と [4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」（metadata の代わりの値）: [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の metadata と [ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md) に、`software_version` が取れなければ `unknown`、`gsi_tile_latest_date` が求められなければ空文字になりうることを書く
+   - D170「算出表に無い標高のポイントは null にする」（算出表に無い標高）: 用語集の [標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) と、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の変更申請判定と突合済み統合 GeoJSON の `points`・`is_band_change_candidate` の説明に、150m 未満では `points` を null にし、`is_band_change_candidate` を false にすることを書く
    - `summit_name_jp` の付け先: [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の説明と [SRS §7.2.5](20_SRS.md#725-sota-既存サミット-geojsongeojson_vn) の用途の「matched・delete・ambiguous サミット」を、`unmatched` を含むすべてのサミットと読める字句に直す（行生成モデルの「review 行の…日本語名…は行の既存登録自身から取得」と合わせる）
 5. `docs/70_ST.md` の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の試験に、次のケースを足す → ST の改訂の機会
    - SOTA の座標が AZ の画素の境目にちょうど乗る（隣り合う 2 つのゾーンのどちらか一方にだけ入る）（D86「ゾーンの内外は Z15 の画素の中心で判定する」）
@@ -3199,6 +3208,7 @@ C3（パイプライン制御）から、フェーズ4 で呼ばれる（通し�
    - `merged_summit.xlsx` の `peak_lat`・`peak_lon` が `merged_peak.csv` と同じ 8 桁で表示され、最後に出典のシートがある（D102「`merged_summit.xlsx` にも出典のシート」・D104「入力から来る数は 10 進の値を変えずに書く」）
    - `--phase 4` で SOTA サミットリスト CSV が無ければ、前回の出力を消さずに止まる（D103「`--phase 4` でもサミットリストを起動前に確かめる」）
    - git が使えないか、`$DATA_DIR/tiles/` に PNG が無いとき、`software_version` が `unknown`、`gsi_tile_latest_date` が空文字になり、警告して続ける（D98「版の文字列は出力を組み立てるときに git から取る」、[4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」）
+   - 150m 未満の `key_col_resolved=false` のピークと、`AltM` が 150 未満のサミットで、`points` か `sota_points` が null になり、`matched` のピークの `is_band_change_candidate` が false（`category` は `no_change`）になって、警告が出る（D170「算出表に無い標高のポイントは null にする」）
 6. 現行のプロトタイプ（`scripts/merge.py`）は、別の形式の統合と突合で、本節の規則に従っていない。C5（統合・突合）の実装の段で本節に従って新規に作る
 7. **xlsx の文書プロパティの固定**。`openpyxl` が `merged_summit.xlsx` に書く作成日時などの文書のプロパティを、[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力) の「内容」に入れるか → [4.12.5](#4125-未決事項と後続) の 2「SheetJS の版と取得のしかた」で、SheetJS の改訂版と同じ扱いに決める
 
@@ -5158,3 +5168,4 @@ HLD の設計判断（D）の索引。番号は第 2 章からの通し番号で
 | D167 | 5 本の結果がそろってから一度に描く | [4.20.4](#4204-設計判断) |
 | D168 | メタデータは決まった順で最初に読めた本から出す | [4.20.4](#4204-設計判断) |
 | D169 | 公開用もスマートフォンを対応に含めない | [4.20.4](#4204-設計判断) |
+| D170 | 算出表に無い標高のポイントは null にする | [4.9.4](#494-設計判断) |
