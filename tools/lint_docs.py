@@ -72,7 +72,11 @@ D_TITLE_MAX = 30
 # 検査G: HLD の手順と未決事項の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）
 ITEM_SECTION_RE = re.compile(r'^#{2,6} \d+(?:\.\d+)+ (?:処理の流れ|未決事項と後続)')
 ITEM_HEADING_RE = re.compile(r'^#{1,6} ')
-ITEM_RE = re.compile(r'^(\d+)\. (?:\*\*([^*\n]+)\*\*。)?')
+# 題の直後は「。」か、本文の続き（`（` `→` `：`）、行末
+ITEM_RE = re.compile(r'^(\d+)\. (?:\*\*([^*\n]+)\*\*(?:。|(?=（| →|：)|$))?')
+# 照合した参照の後ろに、題の無い番号が続く形（`の 3「題」 と 4`、`の 1「題」（注記）・9`）
+ITEM_CONT_RE = re.compile(r'(?:（[^）\n]*）)?(?: ?と |・)\d')
+ITEM_RANGE_MAX = 1000
 ITEM_LABEL_RE = re.compile(r'^\*\*([^*\n]+)\*\*')
 ITEM_CODE_RE = re.compile(r'`[^`\n]+`')
 # `[4.8.2](#482-処理の流れ) の「名前」の 6「題」`・`の 2「題」・5「題」`・`の 1〜5`。
@@ -361,6 +365,11 @@ def check_hld_item_refs(filepath, lines):
             anchor = unquote(r.group(1))
             if anchor not in anchors:
                 continue
+            if ITEM_CONT_RE.match(line, r.end()):
+                violations.append(
+                    f"{where}: HLD-ITEM-CONT: 参照の後ろに題の無い番号が続いています"
+                    f"（番号ごとに `の N「題」` と書き、`・` でつないでください）"
+                )
             name = line[r.start(2):r.end(2)] if r.group(2) else ''
             items = lists.get((anchor, name))
             if items is None:
@@ -370,6 +379,9 @@ def check_hld_item_refs(filepath, lines):
                 lo, hi = int(r.group(3)), int(r.group(4))
                 if lo >= hi:
                     violations.append(f"{where}: HLD-ITEM-RANGE: 範囲 {lo}〜{hi} は始まりが終わりより小さくありません")
+                if hi - lo > ITEM_RANGE_MAX:
+                    violations.append(f"{where}: HLD-ITEM-RANGE: 範囲 {lo}〜{hi} が広すぎます")
+                    continue
                 for n in range(lo, hi + 1):
                     if n not in items:
                         violations.append(f"{where}: HLD-ITEM-UNKNOWN: #{anchor} に項目 {n} がありません")

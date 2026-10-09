@@ -202,6 +202,29 @@ class CheckHldItemRefsTest(unittest.TestCase):
                     '[4.8.8](#488-処理の流れ) の 1「子」に従う。\n')
         self.assertEqual(self.lint(indented), ['HLD-ITEM-UNKNOWN'])
 
+    def test_title_followed_by_parenthesis(self):
+        text = HLD_ITEMS.replace('4. **`.csv` を読む**。本文。', '4. **`.csv` を読む**（注記）。本文。')
+        self.assertEqual(self.lint(text + '\n[4.8.2](#482-処理の流れ) の 4「`.csv` を読む」に従う。\n'), [])
+
+    def test_continuation_after_ref(self):
+        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 1「リストを読む」（注記）・999「存在しない」に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
+        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3「代表行を選ぶ」 と 4 の各段に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
+
+    def test_huge_range_is_cheap(self):
+        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 1〜1000000000 に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-RANGE'])
+
+    def test_percent_encoded_anchor(self):
+        text = HLD_ITEMS + '\n[4.8.2](#482-%E5%87%A6%E7%90%86%E3%81%AE%E6%B5%81%E3%82%8C) の 999「無い」に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-UNKNOWN'])
+
+    def test_duplicate_list_name(self):
+        text = HLD_ITEMS.replace('1. **列を並べる**。本文。\n', '1. **列を並べる**。本文。\n\n'
+                                 '**出力の組み立て**：もう一度。\n\n1. **重ねて**。本文。\n')
+        self.assertEqual(self.lint(text), ['HLD-ITEM-DUP'])
+
     def test_same_document_path_link(self):
         text = HLD_ITEMS + '\n[4.8.2](30_HLD.md#482-処理の流れ) の 999「無い」に従う。\n'
         self.assertEqual(self.lint(text), ['HLD-ITEM-UNKNOWN'])
