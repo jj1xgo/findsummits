@@ -169,7 +169,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 
 | 用語（本書での表記） | 正式名称 | 説明 |
 |---|---|---|
-| ピーク候補 | 山頂候補 | 局所的な地表面の最高点。標高降順走査の中で最初に新しい連結成分を形成するピクセル（8 近傍に処理済みピクセルが 1 つもない時点で処理されるピクセル）を指す。同標高の隣接ピクセルが存在する場合はタイブレーク規則（ピクセルインデックス昇順）で先に処理された 1 つが候補となる。解析中はプロミネンス確定前・フィルタ前のものを「ピーク候補」と呼ぶ。プロミネンス ≥ 150m が確定した時点で「ピーク」となる。 |
+| ピーク候補 | 山頂候補 | 局所的な地表面の最高点。標高降順走査の中で最初に新しい連結成分を形成するピクセル（8 近傍に、成分に属する処理済みの陸地のピクセルが 1 つもない時点で処理されるピクセル。海面・人工ボーダー・NODATA のピクセルは近傍の成分に数えない）を指す。同標高の隣接ピクセルが存在する場合はタイブレーク規則（ピクセルインデックス昇順）で先に処理された 1 つが候補となる。解析中はプロミネンス確定前・フィルタ前のものを「ピーク候補」と呼ぶ。プロミネンス ≥ 150m が確定した時点で「ピーク」となる。 |
 | 独立峰 | — | 周囲に同等以上の山がなく、Keyコルが3×3メッシュの解析範囲の外に出るピーク（例: 大山）。通常解析ではコルが確定せず、広域結合解析（[FR-014](20_SRS.md#fr-014-広域結合解析オーケストレーション)）で扱う（[UR-007](10_URD.md#ur-007)）。 |
 | ピーク | — | プロミネンス ≥ 150m が確定した検出地点。SOTA 申請の分析対象。既存 SOTA サミット座標との照合（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）を経て match_status が確定する。 |
 | 連結成分 | connected component | 8近傍で互いに到達可能なピクセルの集合。1つのピーク候補に従属する地表面領域を表す。ピクセルを高い順に処理しながら Union-Find で管理する（詳細: [SRS FR-005](20_SRS.md#fr-005-ピーク候補検出)）。 |
@@ -193,7 +193,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
 | 担当者指定削除 | — | 孤立 unmatched を担当者が作業用ビューアで明示的に削除申請へ含めた状態。category=delete、review_decision=delete とし、match_status と review_reason は unmatched のまま保持する。親ピーク・接続線を持たない（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。 |
 | 主ピーク | dominant peak | 削除候補となる SOTA サミットが従属するピーク。サミット座標がそのピークの delete判定ゾーン内に含まれることで判定される（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照）。 |
-| delete判定ゾーン | delete-determination zone | 既存 SOTA サミットの削除判定に使用するピーク域ポリゴン。ピーク標高から `min(プロミネンス, delete_zone_max_drop)` 以内の連続エリア（Flood Fill 閾値は `max(col_elev, peak_elev - delete_zone_max_drop)` 以上）。`delete_zone_max_drop`（デフォルト 250m）はデータ辞書「delete判定ゾーン比高上限」として定義（[SRS 2.2.1](20_SRS.md#221-設定可能項目) 参照）。詳細は SRS [FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照。 |
+| delete判定ゾーン | delete-determination zone | 既存 SOTA サミットの削除判定に使用するピーク域ポリゴン。ピーク標高から `min(プロミネンス, delete_zone_max_drop)` 以内の連続エリア（Flood Fill 閾値は `max(col_elev, peak_elev - delete_zone_max_drop)`。`col_elev` で決まるときはコルの標高を含めず、`peak_elev - delete_zone_max_drop` で決まるときは以上）。`delete_zone_max_drop`（デフォルト 250m）はデータ辞書「delete判定ゾーン比高上限」として定義（[SRS 2.2.1](20_SRS.md#221-設定可能項目) 参照）。詳細は SRS [FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照。 |
 | 削除（delete） | — | `summit.match_status` の幾何学的な判定値（削除候補）。申請の有無は category で決まり、ambiguous 主ピークに従属する登録は delete/review として保留する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。`deleted`（削除済み）と区別するため命令形を採用。 |
 | 複数登録未決着（ambiguous） | — | 帰属 AZ は一意だが、その AZ 内に複数の現役登録があり存続コードが未決着である状態。ピークと AZ 内登録全件の match_status に用いる。全ゾーン外の unmatched とは区別する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
 | 保留組 | — | 複数登録ピーク、その AZ 内登録全件、およびそのピークが主ピークに選ばれた AZ 外削除候補をまとめた確認単位。地形・接続線も review とし、通常の申請を続行しつつ組全体の申請を保留する（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)）。 |
