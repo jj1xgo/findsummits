@@ -255,7 +255,7 @@
 
 ### 3.5 制約・前提条件
 
-ユーザー要件定義書（URD）セクション 5 に基づき（SRS で詳細化）:
+ユーザー要件定義書（URD）のセクション 5 に基づき（SRS で詳細化）:
 
 - 解析の標高データは国土地理院タイルのみ使用（DEM5a/5b/5c/DEM10b の優先順）。HTML ビューアの等高線は DEM1a も使う（[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）
 - サミット判定基準は SOTA ルール（プロミネンス ≥ 150m）に従う
