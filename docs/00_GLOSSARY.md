@@ -36,6 +36,8 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | 1100 ≤ h < 1500 | 8      |
 | 1500 ≤ h        | 10     |
 
+150m 未満の標高は、この表に無い（Points を定めない）。この場合の `points`・`sota_points` は null とし、扱いは [SRS FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の変更申請判定に従う（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。
+
 ---
 
 ## 地理・地形関連
