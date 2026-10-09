@@ -202,6 +202,12 @@ class CheckHldItemRefsTest(unittest.TestCase):
                     '[4.8.8](#488-処理の流れ) の 1「子」に従う。\n')
         self.assertEqual(self.lint(indented), ['HLD-ITEM-UNKNOWN'])
 
+    def test_same_document_path_link(self):
+        text = HLD_ITEMS + '\n[4.8.2](30_HLD.md#482-処理の流れ) の 999「無い」に従う。\n'
+        self.assertEqual(self.lint(text), ['HLD-ITEM-UNKNOWN'])
+        ok = HLD_ITEMS + '\n[4.8.2](30_HLD.md#482-処理の流れ) の 3「代表行を選ぶ」に従う。\n'
+        self.assertEqual(self.lint(ok), [])
+
     def test_nested_ref_checks_parent(self):
         self.assertEqual(self.lint(HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3「代表行を選ぶ」の 2 に従う。\n'), [])
 
