@@ -1069,7 +1069,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - `peak_points = band(floor(peak_elev))`: `peak_elev` を切り捨て（floor）した整数 m でバンド判定
     - `sota_points = band(sota_alt_m)`: `sota_alt_m` は整数 m なので丸め不要
     - 標高が算出表に無い（150m 未満）ときは、`peak_points`・`sota_points` を null とする。`matched` のピークで、`peak_points` か AZ の中のサミットの `sota_points` のどちらかが null なら `is_band_change_candidate=false` とし（`category` は `no_change`、rationale は作らない）、該当するピークとサミットを警告ログに出力する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
-    - `is_band_change_candidate = (peak_points ≠ sota_points)`: true の場合、変更申請の候補とする（今回の出力可否は category と application_exclusion で判定）
+    - `is_band_change_candidate = (peak_points ≠ sota_points)`（`peak_points` か `sota_points` が null のときは false）: true の場合、変更申請の候補とする（今回の出力可否は category と application_exclusion で判定）
     - バンド定義は [`00_GLOSSARY.md` 標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) を参照
   - **`merged_summit.geojson` のフィーチャ構成とプロパティ**（本 FR が生成する中心データの構造定義＝スキーマ正本。[ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md) 準拠。消費側の [FR-013](#fr-013-html-ビューア生成)・[FR-019](#fr-019-html-ビューア機能仕様) はこの定義を参照する）:
   - **`category` プロパティの算出**（[ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md)）: 本 FR は全フィーチャに `category` プロパティを算出・付与する。`match_status`/`feature_type`/`is_band_change_candidate` は廃止せず存続し、`category` はそれらから算出する直交プロパティ。消費側（ビューア・XLSX・ZIP）は `category` を読むことで導出ロジックを持たずに分類できる。以下はバッチ生成時の規則であり、担当者指定削除に限り [FR-019](#fr-019-html-ビューア機能仕様) が現在の表示・編集状態の `category` を更新する（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。元のバッチデータは更新せず、各エクスポートは同じ現在状態を読む。category は候補種別であり、申請書の行選定は application_exclusion と組み合わせる（[ADR-SRS-050](decisions/ADR-SRS-050-persistent-exclusion-decisions.md)）:
