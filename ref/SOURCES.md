@@ -173,7 +173,7 @@
 | ISO/IEC/IEEE 24765:2017 | Systems and software engineering — Vocabulary | <https://www.iso.org/standard/71952.html>（オンライン版の SEVOCAB: <https://www.computer.org/sevocab>） |
 | ISTQB CTFL シラバス v4.0.1 | Certified Tester Foundation Level Syllabus v4.0.1 | <https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf> |
 | ISTQB 用語集 | ISTQB Glossary（オンライン版、版を固定しない） | <https://glossary.istqb.org/> |
-| 二次資料: 29148:2018 に基づくとする SRS の雛形 | ISO/IEC/IEEE 29148:2018 Software Requirements Specification（第三者の公開の雛形。規格の本文ではない） | <https://github.com/G7DAO/idea-submission-guidelines/blob/main/SRS-Template.md> |
+| 二次資料: 29148:2018 に基づくとするソフトウェア要件仕様書（SRS）の雛形 | ISO/IEC/IEEE 29148:2018 Software Requirements Specification（第三者の公開の雛形。規格の本文ではない） | <https://github.com/G7DAO/idea-submission-guidelines/blob/main/SRS-Template.md> |
 | 二次資料: 25010:2023 の特性と副特性の一覧 | arc42 Quality Model の「ISO/IEC 25010 - Systems and Software Quality」と「Update on ISO 25010, version 2023」（第三者の解説。規格の本文ではない） | <https://github.com/arc42/quality.arc42.org-site>（commit `713c46f8fb98`、2026-10-05 の時点。`_standards/iso/iso-25010.md`、`_articles/07-iso-25010-update-2023.md`、`images/articles/iso-25010/ISO-25010-2023-detailed.png`） |
 
 - 確認日: 2026-10-07。ISO の目録ページの題・版・状態を、Web 検索の結果に出た目録ページで確かめた（作業環境から iso.org へ直接は接続できなかった）。
