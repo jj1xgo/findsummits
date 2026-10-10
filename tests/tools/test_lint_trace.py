@@ -713,7 +713,14 @@ HLD_PROGRAM = HLD.replace('## 4. FR 設計', '''## 3. プログラム構造
 - **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
 - **担当コンポーネント**: C1
 
-## 4. FR 設計''')
+## 4. FR 設計''').replace('- **担当コンポーネント**: C1・C2\n', '''- **担当コンポーネント**: C1・C2
+
+#### 2.2.4 SRS の FR/NFR との対応
+
+| コンポーネント ID | FR | 処理方式の節 |
+|---|---|---|
+| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |
+''')
 
 HLD_NFR = HLD.replace('| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | | | |',
                       '| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | ✅ | ✅ | [5.1](#51-nfr-001-非一) |') + '''
@@ -856,6 +863,63 @@ class HldMatrixTest(TraceTestCase):
             '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n',
             '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[FR-002](20_SRS.md#fr-002-二)\n')
         self.assertNotIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
+
+
+PROGRAM_ROW = '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |\n'
+
+
+class HldProgramTableTest(TraceTestCase):
+    def files(self, hld=HLD_PROGRAM):
+        return dict(BASE, **{'docs/30_HLD.md': hld})
+
+    def test_clean(self):
+        self.assertEqual(self.check(self.files()), [])
+
+    def test_no_program_chapter_needs_no_table(self):
+        self.assertNotIn('T4:HLD-program:table', self.keys(self.files(HLD)))
+
+    def test_table_missing(self):
+        hld = HLD_PROGRAM.split('\n#### 2.2.4 ')[0] + '\n' + HLD_PROGRAM.split(PROGRAM_ROW, 1)[1]
+        self.assertIn('T4:HLD-program:table', self.keys(self.files(hld)))
+
+    def test_fr_mismatch(self):
+        hld = HLD_PROGRAM.replace('| C1 | [FR-001](20_SRS.md#fr-001-一) |', '| C1 | [FR-002](20_SRS.md#fr-002-二) |')
+        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+
+    def test_sections_mismatch(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | |\n')
+        keys = self.keys(self.files(hld))
+        self.assertIn('T4:HLD-program:C1:sections', keys)
+        self.assertNotIn('T4:HLD-program:C1', keys)
+
+    def test_section_link_to_other_document(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](20_SRS.md#fr-001-一) |\n')
+        self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
+
+    def test_row_missing(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '')
+        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+
+    def test_duplicate_row(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + PROGRAM_ROW)
+        self.assertIn('T4:HLD-program:C1:duplicate', self.keys(self.files(hld)))
+
+    def test_row_without_program_chapter_section(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| C2 | [FR-002](20_SRS.md#fr-002-二) | |\n')
+        self.assertIn('T4:HLD-program:C2', self.keys(self.files(hld)))
+
+    def test_unknown_component_row(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| C9 | | |\n')
+        self.assertIn('T4:HLD-program:row', self.keys(self.files(hld)))
+
+    def test_shared_section_adds_no_row(self):
+        hld = HLD_PROGRAM.replace('## 4. FR 設計', '''### 3.9 共通部品
+
+- **対応 SRS**: なし（横断の設計）
+- **担当コンポーネント**: C1・C2
+
+## 4. FR 設計''', 1)
+        self.assertEqual(self.check(self.files(hld)), [])
 
 
 LLD = '''# LLD

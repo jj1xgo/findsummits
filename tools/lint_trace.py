@@ -4,7 +4,8 @@
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
-T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、SRS の検証の表と品質特性の表の照合
+T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、HLD 2.2.4 の FR の表と第 3 章の宣言の照合、
+    SRS の検証の表と品質特性の表の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
 import io
@@ -633,6 +634,8 @@ HLD_SEC_RE = re.compile(r'^### ([2345]\.\d+) ')
 HLD_PROGRAM_CHAPTER = '3.'
 # HLD 末尾の要求追跡マトリクスの列の見出し（コンポーネントの列は 2 列目と最後の列の間。ADR-HLD-005）
 HLD_MATRIX_HEAD = ('FR/NFR', 'タイトル', '設計の節')
+# HLD 2.2.4 のコンポーネントごとの FR の表（プログラムの割り当て。ADR-HLD-005）
+HLD_PROGRAM_TABLE_RE = re.compile(r'^#### 2\.2\.4 ')
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -778,6 +781,64 @@ def check_hld_matrix(repo, req_ids, comps):
                                'HLD の中の節へのリンク以外があります'))
     for rid in sorted(req_ids - seen):
         out.append(finding('T4', f'HLD-matrix:{rid}', HLD, f'要求追跡マトリクスに {rid} の行がありません'))
+    return out
+
+
+def check_hld_program_table(repo, req_ids, comps):
+    """HLD 2.2.4 の FR の表を、第 3 章の節の宣言と照合する（ADR-HLD-005）。
+
+    FR の列は第 3 章の節の「対応 SRS」の FR と、処理方式の節の列は、その FR を「対応 SRS」に持つ第 2・4・5 章の節と
+    一致させる。表は、第 3 章に FR を宣言する節があるときだけ求める。
+    """
+    if not repo.has(HLD):
+        return []
+    text = repo.read(HLD)
+    program = defaultdict(set)
+    for s in section_decls(text, HLD_SEC_RE):
+        d = s['decl']
+        if not s['key'].startswith(HLD_PROGRAM_CHAPTER) or '対応 SRS' not in d or '担当コンポーネント' not in d:
+            continue
+        ids = {i for i in decl_ids(d['対応 SRS'][1], REQ_ID_RE, '20_SRS.md') & req_ids if i.startswith('FR-')}
+        if not ids:
+            continue
+        for name in (v.strip() for v in d['担当コンポーネント'][1].split('・')):
+            if name in comps:
+                program[name] |= ids
+    rows = table_rows(text, HLD_PROGRAM_TABLE_RE)
+    if not rows:
+        return [finding('T4', 'HLD-program:table', HLD, '2.2.4 の FR の表がありません')] if program else []
+    _, secs = hld_declared(text, req_ids, comps)
+    out, seen = [], set()
+    for no, cells in rows[1:]:
+        if is_separator_row(cells):
+            continue
+        comp, where = cells[0], f'{HLD}:{no}'
+        if comp not in comps:
+            out.append(finding('T4', 'HLD-program:row', where,
+                               f'2.2.4 の FR の表の 1 列目「{comp}」は SRS §3.2 のコンポーネント ID ではありません'))
+            continue
+        if comp in seen:
+            out.append(finding('T4', f'HLD-program:{comp}:duplicate', where,
+                               f'2.2.4 の FR の表に {comp} の行が 2 つ以上あります'))
+            continue
+        seen.add(comp)
+        if len(cells) != 3:
+            out.append(finding('T4', f'HLD-program:{comp}', where, f'2.2.4 の {comp} の行が 3 列ではありません'))
+            continue
+        want = program.get(comp, set())
+        got = decl_ids(cells[1], REQ_ID_RE, '20_SRS.md')
+        if got != want:
+            out.append(finding('T4', f'HLD-program:{comp}', where,
+                               f'2.2.4 の {comp} の行の FR {sorted(got)} が第 3 章の宣言 {sorted(want)} と違います'))
+        want_secs = set().union(*(secs[r] for r in got)) if got else set()
+        got_secs, other = internal_section_links(cells[2])
+        if other or got_secs != want_secs:
+            out.append(finding('T4', f'HLD-program:{comp}:sections', where,
+                               f'2.2.4 の {comp} の行の処理方式の節 {sorted(got_secs, key=section_order)} が、'
+                               f'その FR を対応 SRS に持つ節 {sorted(want_secs, key=section_order)} と違うか、'
+                               'HLD の中の節へのリンク以外があります'))
+    for comp in sorted(set(program) - seen, key=component_order):
+        out.append(finding('T4', f'HLD-program:{comp}', HLD, f'2.2.4 の FR の表に {comp} の行がありません'))
     return out
 
 
@@ -1010,6 +1071,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
     out += hld_out
     out += check_hld_matrix(repo, req_ids, comps)
+    out += check_hld_program_table(repo, req_ids, comps)
     lld_out, modules = check_lld(repo, hld_sections, confirmed)
     out += lld_out
     cases, case_out = load_cases(repo)
