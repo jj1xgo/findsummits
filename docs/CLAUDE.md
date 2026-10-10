@@ -123,7 +123,7 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 ## HLD と LLD の書き分け
 
-HLD（`30_HLD.md`）は、§2 に横断の規約、§3 にプログラム構造、§4・§5 に FR/NFR ごとの処理方式を書く（[ADR-HLD-001](decisions/ADR-HLD-001-program-structure-chapter-and-two-tier-it.md)、[ADR-HLD-002](decisions/ADR-HLD-002-hld-chapter-order-program-structure-first.md)）。§2.11 に、ステークホルダーと関心事、関心事とビューポイントごとに答える節の対応を置く（[ADR-HLD-003](decisions/ADR-HLD-003-stakeholders-concerns-and-views-section.md)）。§2 には全体に共通する決まりだけを置き、FR に固有の異常系の場面とメッセージに含める内容、FR に固有の手順は §4 の各節に置く（[ADR-HLD-004](decisions/ADR-HLD-004-hld-section-boundaries-and-item-references.md)）。
+HLD（`30_HLD.md`）は、§2 に横断の規約、§3 にプログラム構造、§4・§5 に FR/NFR ごとの処理方式を書き、§6 に要求追跡マトリクスを置く（[ADR-HLD-001](decisions/ADR-HLD-001-program-structure-chapter-and-two-tier-it.md)、[ADR-HLD-002](decisions/ADR-HLD-002-hld-chapter-order-program-structure-first.md)、[ADR-HLD-005](decisions/ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。§2.11 に、ステークホルダーと関心事、関心事とビューポイントごとに答える節の対応を置く（[ADR-HLD-003](decisions/ADR-HLD-003-stakeholders-concerns-and-views-section.md)）。§2 には全体に共通する決まりだけを置き、FR に固有の異常系の場面とメッセージに含める内容、FR に固有の手順は §4 の各節に置く（[ADR-HLD-004](decisions/ADR-HLD-004-hld-section-boundaries-and-item-references.md)）。
 
 | 書くもの | 置き場所 |
 |---|---|
@@ -167,7 +167,8 @@ HLD（`30_HLD.md`）で同じ決定を複数の箇所に書き写すと、直し
 
 - HLD の「対応 SRS」には FR/NFR のほか SRS の節（`[SRS §3.2](20_SRS.md#32-主要コンポーネント構成)` の形）も書ける。上位が無い節は `なし（横断の設計）` と書く。
 - HLD の「担当コンポーネント」は [SRS §3.2](20_SRS.md#32-主要コンポーネント構成) のコンポーネント ID を `・` で並べる。全体にわたる節は `全体` と書く。
-- HLD の §3（プログラム構造）の節は、コンポーネントごとに 1 つ（3.N が C<N>）と共通部品（3.9）である。コンポーネントの節の「対応 SRS」には、そのコンポーネントのプログラムが実現する FR（[HLD 2.2.4](30_HLD.md#224-srs-の-frnfr-との対応) の FR の表）を書き、NFR は書かない。共通部品の節は `なし（横断の設計）` と書く。「担当コンポーネント」には、その節のコンポーネントを書く。§3 の宣言は、FR/NFR を「対応 SRS」に持つ節があるかの検査（T3）には数えない（処理方式の節 §2・§4・§5 が要る）。
+- HLD の §3（プログラム構造）の節は、コンポーネントごとに 1 つ（3.N が C<N>）と共通部品（3.9）である。コンポーネントの節の「対応 SRS」には、そのコンポーネントのプログラムが実現する FR（[HLD 2.2.4](30_HLD.md#224-srs-の-frnfr-との対応) の FR の表。食い違うと T4 が止める）を書き、NFR は書かない。共通部品の節は `なし（横断の設計）` と書く。「担当コンポーネント」には、その節のコンポーネントを書く。§3 の宣言は、FR/NFR を「対応 SRS」に持つ節があるかの検査（T3）には数えない（処理方式の節 §2・§4・§5 が要る）。
+- HLD 末尾の[要求追跡マトリクス](30_HLD.md#6-要求追跡マトリクス)は、§2・§4・§5 の節の宣言から組み立てる（✅ は担当コンポーネントの和で、`全体` は全コンポーネントに数える。§3 の節は数えない）。食い違うと T4 が止める（[ADR-HLD-005](decisions/ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。
 - LLD の「対応 HLD」には、§3 の節と、処理の正本である §4・§5 の節を `・` で並べられる（`[3.5](30_HLD.md#35-c5-統合突合)・[4.8](30_HLD.md#48-fr-008-per-mesh-csv-統合)`）。LLD が確定した後は、§3〜§5 のどの節にも、それを指すモジュールが要る（T3）。
 - LLD の ID 名はモジュール名にし、UT の ID（`UT-<モジュール名>-NN`）と揃える。
 - コードとテストのコードの `trace:` は、コメント（`//`・`#`・`/*`・`*` で始まるもの）に書く。C/C++ と Python は行末のコメントも数え、bash は行頭の `#` の行だけを数える。1 つのコメントに複数の ID を `,` で並べられる（`// trace: UT-a-01, UT-a-02`）。文字列リテラルの中は数えない。
