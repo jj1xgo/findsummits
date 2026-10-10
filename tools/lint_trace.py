@@ -66,6 +66,7 @@ SECTION_LABEL_RE = re.compile(r'^(?:SRS §(\d+(?:\.\d+)*)|(\d+(?:\.\d+)*))$')
 SECTION_NUMBER_RE = re.compile(r'^(\d+(?:\.\d+)*)\.?(?:\s|$)')
 UR_ID_RE = re.compile(r'^UR-\d+$')
 REQ_ID_RE = re.compile(r'^(?:FR|NFR)-\d+$')
+FR_ID_RE = re.compile(r'^FR-\d+$')
 SRS_SECTION_LABEL_RE = re.compile(r'^SRS §\d+(?:\.\d+)*$')
 HLD_SECTION_LABEL_RE = re.compile(r'^\d+\.\d+(?:\.\d+)*$')
 
@@ -636,6 +637,9 @@ HLD_PROGRAM_CHAPTER = '3.'
 HLD_MATRIX_HEAD = ('FR/NFR', 'タイトル', '設計の節')
 # HLD 2.2.4 のコンポーネントごとの FR の表（プログラムの割り当て。ADR-HLD-005）
 HLD_PROGRAM_TABLE_RE = re.compile(r'^#### 2\.2\.4 ')
+HLD_PROGRAM_HEAD = ('コンポーネント ID', 'FR', '処理方式の節')
+# リンクを \0 に置き換えたセルが、リンクを「・」で並べただけ（空も可）の形か
+LINK_LIST_RE = re.compile('(?:\0(?:・\0)*)?')
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -699,18 +703,32 @@ def is_separator_row(cells):
     return all(SEPARATOR_CELL_RE.match(c) for c in cells)
 
 
+def link_list(cell, accept):
+    """セルがリンクを「・」で並べただけの形（空も可）なら、リンク文字列を書かれた順の list で返す。
+    リンクの外に別の文字（コード表記を含む）があるか、accept(リンク文字列, リンク先, アンカー) が偽のリンクが
+    あれば None"""
+    if not LINK_LIST_RE.fullmatch(LINK_RE.sub('\0', cell)):
+        return None
+    labels = []
+    for m in LINK_RE.finditer(cell):
+        if not accept(m.group(1), m.group(2), m.group(3)):
+            return None
+        labels.append(m.group(1))
+    return labels
+
+
 def internal_section_links(cell):
-    """セルのリンクのうち HLD の中の節（リンク先が # で始まるアンカーで、リンク文字列が節番号）の節番号を、
-    書かれた順の list で返す。それ以外のリンク（別の文書・節番号でない文字列）か、リンクの外に区切りの「・」と
-    空白以外の文字（コード表記を含む）があるかも返す"""
-    secs, other = [], bool(LINK_RE.sub('', cell).replace('・', '').strip())
-    for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', cell)):
-        label, target, anchor = m.group(1), m.group(2), m.group(3)
-        if target == '' and anchor and HLD_SECTION_LABEL_RE.match(label):
-            secs.append(label)
-        else:
-            other = True
-    return secs, other
+    """HLD の中の節（リンク先が # で始まるアンカーで、リンク文字列が節番号）へのリンクを「・」で並べただけのセルなら、
+    節番号を書かれた順の list で返す。それ以外は None"""
+    return link_list(cell, lambda label, target, anchor:
+                     target == '' and bool(anchor) and bool(HLD_SECTION_LABEL_RE.match(label)))
+
+
+def srs_links(cell, label_re):
+    """SRS の要求（リンク先が 20_SRS.md か ./20_SRS.md のアンカーで、リンク文字列が label_re に合う）へのリンクを
+    「・」で並べただけのセルなら、ID を書かれた順の list で返す。それ以外は None"""
+    return link_list(cell, lambda label, target, anchor:
+                     target in ('20_SRS.md', './20_SRS.md') and bool(anchor) and bool(label_re.match(label)))
 
 
 def hld_declared(text, req_ids, comps):
@@ -752,12 +770,12 @@ def check_hld_matrix(repo, req_ids, comps):
         if is_separator_row(cells):
             continue
         where = f'{HLD}:{no}'
-        ids = decl_ids(cells[0], REQ_ID_RE, '20_SRS.md')
-        if len(ids) != 1 or len(LINK_RE.findall(INLINE_CODE_RE.sub('', cells[0]))) != 1:
+        ids = srs_links(cells[0], REQ_ID_RE)
+        if ids is None or len(ids) != 1:
             out.append(finding('T4', 'HLD-matrix:row', where,
                                '要求追跡マトリクスの行の 1 列目は、SRS の FR/NFR へのリンクを 1 つだけにします'))
             continue
-        rid = next(iter(ids))
+        rid = ids[0]
         if rid in seen:
             out.append(finding('T4', f'HLD-matrix:{rid}:duplicate', where,
                                f'要求追跡マトリクスに {rid} の行が 2 つ以上あります'))
@@ -769,14 +787,17 @@ def check_hld_matrix(repo, req_ids, comps):
         if len(cells) != len(head):
             out.append(finding('T4', f'HLD-matrix:{rid}', where, f'{rid} の行の列の数が見出しと違います'))
             continue
-        got = {cols[j] for j, c in enumerate(cells[2:-1]) if '✅' in c}
+        if any(c not in ('', '✅') for c in cells[2:-1]):
+            out.append(finding('T4', f'HLD-matrix:{rid}', where, f'{rid} の行のコンポーネントの列は ✅ か空にします'))
+            continue
+        got = {cols[j] for j, c in enumerate(cells[2:-1]) if c == '✅'}
         if got != marks[rid]:
             out.append(finding('T4', f'HLD-matrix:{rid}', where,
                                f'{rid} の行の ✅ {sorted(got, key=component_order)} が担当コンポーネントの宣言 '
                                f'{sorted(marks[rid], key=component_order)} と違います'))
-        got_secs, other = internal_section_links(cells[-1])
+        got_secs = internal_section_links(cells[-1])
         want_secs = sorted(secs[rid], key=section_order)
-        if other or got_secs != want_secs:
+        if got_secs != want_secs:
             out.append(finding('T4', f'HLD-matrix:{rid}:sections', where,
                                f'{rid} の行の設計の節 {got_secs} が対応 SRS の宣言の節を番号の順に並べたもの '
                                f'{want_secs} と違うか、HLD の中の節へのリンク以外があります'))
@@ -808,6 +829,10 @@ def check_hld_program_table(repo, req_ids, comps):
     rows = table_rows(text, HLD_PROGRAM_TABLE_RE)
     if not rows:
         return [finding('T4', 'HLD-program:table', HLD, '2.2.4 の FR の表がありません')] if program else []
+    head_no, head = rows[0]
+    if tuple(head) != HLD_PROGRAM_HEAD:
+        return [finding('T4', 'HLD-program:columns', f'{HLD}:{head_no}',
+                        f'2.2.4 の FR の表の列の見出しが「{"｜".join(HLD_PROGRAM_HEAD)}」と違います')]
     _, secs = hld_declared(text, req_ids, comps)
     out, seen = [], set()
     for no, cells in rows[1:]:
@@ -827,18 +852,20 @@ def check_hld_program_table(repo, req_ids, comps):
             out.append(finding('T4', f'HLD-program:{comp}', where, f'2.2.4 の {comp} の行が 3 列ではありません'))
             continue
         want = program.get(comp, set())
-        got = decl_ids(cells[1], REQ_ID_RE, '20_SRS.md')
-        if got != want:
+        fr_list = srs_links(cells[1], FR_ID_RE)
+        got = set(fr_list or [])
+        if fr_list is None or len(fr_list) != len(got) or got != want:
             out.append(finding('T4', f'HLD-program:{comp}', where,
-                               f'2.2.4 の {comp} の行の FR {sorted(got)} が第 3 章の宣言 {sorted(want)} と違います'))
+                               f'2.2.4 の {comp} の行の FR {sorted(got)} が第 3 章の宣言 {sorted(want)} と違うか、'
+                               'SRS の FR へのリンクを「・」で重複なく並べたものでありません'))
         want_secs = set().union(*(secs[r] for r in got)) if got else set()
-        got_secs, other = internal_section_links(cells[2])
-        got_secs = set(got_secs)
-        if other or got_secs != want_secs:
+        sec_list = internal_section_links(cells[2])
+        got_secs = set(sec_list or [])
+        if sec_list is None or len(sec_list) != len(got_secs) or got_secs != want_secs:
             out.append(finding('T4', f'HLD-program:{comp}:sections', where,
                                f'2.2.4 の {comp} の行の処理方式の節 {sorted(got_secs, key=section_order)} が、'
                                f'その FR を対応 SRS に持つ節 {sorted(want_secs, key=section_order)} と違うか、'
-                               'HLD の中の節へのリンク以外があります'))
+                               'HLD の中の節へのリンクを「・」で重複なく並べたものでありません'))
     for comp in sorted(set(program) - seen, key=component_order):
         out.append(finding('T4', f'HLD-program:{comp}', HLD, f'2.2.4 の FR の表に {comp} の行がありません'))
     return out
