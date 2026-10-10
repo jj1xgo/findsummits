@@ -789,6 +789,10 @@ class HldTest(TraceTestCase):
     def test_nfr_chapter_declaration_covers_requirement(self):
         self.assertNotIn('T3:HLD:NFR-001', self.keys(self.files(HLD_NFR), confirmed={'HLD'}))
 
+HLD_TWO_SECTIONS = HLD.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: C1・C2',
+                               '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1・C2')
+
+
 class HldMatrixTest(TraceTestCase):
     def files(self, hld=HLD):
         return dict(BASE, **{'docs/30_HLD.md': hld})
@@ -858,6 +862,27 @@ class HldMatrixTest(TraceTestCase):
         hld = HLD_NFR.replace('| 非一 | ✅ | ✅ |', '| 非一 | ✅ | |')
         self.assertIn('T4:HLD-matrix:NFR-001', self.keys(self.files(hld)))
 
+    def test_row_with_same_requirement_linked_twice(self):
+        hld = HLD.replace('| [FR-002](20_SRS.md#fr-002-二) | 二 |',
+                          '| [FR-002](20_SRS.md#fr-002-二)・[FR-002](20_SRS.md#fr-002-二) | 二 |')
+        self.assertIn('T4:HLD-matrix:row', self.keys(self.files(hld)))
+
+    def test_row_with_requirement_link_outside_srs(self):
+        hld = HLD.replace('| [FR-002](20_SRS.md#fr-002-二) | 二 |', '| [FR-002](https://example.com/#fr-002-二) | 二 |')
+        self.assertIn('T4:HLD-matrix:row', self.keys(self.files(hld)))
+
+    def test_section_number_outside_link(self):
+        hld = HLD.replace('| ✅ | | [4.1](#41-fr-001-一) |', '| ✅ | | [4.1](#41-fr-001-一)・4.2 |')
+        self.assertIn('T4:HLD-matrix:FR-001:sections', self.keys(self.files(hld)))
+
+    def test_sections_in_number_order(self):
+        hld = HLD_TWO_SECTIONS.replace('| ✅ | | [4.1](#41-fr-001-一) |',
+                                       '| ✅ | ✅ | [2.2](#22-横断)・[4.1](#41-fr-001-一) |')
+        self.assertEqual(self.check(self.files(hld)), [])
+        hld = HLD_TWO_SECTIONS.replace('| ✅ | | [4.1](#41-fr-001-一) |',
+                                       '| ✅ | ✅ | [4.1](#41-fr-001-一)・[2.2](#22-横断) |')
+        self.assertIn('T4:HLD-matrix:FR-001:sections', self.keys(self.files(hld)))
+
     def test_program_chapter_does_not_mark(self):
         hld = HLD_PROGRAM.replace(
             '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n',
@@ -894,6 +919,10 @@ class HldProgramTableTest(TraceTestCase):
 
     def test_section_link_to_other_document(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](20_SRS.md#fr-001-一) |\n')
+        self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
+
+    def test_section_number_outside_link(self):
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一)・4.2 |\n')
         self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
 
     def test_row_missing(self):
