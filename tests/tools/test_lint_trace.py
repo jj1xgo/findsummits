@@ -696,6 +696,14 @@ HLD = '''# HLD
 #### 4.1.1 目的と範囲
 
 本文。
+
+## 6. 要求追跡マトリクス
+
+| FR/NFR | タイトル | C1 | C2 | 設計の節 |
+|:---|:---|:-:|:-:|:---|
+| [FR-001](20_SRS.md#fr-001-一) | 一 | ✅ | | [4.1](#41-fr-001-一) |
+| [FR-002](20_SRS.md#fr-002-二) | 二 | | | |
+| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | | | |
 '''
 
 HLD_PROGRAM = HLD.replace('## 4. FR 設計', '''## 3. プログラム構造
@@ -707,7 +715,8 @@ HLD_PROGRAM = HLD.replace('## 4. FR 設計', '''## 3. プログラム構造
 
 ## 4. FR 設計''')
 
-HLD_NFR = HLD + '''
+HLD_NFR = HLD.replace('| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | | | |',
+                      '| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | ✅ | ✅ | [5.1](#51-nfr-001-非一) |') + '''
 ## 5. NFR 設計
 
 ### 5.1 NFR-001 非一
@@ -772,6 +781,82 @@ class HldTest(TraceTestCase):
 
     def test_nfr_chapter_declaration_covers_requirement(self):
         self.assertNotIn('T3:HLD:NFR-001', self.keys(self.files(HLD_NFR), confirmed={'HLD'}))
+
+class HldMatrixTest(TraceTestCase):
+    def files(self, hld=HLD):
+        return dict(BASE, **{'docs/30_HLD.md': hld})
+
+    def test_clean(self):
+        self.assertEqual(self.check(self.files()), [])
+
+    def test_table_missing(self):
+        hld = HLD.split('\n## 6. 要求追跡マトリクス')[0] + '\n'
+        self.assertIn('T4:HLD-matrix:table', self.keys(self.files(hld)))
+
+    def test_no_hld_no_finding(self):
+        self.assertNotIn('T4:HLD-matrix:table', self.keys(dict(BASE)))
+
+    def test_mark_mismatch(self):
+        hld = HLD.replace('| [FR-001](20_SRS.md#fr-001-一) | 一 | ✅ | |',
+                          '| [FR-001](20_SRS.md#fr-001-一) | 一 | | ✅ |')
+        self.assertIn('T4:HLD-matrix:FR-001', self.keys(self.files(hld)))
+
+    def test_sections_mismatch(self):
+        hld = HLD.replace('| ✅ | | [4.1](#41-fr-001-一) |', '| ✅ | | |')
+        keys = self.keys(self.files(hld))
+        self.assertIn('T4:HLD-matrix:FR-001:sections', keys)
+        self.assertNotIn('T4:HLD-matrix:FR-001', keys)
+
+    def test_section_link_to_other_document(self):
+        hld = HLD.replace('| ✅ | | [4.1](#41-fr-001-一) |', '| ✅ | | [4.1](20_SRS.md#fr-001-一) |')
+        self.assertIn('T4:HLD-matrix:FR-001:sections', self.keys(self.files(hld)))
+
+    def test_row_missing(self):
+        hld = HLD.replace('| [FR-002](20_SRS.md#fr-002-二) | 二 | | | |\n', '')
+        self.assertIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
+
+    def test_duplicate_row(self):
+        row = '| [FR-002](20_SRS.md#fr-002-二) | 二 | | | |\n'
+        hld = HLD.replace(row, row + row)
+        self.assertIn('T4:HLD-matrix:FR-002:duplicate', self.keys(self.files(hld)))
+
+    def test_row_for_unknown_requirement(self):
+        hld = HLD + '| [FR-003](20_SRS.md#fr-003-三) | 三 | | | |\n'
+        self.assertIn('T4:HLD-matrix:FR-003', self.keys(self.files(hld)))
+
+    def test_row_without_requirement_link(self):
+        hld = HLD + '| `FR-010` | 欠番 | | | |\n'
+        self.assertIn('T4:HLD-matrix:row', self.keys(self.files(hld)))
+
+    def test_row_with_two_requirements(self):
+        hld = HLD.replace('| [FR-002](20_SRS.md#fr-002-二) | 二 |',
+                          '| [FR-002](20_SRS.md#fr-002-二)・[NFR-001](20_SRS.md#nfr-001-非一) | 二 |')
+        self.assertIn('T4:HLD-matrix:row', self.keys(self.files(hld)))
+
+    def test_row_with_wrong_cell_count(self):
+        hld = HLD.replace('| [FR-002](20_SRS.md#fr-002-二) | 二 | | | |', '| [FR-002](20_SRS.md#fr-002-二) | 二 | | |')
+        self.assertIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
+
+    def test_columns_mismatch(self):
+        srs = SRS.replace('| C2 | 乙 |\n', '| C2 | 乙 |\n| C3 | 丙 |\n')
+        files = dict(self.files(), **{'docs/20_SRS.md': srs})
+        self.assertIn('T4:HLD-matrix:columns', self.keys(files))
+
+    def test_columns_out_of_order(self):
+        hld = HLD.replace('| FR/NFR | タイトル | C1 | C2 | 設計の節 |', '| FR/NFR | タイトル | C2 | C1 | 設計の節 |')
+        self.assertIn('T4:HLD-matrix:columns', self.keys(self.files(hld)))
+
+    def test_all_components_mark_every_column(self):
+        self.assertEqual(self.check(self.files(HLD_NFR)), [])
+        hld = HLD_NFR.replace('| 非一 | ✅ | ✅ |', '| 非一 | ✅ | |')
+        self.assertIn('T4:HLD-matrix:NFR-001', self.keys(self.files(hld)))
+
+    def test_program_chapter_does_not_mark(self):
+        hld = HLD_PROGRAM.replace(
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n',
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[FR-002](20_SRS.md#fr-002-二)\n')
+        self.assertNotIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
+
 
 LLD = '''# LLD
 

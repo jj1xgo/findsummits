@@ -4,7 +4,7 @@
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
-T4: 追跡マトリクスと宣言の照合、SRS の検証の表と品質特性の表の照合
+T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、SRS の検証の表と品質特性の表の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
 import io
@@ -631,6 +631,8 @@ def check_st_matrix(repo, urs, declared, cases):
 HLD_SEC_RE = re.compile(r'^### ([2345]\.\d+) ')
 # プログラム構造の章（ADR-HLD-001・ADR-HLD-002）。この章の宣言は T3 に数えない
 HLD_PROGRAM_CHAPTER = '3.'
+# HLD 末尾の要求追跡マトリクスの列の見出し（コンポーネントの列は 2 列目と最後の列の間。ADR-HLD-005）
+HLD_MATRIX_HEAD = ('FR/NFR', 'タイトル', '設計の節')
 
 
 def check_hld(repo, req_ids, comps, confirmed):
@@ -678,6 +680,105 @@ def check_hld(repo, req_ids, comps, confirmed):
         for rid in sorted(req_ids - covered):
             out.append(finding('T3', f'HLD:{rid}', HLD, f'{rid} を対応 SRS に持つ HLD の節がありません'))
     return out, sections
+
+
+def component_order(name):
+    """C1〜C8 を番号の順に並べるための鍵"""
+    return int(name[1:])
+
+
+def section_order(sec):
+    """節番号（'4.10' など）を番号の順に並べるための鍵"""
+    return tuple(int(x) for x in sec.split('.'))
+
+
+def is_separator_row(cells):
+    return all(SEPARATOR_CELL_RE.match(c) for c in cells)
+
+
+def internal_section_links(cell):
+    """セルのリンクのうち HLD の中の節（リンク先が # で始まるアンカーで、リンク文字列が節番号）の節番号の集合と、
+    それ以外のリンク（別の文書・節番号でない文字列）があるかを返す。コード表記の中は数えない"""
+    secs, other = set(), False
+    for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', cell)):
+        label, target, anchor = m.group(1), m.group(2), m.group(3)
+        if target == '' and anchor and HLD_SECTION_LABEL_RE.match(label):
+            secs.add(label)
+        else:
+            other = True
+    return secs, other
+
+
+def hld_declared(text, req_ids, comps):
+    """第 2・4・5 章の節の宣言から、FR/NFR ごとに担当コンポーネントの和と、節の集合を返す。
+
+    「全体」は SRS §3.2 のすべてのコンポーネントに数える。第 3 章（プログラム構造）の節は数えない（ADR-HLD-005）。
+    """
+    marks, secs = defaultdict(set), defaultdict(set)
+    for s in section_decls(text, HLD_SEC_RE):
+        sec, d = s['key'], s['decl']
+        if sec.startswith(HLD_PROGRAM_CHAPTER) or '対応 SRS' not in d or '担当コンポーネント' not in d:
+            continue
+        ids = decl_ids(d['対応 SRS'][1], REQ_ID_RE, '20_SRS.md') & req_ids
+        value = d['担当コンポーネント'][1]
+        names = set(comps) if value == ALL_COMPONENTS else {v.strip() for v in value.split('・')} & comps
+        for rid in ids:
+            marks[rid] |= names
+            secs[rid].add(sec)
+    return marks, secs
+
+
+def check_hld_matrix(repo, req_ids, comps):
+    """HLD 末尾の要求追跡マトリクスを、第 2・4・5 章の節の宣言と照合する（ADR-HLD-005）"""
+    if not repo.has(HLD):
+        return []
+    text = repo.read(HLD)
+    rows = table_rows(text, SRS_MATRIX_HEAD_RE)
+    if not rows:
+        return [finding('T4', 'HLD-matrix:table', HLD, '要求追跡マトリクスの表がありません')]
+    head_no, head = rows[0]
+    order = sorted(comps, key=component_order)
+    cols = head[2:-1]
+    if tuple(head[:2] + head[-1:]) != HLD_MATRIX_HEAD or cols != order:
+        expected = '｜'.join(HLD_MATRIX_HEAD[:2] + tuple(order) + HLD_MATRIX_HEAD[2:])
+        return [finding('T4', 'HLD-matrix:columns', f'{HLD}:{head_no}', f'列の見出しが「{expected}」と違います')]
+    marks, secs = hld_declared(text, req_ids, comps)
+    out, seen = [], set()
+    for no, cells in rows[1:]:
+        if is_separator_row(cells):
+            continue
+        where = f'{HLD}:{no}'
+        ids = decl_ids(cells[0], REQ_ID_RE)
+        if len(ids) != 1:
+            out.append(finding('T4', 'HLD-matrix:row', where,
+                               '要求追跡マトリクスの行の 1 列目は、FR/NFR へのリンクを 1 つだけにします'))
+            continue
+        rid = next(iter(ids))
+        if rid in seen:
+            out.append(finding('T4', f'HLD-matrix:{rid}:duplicate', where,
+                               f'要求追跡マトリクスに {rid} の行が 2 つ以上あります'))
+            continue
+        seen.add(rid)
+        if rid not in req_ids:
+            out.append(finding('T4', f'HLD-matrix:{rid}', where, f'{rid} の行がありますが、SRS にありません'))
+            continue
+        if len(cells) != len(head):
+            out.append(finding('T4', f'HLD-matrix:{rid}', where, f'{rid} の行の列の数が見出しと違います'))
+            continue
+        got = {cols[j] for j, c in enumerate(cells[2:-1]) if '✅' in c}
+        if got != marks[rid]:
+            out.append(finding('T4', f'HLD-matrix:{rid}', where,
+                               f'{rid} の行の ✅ {sorted(got, key=component_order)} が担当コンポーネントの宣言 '
+                               f'{sorted(marks[rid], key=component_order)} と違います'))
+        got_secs, other = internal_section_links(cells[-1])
+        if other or got_secs != secs[rid]:
+            out.append(finding('T4', f'HLD-matrix:{rid}:sections', where,
+                               f'{rid} の行の設計の節 {sorted(got_secs, key=section_order)} が対応 SRS の宣言 '
+                               f'{sorted(secs[rid], key=section_order)} と違うか、'
+                               'HLD の中の節へのリンク以外があります'))
+    for rid in sorted(req_ids - seen):
+        out.append(finding('T4', f'HLD-matrix:{rid}', HLD, f'要求追跡マトリクスに {rid} の行がありません'))
+    return out
 
 
 LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
@@ -908,6 +1009,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += check_srs_quality(repo, req_ids)
     hld_out, hld_sections = check_hld(repo, req_ids, comps, confirmed)
     out += hld_out
+    out += check_hld_matrix(repo, req_ids, comps)
     lld_out, modules = check_lld(repo, hld_sections, confirmed)
     out += lld_out
     cases, case_out = load_cases(repo)
