@@ -177,7 +177,7 @@
 | 提供元 | [ジオサミットでひとこえ](https://little-ctc.com/) |
 | 参照URL | <https://little-ctc.com/wp_html/sota_updatelist_2024.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2025.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2026.xhtml> |
 | 確認日 | 2026-10-11 |
-| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）。ツールの入力ではない。 |
+| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）と、[URD §6](../docs/10_URD.md#6-スコープ外対象外) の既存サミットの座標変更申請をスコープ外とする理由の事実（[ADR-URD-025](../docs/decisions/ADR-URD-025-coordinate-change-stays-out-of-scope.md)）。ツールの入力ではない。 |
 
 ---
 
