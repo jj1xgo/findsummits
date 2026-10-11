@@ -169,6 +169,18 @@
 
 ---
 
+### 山岳データ登録変更リスト
+
+| 項目 | 内容 |
+|---|---|
+| タイトル | 山岳データ登録変更リスト（年ごと） |
+| 提供元 | [ジオサミットでひとこえ](https://little-ctc.com/) |
+| 参照URL | <https://little-ctc.com/wp_html/sota_updatelist_2024.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2025.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2026.xhtml> |
+| 確認日 | 2026-10-11 |
+| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）。ツールの入力ではない。 |
+
+---
+
 ### 開発プロセスの参照規格
 
 開発文書とプロセスが参照する規格の目録。どれを何に使うか、「参照」と「準拠」の違い、意図して保つ形は [ADR-OPS-002](../docs/decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) が正本。規格の版の正本も ADR-OPS-002 の表で、下の表に記載する版は、その写しである。規格の本文は持っていない。
