@@ -666,6 +666,12 @@ def check_hld(repo, req_ids, comps, confirmed):
             for rid in sorted(ids - req_ids):
                 out.append(finding('T2', f'HLD-{sec}->{rid}', f'{HLD}:{no}',
                                    f'{sec} の対応 SRS {rid} は SRS にありません'))
+            # 3 章（プログラム構造）の節の「対応 SRS」には FR だけを書く（docs/CLAUDE.md「追跡の宣言」）
+            if sec.startswith(HLD_PROGRAM_CHAPTER):
+                for rid in sorted(i for i in ids if i.startswith('NFR-')):
+                    out.append(finding('T1', f'HLD-{sec}:対応 SRS:{rid}', f'{HLD}:{no}',
+                                       f'{sec} の「対応 SRS」に {rid} があります'
+                                       '（第 3 章の節の「対応 SRS」には FR だけを書き、NFR は書けません）'))
             # 3 章（プログラム構造）の宣言は、処理方式の節（2・4・5 章）の代わりに数えない
             if not sec.startswith(HLD_PROGRAM_CHAPTER):
                 covered |= ids & req_ids

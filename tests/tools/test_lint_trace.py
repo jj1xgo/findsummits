@@ -789,6 +789,25 @@ class HldTest(TraceTestCase):
     def test_nfr_chapter_declaration_covers_requirement(self):
         self.assertNotIn('T3:HLD:NFR-001', self.keys(self.files(HLD_NFR), confirmed={'HLD'}))
 
+    def test_program_chapter_declaration_rejects_nfr(self):
+        hld = HLD_PROGRAM.replace(
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-001](20_SRS.md#nfr-001-非一)')
+        keys = self.keys(self.files(hld))
+        self.assertEqual(keys, ['T1:HLD-3.1:対応 SRS:NFR-001'])
+
+    def test_nfr_chapter_declaration_is_not_rejected(self):
+        self.assertFalse([k for k in self.keys(self.files(HLD_NFR)) if ':対応 SRS:NFR-' in k])
+
+    def test_program_chapter_unknown_nfr_is_rejected(self):
+        hld = HLD_PROGRAM.replace(
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-999](20_SRS.md#nfr-999-無い)')
+        keys = self.keys(self.files(hld))
+        self.assertIn('T1:HLD-3.1:対応 SRS:NFR-999', keys)
+        self.assertIn('T2:HLD-3.1->NFR-999', keys)
+
+
 HLD_TWO_SECTIONS = HLD.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: C1・C2',
                                '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1・C2')
 
