@@ -157,6 +157,18 @@
 
 ---
 
+### Cloudflare Workers（公開用ビューアの静的ホスティング）
+
+| 項目 | 内容 |
+|---|---|
+| タイトル | Cloudflare Workers のドキュメント（Workers Builds、Static Assets、Worker Previews、Wrangler の設定、制限と料金） |
+| 提供元 | [Cloudflare](https://developers.cloudflare.com/workers/) |
+| 参照URL | <https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>、<https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>、<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>、<https://developers.cloudflare.com/workers/configuration/routing/workers-dev/>、<https://developers.cloudflare.com/workers/previews/get-started/>、<https://github.com/cloudflare/wrangler-action>（Cloudflare の公式の Action。wrangler の版の下限の出どころ）、<https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/>、<https://developers.cloudflare.com/workers/static-assets/>、<https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/>、<https://developers.cloudflare.com/workers/wrangler/configuration/#assets>、<https://developers.cloudflare.com/workers/previews/> |
+| 確認日 | 2026-10-11（開発コンテナから届かないため、host の Codex が web 検索で読み、要の 4 点は持ち主が原文で確かめた） |
+| 本プロジェクトでの利用形態 | [FR-020](../docs/20_SRS.md#fr-020-公開用ビューア配信) の公開用ビューアの配信サービス。組み立てと配信の仕組み、URL の形、設定は [HLD 4.20](../docs/30_HLD.md#420-fr-020-公開用ビューア配信)（D164・D184〜D186）。データの取得元ではないので、帰属表示の対象ではない。 |
+
+---
+
 ### 開発プロセスの参照規格
 
 開発文書とプロセスが参照する規格の目録。どれを何に使うか、「参照」と「準拠」の違い、意図して保つ形は [ADR-OPS-002](../docs/decisions/ADR-OPS-002-reference-standards-and-intended-deviations.md) が正本。規格の版の正本も ADR-OPS-002 の表で、下の表に記載する版は、その写しである。規格の本文は持っていない。
