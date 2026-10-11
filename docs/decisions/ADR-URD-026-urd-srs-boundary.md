@@ -29,7 +29,6 @@
 3. 要求が必要な理由の説明で、方式の選択や採否を定めないものは、方式に触れていても URD に書いてよい。将来の要望も同じ。
 4. 範囲外とすることのうち、方式の採否に当たるもの（使わないデータ、処理の場所など）は、URD には項目名だけを置き、理由と範囲は SRS を指す。
 5. URD の記述が SRS 以下の決定を写していたら、URD からは消して、SRS への参照を残す。Context の 4 件をこの形に直す。確定済みの URD の補足として、URD に注記を置く。
-6. ISO/IEC/IEEE 29148:2018 の本文で確かめていない点（StRS に書く項目の範囲）は、ADR-OPS-002 の Decision 4 の保留とする。
 
 ## Alternatives
 
@@ -43,3 +42,4 @@
 - [文書管理ルール](../CLAUDE.md#urd-と-srs-の書き分け)に「URD と SRS の書き分け」の節を足した。
 - URD の [§5](../10_URD.md#5-前提制約) と [§6](../10_URD.md#6-スコープ外対象外) の 4 件を、SRS への参照に改めた。ツールの振る舞いと SRS は変わらない。
 - 多視点のレビュー（spec-panel、`.agents/skills/spec-panel/SKILL.md`）の層の適合チェックに、URD の例を戻し、この規約を根拠に挙げた。
+- ISO/IEC/IEEE 29148:2018 の本文で確かめていない点（StRS に書く項目の範囲）は、[ADR-OPS-002](ADR-OPS-002-reference-standards-and-intended-deviations.md) の Decision 4 に従い保留する。
