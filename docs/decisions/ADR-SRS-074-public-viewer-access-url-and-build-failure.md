@@ -30,7 +30,7 @@
 ## Consequences
 
 - HLD 4.20 の DEC164「公開用は Cloudflare Workers で配信する」・DEC184「組み立ては Workers Builds で動かす」・DEC186「組み立てのメッセージは標準エラー出力だけ」が、本 ADR の SRS の文を満たす形になる。
-- ST の追従（[FR-020](../20_SRS.md#fr-020-公開用ビューア配信) の、版ごとの URL が配信の後も変わらないこと、ログインなしで開けること、組み立てが止まったときに前の版が残ることのケース、`ST-NFR-007-01` の対象の書き方）は、この改訂に含めず、ST の改訂の機会に扱う。公開用ビューアのケースは [HLD 4.20.5](../30_HLD.md#4205-未決事項と後続) の 5「`FR-020` の ST にケースを足す」に残す（[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) の Decision 5 と同じ扱い）。
+- ST の追従（[FR-020](../20_SRS.md#fr-020-公開用ビューア配信) の、版ごとの URL が配信の後も変わらないこと、ログインなしで開けること、組み立てが止まったときに前の版が残ることのケース、`ST-NFR-007-01` の対象の書き方）は、この改訂に含めず、ST の改訂の機会に扱う。公開用ビューアのケースは [HLD 4.20.5](https://github.com/jj1xgo/findsummits/blob/5cad4a5/docs/30_HLD.md#4205-未決事項と後続) の 5「`FR-020` の ST にケースを足す」に残す（[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) の Decision 5 と同じ扱い）。
 
 ## 追記（2026-10-12）: 記号の改名
 

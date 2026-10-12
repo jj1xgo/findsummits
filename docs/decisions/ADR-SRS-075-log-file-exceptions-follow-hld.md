@@ -33,8 +33,8 @@
 
 ## Consequences
 
-- [NFR-007](../20_SRS.md#nfr-007-ログ出力) の出力先の項目を直し、[ADR-SRS-058](ADR-SRS-058-error-messages-to-stderr.md) に注を置いた。[HLD 5.7.5](../30_HLD.md#575-未決事項と後続) の 5「SRS の追従」を決めた形に縮め、[HLD 2.5.3](../30_HLD.md#253-利用者向けのメッセージ) から本 ADR を指した。
-- システムテスト（ST）の `ST-NFR-007-01` の追従は、この改訂に含めず、ST の改訂の機会に扱う（[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) の Decision 5 と同じ扱い）。[HLD 5.7.5](../30_HLD.md#575-未決事項と後続) の 4「ST の追従」が挙げる場面（同時起動・ロックファイルを開けない・終了コード 2）に、ログの出力先を用意できないときと、CMP3 で設定解決の出力が決まった形でないときも加えて確かめる。
+- [NFR-007](../20_SRS.md#nfr-007-ログ出力) の出力先の項目を直し、[ADR-SRS-058](ADR-SRS-058-error-messages-to-stderr.md) に注を置いた。[HLD 5.7.5](https://github.com/jj1xgo/findsummits/blob/5cad4a5/docs/30_HLD.md#575-未決事項と後続) の 5「SRS の追従」を決めた形に縮め、[HLD 2.5.3](../30_HLD.md#253-利用者向けのメッセージ) から本 ADR を指した。
+- システムテスト（ST）の `ST-NFR-007-01` の追従は、この改訂に含めず、ST の改訂の機会に扱う（[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) の Decision 5 と同じ扱い）。[HLD 5.7.5](https://github.com/jj1xgo/findsummits/blob/5cad4a5/docs/30_HLD.md#575-未決事項と後続) の 4「ST の追従」が挙げる場面（同時起動・ロックファイルを開けない・終了コード 2）に、ログの出力先を用意できないときと、CMP3 で設定解決の出力が決まった形でないときも加えて確かめる。
 - ログファイルを開いた後にログに書けなくなったときの扱い（[HLD 5.7](../30_HLD.md#57-nfr-007-ログ出力) の DEC177「ログに書けなければ止まる」）は、この改訂の範囲外とした。
 
 ## 追記（2026-10-12）: 記号の改名
