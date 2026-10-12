@@ -197,6 +197,9 @@
 | ISO/IEC/IEEE 24765:2017 | Systems and software engineering — Vocabulary | <https://www.iso.org/standard/71952.html>（オンライン版の SEVOCAB: <https://www.computer.org/sevocab>） |
 | ISTQB CTFL シラバス v4.0.1 | Certified Tester Foundation Level Syllabus v4.0.1 | <https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf> |
 | ISTQB 用語集 | ISTQB Glossary（オンライン版、版を固定しない） | <https://glossary.istqb.org/> |
+| arc42 §9 Architecture Decisions・§11 Risks and Technical Debts | arc42 Documentation（無料で公開されている設計文書の雛形の解説。規格ではない） | <https://docs.arc42.org/section-9/>、<https://docs.arc42.org/section-11/> |
+| Nygard, Documenting Architecture Decisions（2011-11-15） | ADR（Architecture Decision Record）の原形を示した記事 | <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions> |
+| Ubl, Design Docs at Google | Google の design doc の構成（Alternatives considered など）を示した記事 | <https://www.industrialempathy.com/posts/design-docs-at-google/> |
 | 二次資料: 29148:2018 に基づくとするソフトウェア要件仕様書（SRS）の雛形 | ISO/IEC/IEEE 29148:2018 Software Requirements Specification（第三者の公開の雛形。規格の本文ではない） | <https://github.com/G7DAO/idea-submission-guidelines/blob/main/SRS-Template.md> |
 | 二次資料: 25010:2023 の特性と副特性の一覧 | arc42 Quality Model の「ISO/IEC 25010 - Systems and Software Quality」と「Update on ISO 25010, version 2023」（第三者の解説。規格の本文ではない） | <https://github.com/arc42/quality.arc42.org-site>（commit `713c46f8fb98`、2026-10-05 の時点。`_standards/iso/iso-25010.md`、`_articles/07-iso-25010-update-2023.md`、`images/articles/iso-25010/ISO-25010-2023-detailed.png`） |
 
@@ -204,3 +207,4 @@
 - 改訂の動き（2026-10-07 時点）: 12207:2026 は 12207:2017 を置き換えた。29148 は次の版の委員会原案が、24765 は第 3 版の国際規格案（DIS）が進行中。
 - 25010:2023 の特性と副特性は、2026-10-08 に上の arc42 のソースを取得して確かめた。ソースの表は Testability を Flexibility の行に置くが、同じリポジトリの詳細図は Maintainability の下に置くので、図に従う。iso.org には作業環境から接続できず、規格の本文と ISO の公式の見本は読んでいない。
 - CTFL シラバス v4.0.1 は、2026-10-08 に上の URL から PDF を取得し、2.2（2.2.1 を含む）・5.1.1・5.1.3 の原文を読んだ（取得した PDF の SHA-256 は `3b072f81db5c7671aadacc42553e726faa93913a969cc7a89e9dc28c2318d1f1`）。
+- arc42 §9・§11、Nygard の記事、Ubl の記事は、2026-10-12 に上の URL から取得して読んだ（HLD の設計判断の選別基準の拠り所。[ADR-HLD-006](../docs/decisions/ADR-HLD-006-hld-decision-selection-criteria-and-open-item-cleanup.md)）。42010:2022 は公開のプレビューの目次（6.9・6.10 の見出し）と iso-architecture.org の概念モデルの頁で確かめ、本文は読んでいないという扱いを変えない。
