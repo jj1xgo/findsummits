@@ -73,7 +73,8 @@ D_TITLE_MAX = 30
 
 # 検査H: 1 文字の記号の残り（ADR-HLD-007）。調査資料は対象外
 OLD_JOINT_RE = re.compile(r'(?<![A-Za-z0-9_])C(\d+)-([EI])(\d+)(?![0-9A-Za-z])')
-OLD_SYMBOL_RE = re.compile(r'(?<![A-Za-z0-9_./#-])(C[1-8]|D\d+|K[1-6])(?![0-9A-Za-z])')
+OLD_SYMBOL_RE = re.compile(r'(?<![A-Za-z0-9_./#-])(C[1-8]|D\d+|K[1-6])(?![0-9A-Za-z_/]|\.[0-9A-Za-z])')
+OLD_URL_RE = re.compile(r'https?://[^\s)>]+')
 OLD_PREFIX = {'C': 'CMP', 'D': 'DEC', 'K': 'PRE'}
 OLD_SKIP_RE = re.compile(r'`[^`\n]+`|https?://[^\s)>]+')
 RESEARCH_DIR = os.sep + os.path.join('docs', 'decisions', 'research') + os.sep
@@ -336,12 +337,13 @@ def check_old_symbols(filepath, lines):
     for i, raw in enumerate(lines):
         line = raw.rstrip('\n')
         where = f"{filepath}:{i + 1}"
-        for m in OLD_JOINT_RE.finditer(line):
+        scan = OLD_URL_RE.sub(lambda x: '\0' * len(x.group()), line)
+        for m in OLD_JOINT_RE.finditer(scan):
             new = f"CMP{m.group(1)}-{'EXT' if m.group(2) == 'E' else 'INT'}{m.group(3)}"
             violations.append(
                 f"{where}: OLD-JOINT: 結合のつなぎ目の ID「{m.group()}」は {new} にしてください（ADR-HLD-007）"
             )
-        masked = OLD_JOINT_RE.sub(lambda x: '\0' * len(x.group()), line)
+        masked = OLD_JOINT_RE.sub(lambda x: '\0' * len(x.group()), scan)
         masked = OLD_SKIP_RE.sub(lambda x: '\0' * len(x.group()), masked)
         for m in OLD_SYMBOL_RE.finditer(masked):
             s = m.group(1)

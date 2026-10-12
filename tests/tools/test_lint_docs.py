@@ -123,6 +123,18 @@ class CheckOldSymbolsTest(unittest.TestCase):
         self.assertEqual(lint_at('（D164・D184〜D186）\n', 'ref/SOURCES.md'),
                          ['OLD-SYMBOL', 'OLD-SYMBOL', 'OLD-SYMBOL'])
 
+    def test_joint_like_text_in_url_is_not_checked(self):
+        self.assertEqual(lint_at('[資料](https://example.com/C4-E1)\n', 'docs/02_test_policy.md'), [])
+
+    def test_symbol_inside_file_name_is_not_a_symbol(self):
+        for text in ('C1.txt を読む。\n', 'C1_data を読む。\n', 'C1/x を読む。\n'):
+            with self.subTest(text=text):
+                self.assertEqual(lint_at(text, 'docs/02_test_policy.md'), [])
+
+    def test_sentence_end_after_symbol_is_still_checked(self):
+        self.assertEqual(lint_at('C4。\n', 'docs/02_test_policy.md'), ['OLD-SYMBOL'])
+        self.assertEqual(lint_at('C4. 次\n', 'docs/02_test_policy.md'), ['OLD-SYMBOL'])
+
 
 HLD_ITEMS = '''# HLD
 
