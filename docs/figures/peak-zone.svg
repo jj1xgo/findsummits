@@ -81,7 +81,7 @@ text { font-size: 18px; fill: #111827; }
   </g>
 
   <!-- 2. Key コルの閾値 -->
-  <text x="800" y="96" class="cap">2. Key コルで決まる閾値（D70）</text>
+  <text x="800" y="96" class="cap">2. Key コルで決まる閾値（DEC70）</text>
   <g transform="translate(800,140)">
     <line x1="0" y1="300" x2="560" y2="300" stroke="#334155" stroke-width="1.5"/>
     <!-- region beyond col (not adopted) -->
@@ -105,7 +105,7 @@ text { font-size: 18px; fill: #111827; }
   <text x="800" y="540" class="p">「ピーク標高 − 250m」で決まるときとアクティベーションゾーンは「以上」</text>
 
   <!-- 3. area_complete -->
-  <text x="40" y="604" class="cap">3. area_complete（塗った画素の 8 近傍のうち、範囲の外の画素の種類で決める。D73）</text>
+  <text x="40" y="604" class="cap">3. area_complete（塗った画素の 8 近傍のうち、範囲の外の画素の種類で決める。DEC73）</text>
   <g transform="translate(40,630)">
     <!-- grid with border -->
     <rect x="0" y="0" width="600" height="330" fill="url(#hatch)" stroke="#6b7280"/>

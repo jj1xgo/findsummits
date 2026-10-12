@@ -77,12 +77,12 @@ text { font-size: 18px; fill: #111827; }
   <text x="770" y="450" class="m">NODATA（-9999）は有効な値に負け、</text>
   <text x="770" y="474" class="m">4 画素とも NODATA のときだけ NODATA</text>
   <text x="770" y="506" class="m b">対象ピークを含む 2×2 だけ、採った画素の</text>
-  <text x="770" y="530" class="m b">Z15 の座標を控える（D50）</text>
+  <text x="770" y="530" class="m b">Z15 の座標を控える（DEC50）</text>
   <text x="770" y="562" class="m">Z15 のタイル 256×256 → グリッドの 128×128 の区画</text>
   <text x="770" y="586" class="m">幅は (x_max − x_min + 1) × 128 + 2 画素</text>
   <text x="770" y="610" class="m">2×2 はタイルの中で閉じ、境目をまたがない</text>
   <text x="770" y="634" class="m">外周 1 画素は海面（0m）</text>
-  <text x="30" y="790" class="cap">パターンごとの処理（D52・D53）</text>
+  <text x="30" y="790" class="cap">パターンごとの処理（DEC52・DEC53）</text>
   <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.5">
     <rect x="30" y="806" width="170" height="60" rx="6"/>
     <rect x="222" y="806" width="170" height="60" rx="6"/>
@@ -114,5 +114,5 @@ text { font-size: 18px; fill: #111827; }
   <text x="1075" y="854" class="p" text-anchor="middle">FR-007（対象だけ）</text>
   <text x="1267" y="831" class="m b" text-anchor="middle">.meshset を書く</text>
   <text x="1267" y="854" class="p" text-anchor="middle">早期終了の判定</text>
-  <text x="30" y="900" class="m">省略したパターンと、出力に出なかった対象ピークは、確定を与えない（D53）。FR-016 は呼ばない。</text>
+  <text x="30" y="900" class="m">省略したパターンと、出力に出なかった対象ピークは、確定を与えない（DEC53）。FR-016 は呼ばない。</text>
 </svg>

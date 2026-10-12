@@ -36,55 +36,55 @@ text { font-size: 18px; fill: #111827; }
   <g transform="translate(0,40)">
     <!-- システム境界 -->
     <rect x="380" y="170" width="640" height="780" rx="14" fill="#eff6ff" stroke="#1d4ed8" stroke-width="3"/>
-    <text x="395" y="196" class="b blue">findsummits のローカル実行部分（C1〜C7）</text>
+    <text x="395" y="196" class="b blue">findsummits のローカル実行部分（CMP1〜CMP7）</text>
 
     <!-- バッチ処理ブロック（取得時のネットワーク接続は C2 の入力に表示） -->
     <rect x="405" y="210" width="590" height="370" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="2"/>
     <text x="420" y="236" class="b">解析・成果物生成は入力とキャッシュ配置後オフライン</text>
 
     <rect x="425" y="252" width="270" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-    <text x="440" y="284" class="b">C1 行政区域前処理</text>
+    <text x="440" y="284" class="b">CMP1 行政区域前処理</text>
     <text x="440" y="312">フェーズ1・初回のみ</text>
 
     <rect x="710" y="252" width="265" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-    <text x="725" y="284" class="b">C2 タイル取得</text>
+    <text x="725" y="284" class="b">CMP2 タイル取得</text>
     <text x="725" y="312">フェーズ1</text>
 
     <rect x="425" y="350" width="550" height="72" rx="6" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>
-    <text x="440" y="380" class="b">C3 パイプライン制御（制御のみ）</text>
-    <text x="440" y="408">C4・C5・C6 を順に起動し、終了状態を受け取る</text>
+    <text x="440" y="380" class="b">CMP3 パイプライン制御（制御のみ）</text>
+    <text x="440" y="408">CMP4・CMP5・CMP6 を順に起動し、終了状態を受け取る</text>
 
     <line x1="512" y1="422" x2="512" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
     <line x1="699" y1="422" x2="699" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
     <line x1="887" y1="422" x2="887" y2="448" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah1)"/>
 
     <rect x="425" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-    <text x="512" y="482" class="b" text-anchor="middle">C4</text>
+    <text x="512" y="482" class="b" text-anchor="middle">CMP4</text>
     <text x="512" y="508" text-anchor="middle">地形解析</text>
     <text x="512" y="534" text-anchor="middle">エンジン</text>
 
     <rect x="612" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-    <text x="699" y="482" class="b" text-anchor="middle">C5</text>
+    <text x="699" y="482" class="b" text-anchor="middle">CMP5</text>
     <text x="699" y="508" text-anchor="middle">統合・突合</text>
 
     <rect x="800" y="450" width="175" height="110" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-    <text x="887" y="482" class="b" text-anchor="middle">C6</text>
+    <text x="887" y="482" class="b" text-anchor="middle">CMP6</text>
     <text x="887" y="508" text-anchor="middle">可視化生成</text>
 
     <!-- バッチ → C7 （ファイル） -->
     <line x1="900" y1="580" x2="900" y2="678" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
     <text x="888" y="610" text-anchor="end">merged_viewer.html ＋</text>
-    <text x="888" y="636" text-anchor="end">merged_viewer_data.js（C6）</text>
+    <text x="888" y="636" text-anchor="end">merged_viewer_data.js（CMP6）</text>
 
     <!-- ブラウザブロック -->
     <rect x="405" y="680" width="590" height="258" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
     <text x="420" y="706" class="b">ローカル HTML ビューア（ブラウザ・フェーズ5）</text>
     <rect x="425" y="722" width="550" height="200" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-    <text x="440" y="754" class="b">C7 申請書生成 UI</text>
+    <text x="440" y="754" class="b">CMP7 申請書生成 UI</text>
     <text x="440" y="784">作業用ビューアで確認・rationale 編集</text>
     <text x="440" y="812">申請書 XLSX などをブラウザ内で生成</text>
     <text x="440" y="840">バッチとは実行時に通信しない</text>
-    <text x="440" y="868">（C6 が出力したファイルを開く）</text>
+    <text x="440" y="868">（CMP6 が出力したファイルを開く）</text>
     <text x="440" y="896">除外判断ファイル（任意）を読み込める</text>
 
     <!-- 外部データ（左） -->
@@ -93,25 +93,25 @@ text { font-size: 18px; fill: #111827; }
     <rect x="30" y="180" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
     <text x="44" y="206" class="b">国土地理院 標高タイル</text>
     <text x="44" y="231">DEM5a/5b/5c・DEM10b（PNG）</text>
-    <text x="44" y="256"><tspan class="pre">[事前取得]</tspan> C2 が HTTP で取得</text>
+    <text x="44" y="256"><tspan class="pre">[事前取得]</tspan> CMP2 が HTTP で取得</text>
     <line x1="330" y1="224" x2="403" y2="224" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="30" y="278" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
     <text x="44" y="304" class="b">N03 行政区域 ZIP</text>
     <text x="44" y="329">国土交通省 国土数値情報</text>
-    <text x="44" y="354"><tspan class="man">[手動配置]</tspan> → C1</text>
+    <text x="44" y="354"><tspan class="man">[手動配置]</tspan> → CMP1</text>
     <line x1="330" y1="322" x2="403" y2="322" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="30" y="376" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
     <text x="44" y="402" class="b">SOTA サミットリスト CSV</text>
     <text x="44" y="427">summitslist.csv（SOTA DB）</text>
-    <text x="44" y="452"><tspan class="man">[手動配置]</tspan> → C5（FR-009）</text>
+    <text x="44" y="452"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
     <line x1="330" y1="420" x2="403" y2="420" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="30" y="474" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
     <text x="44" y="500" class="b">SOTA 既存サミット GeoJSON</text>
     <text x="44" y="525">ジオサミットでひとこえ</text>
-    <text x="44" y="550"><tspan class="man">[手動配置]</tspan> → C5（FR-009）</text>
+    <text x="44" y="550"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
     <line x1="330" y1="518" x2="403" y2="518" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <!-- 利用者 -->
@@ -133,22 +133,22 @@ text { font-size: 18px; fill: #111827; }
 
     <rect x="1045" y="215" width="285" height="80" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
     <text x="1058" y="245" class="b">標高地形図 PNG</text>
-    <text x="1058" y="272">C4 が出力（目視確認用）</text>
+    <text x="1058" y="272">CMP4 が出力（目視確認用）</text>
     <line x1="995" y1="255" x2="1043" y2="255" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="1045" y="305" width="285" height="80" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
     <text x="1058" y="335" class="b">サミット一覧（突合後）</text>
-    <text x="1058" y="362">merged_summit.xlsx・C5</text>
+    <text x="1058" y="362">merged_summit.xlsx・CMP5</text>
     <line x1="995" y1="345" x2="1043" y2="345" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="1045" y="395" width="285" height="105" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
     <text x="1058" y="425" class="b">突合済み統合 GeoJSON</text>
     <text x="1058" y="452">merged_summit.geojson</text>
-    <text x="1058" y="479">中心データ・C5 が出力</text>
+    <text x="1058" y="479">中心データ・CMP5 が出力</text>
     <line x1="995" y1="447" x2="1043" y2="447" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="1045" y="700" width="285" height="50" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
-    <text x="1058" y="732" class="b">申請書 XLSX（C7 が生成）</text>
+    <text x="1058" y="732" class="b">申請書 XLSX（CMP7 が生成）</text>
     <line x1="975" y1="725" x2="1043" y2="725" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <rect x="1045" y="756" width="285" height="64" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
@@ -178,7 +178,7 @@ text { font-size: 18px; fill: #111827; }
     <rect x="690" y="1005" width="400" height="170" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
     <text x="705" y="1031" class="b">静的ホスティング（外部サービス）</text>
     <rect x="705" y="1043" width="370" height="122" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-    <text x="720" y="1071" class="b">C8 公開用ビューア（findsummits）</text>
+    <text x="720" y="1071" class="b">CMP8 公開用ビューア（findsummits）</text>
     <text x="720" y="1098">テンプレート＋GeoJSON 5本</text>
     <text x="720" y="1124">閲覧専用・無改変で配信</text>
     <text x="720" y="1150">GeoJSON は③で利用者が配置</text>
@@ -198,8 +198,8 @@ text { font-size: 18px; fill: #111827; }
     <text x="46" y="1046">・背景タイル（地理院標準地図・淡色地図・OSM・OpenTopoMap）</text>
     <text x="46" y="1074">・地理院標高タイル（等高線オーバーレイ用）</text>
     <text x="46" y="1102">・地理院基準点タイル（ベクトルタイル）</text>
-    <text x="46" y="1130">・CDN（C7: Leaflet・SheetJS・JSZip／C8: Leaflet）</text>
-    <text x="46" y="1158">→ C7・C8 のブラウザが直接取得</text>
+    <text x="46" y="1130">・CDN（CMP7: Leaflet・SheetJS・JSZip／CMP8: Leaflet）</text>
+    <text x="46" y="1158">→ CMP7・CMP8 のブラウザが直接取得</text>
     <line x1="560" y1="990" x2="560" y2="924" stroke="#334155" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah1)"/>
     <text x="572" y="975" class="run">実行時</text>
     <line x1="630" y1="1090" x2="703" y2="1090" stroke="#334155" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah1)"/>

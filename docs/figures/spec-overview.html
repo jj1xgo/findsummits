@@ -41,7 +41,7 @@
       <section id="boundary">
         <h2>境界図</h2>
         <figure>
-          <a href="system-boundary.svg"><img src="system-boundary.svg" width="1400" height="970" alt="申請担当者と SOTA 日本支部マネージャ、システム境界の内側のバッチ（C1〜C6）・C7・C8、外部のタイル・CDN・静的ホスティングとの接続を A〜G の線で示す"></a>
+          <a href="system-boundary.svg"><img src="system-boundary.svg" width="1400" height="970" alt="申請担当者と SOTA 日本支部マネージャ、システム境界の内側のバッチ（CMP1〜CMP6）・CMP7・CMP8、外部のタイル・CDN・静的ホスティングとの接続を A〜G の線で示す"></a>
           <figcaption>出典: HLD §2.1.2〜2.1.3。実線はデータ・操作の流れ、青の破線はネットワーク接続、点線はシステムの外のやり取りです。A〜G の詳しい内容と外部要素ごとの接続は HLD の本文を参照してください。</figcaption>
         </figure>
       </section>
@@ -55,8 +55,8 @@
       <section id="ipo">
         <h2>コンポーネント別 IPO 図</h2>
         <figure>
-          <a href="component-ipo.svg"><img src="component-ipo.svg" width="1400" height="1720" alt="C1 から C8 の入力、処理、出力を左右の三列で対応づけた IPO 図"></a>
-          <figcaption>出典: SRS §3.2〜3.3、HLD §2.2.2〜2.2.4。C3 は処理の起動・終了状態を扱います。再解析のループ、不備ゲート、ブラウザ内の状態や入出力の詳細条件は本文を参照してください。</figcaption>
+          <a href="component-ipo.svg"><img src="component-ipo.svg" width="1400" height="1720" alt="CMP1 から CMP8 の入力、処理、出力を左右の三列で対応づけた IPO 図"></a>
+          <figcaption>出典: SRS §3.2〜3.3、HLD §2.2.2〜2.2.4。CMP3 は処理の起動・終了状態を扱います。再解析のループ、不備ゲート、ブラウザ内の状態や入出力の詳細条件は本文を参照してください。</figcaption>
         </figure>
       </section>
       <section id="pipeline">
@@ -71,7 +71,7 @@
         <h2>3×3 メッシュの窓</h2>
         <figure>
           <a href="mesh-window.svg"><img src="mesh-window.svg" width="1100" height="520" alt="対象メッシュを中心にした 3×3 の 1 次メッシュの窓。抽象と、5239 を中心にした具体例。5140 は日本全土1次メッシュコードリストに無いので解析対象メッシュではなく、解析範囲の中にあるのでタイルの有無によらず NODATA で埋める"></a>
-          <figcaption>出典: SRS FR-004、HLD §4.4.2（D47）、ADR-SRS-053。解析範囲標高グリッドの作り方の詳細は、次の図です。</figcaption>
+          <figcaption>出典: SRS FR-004、HLD §4.4.2（DEC47）、ADR-SRS-053。解析範囲標高グリッドの作り方の詳細は、次の図です。</figcaption>
         </figure>
       </section>
       <section id="analysis-grid">

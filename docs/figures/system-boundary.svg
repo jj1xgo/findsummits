@@ -30,9 +30,9 @@ text { font-size: 18px; fill: #111827; }
   <rect x="30" y="150" width="34" height="22" fill="#f3f4f6" stroke="#6b7280"/>
   <text x="72" y="168">外部データ・外部サービス</text>
   <rect x="320" y="150" width="34" height="22" fill="#dbeafe" stroke="#2563eb"/>
-  <text x="362" y="168">バッチ（C1〜C6）</text>
+  <text x="362" y="168">バッチ（CMP1〜CMP6）</text>
   <rect x="560" y="150" width="34" height="22" fill="#d1fae5" stroke="#059669"/>
-  <text x="602" y="168">ブラウザ内で動く（C7・C8）</text>
+  <text x="602" y="168">ブラウザ内で動く（CMP7・CMP8）</text>
   <rect x="890" y="150" width="34" height="22" fill="#ffedd5" stroke="#ea580c"/>
   <text x="932" y="168">関係者</text>
 
@@ -57,23 +57,29 @@ text { font-size: 18px; fill: #111827; }
   <rect x="50" y="420" width="380" height="290" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="2"/>
   <text x="65" y="448" class="b">バッチ側（ローカルで実行）</text>
   <rect x="65" y="462" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="78" y="490" class="m b">C1 行政区域前処理</text>
-  <text x="78" y="517" class="s">初回と更新時に前処理</text>
+  <text x="78" y="482" class="s b">CMP1</text>
+  <text x="78" y="502" class="m b">行政区域前処理</text>
+  <text x="78" y="522" class="s">初回と更新時に前処理</text>
   <rect x="245" y="462" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="258" y="490" class="m b">C2 タイル取得</text>
-  <text x="258" y="517" class="s">標高タイルを事前取得</text>
+  <text x="258" y="482" class="s b">CMP2</text>
+  <text x="258" y="502" class="m b">タイル取得</text>
+  <text x="258" y="522" class="s">標高タイルを事前取得</text>
   <rect x="65" y="542" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="78" y="570" class="m b">C3 パイプライン制御</text>
-  <text x="78" y="597" class="s">フェーズ2〜4 を制御</text>
+  <text x="78" y="562" class="s b">CMP3</text>
+  <text x="78" y="582" class="m b">パイプライン制御</text>
+  <text x="78" y="602" class="s">フェーズ2〜4 を制御</text>
   <rect x="245" y="542" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="258" y="570" class="m b">C4 地形解析エンジン</text>
-  <text x="258" y="597" class="s">ピーク・コルの解析</text>
+  <text x="258" y="562" class="s b">CMP4</text>
+  <text x="258" y="582" class="m b">地形解析エンジン</text>
+  <text x="258" y="602" class="s">ピーク・コルの解析</text>
   <rect x="65" y="622" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="78" y="650" class="m b">C5 統合・突合</text>
-  <text x="78" y="677" class="s">統合と SOTA 突合</text>
+  <text x="78" y="642" class="s b">CMP5</text>
+  <text x="78" y="662" class="m b">統合・突合</text>
+  <text x="78" y="682" class="s">統合と SOTA 突合</text>
   <rect x="245" y="622" width="170" height="70" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="258" y="650" class="m b">C6 可視化生成</text>
-  <text x="258" y="677" class="s">作業用ビューアを生成</text>
+  <text x="258" y="642" class="s b">CMP6</text>
+  <text x="258" y="662" class="m b">可視化生成</text>
+  <text x="258" y="682" class="s">作業用ビューアを生成</text>
 
   <!-- バッチ → C7（作業用 HTML ビューア） -->
   <line x1="430" y1="620" x2="518" y2="620" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
@@ -82,7 +88,7 @@ text { font-size: 18px; fill: #111827; }
 
   <!-- C7 -->
   <rect x="520" y="420" width="220" height="290" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-  <text x="535" y="450" class="b">C7 申請書生成 UI</text>
+  <text x="535" y="450" class="b">CMP7 申請書生成 UI</text>
   <text x="535" y="478" class="s">作業用ビューアの中で動く</text>
   <text x="535" y="520" class="s">・確認、rationale の編集</text>
   <text x="535" y="546" class="s">・除外判断</text>
@@ -90,7 +96,7 @@ text { font-size: 18px; fill: #111827; }
 
   <!-- C8 -->
   <rect x="760" y="420" width="200" height="290" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-  <text x="775" y="450" class="b">C8 公開用ビューア</text>
+  <text x="775" y="450" class="b">CMP8 公開用ビューア</text>
   <text x="775" y="478" class="s">リポジトリに置く</text>
   <text x="775" y="520" class="s">・テンプレート</text>
   <text x="775" y="546" class="s">・公開用データ</text>
@@ -123,7 +129,7 @@ text { font-size: 18px; fill: #111827; }
   <rect x="1070" y="540" width="300" height="120" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
   <text x="1088" y="574" class="b">静的ホスティング</text>
   <text x="1088" y="604" class="s">外部サービス（Cloudflare）</text>
-  <text x="1088" y="630" class="s">C8 と公開用データを配信</text>
+  <text x="1088" y="630" class="s">CMP8 と公開用データを配信</text>
 
   <line x1="960" y1="600" x2="1068" y2="600" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
   <rect x="999" y="576" width="30" height="24" rx="12" fill="#334155"/>
@@ -137,9 +143,9 @@ text { font-size: 18px; fill: #111827; }
   <rect x="50" y="800" width="380" height="110" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
   <text x="68" y="834" class="b">国土地理院 標高タイル</text>
   <text x="68" y="864" class="s">DEM5a・5b・5c・DEM10b</text>
-  <text x="68" y="890" class="s">C2 が事前に取得してキャッシュに置く</text>
+  <text x="68" y="890" class="s">CMP2 が事前に取得してキャッシュに置く</text>
   <line x1="240" y1="800" x2="240" y2="712" stroke="#1d4ed8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah2)"/>
-  <text x="252" y="772" class="s blue">HTTPS・事前取得（C2）</text>
+  <text x="252" y="772" class="s blue">HTTPS・事前取得（CMP2）</text>
 
   <!-- 外部（実行時接続） -->
   <rect x="520" y="800" width="440" height="140" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
@@ -149,7 +155,8 @@ text { font-size: 18px; fill: #111827; }
   <text x="538" y="908" class="s">・CDN（Leaflet・SheetJS・JSZip）</text>
   <line x1="630" y1="800" x2="630" y2="712" stroke="#1d4ed8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah2)"/>
   <line x1="860" y1="800" x2="860" y2="712" stroke="#1d4ed8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#ah2)"/>
-  <text x="642" y="772" class="s blue">HTTPS・実行時（C7・C8）</text>
+  <text x="642" y="758" class="s blue">HTTPS・実行時</text>
+  <text x="642" y="778" class="s blue">（CMP7・CMP8）</text>
 
   <!-- 線の記号 -->
   <rect x="1070" y="700" width="300" height="240" rx="8" fill="#ffffff" stroke="#6b7280" stroke-width="1.5"/>

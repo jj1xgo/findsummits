@@ -90,7 +90,7 @@ text { font-size: 18px; fill: #111827; }
   <text x="894" y="789" class="s">外周 1 画素の海面ボーダー（0m）</text>
   <line x1="850" y1="813" x2="884" y2="813" stroke="#475569" stroke-width="1" stroke-dasharray="4 4"/>
   <text x="894" y="819" class="s">Z15 のタイルの境目</text>
-  <text x="30" y="852" class="cap">タイルの位置 (x, y) ごとの処理（D46）</text>
+  <text x="30" y="852" class="cap">タイルの位置 (x, y) ごとの処理（DEC46）</text>
   <rect x="30" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
   <text x="150" y="902" class="s" text-anchor="middle">4 つの DEM 種別のタイルを</text>
   <text x="150" y="926" class="s" text-anchor="middle">cv::imread で読む</text>
@@ -101,15 +101,15 @@ text { font-size: 18px; fill: #111827; }
   <polyline points="549,910 574,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
   <rect x="580" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
   <text x="700" y="902" class="s" text-anchor="middle">フォールバック</text>
-  <text x="700" y="926" class="s" text-anchor="middle">（3.2。D40）</text>
+  <text x="700" y="926" class="s" text-anchor="middle">（3.2。DEC40）</text>
   <polyline points="824,910 849,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
   <rect x="855" y="868" width="240" height="84" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
   <text x="975" y="902" class="s" text-anchor="middle">デコードの 2 段</text>
-  <text x="975" y="926" class="s" text-anchor="middle">（3.3。D43）</text>
+  <text x="975" y="926" class="s" text-anchor="middle">（3.3。DEC43）</text>
   <polyline points="1099,910 1124,910" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
   <rect x="1130" y="868" width="240" height="84" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
   <text x="1250" y="902" class="s" text-anchor="middle">グリッドに float で書く</text>
   <text x="1250" y="926" class="s" text-anchor="middle">（広域は縮約して Z14）</text>
-  <text x="30" y="990" class="m">無いタイル: 全画素を (128, 0, 0) として扱う（D40）。読めないタイル: パスを控えて続け、窓のタイルを読み終えてから、すべて挙げて止める（D49）。</text>
+  <text x="30" y="990" class="m">無いタイル: 全画素を (128, 0, 0) として扱う（DEC40）。読めないタイル: パスを控えて続け、窓のタイルを読み終えてから、すべて挙げて止める（DEC49）。</text>
   <text x="30" y="1018" class="m">外周 1 画素は海面（0m）。メモリに持つのは、グリッドと読んでいる 4 枚のタイルだけ（NFR-002）。</text>
 </svg>

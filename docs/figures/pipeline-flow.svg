@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1660" viewBox="0 0 1400 1660" role="img" aria-labelledby="title desc">
 <title id="title">解析パイプラインの処理フロー</title>
-<desc id="desc">findsummits の通常の通し実行（フェーズ2〜4）を示す。C3 パイプライン制御（FR-023）が N=3 で開始し、C4 通常解析（FR-004）、C5 CSV 統合（FR-008）、C5 GeoJSON 統合（FR-018）、C5 コル充足判定（FR-022）の順に進む。未確定ピークがゼロならフェーズ4へ進む。残りがあって N が 6 未満なら、C3 が N を 1 増やす。そのうえで C4 広域解析（FR-014）に新しい N と前段 N の未確定 CSV のパスを渡し、CSV 統合・GeoJSON 統合・充足判定に戻る（N=4→5→6）。N=6 で残りがあってもフェーズ4の FR-009 へ進む。FR-009 が正常終了したときだけ C6 ビューア生成（FR-013）を起動し、merged_viewer.html と merged_viewer_data.js を出力する。FR-009 が不備ゲートに該当したときは、調査用の merged_summit.geojson と merged_summit.xlsx を出力してから異常終了し、C6 は起動しない。一般のエラーはその場で即時終了し、調査用の出力は保証しない。出典は HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022。</desc>
+<desc id="desc">findsummits の通常の通し実行（フェーズ2〜4）を示す。CMP3 パイプライン制御（FR-023）が N=3 で開始し、CMP4 通常解析（FR-004）、CMP5 CSV 統合（FR-008）、CMP5 GeoJSON 統合（FR-018）、CMP5 コル充足判定（FR-022）の順に進む。未確定ピークがゼロならフェーズ4へ進む。残りがあって N が 6 未満なら、CMP3 が N を 1 増やす。そのうえで CMP4 広域解析（FR-014）に新しい N と前段 N の未確定 CSV のパスを渡し、CSV 統合・GeoJSON 統合・充足判定に戻る（N=4→5→6）。N=6 で残りがあってもフェーズ4の FR-009 へ進む。FR-009 が正常終了したときだけ CMP6 ビューア生成（FR-013）を起動し、merged_viewer.html と merged_viewer_data.js を出力する。FR-009 が不備ゲートに該当したときは、調査用の merged_summit.geojson と merged_summit.xlsx を出力してから異常終了し、CMP6 は起動しない。一般のエラーはその場で即時終了し、調査用の出力は保証しない。出典は HLD §2.2.3・§2.5、SRS FR-023・FR-009・FR-022。</desc>
 <defs>
 <style>
 text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;font-size:18px;fill:#222}
@@ -45,9 +45,9 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 
 <!-- C3 開始 -->
 <rect x="360" y="260" width="400" height="100" rx="8" class="gray"/>
-<text x="560" y="292" class="c b">C3 パイプライン制御（FR-023）</text>
+<text x="560" y="292" class="c b">CMP3 パイプライン制御（FR-023）</text>
 <text x="560" y="319" class="c">通し実行を開始（N = 3）</text>
-<text x="560" y="345" class="c note">N を持つのは C3 だけ</text>
+<text x="560" y="345" class="c note">N を持つのは CMP3 だけ</text>
 <path d="M560,360 V388" class="ln"/>
 
 <!-- フェーズ2 -->
@@ -55,7 +55,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="325" y="420" class="e b">フェーズ2</text>
 <text x="325" y="446" class="e note">3×3 解析</text>
 <rect x="360" y="390" width="400" height="70" rx="8" class="blue"/>
-<text x="560" y="420" class="c b">C4 通常解析（FR-004）</text>
+<text x="560" y="420" class="c b">CMP4 通常解析（FR-004）</text>
 <text x="560" y="446" class="c">3×3 メッシュ結合解析（N = 3）</text>
 <path d="M560,460 V518" class="ln"/>
 
@@ -69,17 +69,17 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="325" y="718" class="e note">で統合 GeoJSON を再生成</text>
 
 <rect x="360" y="520" width="400" height="70" rx="8" class="blue"/>
-<text x="560" y="550" class="c b">C5 CSV 統合（FR-008）</text>
+<text x="560" y="550" class="c b">CMP5 CSV 統合（FR-008）</text>
 <text x="560" y="576" class="c">merged_peak.csv</text>
 <path d="M560,590 V618" class="ln"/>
 
 <rect x="360" y="620" width="400" height="70" rx="8" class="blue"/>
-<text x="560" y="650" class="c b">C5 GeoJSON 統合（FR-018）</text>
+<text x="560" y="650" class="c b">CMP5 GeoJSON 統合（FR-018）</text>
 <text x="560" y="676" class="c">merged_peak.geojson</text>
 <path d="M560,690 V718" class="ln"/>
 
 <rect x="360" y="720" width="400" height="70" rx="8" class="blue"/>
-<text x="560" y="750" class="c b">C5 コル充足判定（FR-022）</text>
+<text x="560" y="750" class="c b">CMP5 コル充足判定（FR-022）</text>
 <text x="560" y="776" class="c">key_col_unresolved_peaks-&lt;N&gt;.csv</text>
 <path d="M560,790 V818" class="ln"/>
 
@@ -104,7 +104,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="1012" y="800" class="lbl">はい（N &lt; 6）</text>
 
 <rect x="820" y="680" width="360" height="80" rx="8" class="gray"/>
-<text x="1000" y="713" class="c b">C3：N を 1 増やす</text>
+<text x="1000" y="713" class="c b">CMP3：N を 1 増やす</text>
 <text x="1000" y="740" class="c">N = 4 → 5 → 6</text>
 
 <path d="M1000,680 V592" class="ln"/>
@@ -112,7 +112,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="1012" y="656" class="note">未確定 CSV のパスを渡す</text>
 
 <rect x="820" y="520" width="360" height="70" rx="8" class="blue"/>
-<text x="1000" y="550" class="c b">C4 広域解析（FR-014）</text>
+<text x="1000" y="550" class="c b">CMP4 広域解析（FR-014）</text>
 <text x="1000" y="576" class="c">per-mesh GeoJSON は作らない</text>
 
 <!-- 広域 → CSV 統合へ戻る -->
@@ -133,7 +133,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="1012" y="1028" class="note">未確定が残っていても進む</text>
 
 <rect x="360" y="1010" width="400" height="70" rx="8" class="blue"/>
-<text x="560" y="1040" class="c b">C5 SOTA リスト突合（FR-009）</text>
+<text x="560" y="1040" class="c b">CMP5 SOTA リスト突合（FR-009）</text>
 <text x="560" y="1066" class="c">match_status 判定</text>
 <path d="M560,1080 V1108" class="ln"/>
 
@@ -149,14 +149,14 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="1060" y="1127" class="c b rtx">異常終了（不備ゲート）</text>
 <text x="1060" y="1157" class="c">調査用に merged_summit.geojson と</text>
 <text x="1060" y="1183" class="c">merged_summit.xlsx を出力してから停止</text>
-<text x="1060" y="1211" class="c b">C6（ビューア生成）は起動しない</text>
+<text x="1060" y="1211" class="c b">CMP6（ビューア生成）は起動しない</text>
 <text x="1060" y="1239" class="c note">N = 6 でも未確定が残った場合もここ</text>
 
 <!-- 正常終了 → C6 -->
 <path d="M560,1230 V1288" class="ln"/>
 <text x="572" y="1262" class="lbl">正常終了</text>
 <rect x="360" y="1290" width="400" height="100" rx="8" class="green"/>
-<text x="560" y="1320" class="c b">C6 ビューア生成（FR-013）</text>
+<text x="560" y="1320" class="c b">CMP6 ビューア生成（FR-013）</text>
 <text x="560" y="1346" class="c">merged_viewer.html</text>
 <text x="560" y="1372" class="c">merged_viewer_data.js</text>
 <path d="M560,1390 V1418" class="ln"/>
@@ -168,5 +168,5 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="60" y="1545" class="b rtx">一般のエラー（各 FR 共通）：入力の欠落・読み書きの失敗・例外などは、その場で即時終了する（フェイルファースト）。</text>
 <text x="60" y="1573" class="rtx">このとき調査用の出力は保証しない。</text>
 <text x="60" y="1601" class="rtx">FR-022 の「未確定あり」はエラーではなく、上の分岐（N &lt; 6 ？）で扱う。</text>
-<text x="60" y="1643" class="note">C7 以降、各フェーズの単独起動、CLI の詳細はこの図の対象外。</text>
+<text x="60" y="1643" class="note">CMP7 以降、各フェーズの単独起動、CLI の詳細はこの図の対象外。</text>
 </svg>
