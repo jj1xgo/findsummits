@@ -151,15 +151,11 @@ HLD_ITEMS = '''# HLD
 
 1. **列を並べる**。本文。
 
-#### 4.8.5 未決事項と後続
-
-1. **テストの枠組み**。本文。
-
 #### 4.8.6 その他
 
 1. 対象外の箇条。
 
-参照は [4.8.2](#482-処理の流れ) の 1「リストを読む」と [4.8.5](#485-未決事項と後続) の 1「テストの枠組み」。
+参照は [4.8.2](#482-処理の流れ) の 1「リストを読む」。
 '''
 
 
@@ -214,7 +210,7 @@ class CheckHldItemRefsTest(unittest.TestCase):
         self.assertEqual(self.lint(HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 4「`.csv` を読む」に従う。\n'), [])
 
     def test_counter_words_are_not_refs(self):
-        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 5 種類と [4.8.5](#485-未決事項と後続) の 60 行。\n'
+        text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 5 種類と 60 行。\n'
         self.assertEqual(self.lint(text), [])
 
     def test_code_span_ignored(self):
@@ -239,8 +235,8 @@ class CheckHldItemRefsTest(unittest.TestCase):
                          ['HLD-ITEM-RANGE'])
 
     def test_section_without_items(self):
-        text = (HLD_ITEMS + '\n#### 4.8.7 未決事項と後続\n\nなし。\n\n'
-                '[4.8.7](#487-未決事項と後続) の 1「無い」に従う。\n')
+        text = (HLD_ITEMS + '\n#### 4.8.7 処理の流れ\n\nなし。\n\n'
+                '[4.8.7](#487-処理の流れ) の 1「無い」に従う。\n')
         self.assertEqual(self.lint(text), ['HLD-ITEM-UNKNOWN'])
         indented = (HLD_ITEMS + '\n#### 4.8.8 処理の流れ\n\n- 親。\n  1. **子**。本文。\n\n'
                     '[4.8.8](#488-処理の流れ) の 1「子」に従う。\n')
@@ -257,6 +253,29 @@ class CheckHldItemRefsTest(unittest.TestCase):
         self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
         text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3「代表行を選ぶ」と、4「`.csv` を読む」に従う。\n'
         self.assertEqual(self.lint(text), ['HLD-ITEM-CONT'])
+
+    def test_open_items_section_rejected(self):
+        text = HLD_ITEMS + '\n#### 4.8.9 未決事項と後続\n\n1. **何か**。本文。\n'
+        self.assertEqual(self.lint(text), ['HLD-OPEN-SECTION'])
+        text = HLD_ITEMS + '\n#### 4.8.9 未決事項と後続（他の節・LLD・ADR 候補）\n\nなし。\n'
+        self.assertEqual(self.lint(text), ['HLD-OPEN-SECTION'])
+        text = HLD_ITEMS + '\n### 未決事項と後続\n\nなし。\n'
+        self.assertEqual(self.lint(text), ['HLD-OPEN-SECTION'])
+
+    def test_open_items_section_in_code_block_ignored(self):
+        self.assertEqual(self.lint(HLD_ITEMS + '\n```text\n#### 4.8.9 未決事項と後続\n```\n'), [])
+        self.assertEqual(self.lint(HLD_ITEMS + '\n~~~\n#### 4.8.9 未決事項と後続\n~~~\n'), [])
+        self.assertEqual(self.lint(HLD_ITEMS + '\n````\n```\n#### 4.8.9 未決事項と後続\n```\n````\n'), [])
+
+    def test_open_items_section_only_in_hld(self):
+        text = '# 文書\n\n#### 4.8.9 未決事項と後続\n\nなし。\n'
+        self.assertEqual(self.lint(text, name='70_ST.md'), [])
+
+    def test_open_items_items_not_checked(self):
+        # 小節が残っていても、その項目は検査G で照合しない（題の違う参照で HLD-ITEM-TITLE を出さない）
+        text = (HLD_ITEMS + '\n#### 4.8.5 未決事項と後続\n\n1. **テストの枠組み**。本文。\n\n'
+                '[4.8.5](#485-未決事項と後続) の 1「違う題」に従う。\n')
+        self.assertEqual(self.lint(text), ['HLD-OPEN-SECTION'])
 
     def test_huge_range_is_cheap(self):
         text = HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 1〜1000000000 に従う。\n'

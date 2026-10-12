@@ -7,8 +7,9 @@
 検査D: FR/UR/NFR 裸参照（リンクでもコード表記でもない参照）の検出
 検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止）
 検査F: HLD の設計判断（DEC）の定義（置き場・題の長さ・重要の印）と参照（リンク先・題）
-検査G: HLD の手順と未決事項の項目の題（指される項目の題、参照に添えた題）
+検査G: HLD の手順の項目の題（指される項目の題、参照に添えた題）
 検査H: docs/ の文書と ADR（調査資料を除く）と ref/SOURCES.md に残った 1 文字の記号（C・D・K と結合のつなぎ目の E・I）
+検査I: HLD に未決事項の小節の見出しが戻っていないか（ADR-HLD-008）
 """
 import os
 import re
@@ -80,9 +81,12 @@ OLD_SKIP_RE = re.compile(r'`[^`\n]+`|https?://[^\s)>]+')
 RESEARCH_DIR = os.sep + os.path.join('docs', 'decisions', 'research') + os.sep
 SOURCES_SUFFIX = os.sep + os.path.join('ref', 'SOURCES.md')
 
+# 検査I: HLD に未決事項の小節を置かない（ADR-HLD-008）。節の番号の有無を問わない
+OPEN_SECTION_RE = re.compile(r'^#{1,6} (?:\d+(?:\.\d+)* )?未決事項')
 
-# 検査G: HLD の手順と未決事項の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）
-ITEM_SECTION_RE = re.compile(r'^#{2,6} \d+(?:\.\d+)+ (?:処理の流れ|未決事項と後続)')
+
+# 検査G: HLD の手順の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）
+ITEM_SECTION_RE = re.compile(r'^#{2,6} \d+(?:\.\d+)+ 処理の流れ')
 ITEM_HEADING_RE = re.compile(r'^#{1,6} ')
 # 題の直後は「。」か、本文の続き（`（` `→` `：`）、行末
 ITEM_RE = re.compile(r'^(\d+)\. (?:\*\*([^*\n]+)\*\*(?:。|(?=（| →|：)|$))?')
@@ -234,10 +238,11 @@ def check_file(filepath):
     if (_in_docs and RESEARCH_DIR not in abs_filepath) or abs_filepath.endswith(SOURCES_SUFFIX):
         violations.extend(check_old_symbols(filepath, lines))
 
-    # 検査F・G: docs/30_HLD.md だけに適用する（ファイル全体の定義と照合するため、行の検査の後に行う）
+    # 検査F・G・I: docs/30_HLD.md だけに適用する（ファイル全体の定義と照合するため、行の検査の後に行う）
     if abs_filepath.endswith(HLD_PATH_SUFFIX):
         violations.extend(check_hld_decisions(filepath, lines))
         violations.extend(check_hld_item_refs(filepath, lines))
+        violations.extend(check_hld_open_sections(filepath, lines))
 
     return violations
 
@@ -354,7 +359,7 @@ def check_old_symbols(filepath, lines):
 
 
 def hld_item_lists(lines):
-    """処理の流れと未決事項と後続の小節から、番号付きの項目と題を集める
+    """処理の流れの小節から、番号付きの項目と題を集める
 
     返り値は ({(アンカー, 名前): {番号: (行番号, 題か None)}}, [(行番号, 種別, 説明)])。
     対象の小節はすべて名前 '' で登録する（箇条が無ければ空）。小節の最初の箇条は名前 '' で引ける。
@@ -406,7 +411,7 @@ def hld_item_lists(lines):
 
 
 def check_hld_item_refs(filepath, lines):
-    """手順と未決事項の項目を指す参照（`[4.8.2](#482-処理の流れ) の 6「題」`）を、項目の題と照合する"""
+    """手順の項目を指す参照（`[4.8.2](#482-処理の流れ) の 6「題」`）を、項目の題と照合する"""
     lists, problems = hld_item_lists(lines)
     violations = [f"{filepath}:{n}: {kind}: {msg}" for n, kind, msg in problems]
     anchors = {a for a, _ in lists}
@@ -460,6 +465,19 @@ def check_hld_item_refs(filepath, lines):
                     violations.append(
                         f"{where}: HLD-ITEM-TITLE: 項目 {n} の題が項目と一致しません（{n}「{items[n][1]}」）"
                     )
+    return violations
+
+
+def check_hld_open_sections(filepath, lines):
+    """「未決事項と後続」の小節の見出しが HLD に戻っていないかを見る（コードブロックの中は見ない）"""
+    from lint_trace import iter_lines
+    violations = []
+    for no, line in iter_lines(''.join(lines)):
+        if OPEN_SECTION_RE.match(line):
+            violations.append(
+                f"{filepath}:{no}: HLD-OPEN-SECTION: HLD に未決事項の小節を置かないでください"
+                f"（未決の問いと作業の予約は Issue、送り先の文書が決まったものは節の「対象外」の行。ADR-HLD-008）"
+            )
     return violations
 
 
