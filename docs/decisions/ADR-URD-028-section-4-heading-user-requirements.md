@@ -11,7 +11,7 @@
 
 2026-10-12 に、改訂した多視点のレビュー（spec-panel）で URD の全体を見直した（[#204](https://github.com/jj1xgo/findsummits/issues/204)）。そのとき、[ADR-OPS-002](ADR-OPS-002-reference-standards-and-intended-deviations.md) が用語の補助に挙げる ISO/IEC/IEEE 24765 のオンライン版 SEVOCAB（[SOURCES「開発プロセスの参照規格」](../../ref/SOURCES.md#開発プロセスの参照規格)）で、URD の用語を引いた。
 
-SEVOCAB はニーズと要求を分けている。user need は、解決の手段から独立した、利用者が成果を得るための前提で、user requirements はそれを変換して得る要求とされる。requirement は、ニーズとそれに伴う制約と条件を表す文とされる（ISO/IEC/IEEE 12207:2026 ほか）。引いた日は 2026-10-12 で、SEVOCAB は版を固定しない。user need と user requirements の項の出典は ADR-OPS-002 の表に無い規格で、24765:2017 は出典に挙がっていなかった。
+SEVOCAB の user need の項の注記は、ニーズと要求を分けている。user need は、解決の手段から独立した、利用者が成果を得るための前提で、user requirements はそれを変換して得る要求とされる（同じ項には、ニーズを要求の集合とする別の規格の定義も並んでいる）。requirement は、ニーズとそれに伴う制約と条件を表す文とされる（ISO/IEC/IEEE 12207:2026 ほか）。引いた日は 2026-10-12 で、SEVOCAB は版を固定しない。user need と user requirements の項の出典は ADR-OPS-002 の表に無い規格で、24765:2017 は出典に挙がっていなかった。
 
 [URD §4](../10_URD.md#4-ユーザー要件) の見出しは「ユーザーニーズ」だったが、表の列名は「要件」、文書の題名は「ユーザー要件定義書」で、各 UR は「〜できること」の形の要求である。[UR-016](../10_URD.md#ur-016)〜[UR-018](../10_URD.md#ur-018) のように、成果物（GeoJSON・HTML ビューア）を指定する UR もある。見出しだけが、中身と違う語になっていた。
 
