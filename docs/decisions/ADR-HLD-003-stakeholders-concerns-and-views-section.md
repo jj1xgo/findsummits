@@ -41,3 +41,7 @@ HLD の第 2 章の節（2.1〜2.10）へのリンクは、HLD の中に約 790 
 ## 追記（2026-10-12）: 付録 A の廃止
 
 [ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の付録 A を廃止したので、本文の付録 A へのリンクを外した。
+
+## 追記（2026-10-12）: 未決事項の小節の廃止
+
+[ADR-HLD-008](ADR-HLD-008-remove-hld-open-items-subsections.md) で HLD の「未決事項と後続」の小節を廃止したので、2.11 の関心事「未決事項」の答えを、各節の本文から Issue へのリンクに改めた。

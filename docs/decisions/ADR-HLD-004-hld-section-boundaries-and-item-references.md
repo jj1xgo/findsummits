@@ -67,3 +67,7 @@ Decision 3 の「未決事項の項目は、解決しても消さず、番号を
 ## 追記（2026-10-12）: 記号の改名
 
 [ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。
+
+## 追記（2026-10-12）: 未決事項の小節の廃止
+
+Decision 3 の未決事項の部分（解決しても消さない、番号を振り直さない。2026-10-12 の上の追記で ADR-HLD-006 が改めたもの）は、[ADR-HLD-008](ADR-HLD-008-remove-hld-open-items-subsections.md) で小節ごと廃止したので用いない。番号と題で指す書き方と検査G は「処理の流れ」の項目に残る。

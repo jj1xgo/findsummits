@@ -60,3 +60,7 @@
 [ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。
 
 Decision 2 の付録 A の「重要」列は、ADR-HLD-007 の Decision 2・4 で、DEC の定義の行の `〔〕` の印に改め、付録 A を廃止した。基準（Decision 1）は変えていない。本文の付録 A へのリンクは、節が無くなったので外した。
+
+## 追記（2026-10-12）: 未決事項の小節の廃止
+
+Decision 3（HLD 全体の最終周回の最後に、未決事項の解決済みの項目を消して番号を振り直す）は、[ADR-HLD-008](ADR-HLD-008-remove-hld-open-items-subsections.md) で小節ごと廃止したので用いない。最終周回の範囲は ADR-HLD-008 の後に決め直す。
