@@ -228,8 +228,8 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 | key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、3×3 メッシュ解析範囲外でコルが未発見の場合 `false`。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
-| area_complete | per-mesh GeoJSON のアクティベーションゾーンプロパティ。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |
-| 仮サミットコード | 申請前の new ピークに暫定付与する識別コード。正式なサミットコードはSOTA審査後に確定する。`summit_code` プロパティに格納（`match_status="new"` の場合）。 |
+| area_complete | per-mesh GeoJSON と突合済み統合 GeoJSON の、アクティベーションゾーンと delete判定ゾーンのプロパティ（[FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照）。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |
+| 仮サミットコード | 申請前の new・dominant のピークに暫定付与する識別コード。正式なサミットコードはSOTA審査後に確定する。`summit_code` プロパティに格納（`match_status` が `new` か `dominant` の場合）。採番の規則は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 
 ---
 
@@ -276,7 +276,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 既存 ADR（URD: 005/007/009/014、SRS: 001/002/003/004/006/008/010/011/012/013）は前回刷新時の経緯で全体通し番号を維持しているため、ステージ別に見ると番号に欠番がある
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-029-...`
-    - 次の SRS: `ADR-SRS-081-...`
+    - 次の SRS: `ADR-SRS-082-...`
     - 次の OPS: `ADR-OPS-005-...`
     - 次の HLD: `ADR-HLD-009-...`（まだ ADR の無いステージは 001 から）
 
