@@ -23,7 +23,7 @@
 3. 用語集の `area_complete` を、アクティベーションゾーンと delete判定ゾーンのプロパティとし、詳細は [FR-016](../20_SRS.md#fr-016-ピーク域ポリゴン生成)・[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を指す。サミット一覧の `area_complete` 列をアクティベーションゾーン由来とすること（[ADR-SRS-045](ADR-SRS-045-summit-xlsx-row-aggregation-model.md)）は変えない。
 4. 用語集の「仮サミットコード」を `new`・`dominant` のピークに付与するものとし、採番の規則は [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) を指す。
 
-要求の中身と範囲は変えない。
+要求の中身と範囲は、1 で HLD が決めていた扱いを SRS に書いたことのほかは変えない。
 
 ## Alternatives
 
