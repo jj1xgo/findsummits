@@ -165,7 +165,7 @@
 | 提供元 | [Cloudflare](https://developers.cloudflare.com/workers/) |
 | 参照URL | <https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>、<https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>、<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>、<https://developers.cloudflare.com/workers/configuration/routing/workers-dev/>、<https://developers.cloudflare.com/workers/previews/get-started/>、<https://github.com/cloudflare/wrangler-action>（Cloudflare の公式の Action。wrangler の版の下限の出どころ）、<https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/>、<https://developers.cloudflare.com/workers/static-assets/>、<https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/>、<https://developers.cloudflare.com/workers/wrangler/configuration/#assets>、<https://developers.cloudflare.com/workers/previews/> |
 | 確認日 | 2026-10-11（開発コンテナから届かないため、host の Codex が web 検索で読み、要の 4 点は持ち主が原文で確かめた） |
-| 本プロジェクトでの利用形態 | [FR-020](../docs/20_SRS.md#fr-020-公開用ビューア配信) の公開用ビューアの配信サービス。組み立てと配信の仕組み、URL の形、設定は [HLD 4.20](../docs/30_HLD.md#420-fr-020-公開用ビューア配信)（D164・D184〜D186）。データの取得元ではないので、帰属表示の対象ではない。 |
+| 本プロジェクトでの利用形態 | [FR-020](../docs/20_SRS.md#fr-020-公開用ビューア配信) の公開用ビューアの配信サービス。組み立てと配信の仕組み、URL の形、設定は [HLD 4.20](../docs/30_HLD.md#420-fr-020-公開用ビューア配信)（[DEC164](../docs/30_HLD.md#4204-設計判断)・[DEC184](../docs/30_HLD.md#4204-設計判断)〜[DEC186](../docs/30_HLD.md#4204-設計判断)）。データの取得元ではないので、帰属表示の対象ではない。 |
 
 ---
 

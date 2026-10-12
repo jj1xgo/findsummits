@@ -3,7 +3,7 @@
 | 状態 | 採用・未実装 |
 | 決定日 | 2026-06-19 |
 
-> ※ 本 ADR の metadata の値は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、`software_version` が取れなければ `unknown`、`gsi_tile_latest_date` が求められなければ空文字になりうる、と改めた（2026-10-09）。いずれも警告して続ける。[HLD 4.9.4](../30_HLD.md#494-設計判断) の D98「版の文字列は出力を組み立てるときに git から取る」と、[HLD 4.9.2](../30_HLD.md#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」で定めた。
+> ※ 本 ADR の metadata の値は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、`software_version` が取れなければ `unknown`、`gsi_tile_latest_date` が求められなければ空文字になりうる、と改めた（2026-10-09）。いずれも警告して続ける。[HLD 4.9.4](../30_HLD.md#494-設計判断) の DEC98「版の文字列は出力を組み立てるときに git から取る」と、[HLD 4.9.2](../30_HLD.md#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」で定めた。
 
 ## Context
 

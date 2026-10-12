@@ -7,7 +7,7 @@
 >
 > **補足（2026-09-23）:** 存在メッシュからは北方領土除外メッシュを除く（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）。
 >
-> ※ 本 ADR の「近傍一致するピークを海面確定に更新する」は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、当たったピークがすでに陸のコルで確定している（`key_col_resolved=true` で `col_lat`・`col_lon` が 0.0 でない）ときは書き換えずに警告する、と改めた（2026-10-09）。[HLD 4.8.4](../30_HLD.md#484-設計判断) の D81「陸のコルで確定したピークは陸地最高峰リストで書き換えない」で定めた。
+> ※ 本 ADR の「近傍一致するピークを海面確定に更新する」は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、当たったピークがすでに陸のコルで確定している（`key_col_resolved=true` で `col_lat`・`col_lon` が 0.0 でない）ときは書き換えずに警告する、と改めた（2026-10-09）。[HLD 4.8.4](../30_HLD.md#484-設計判断) の DEC81「陸のコルで確定したピークは陸地最高峰リストで書き換えない」で定めた。
 
 ## Context
 

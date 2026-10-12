@@ -21,8 +21,8 @@ SRS = '''# SRS
 
 | コンポーネント ID | 名前 |
 |---|---|
-| C1 | 甲 |
-| C2 | 乙 |
+| CMP1 | 甲 |
+| CMP2 | 乙 |
 
 #### FR-001: 一
 
@@ -684,14 +684,14 @@ HLD = '''# HLD
 ### 2.2 横断
 
 - **対応 SRS**: なし（横断の設計）
-- **担当コンポーネント**: C1・C2
+- **担当コンポーネント**: CMP1・CMP2
 
 ## 4. FR 設計
 
 ### 4.1 FR-001 一
 
 - **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
-- **担当コンポーネント**: C1
+- **担当コンポーネント**: CMP1
 
 #### 4.1.1 目的と範囲
 
@@ -699,7 +699,7 @@ HLD = '''# HLD
 
 ## 6. 要求追跡マトリクス
 
-| FR/NFR | タイトル | C1 | C2 | 設計の節 |
+| FR/NFR | タイトル | CMP1 | CMP2 | 設計の節 |
 |:---|:---|:-:|:-:|:---|
 | [FR-001](20_SRS.md#fr-001-一) | 一 | ✅ | | [4.1](#41-fr-001-一) |
 | [FR-002](20_SRS.md#fr-002-二) | 二 | | | |
@@ -708,18 +708,18 @@ HLD = '''# HLD
 
 HLD_PROGRAM = HLD.replace('## 4. FR 設計', '''## 3. プログラム構造
 
-### 3.1 C1 一
+### 3.1 CMP1 一
 
 - **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)
-- **担当コンポーネント**: C1
+- **担当コンポーネント**: CMP1
 
-## 4. FR 設計''').replace('- **担当コンポーネント**: C1・C2\n', '''- **担当コンポーネント**: C1・C2
+## 4. FR 設計''').replace('- **担当コンポーネント**: CMP1・CMP2\n', '''- **担当コンポーネント**: CMP1・CMP2
 
 #### 2.2.4 SRS の FR/NFR との対応
 
 | コンポーネント ID | FR | 処理方式の節 |
 |---|---|---|
-| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |
+| CMP1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |
 ''')
 
 HLD_NFR = HLD.replace('| [NFR-001](20_SRS.md#nfr-001-非一) | 非一 | | | |',
@@ -741,12 +741,12 @@ class HldTest(TraceTestCase):
         self.assertEqual(self.check(self.files()), [])
 
     def test_missing_component(self):
-        hld = HLD.replace('- **担当コンポーネント**: C1\n', '')
+        hld = HLD.replace('- **担当コンポーネント**: CMP1\n', '')
         self.assertIn('T1:HLD-4.1:担当コンポーネント', self.keys(self.files(hld)))
 
     def test_unknown_component(self):
-        hld = HLD.replace('C1・C2', 'C1・C9')
-        self.assertIn('T2:HLD-2.2->C9', self.keys(self.files(hld)))
+        hld = HLD.replace('CMP1・CMP2', 'CMP1・CMP9')
+        self.assertIn('T2:HLD-2.2->CMP9', self.keys(self.files(hld)))
 
     def test_declaration_without_link(self):
         hld = HLD.replace('- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)', '- **対応 SRS**: FR-001')
@@ -754,8 +754,8 @@ class HldTest(TraceTestCase):
 
     def test_declaration_after_subheading_is_not_counted(self):
         hld = HLD.replace(
-            '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n\n#### 4.1.1 目的と範囲\n',
-            '#### 4.1.1 目的と範囲\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1\n')
+            '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: CMP1\n\n#### 4.1.1 目的と範囲\n',
+            '#### 4.1.1 目的と範囲\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: CMP1\n')
         keys = self.keys(self.files(hld))
         self.assertIn('T1:HLD-4.1:対応 SRS', keys)
         self.assertIn('T1:HLD-4.1:担当コンポーネント', keys)
@@ -776,14 +776,14 @@ class HldTest(TraceTestCase):
         self.assertEqual(self.check(self.files(HLD_PROGRAM)), [])
 
     def test_program_chapter_section_needs_declarations(self):
-        hld = HLD.replace('## 4. FR 設計', '## 3. プログラム構造\n\n### 3.1 C1 一\n\n本文。\n\n## 4. FR 設計')
+        hld = HLD.replace('## 4. FR 設計', '## 3. プログラム構造\n\n### 3.1 CMP1 一\n\n本文。\n\n## 4. FR 設計')
         keys = self.keys(self.files(hld))
         self.assertIn('T1:HLD-3.1:対応 SRS', keys)
         self.assertIn('T1:HLD-3.1:担当コンポーネント', keys)
 
     def test_program_chapter_declaration_does_not_cover_requirement(self):
-        hld = HLD_PROGRAM.replace('### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
-                                  '### 3.1 C1 一\n\n- **対応 SRS**: [FR-002](20_SRS.md#fr-002-二)')
+        hld = HLD_PROGRAM.replace('### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+                                  '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-002](20_SRS.md#fr-002-二)')
         self.assertIn('T3:HLD:FR-002', self.keys(self.files(hld), confirmed={'HLD'}))
 
     def test_nfr_chapter_declaration_covers_requirement(self):
@@ -791,8 +791,8 @@ class HldTest(TraceTestCase):
 
     def test_program_chapter_declaration_rejects_nfr(self):
         hld = HLD_PROGRAM.replace(
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-001](20_SRS.md#nfr-001-非一)')
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-001](20_SRS.md#nfr-001-非一)')
         keys = self.keys(self.files(hld))
         self.assertEqual(keys, ['T1:HLD-3.1:対応 SRS:NFR-001'])
 
@@ -801,15 +801,15 @@ class HldTest(TraceTestCase):
 
     def test_program_chapter_unknown_nfr_is_rejected(self):
         hld = HLD_PROGRAM.replace(
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-999](20_SRS.md#nfr-999-無い)')
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)',
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[NFR-999](20_SRS.md#nfr-999-無い)')
         keys = self.keys(self.files(hld))
         self.assertIn('T1:HLD-3.1:対応 SRS:NFR-999', keys)
         self.assertIn('T2:HLD-3.1->NFR-999', keys)
 
 
-HLD_TWO_SECTIONS = HLD.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: C1・C2',
-                               '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1・C2')
+HLD_TWO_SECTIONS = HLD.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: CMP1・CMP2',
+                               '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: CMP1・CMP2')
 
 
 class HldMatrixTest(TraceTestCase):
@@ -868,12 +868,13 @@ class HldMatrixTest(TraceTestCase):
         self.assertIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
 
     def test_columns_mismatch(self):
-        srs = SRS.replace('| C2 | 乙 |\n', '| C2 | 乙 |\n| C3 | 丙 |\n')
+        srs = SRS.replace('| CMP2 | 乙 |\n', '| CMP2 | 乙 |\n| CMP3 | 丙 |\n')
         files = dict(self.files(), **{'docs/20_SRS.md': srs})
         self.assertIn('T4:HLD-matrix:columns', self.keys(files))
 
     def test_columns_out_of_order(self):
-        hld = HLD.replace('| FR/NFR | タイトル | C1 | C2 | 設計の節 |', '| FR/NFR | タイトル | C2 | C1 | 設計の節 |')
+        hld = HLD.replace('| FR/NFR | タイトル | CMP1 | CMP2 | 設計の節 |',
+                          '| FR/NFR | タイトル | CMP2 | CMP1 | 設計の節 |')
         self.assertIn('T4:HLD-matrix:columns', self.keys(self.files(hld)))
 
     def test_all_components_mark_every_column(self):
@@ -914,12 +915,12 @@ class HldMatrixTest(TraceTestCase):
 
     def test_program_chapter_does_not_mark(self):
         hld = HLD_PROGRAM.replace(
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n',
-            '### 3.1 C1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[FR-002](20_SRS.md#fr-002-二)\n')
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n',
+            '### 3.1 CMP1 一\n\n- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)・[FR-002](20_SRS.md#fr-002-二)\n')
         self.assertNotIn('T4:HLD-matrix:FR-002', self.keys(self.files(hld)))
 
 
-PROGRAM_ROW = '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |\n'
+PROGRAM_ROW = '| CMP1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一) |\n'
 
 
 class HldProgramTableTest(TraceTestCase):
@@ -937,56 +938,58 @@ class HldProgramTableTest(TraceTestCase):
         self.assertIn('T4:HLD-program:table', self.keys(self.files(hld)))
 
     def test_fr_mismatch(self):
-        hld = HLD_PROGRAM.replace('| C1 | [FR-001](20_SRS.md#fr-001-一) |', '| C1 | [FR-002](20_SRS.md#fr-002-二) |')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+        hld = HLD_PROGRAM.replace('| CMP1 | [FR-001](20_SRS.md#fr-001-一) |',
+                                  '| CMP1 | [FR-002](20_SRS.md#fr-002-二) |')
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_sections_mismatch(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | |\n')
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| CMP1 | [FR-001](20_SRS.md#fr-001-一) | |\n')
         keys = self.keys(self.files(hld))
-        self.assertIn('T4:HLD-program:C1:sections', keys)
-        self.assertNotIn('T4:HLD-program:C1', keys)
+        self.assertIn('T4:HLD-program:CMP1:sections', keys)
+        self.assertNotIn('T4:HLD-program:CMP1', keys)
 
     def test_section_link_to_other_document(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](20_SRS.md#fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW,
+                                  '| CMP1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](20_SRS.md#fr-001-一) |\n')
+        self.assertIn('T4:HLD-program:CMP1:sections', self.keys(self.files(hld)))
 
     def test_section_number_outside_link(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一)・4.2 |\n')
-        self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| CMP1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一)・4.2 |\n')
+        self.assertIn('T4:HLD-program:CMP1:sections', self.keys(self.files(hld)))
 
     def test_fr_cell_with_extra_text(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW,
-                                  '| C1 | [FR-001](20_SRS.md#fr-001-一)・`FR-002` | [4.1](#41-fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+                                  '| CMP1 | [FR-001](20_SRS.md#fr-001-一)・`FR-002` | [4.1](#41-fr-001-一) |\n')
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_fr_cell_with_link_outside_srs(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW,
-                                  '| C1 | [FR-001](20_SRS.md#fr-001-一)・[FR-002](https://example.com/#fr-002-二) '
+                                  '| CMP1 | [FR-001](20_SRS.md#fr-001-一)・[FR-002](https://example.com/#fr-002-二) '
                                   '| [4.1](#41-fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_fr_cell_with_nfr(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW,
-                                  '| C1 | [FR-001](20_SRS.md#fr-001-一)・[NFR-001](20_SRS.md#nfr-001-非一) '
+                                  '| CMP1 | [FR-001](20_SRS.md#fr-001-一)・[NFR-001](20_SRS.md#nfr-001-非一) '
                                   '| [4.1](#41-fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_duplicate_section(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) '
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| CMP1 | [FR-001](20_SRS.md#fr-001-一) '
                                                '| [4.1](#41-fr-001-一)・[4.1](#41-fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1:sections', self.keys(self.files(hld)))
+        self.assertIn('T4:HLD-program:CMP1:sections', self.keys(self.files(hld)))
 
     def test_sections_need_not_be_in_number_order(self):
-        hld = HLD_PROGRAM.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: C1・C2',
-                                  '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: C1・C2')
+        hld = HLD_PROGRAM.replace('- **対応 SRS**: なし（横断の設計）\n- **担当コンポーネント**: CMP1・CMP2',
+                                  '- **対応 SRS**: [FR-001](20_SRS.md#fr-001-一)\n- **担当コンポーネント**: CMP1・CMP2')
         hld = hld.replace('| ✅ | | [4.1](#41-fr-001-一) |', '| ✅ | ✅ | [2.2](#22-横断)・[4.1](#41-fr-001-一) |')
         hld = hld.replace(PROGRAM_ROW,
-                          '| C1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一)・[2.2](#22-横断) |\n')
+                          '| CMP1 | [FR-001](20_SRS.md#fr-001-一) | [4.1](#41-fr-001-一)・[2.2](#22-横断) |\n')
         self.assertEqual(self.check(self.files(hld)), [])
 
     def test_row_with_wrong_cell_count(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| C1 | [FR-001](20_SRS.md#fr-001-一) |\n')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, '| CMP1 | [FR-001](20_SRS.md#fr-001-一) |\n')
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_columns_mismatch(self):
         hld = HLD_PROGRAM.replace('| コンポーネント ID | FR | 処理方式の節 |',
@@ -995,25 +998,25 @@ class HldProgramTableTest(TraceTestCase):
 
     def test_row_missing(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW, '')
-        self.assertIn('T4:HLD-program:C1', self.keys(self.files(hld)))
+        self.assertIn('T4:HLD-program:CMP1', self.keys(self.files(hld)))
 
     def test_duplicate_row(self):
         hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + PROGRAM_ROW)
-        self.assertIn('T4:HLD-program:C1:duplicate', self.keys(self.files(hld)))
+        self.assertIn('T4:HLD-program:CMP1:duplicate', self.keys(self.files(hld)))
 
     def test_row_without_program_chapter_section(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| C2 | [FR-002](20_SRS.md#fr-002-二) | |\n')
-        self.assertIn('T4:HLD-program:C2', self.keys(self.files(hld)))
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| CMP2 | [FR-002](20_SRS.md#fr-002-二) | |\n')
+        self.assertIn('T4:HLD-program:CMP2', self.keys(self.files(hld)))
 
     def test_unknown_component_row(self):
-        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| C9 | | |\n')
+        hld = HLD_PROGRAM.replace(PROGRAM_ROW, PROGRAM_ROW + '| CMP9 | | |\n')
         self.assertIn('T4:HLD-program:row', self.keys(self.files(hld)))
 
     def test_shared_section_adds_no_row(self):
         hld = HLD_PROGRAM.replace('## 4. FR 設計', '''### 3.9 共通部品
 
 - **対応 SRS**: なし（横断の設計）
-- **担当コンポーネント**: C1・C2
+- **担当コンポーネント**: CMP1・CMP2
 
 ## 4. FR 設計''', 1)
         self.assertEqual(self.check(self.files(hld)), [])
@@ -1088,7 +1091,7 @@ class LldTest(TraceTestCase):
 
     def test_lld_can_point_to_program_chapter(self):
         lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)',
-                          '[4.1](30_HLD.md#41-fr-001-一)・[3.1](30_HLD.md#31-c1-一)')
+                          '[4.1](30_HLD.md#41-fr-001-一)・[3.1](30_HLD.md#31-cmp1-一)')
         files = self.files(**{'docs/30_HLD.md': HLD_PROGRAM, 'docs/40_LLD.md': lld})
         keys = self.keys(files, confirmed={'LLD', 'UT'})
         self.assertEqual([k for k in keys if not k.startswith('T1:stage:')], [])

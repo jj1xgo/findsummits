@@ -11,85 +11,117 @@ HLD = '''# HLD
 
 ## 2. 設計
 
-- D1（甲は乙にする）: 本文。D2「`--opt` の値は丙」に従う。
-- D2（`--opt` の値は丙）: 本文。
-- D3（申請書の行は D1 の順のまま）: 本文。
+### 2.1 甲
 
-参照は D1「甲は乙にする」と D3「申請書の行は D1 の順のまま」（観点）。
+#### 2.1.4 設計判断
 
-## 付録 A 設計判断の一覧
+- DEC1（甲は乙にする）〔境界〕: 本文。[DEC2](#214-設計判断)「`--opt` の値は丙」に従う。
+- DEC2（`--opt` の値は丙）: 本文。
+- DEC3（申請書の行は DEC1 の順のまま）〔上位文書・やり直し費用〕: 本文。
 
-| 記号 | 題 | 置き場 |
-|---|---|---|
-| D1 | 甲は乙にする | [2](#2-設計) |
-| D2 | `--opt` の値は丙 | [2](#2-設計) |
-| D3 | 申請書の行は D1 の順のまま | [2](#2-設計) |
+参照は [DEC1](#214-設計判断)「甲は乙にする」と [DEC3](#214-設計判断)「申請書の行は DEC1 の順のまま」（観点）。
 '''
+
+
+def lint_at(text, rel):
+    """tmp/<rel> に text を書いて check_file の違反名の list を返す"""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / rel
+        path.parent.mkdir(parents=True)
+        path.write_text(text, encoding='utf-8')
+        return [v.split(': ')[1] for v in ld.check_file(str(path))]
 
 
 class CheckHldDecisionsTest(unittest.TestCase):
     def lint(self, text, name='30_HLD.md'):
-        with tempfile.TemporaryDirectory() as tmp:
-            docs = Path(tmp) / 'docs'
-            docs.mkdir()
-            path = docs / name
-            path.write_text(text, encoding='utf-8')
-            return [v.split(': ')[1] for v in ld.check_file(str(path))]
+        return lint_at(text, f'docs/{name}')
 
     def test_clean(self):
         self.assertEqual(self.lint(HLD), [])
 
     def test_bare_ref(self):
-        self.assertEqual(self.lint(HLD + '\nD1 に従う。\n'), ['HLD-D-BARE'])
+        self.assertEqual(self.lint(HLD + '\nDEC1「甲は乙にする」に従う。\n'), ['HLD-DEC-BARE'])
 
     def test_bare_ref_in_definition_body(self):
-        text = HLD.replace('- D2（`--opt` の値は丙）: 本文。', '- D2（`--opt` の値は丙）: D1 を受ける。')
-        self.assertEqual(self.lint(text), ['HLD-D-BARE'])
+        text = HLD.replace('[DEC2](#214-設計判断)「`--opt`', 'DEC2「`--opt`')
+        self.assertEqual(self.lint(text), ['HLD-DEC-BARE'])
+
+    def test_wrong_anchor(self):
+        self.assertEqual(self.lint(HLD + '\n[DEC1](#21-甲)「甲は乙にする」に従う。\n'), ['HLD-DEC-ANCHOR'])
+
+    def test_percent_encoded_anchor(self):
+        text = HLD + '\n[DEC1](#214-%E8%A8%AD%E8%A8%88%E5%88%A4%E6%96%AD)「甲は乙にする」に従う。\n'
+        self.assertEqual(self.lint(text), [])
+
+    def test_no_title(self):
+        self.assertEqual(self.lint(HLD + '\n[DEC1](#214-設計判断) に従う。\n'), ['HLD-DEC-NOTITLE'])
 
     def test_title_not_closed(self):
-        self.assertEqual(self.lint(HLD + '\nD1「甲は乙にする に従う。\n'), ['HLD-D-TITLE'])
+        self.assertEqual(self.lint(HLD + '\n[DEC1](#214-設計判断)「甲は乙\n'), ['HLD-DEC-TITLE'])
 
     def test_title_mismatch(self):
-        self.assertEqual(self.lint(HLD + '\nD1「甲は乙」に従う。\n'), ['HLD-D-TITLE'])
+        self.assertEqual(self.lint(HLD + '\n[DEC1](#214-設計判断)「甲は丁にする」。\n'), ['HLD-DEC-TITLE'])
 
     def test_unknown(self):
-        self.assertEqual(self.lint(HLD + '\nD9「何か」に従う。\n'), ['HLD-D-UNKNOWN'])
+        self.assertEqual(self.lint(HLD + '\n[DEC9](#214-設計判断)「無い」と DEC8。\n'),
+                         ['HLD-DEC-UNKNOWN', 'HLD-DEC-UNKNOWN'])
 
     def test_ignored_places(self):
-        text = HLD + '\n### D1 の見出し\n\n`D1` と 「D1 の引用」。\n\n```text\nD1\n```\n'
+        text = HLD + '\n## DEC1 について\n\n`DEC1` と「DEC1 の引用」。\n'
         self.assertEqual(self.lint(text), [])
 
     def test_title_length_excludes_backticks(self):
-        ok = 'あ' * 28 + '`ab`'  # 見える文字数 30、バッククォート込みで 32
-        long_ = 'あ' * 31
-        text = HLD.replace('甲は乙にする', ok)
-        self.assertEqual(self.lint(text), [])
-        text = HLD.replace('甲は乙にする', long_)
-        self.assertEqual(self.lint(text), ['HLD-D-LONG'])
+        ok = HLD.replace('甲は乙にする）', 'あ' * 28 + '`x`）').replace('「甲は乙にする」', '「' + 'あ' * 28 + '`x`」')
+        self.assertEqual(self.lint(ok), [])
+        long = HLD.replace('甲は乙にする）', 'あ' * 31 + '）').replace('「甲は乙にする」', '「' + 'あ' * 31 + '」')
+        self.assertEqual(self.lint(long), ['HLD-DEC-LONG'])
 
-    def test_index_mismatch_and_missing(self):
-        text = HLD.replace('| D1 | 甲は乙にする |', '| D1 | 甲は乙 |')
-        self.assertEqual(self.lint(text), ['HLD-D-INDEX'])
-        text = HLD.replace('| D2 | `--opt` の値は丙 | [2](#2-設計) |\n', '')
-        self.assertEqual(self.lint(text), ['HLD-D-INDEX'])
+    def test_mark(self):
+        for bad in ('〔重要〕', '〔やり直し費用・上位文書〕', '〔〕', '〔境界・境界〕'):
+            with self.subTest(bad=bad):
+                self.assertEqual(self.lint(HLD.replace('〔境界〕', bad)), ['HLD-DEC-MARK'])
 
-    def test_index_row_outside_appendix(self):
-        row = '| D2 | `--opt` の値は丙 | [2](#2-設計) |\n'
-        text = HLD.replace(row, '').replace('## 付録 A', row + '\n## 付録 A')
-        self.assertEqual(self.lint(text), ['HLD-D-BARE', 'HLD-D-INDEX'])
+    def test_definition_outside_decision_section(self):
+        self.assertEqual(self.lint(HLD + '\n## 3. 他\n\n- DEC4（外）: 本文。\n'), ['HLD-DEC-PLACE'])
 
     def test_definition_in_code_block_ignored(self):
-        text = HLD + '\n```text\n- D1（別の題）: 例。\n```\n'
-        self.assertEqual(self.lint(text), [])
+        self.assertEqual(self.lint(HLD + '\n```\n- DEC4（無視）: 本文。\n```\n'), [])
 
     def test_duplicate_definition(self):
-        text = HLD.replace('- D3（申請書の行は D1 の順のまま）: 本文。',
-                           '- D3（申請書の行は D1 の順のまま）: 本文。\n- D1（甲は乙にする）: 再掲。')
-        self.assertEqual(self.lint(text), ['HLD-D-DUP'])
+        text = HLD.replace('- DEC2（`--opt` の値は丙）: 本文。\n',
+                           '- DEC2（`--opt` の値は丙）: 本文。\n- DEC2（`--opt` の値は丙）: 本文。\n')
+        self.assertEqual(self.lint(text), ['HLD-DEC-DUP'])
 
     def test_other_files_not_checked(self):
-        self.assertEqual(self.lint(HLD + '\nD1 に従う。\n', name='40_LLD.md'), [])
-        self.assertEqual(self.lint(HLD + '\nD1 に従う。\n', name='30_HLD-§2.7.md'), [])
+        self.assertEqual(self.lint('DEC1「x」\n', name='20_SRS.md'), [])
+
+
+class CheckOldSymbolsTest(unittest.TestCase):
+    def test_old_symbols(self):
+        self.assertEqual(lint_at('C4 と D45「題」と K1。\n', 'docs/02_test_policy.md'),
+                         ['OLD-SYMBOL', 'OLD-SYMBOL', 'OLD-SYMBOL'])
+
+    def test_not_symbols(self):
+        text = ('CMP4・DEC45・PRE1・CMP4-EXT1・ADR-SRS-010・DEM5・3D・UTF-8・`C3` のセル・'
+                '[x](https://example.com/C4)・[3.4](#34-cmp4-地形解析エンジン)\n')
+        self.assertEqual(lint_at(text, 'docs/02_test_policy.md'), [])
+
+    def test_joint_even_in_code(self):
+        self.assertEqual(lint_at('`C4-E1` と C5-I2。\n', 'docs/30_HLD.md'), ['OLD-JOINT', 'OLD-JOINT'])
+
+    def test_fenced_block_checked(self):
+        self.assertEqual(lint_at('```text\nC1 ─→ C2\n```\n', 'docs/30_HLD.md'), ['OLD-SYMBOL', 'OLD-SYMBOL'])
+
+    def test_adr_checked_research_not(self):
+        self.assertEqual(lint_at('C4。\n', 'docs/decisions/ADR-HLD-999-x.md'), ['OLD-SYMBOL'])
+        self.assertEqual(lint_at('C4。\n', 'docs/decisions/research/x.md'), [])
+
+    def test_outside_docs_not_checked(self):
+        self.assertEqual(lint_at('C4。\n', 'other/x.md'), [])
+
+    def test_sources_checked(self):
+        self.assertEqual(lint_at('（D164・D184〜D186）\n', 'ref/SOURCES.md'),
+                         ['OLD-SYMBOL', 'OLD-SYMBOL', 'OLD-SYMBOL'])
 
 
 HLD_ITEMS = '''# HLD

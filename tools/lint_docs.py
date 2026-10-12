@@ -6,8 +6,9 @@
 検査C: 内部トラッカーID（ISSUE-NNN/BUG-NNN）および mgmt/ パス参照の混入検出
 検査D: FR/UR/NFR 裸参照（リンクでもコード表記でもない参照）の検出
 検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止）
-検査F: HLD の設計判断（D）の題（定義の題の長さ、付録 A の題、本文の参照に添えた題）
+検査F: HLD の設計判断（DEC）の定義（置き場・題の長さ・重要の印）と参照（リンク先・題）
 検査G: HLD の手順と未決事項の項目の題（指される項目の題、参照に添えた題）
+検査H: docs/ の文書と ADR（調査資料を除く）と ref/SOURCES.md に残った 1 文字の記号（C・D・K と結合のつなぎ目の E・I）
 """
 import os
 import re
@@ -58,15 +59,25 @@ NOTATION_RULES = [
 # 検査C・D 対象外ファイル（ルール自体の経緯を記録したメタドキュメントが将来追加された場合の受け皿）。
 CHECK_CD_EXEMPT_FILES = set()
 
-# 検査F: HLD の設計判断（D）の題（docs/CLAUDE.md「HLD の記号の書き方」）
+# 検査F: HLD の設計判断（DEC）（docs/CLAUDE.md「HLD の記号の書き方」、ADR-HLD-006・ADR-HLD-007）
 HLD_PATH_SUFFIX = os.sep + os.path.join('docs', '30_HLD.md')
-D_DEF_RE = re.compile(r'^- (D\d+)（(.+?)）: ')
-D_INDEX_HEADING = '## 付録 A '
-D_INDEX_RE = re.compile(r'^\| (D\d+) \| (.+?) \| ')
-D_REF_RE = re.compile(r'(?<![A-Za-z0-9_\-])(D\d+)(?![0-9])')
-# 題の照合から外す範囲: コード表記と「」の中（他の D の題の中の D、引用）
+DEC_DEF_RE = re.compile(r'^- (DEC\d+)（(.+?)）(?:〔([^〕\n]*)〕)?: ')
+DEC_REF_RE = re.compile(r'(?<![A-Za-z0-9_\-])(DEC\d+)(?![0-9])')
+DEC_LINK_RE = re.compile(r'\[(DEC\d+)\]\(#([^)\s]+)\)')
+DEC_SECTION_RE = re.compile(r'^#{2,6} \d+(?:\.\d+)+ 設計判断')
+DEC_HEADING_RE = re.compile(r'^#{1,6} ')
+DEC_CRITERIA = ('上位文書', 'NFR', '境界', '外部参照', 'やり直し費用')
+# 題の照合から外す範囲: コード表記と「」の中（他の DEC の題の中の DEC、引用）
 D_MASK_RE = re.compile(r'`[^`\n]+`|「[^」\n]*」')
 D_TITLE_MAX = 30
+
+# 検査H: 1 文字の記号の残り（ADR-HLD-007）。調査資料は対象外
+OLD_JOINT_RE = re.compile(r'(?<![A-Za-z0-9_])C(\d+)-([EI])(\d+)(?![0-9A-Za-z])')
+OLD_SYMBOL_RE = re.compile(r'(?<![A-Za-z0-9_./#-])(C[1-8]|D\d+|K[1-6])(?![0-9A-Za-z])')
+OLD_PREFIX = {'C': 'CMP', 'D': 'DEC', 'K': 'PRE'}
+OLD_SKIP_RE = re.compile(r'`[^`\n]+`|https?://[^\s)>]+')
+RESEARCH_DIR = os.sep + os.path.join('docs', 'decisions', 'research') + os.sep
+SOURCES_SUFFIX = os.sep + os.path.join('ref', 'SOURCES.md')
 
 
 # 検査G: HLD の手順と未決事項の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）
@@ -218,6 +229,10 @@ def check_file(filepath):
                         f"{filepath}:{i + 1}: NOTATION-{rule_name}: {message}"
                     )
 
+    # 検査H: docs/ の文書と ADR（調査資料を除く）と ref/SOURCES.md
+    if (_in_docs and RESEARCH_DIR not in abs_filepath) or abs_filepath.endswith(SOURCES_SUFFIX):
+        violations.extend(check_old_symbols(filepath, lines))
+
     # 検査F・G: docs/30_HLD.md だけに適用する（ファイル全体の定義と照合するため、行の検査の後に行う）
     if abs_filepath.endswith(HLD_PATH_SUFFIX):
         violations.extend(check_hld_decisions(filepath, lines))
@@ -226,30 +241,20 @@ def check_file(filepath):
     return violations
 
 
+def dec_mark_ok(mark):
+    """重要の印が、基準の名を規定の順に、重ねずに `・` でつないだものか"""
+    names = mark.split('・')
+    if not all(n in DEC_CRITERIA for n in names):
+        return False
+    idx = [DEC_CRITERIA.index(n) for n in names]
+    return idx == sorted(set(idx))
+
+
 def check_hld_decisions(filepath, lines):
-    """D の定義の題の長さ、付録 A の題、本文の参照に添えた題を照合する"""
-    violations = []
-    defs = {}
-    in_code_block = False
-    for i, raw in enumerate(lines):
-        if raw.lstrip().startswith('```'):
-            in_code_block = not in_code_block
-            continue
-        m = D_DEF_RE.match(raw)
-        if in_code_block or not m:
-            continue
-        d, title = m.groups()
-        if d in defs:
-            violations.append(f"{filepath}:{i + 1}: HLD-D-DUP: {d} の定義が重複しています")
-        defs[d] = title
-        if len(title.replace('`', '')) > D_TITLE_MAX:
-            violations.append(
-                f"{filepath}:{i + 1}: HLD-D-LONG: {d} の題が {D_TITLE_MAX} 字を超えています"
-                f"（バッククォートを除いて数える）"
-            )
-    indexed = set()
-    in_code_block = False
-    in_index = False
+    """DEC の定義（置き場・題の長さ・重要の印）と、本文の参照（リンク・リンク先・題）を照合する"""
+    from lint_trace import github_slug
+    violations, defs = [], {}
+    anchor, in_code_block = None, False
     for i, raw in enumerate(lines):
         line = raw.rstrip('\n')
         if line.lstrip().startswith('```'):
@@ -257,40 +262,92 @@ def check_hld_decisions(filepath, lines):
             continue
         if in_code_block:
             continue
-        if line.startswith('#'):
-            if line.startswith('## '):
-                in_index = line.startswith(D_INDEX_HEADING)
+        if DEC_HEADING_RE.match(line):
+            anchor = github_slug(line.lstrip('#')) if DEC_SECTION_RE.match(line) else None
             continue
-        m = D_INDEX_RE.match(line) if in_index else None
-        if m:
-            d, title = m.groups()
-            indexed.add(d)
-            if defs.get(d) != title:
-                violations.append(
-                    f"{filepath}:{i + 1}: HLD-D-INDEX: 付録 A の {d} の題が定義と一致しません"
-                )
+        m = DEC_DEF_RE.match(line)
+        if not m:
             continue
-        m = D_DEF_RE.match(line)
+        d, title, mark = m.groups()
+        where = f"{filepath}:{i + 1}"
+        if d in defs:
+            violations.append(f"{where}: HLD-DEC-DUP: {d} の定義が重複しています")
+        defs[d] = (title, anchor)
+        if anchor is None:
+            violations.append(f"{where}: HLD-DEC-PLACE: {d} の定義が「設計判断」の小節の外にあります")
+        if len(title.replace('`', '')) > D_TITLE_MAX:
+            violations.append(
+                f"{where}: HLD-DEC-LONG: {d} の題が {D_TITLE_MAX} 字を超えています（バッククォートを除いて数える）"
+            )
+        if mark is not None and not dec_mark_ok(mark):
+            violations.append(
+                f"{where}: HLD-DEC-MARK: {d} の重要の印は {'・'.join(DEC_CRITERIA)} の名を"
+                f"この順に `・` でつないでください"
+            )
+    in_code_block = False
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        if line.lstrip().startswith('```'):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block or DEC_HEADING_RE.match(line):
+            continue
+        m = DEC_DEF_RE.match(line)
         start = m.end() if m else 0
         masked = '\0' * start + D_MASK_RE.sub(lambda x: '\0' * len(x.group()), line[start:])
-        for r in D_REF_RE.finditer(masked):
+        where = f"{filepath}:{i + 1}"
+        linked = []
+        for r in DEC_LINK_RE.finditer(masked):
+            linked.append((r.start(), r.end()))
             d = r.group(1)
+            if d not in defs:
+                violations.append(f"{where}: HLD-DEC-UNKNOWN: {d} の定義がありません")
+                continue
+            title, place = defs[d]
+            form = f"[{d}](#{place})「{title}」"
+            if place is not None and unquote(r.group(2)) != place:
+                violations.append(f"{where}: HLD-DEC-ANCHOR: {d} のリンク先が定義の小節と違います（{form}）")
             rest = line[r.end():]
             end = rest.find('」')
-            if d not in defs:
-                violations.append(f"{filepath}:{i + 1}: HLD-D-UNKNOWN: {d} の定義がありません")
-            elif not rest.startswith('「'):
-                violations.append(
-                    f"{filepath}:{i + 1}: HLD-D-BARE: {d} に題を添えてください（{d}「{defs[d]}」）"
-                )
+            if not rest.startswith('「'):
+                violations.append(f"{where}: HLD-DEC-NOTITLE: {d} に題を添えてください（{form}）")
             elif end < 0:
-                violations.append(f"{filepath}:{i + 1}: HLD-D-TITLE: {d} の題が行の中で閉じていません")
-            elif rest[1:end] != defs[d]:
+                violations.append(f"{where}: HLD-DEC-TITLE: {d} の題が行の中で閉じていません")
+            elif rest[1:end] != title:
+                violations.append(f"{where}: HLD-DEC-TITLE: {d} の題が定義と一致しません（{form}）")
+        for r in DEC_REF_RE.finditer(masked):
+            if any(a <= r.start() < b for a, b in linked):
+                continue
+            d = r.group(1)
+            if d not in defs:
+                violations.append(f"{where}: HLD-DEC-UNKNOWN: {d} の定義がありません")
+            else:
+                title, place = defs[d]
                 violations.append(
-                    f"{filepath}:{i + 1}: HLD-D-TITLE: {d} の題が定義と一致しません（{d}「{defs[d]}」）"
+                    f"{where}: HLD-DEC-BARE: {d} は定義の小節へのリンクにしてください（[{d}](#{place})「{title}」）"
                 )
-    for d in sorted(set(defs) - indexed, key=lambda x: int(x[1:])):
-        violations.append(f"{filepath}: HLD-D-INDEX: {d} が付録 A にありません")
+    return violations
+
+
+def check_old_symbols(filepath, lines):
+    """検査H: 1 文字の記号（C・D・K と結合のつなぎ目の E・I）を止める。
+    つなぎ目の ID はコード表記の中も見る。ほかの記号はコード表記と URL の中を見ない"""
+    violations = []
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        where = f"{filepath}:{i + 1}"
+        for m in OLD_JOINT_RE.finditer(line):
+            new = f"CMP{m.group(1)}-{'EXT' if m.group(2) == 'E' else 'INT'}{m.group(3)}"
+            violations.append(
+                f"{where}: OLD-JOINT: 結合のつなぎ目の ID「{m.group()}」は {new} にしてください（ADR-HLD-007）"
+            )
+        masked = OLD_JOINT_RE.sub(lambda x: '\0' * len(x.group()), line)
+        masked = OLD_SKIP_RE.sub(lambda x: '\0' * len(x.group()), masked)
+        for m in OLD_SYMBOL_RE.finditer(masked):
+            s = m.group(1)
+            violations.append(
+                f"{where}: OLD-SYMBOL: 1 文字の記号「{s}」は {OLD_PREFIX[s[0]]}{s[1:]} にしてください（ADR-HLD-007）"
+            )
     return violations
 
 

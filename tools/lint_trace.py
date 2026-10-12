@@ -227,7 +227,7 @@ def check_links(repo):
 UR_ANCHOR_RE = re.compile(r'<a\s+id="ur-(\d+)"')
 SRS_REQ_RE = re.compile(r'^#{3,4}\s+((?:FR|NFR)-\d+)')
 DECL_RE = re.compile(r'^- \*\*([^*]+)\*\*:\s*(.*)$')
-COMPONENT_ROW_RE = re.compile(r'^\|\s*(C\d+)\s*\|')
+COMPONENT_ROW_RE = re.compile(r'^\|\s*(CMP\d+)\s*\|')
 ID_NUM_RE = re.compile(r'^(UR|FR|NFR)-(\d+)$')
 SRS_MATRIX_HEAD_RE = re.compile(r'^## \d+\. 要求追跡マトリクス')
 SRS_VERIFY_HEAD_RE = re.compile(r'^## \d+\. 検証\s*$')
@@ -696,8 +696,8 @@ def check_hld(repo, req_ids, comps, confirmed):
 
 
 def component_order(name):
-    """C1〜C8 を番号の順に並べるための鍵"""
-    return int(name[1:])
+    """CMP1〜CMP8 を番号の順に並べるための鍵"""
+    return int(name[len('CMP'):])
 
 
 def section_order(sec):
