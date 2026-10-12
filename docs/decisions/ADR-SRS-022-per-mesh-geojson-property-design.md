@@ -87,3 +87,7 @@ CSV と GeoJSON で同一データを二重管理することになり、更新�
 - **[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定)**: merged_peak.csv と merged_peak.geojson の join キー = `peak_lat`/`peak_lon` を明記。
 - **コード追従（別タスク）**: mesh_analyze.c の GeoJSON 出力プロパティ・merge.py の join 実装を本 ADR に合わせて修正する。
 - **可視化フィーチャ追加（[ADR-SRS-026](ADR-SRS-026-intermediate-geojson-peak-col-visualization.md)）**: [UR-013](../10_URD.md#ur-013) を満たすため、ゾーンポリゴンに加えてピーク/コル Point・peak→col LineString を中間 GeoJSON に追加する。本 ADR の join 方式（4 プロパティ・ポリゴン設計）は不変で、フィーチャを加算的に追加する。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

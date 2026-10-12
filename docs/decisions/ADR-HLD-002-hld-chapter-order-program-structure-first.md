@@ -48,3 +48,7 @@
 ## 追記（2026-10-10）: 第 6 章の追加
 
 第 5 章の後に「[6. 要求追跡マトリクス](../30_HLD.md#6-要求追跡マトリクス)」を足した（[ADR-HLD-005](ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。Decision 1 の第 1〜5 章の並びと、Decision 2 の 1 つのファイルのままにすることは変えない。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

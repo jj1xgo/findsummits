@@ -63,3 +63,7 @@
 ## 追記（2026-10-12）: Decision 3 の未決事項の扱い
 
 Decision 3 の「未決事項の項目は、解決しても消さず、番号を振り直さない」は、[ADR-HLD-006](ADR-HLD-006-hld-decision-selection-criteria-and-open-item-cleanup.md) の Decision 3 で「HLD が確定するまでは残し、HLD 全体の最終周回の最後に解決済みの項目を消して 1 回だけ番号を振り直す」に改めた。番号と題で指す書き方と検査G、過去の出来事の記録の番号を直さない Decision 4 は変わらない。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

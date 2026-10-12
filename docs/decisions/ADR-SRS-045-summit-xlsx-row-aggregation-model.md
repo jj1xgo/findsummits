@@ -96,3 +96,7 @@ SRS 未定義だった。本 ADR はその欠落を補完する。
 
 1行=1サミットと行数・行位置を維持し、除外された候補も両一覧へ保持する。application_exclusion・exclusion_note 列を追加し、バッチは空文字、改訂一覧は現在状態の値を転記する。除外によって登録・解析属性や行の生成元を変えない。
 詳細は [ADR-SRS-050](ADR-SRS-050-persistent-exclusion-decisions.md) と [FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様) を参照。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

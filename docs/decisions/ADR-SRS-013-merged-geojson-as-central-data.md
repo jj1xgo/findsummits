@@ -120,3 +120,7 @@ dominant 行は申請書 XLSX で 2 行（追加 + 削除）に展開される�
 
 - コード（merge.py, output_geojson.py 等）の修正は HLD/COD ステージで対応（後続ステージで継続）
 - rationale 永続化方式・XLSX マージロジックの詳細は HLD ステージで決定
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

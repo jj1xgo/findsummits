@@ -69,3 +69,7 @@ C エンジンが per-mesh 解析時に使用タイルの mtime を CSV に出�
 - SRS [FR-001](../20_SRS.md#fr-001-標高タイル事前取得) の説明に mtime 焼き込みを追記
 - SRS [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の説明に gsi_tile_latest_date 格納を追記
 - SRS [FR-013](../20_SRS.md#fr-013-html-ビューア生成) の metadata 一覧に `gsi_tile_latest_date` を追記（既知の制約注記付き）
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

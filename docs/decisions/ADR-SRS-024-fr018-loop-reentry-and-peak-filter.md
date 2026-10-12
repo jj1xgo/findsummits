@@ -92,3 +92,7 @@
   途中経過を確認できる。可視化を見て解析を途中中断するシナリオは本 ADR のスコープ外（追って検討）。
 - **コード追従（別タスク）**: per-mesh GeoJSON 統合スクリプトに `merged_peak.csv` による
   絞り込みと、[FR-022](../20_SRS.md#fr-022-コル充足判定) ループ内での [FR-008](../20_SRS.md#fr-008-per-mesh-csv-統合) とセットの再実行を実装する。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

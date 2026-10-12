@@ -40,3 +40,7 @@
 - 標高タイル取得完了記録の後でローカルキャッシュから消えたタイルは、メッシュのタイルがすべて消えたときを除いて検出しない（[HLD 4.4.5](../30_HLD.md#445-未決事項と後続)）。
 - [ST](../70_ST.md) の [FR-004](../20_SRS.md#fr-004-33メッシュ結合解析オーケストレーション)・[FR-014](../20_SRS.md#fr-014-広域結合解析オーケストレーション) の試験に、読めないタイルのケースと、窓の中の 1 つのメッシュだけタイルが 1 枚も無いケースを足す。ST の改訂の機会に合わせる。
 - 現行のプロトタイプとの違いは、CMP4 の C++ 移行（[ADR-SRS-010](ADR-SRS-010-cpp-opencv-migration.md)）の段で反映する。北方領土除外メッシュの扱い（[ADR-SRS-053](ADR-SRS-053-northern-territories-tile-intersection-and-excluded-meshes.md)）は変えない。
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

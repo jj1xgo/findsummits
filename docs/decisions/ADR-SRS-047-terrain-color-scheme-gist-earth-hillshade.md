@@ -106,3 +106,7 @@ gist_earth標準方式（カラーマップ全体をgist_earthのみで完結さ
 - [ADR-SRS-012: 標高地形図の縮小方式](ADR-SRS-012-terrain-image-downscaling-method.md)
 - [SRS FR-015: 標高地形図出力](../20_SRS.md#fr-015-標高地形図出力)
 - [SRS 6.2.3: 標高地形図](../20_SRS.md#623-標高地形図)
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

@@ -99,3 +99,7 @@ GeoJSON の properties に `col_lat`/`col_lon` を追加するだけで点・線
 - **[NFR-009](../20_SRS.md#nfr-009-観測可能性中間成果物の可視化)**: 「保証範囲外」の記述を削除し、本 ADR を参照してスコープ内に改訂
 - **[ADR-SRS-022](ADR-SRS-022-per-mesh-geojson-property-design.md)**: Consequences に本 ADR への前方リンクを追加
 - コード追従（mesh_analyze.c・merge.py・[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) のポリゴン絞り込み）は HLD/COD ステージ（todo.md 転記済み）
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

@@ -96,3 +96,7 @@ geojson のみに持ち、xlsx には追加しない案。問題 2・3 が解消
 - **SRS [FR-013](../20_SRS.md#fr-013-html-ビューア生成)（metadata 一覧）**: boolean 不備フラグ群の記述を削除（per-feature プロパティは残す）
 - **[ADR-SRS-011](ADR-SRS-011-delete-zone-polygon.md) Consequences**: 「不備フラグは `merged_summit.geojson` のメタデータプロパティに格納」を本 ADR 決定に更新
 - **[ADR-SRS-013](ADR-SRS-013-merged-geojson-as-central-data.md)**: 「不備フラグを metadata に」という旧決定を本 ADR 決定で上書きと追記
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。

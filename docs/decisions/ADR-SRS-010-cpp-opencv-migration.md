@@ -149,3 +149,7 @@ Phase 1〜4 の詳細手順・検証手順は採用後に各 ISSUE として登�
 - [SRS FR-015: 標高地形図出力](../20_SRS.md#fr-015-標高地形図出力)
 - [SRS FR-016: ピーク域ポリゴン生成（旧称: アクティベーションゾーン計算）](../20_SRS.md#fr-016-ピーク域ポリゴン生成)
 - [調査資料: cpp-opencv-migration-research.md](research/cpp-opencv-migration-research.md)
+
+## 追記（2026-10-12）: 記号の改名
+
+[ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。
