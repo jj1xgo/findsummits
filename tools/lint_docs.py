@@ -81,8 +81,9 @@ OLD_SKIP_RE = re.compile(r'`[^`\n]+`|https?://[^\s)>]+')
 RESEARCH_DIR = os.sep + os.path.join('docs', 'decisions', 'research') + os.sep
 SOURCES_SUFFIX = os.sep + os.path.join('ref', 'SOURCES.md')
 
-# 検査I: HLD に未決事項の小節を置かない（ADR-HLD-008）。節の番号の有無を問わない
-OPEN_SECTION_RE = re.compile(r'^#{1,6} (?:\d+(?:\.\d+)* )?未決事項')
+# 検査I: HLD に未決事項の小節を置かない（ADR-HLD-008）。節の番号の有無と書き方（末尾のピリオド）、空白の数と種類、
+# 行頭の 3 つまでの空白を問わない
+OPEN_SECTION_RE = re.compile(r'^ {0,3}#{1,6}\s+(?:\d+(?:\.\d+)*\.?\s+)?未決事項')
 
 
 # 検査G: HLD の手順の項目の題（docs/CLAUDE.md「HLD の記号の書き方」）

@@ -262,6 +262,13 @@ class CheckHldItemRefsTest(unittest.TestCase):
         text = HLD_ITEMS + '\n### 未決事項と後続\n\nなし。\n'
         self.assertEqual(self.lint(text), ['HLD-OPEN-SECTION'])
 
+    def test_open_items_section_heading_variants_rejected(self):
+        # 章の番号の後のピリオド、2 つ以上の空白、全角の空白、行頭の 3 つまでの空白
+        for heading in ['## 7. 未決事項と後続', '#### 4.8.9  未決事項と後続', '#### 4.8.9\u3000未決事項と後続',
+                        '   #### 4.8.9 未決事項と後続']:
+            with self.subTest(heading=heading):
+                self.assertEqual(self.lint(HLD_ITEMS + '\n' + heading + '\n\nなし。\n'), ['HLD-OPEN-SECTION'])
+
     def test_open_items_section_in_code_block_ignored(self):
         self.assertEqual(self.lint(HLD_ITEMS + '\n```text\n#### 4.8.9 未決事項と後続\n```\n'), [])
         self.assertEqual(self.lint(HLD_ITEMS + '\n~~~\n#### 4.8.9 未決事項と後続\n~~~\n'), [])
