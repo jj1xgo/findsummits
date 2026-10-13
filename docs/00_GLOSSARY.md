@@ -227,7 +227,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | 除外台帳 | 適用中と未適用の manual 判断を保持する内部データ。判断ファイルは台帳を持ち運ぶ JSON であり、公開エビデンスとは別の成果物（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
-| key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、解析範囲（通常は 3×3 メッシュ、広域は N×N メッシュ）の外でコルが未発見の場合 `false`（定義は [FR-007 出力](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用)）。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
+| key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、解析範囲（通常は 3×3 メッシュ、広域は N×N メッシュ）の外でコルが未発見の場合 `false`（定義は [FR-007 出力](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用)）。統合した後（`merged_peak.csv` 以降）は、陸地最高峰リストで `true`（Key コル = 海面）にしたピークも含む（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合)）。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
 | area_complete | GeoJSON の、アクティベーションゾーンと delete判定ゾーンのプロパティ（[FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照）。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |
 | 仮サミットコード | 申請前の new・dominant のピークに暫定付与する識別コード。正式なサミットコードはSOTA審査後に確定する。`summit_code` プロパティに格納（`match_status` が `new` か `dominant` の場合）。採番の規則は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 
