@@ -1570,7 +1570,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 | データ名 | 種別 | 形式 | 備考 |
 |---|---|---|---|
-| 申請エビデンス ZIP（パッケージング仕様） | 外部I/F | ZIP | ブラウザダウンロード。同梱物は下記「説明」の同梱ファイル一覧参照（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)） |
+| 申請エビデンス ZIP（パッケージング仕様） | 外部I/F | ZIP | ブラウザダウンロード。ファイル名は [6.2.8](#628-申請エビデンス-zipパッケージング仕様) 参照（[ADR-SRS-085](decisions/ADR-SRS-085-srs-fr-021-second-review-link-to-zip-file-name.md)）。同梱物は下記「説明」の同梱ファイル一覧参照（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)） |
 
 **説明**:
 
