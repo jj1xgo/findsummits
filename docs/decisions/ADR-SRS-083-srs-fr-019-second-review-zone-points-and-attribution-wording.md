@@ -17,7 +17,7 @@
 ## Decision
 
 1. [FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の AZ の `points` の説明から「（ビューアでの色付け用）」を外し、「対応ピークの `points` と同値」とする。属性は残す。
-2. [FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様) の地図帰属表示の理由を、解析から作ったフィーチャ（peak・key_col・AZ・delete_zone など）に絞って書く。`© 国土地理院` を基図によらず常に表示する要求は変えない。
+2. [FR-019](../20_SRS.md#fr-019-html-ビューア機能仕様) の地図帰属表示の理由を、解析から作ったフィーチャ（`feature_type` の peak・key_col・activation_zone・delete_zone など）に絞って書く。`© 国土地理院` を基図によらず常に表示する要求は変えない。
 
 要求の中身と範囲は変えない。
 
