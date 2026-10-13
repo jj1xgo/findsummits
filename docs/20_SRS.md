@@ -1424,6 +1424,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - 山岳名・通常 rationale の編集値は、対象ごとに次の識別値で保存・照合する（仮サミットコードは実行ごとに再採番されるため識別に使わない。[8.2.2](#822-localstorage-編集内容詳細仕様)）: new / dominant のピークはピーク座標、既存サミット（band_change の matched 登録・通常 delete）は正式 SummitCode とアクション（band_change か delete。[ADR-SRS-066](decisions/ADR-SRS-066-existing-rationale-matched-by-code-and-action.md)）。引き継ぎ時に今回の対象と一致しない保存値は適用せず、件数と識別値を利用者に知らせる
     - 新しいパイプライン実行で `generated_at` が変わった場合、前回の入力が残っていれば「前回の入力内容が残っています（解析日時: XXX）。引き継ぎますか？」と警告・選択を促す。「引き継ぐ」を選んだ場合は前回 `generated_at` キーの入力内容を今回の `generated_at` キーに引き継いで使用する（担当者指定削除は根拠下書きのみ継承し、判断は個別再選択する。除外台帳も確認対象と明示し、継承時は同じ対象・条件に一致する判断を再選択なしで適用、非継承時は空台帳とする。[8.2.2](#822-localstorage-編集内容詳細仕様)。詳細実装は HLD に委ねる）。「引き継がない」を選んだ場合は前回 localStorage を破棄せず保持したまま、今回の `generated_at` キーで初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート）から開始する（確認なしにユーザーの入力成果を削除しない。前回データの破棄・容量上限超過時の扱いは HLD に委ねる）
   - **申請成果物のエクスポート機能**（申請書/申請エビデンスの2ボタン。除外判断の保存・読込操作は別途設け、配置は HLD）:
+    - 申請書エクスポート時、今回の申請対象（`category=add` かつ application_exclusion が空文字）のピークのうち `region_name` が空文字のもの（申請書の B 列〔県名〕が空欄になる。[FR-011](#fr-011-申請書-xlsx-生成) の ※6）の件数と仮サミットコード・座標を警告表示し、出力は続行する（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。
     - 申請書エクスポート時、複数登録の組数と保留登録件数（AZ 内＋主ピーク依存の AZ 外）を示し、それらは申請対象外であると警告表示する。保留組を除いたドラフトとして、無関係な候補の出力は続行する。
     - 両ボタンとも、担当者指定削除で根拠本文が未記入の件数・正式コードを警告し、出力を許す。未記入の行を落とさず、review_note は空文字、rationale は「未記入（担当者補記）」を含む専用テンプレートとする。
     - 両ボタンで、除外行数（manual/parent_add 別）、未適用判断、理由未記入の manual の件数と識別子を知らせて出力を許す。新設は現在の仮コードと座標、未適用新設記録は保存座標で示す。関連削除だけを除外した場合の警告と、今回適用した除外理由が公開エビデンスに含まれる旨も示す。既存の不備・保留組等の警告は維持する。
@@ -1476,7 +1477,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - **※3**: summit_name_jp（geojson_v{N} から自動取得）。空文字の場合は空欄のまま続行可（C 列は補助情報。支部担当者は D 列 `summit_name` と B 列 SummitCode で削除対象を確認する）
   - **※4**: 担当者指定削除は [FR-019](#fr-019-html-ビューア機能仕様) の専用テンプレートから生成した現在の `rationale` を転記する（親ピーク情報は使わない）。通常削除は [FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成する `rationale` プロパティ値（削除根拠）をそのまま転記する。HTML ビューアで編集した場合は編集後の値を使用する。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)
   - **※5**: [FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成する `rationale` プロパティ値（変更根拠）をそのまま転記する。HTML ビューアで編集した場合は編集後の値を使用する。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)。変更の行の E 列（`sota_alt_m`）は、AZ の中のサミットの点から取る（ピークの点に `sota_alt_m` は無い。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
-  - **※6**: 都道府県名（北海道は振興局名）。`merged_summit.geojson` の `region_name` プロパティ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が N03 前処理済み地域 GeoJSON から取得して格納）を転記する。仮サミットコードは申請書には出力しない（GeoJSON・エビデンス・サミット一覧での内部識別子。正式コードは支部による承認後に採番）。J: MT使用欄は SOTA 日本支部マネジメントチーム記入欄のため全アクション空白
+  - **※6**: 都道府県名（北海道は振興局名）。`merged_summit.geojson` の `region_name` プロパティ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が N03 前処理済み地域 GeoJSON から取得して格納）を転記する。`region_name` が空文字（N03 前処理済み地域 GeoJSON が無いとき、またはどの地域にも入らないピーク）のときは B 列を空欄のまま出力し、エクスポート時に警告する（出力は止めない。[FR-019](#fr-019-html-ビューア機能仕様)。[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。仮サミットコードは申請書には出力しない（GeoJSON・エビデンス・サミット一覧での内部識別子。正式コードは支部による承認後に採番）。J: MT使用欄は SOTA 日本支部マネジメントチーム記入欄のため全アクション空白
   - **異常系**: 入力 GeoJSON は常に有効な状態でデータファイルとして読み込み済みのため、入力データ起因の異常系は持たない。XLSX 生成ライブラリ（SheetJS。CDN 経由: [§3.4](#34-外部システム依存関係環境)）が取得できていない場合はエクスポートを実行できない旨を利用者に提示する（検出方式・表示の詳細は HLD に委ねる）
 
 #### FR-012: サミット一覧（申請内容反映版）生成
@@ -1555,21 +1556,21 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 #### FR-021: 申請エビデンス ZIP 生成
 
 - **対応 UR**: [UR-005](10_URD.md#ur-005), [UR-018](10_URD.md#ur-018)（公開用データの供給）, [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015)
-- **概要**: ローカル HTML ビューア（[FR-013](#fr-013-html-ビューア生成)）上の「申請エビデンス」ボタンで、サミット一覧（申請内容反映版）XLSX と 5 カテゴリ GeoJSON を 1 つの ZIP にまとめてブラウザダウンロードする。
+- **概要**: HTML ビューア（[FR-019](#fr-019-html-ビューア機能仕様)）の「申請エビデンス」ボタンで、サミット一覧（申請内容反映版）XLSX と 5 カテゴリ GeoJSON を 1 つの ZIP にまとめてブラウザダウンロードする。
 
 **入力**:
 
 | データ名 | 種別 | 必須/任意 | デフォルト（任意時） | 備考 |
 |---|---|---|---|---|
 | 突合済み統合 GeoJSON（`merged_summit.geojson`） | 外部I/F | 必須 | — | 作業用ビューアデータファイルとして読み込み済み（[FR-013](#fr-013-html-ビューア生成) 出力） |
-| ビューア上の表示・編集状態 | 内部データ | 必須 | — | [FR-019](#fr-019-html-ビューア機能仕様) 出力。エクスポート時点のスナップショット（localStorage を直接読むのではなく、[FR-019](#fr-019-html-ビューア機能仕様) の引き継ぎ確認を経た現在の編集状態）。山岳名・rationale を未編集の対象は初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート）のまま |
+| ビューア上の表示・編集状態 | 内部データ | 必須 | — | 許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外の状態・理由を反映した現在状態。[FR-019](#fr-019-html-ビューア機能仕様) 出力。エクスポート時点のスナップショット（localStorage を直接読むのではなく、[FR-019](#fr-019-html-ビューア機能仕様) の引き継ぎ確認を経た現在の編集状態）。山岳名・rationale を未編集の対象は初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート）のまま |
 | ライブラリ（JSZip・SheetJS） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§3.4](#34-外部システム依存関係環境)）。取得失敗時の扱いは本 FR の異常系 |
 
 **出力**:
 
 | データ名 | 種別 | 形式 | 備考 |
 |---|---|---|---|
-| 申請エビデンス ZIP | 外部I/F | ZIP | ブラウザダウンロード。同梱物は下記「詳細」参照 |
+| 申請エビデンス ZIP（パッケージング仕様） | 外部I/F | ZIP | ブラウザダウンロード。同梱物は下記「説明」の同梱ファイル一覧参照（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)） |
 
 **説明**:
 
@@ -1586,7 +1587,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | `review.geojson` | 要確認サミット・複数登録の保留組全体 | `category="review"` のフィーチャ全て（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)） |
 
   - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url`）を複製する（`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
-  - 各 GeoJSON は [FR-009](#fr-009-sotaリスト突合match_status-判定) で定義した category 別フィーチャ構成に基づき、関連フィーチャ（col・activation_zone・delete_zone・peak_col_link・coord_diff）を通常は同一 `summit_code`、複数登録の保留組は `review_group_id` で紐付けて格納する（category によって含まれるフィーチャ種類は異なる）
+  - 各 GeoJSON は [FR-009](#fr-009-sotaリスト突合match_status-判定) で定義した category 別フィーチャ構成に基づき、関連フィーチャ（key_col・activation_zone・delete_zone・peak_col_link・coord_diff）を通常は同一 `summit_code`、複数登録の保留組は `review_group_id` で紐付けて格納する（category によって含まれるフィーチャ種類は異なる）
   - 対象 category のフィーチャが 0 件の場合も空 FeatureCollection（`{"type":"FeatureCollection","metadata":{...},"features":[]}`。`metadata` は省略不可）として ZIP に同梱する（5 ファイルを常に出力し、エビデンスの完全性を保つ）
   - GeoJSON の生成は [FR-019](#fr-019-html-ビューア機能仕様) が入力の適格性を検証して構成した現在の表示・編集状態（許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外状態・理由）を使う。localStorage を直接読まず、出力側で category や判断を再導出しない。
   - 保留組の review フィーチャには過去の編集値をマージしない。孤立 unmatched も通常の名称・rationale 編集では変更せず、[FR-019](#fr-019-html-ビューア機能仕様) の適格性検証と明示判断を経た担当者指定削除だけを例外とする。保留組全体は review.geojson のみに含める。担当者指定削除は delete.geojson のみに入り、取消後は review.geojson のみに戻る。
@@ -1616,13 +1617,13 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap） | 外部I/F | 必須 | — | [FR-019](#fr-019-html-ビューア機能仕様) と同じ。ブラウザから実行時取得（[6.1](#61-外部if一覧) No.10） |
 | 地理院標高タイル（dem1a/5a/5b/5c/10b） | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 等高線オーバーレイ ON 時にブラウザから実行時取得（dem1a は大きいズームだけ。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)。[6.1](#61-外部if一覧) No.9） |
 | 地理院基準点タイル | 外部I/F | 任意 | デフォルト OFF（レイヤー非表示時は取得しない） | 基準点レイヤー ON 時にブラウザから実行時取得（[6.1](#61-外部if一覧) No.11） |
-| ライブラリ（Leaflet） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§3.4](#34-外部システム依存関係環境)） |
+| ライブラリ（Leaflet） | 外部I/F | 必須 | — | CDN からブラウザが実行時取得（[§3.4](#34-外部システム依存関係環境)）。取得失敗時の扱いは本 FR の異常系（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)） |
 
 **出力**:
 
 | データ名 | 種別 | 形式 | 備考 |
 |---|---|---|---|
-| 公開用ビューア | 外部I/F | HTML + GeoJSON + JSON | ホスティング配信。GeoJSON は配置した公開用データ5本を無改変で配信したもの。JSON は版の区分を示す `site.json`（組み立てが書く。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照 |
+| 公開用ビューア（閲覧専用・静的ホスティング配信） | 外部I/F | HTML + GeoJSON + JSON | ホスティング配信（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。GeoJSON は配置した公開用データ5本を無改変で配信したもの。JSON は版の区分を示す `site.json`（組み立てが書く。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照 |
 
 **説明**:
 
@@ -1635,7 +1636,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - **帰属表示**: [UR-011](10_URD.md#ur-011) に従い、公開用テンプレートにも [FR-019](#fr-019-html-ビューア機能仕様) と同等の地図帰属表示（`© 国土地理院` 常時表示＋OSM/OpenTopoMap 各選択時の attribution 併記＋「加工して作成」の旨の明示）を備える。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照
   - リリース版と開発版を同時に配信でき、閲覧者がどちらかを判別できること（判別手段は URL と画面表示。詳細は HLD。`software_version` は解析ソフトウェアの版として併記する）。リリース版も開発版も、ログインを求めずに誰でも閲覧できること。版ごとに、配信のたびに変わらない URL を 1 つずつ持ち、閲覧者が同じ URL で最新の配信を開けること（[ADR-SRS-074](decisions/ADR-SRS-074-public-viewer-access-url-and-build-failure.md)）。ブランチとの対応・配信サービス・組み立て手順・URL の形・公開用データ置き場のパスは HLD
   - 詳細仕様は [6.2.7 公開用ビューア](#627-公開用ビューア閲覧専用静的ホスティング配信) を参照
-  - **異常系**: 公開用データの一部が取得できない、または読み取りエラーの場合も残りを表示し、欠落を利用者が判別できること（[FR-021](#fr-021-申請エビデンス-zip-生成) が出力する空 FeatureCollection は正常入力であり欠落ではない）。5 本の `metadata.generated_at` が一致しない場合は、異なる解析結果の混在として利用者に提示すること（同一解析の異なる編集状態の混在は本比較では検出しない。同一 ZIP の 5 本を一組で配置する責務は [7.2.7](#727-公開用データ申請エビデンス-geojson)）。全 5 本が取得できない場合の画面、不一致時にどの本の `metadata` を表示するかは HLD に委ねる。ホスティングの障害は外部境界（[§3.4](#34-外部システム依存関係環境)）。配信する物の組み立てが止まった場合は、止まった版を配信せず、前に配信していた版があればそれを配信し続け、無ければ何も配信しないこと（組み立ての手順と止める条件は HLD。[ADR-SRS-074](decisions/ADR-SRS-074-public-viewer-access-url-and-build-failure.md)）
+  - **異常系**: 公開用データの一部が取得できない、または読み取りエラーの場合も残りを表示し、欠落を利用者が判別できること（[FR-021](#fr-021-申請エビデンス-zip-生成) が出力する空 FeatureCollection は正常入力であり欠落ではない）。5 本の `metadata.generated_at` が一致しない場合は、異なる解析結果の混在として利用者に提示すること（同一解析の異なる編集状態の混在は本比較では検出しない。同一 ZIP の 5 本を一組で配置する責務は [7.2.7](#727-公開用データ申請エビデンス-geojson)）。全 5 本が取得できない場合の画面、不一致時にどの本の `metadata` を表示するかは HLD に委ねる。ホスティングの障害は外部境界（[§3.4](#34-外部システム依存関係環境)）。背景タイル・地理院標高タイル・基準点タイル・ライブラリ（CDN 経由: [§3.4](#34-外部システム依存関係環境)）の実行時取得も失敗しうる外部境界であり、取得失敗時も公開用ビューア全体は停止せず、該当機能が利用できないことを利用者が判別できること（[FR-019](#fr-019-html-ビューア機能仕様) と同じ。機能別の詳細挙動は HLD に委ねる。[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。配信する物の組み立てが止まった場合は、止まった版を配信せず、前に配信していた版があればそれを配信し続け、無ければ何も配信しないこと（組み立ての手順と止める条件は HLD。[ADR-SRS-074](decisions/ADR-SRS-074-public-viewer-access-url-and-build-failure.md)）
 
 ---
 
