@@ -67,4 +67,4 @@ Decision 3（HLD 全体の最終周回の最後に、未決事項の解決済み
 
 ## 追記（2026-10-13）: 外部参照の数え方
 
-Decision 1 の「外部参照」で数えないものに、ADR の中の書式の例と、ADR と調査資料がある時点の HLD の字句を記録として写したものを足した（[ADR-HLD-009](ADR-HLD-009-external-reference-criterion-excludes-record-quotes.md)）。Decision 1 の表の行は、この追記の前の記録として残す。ほかの基準と、今ある印は変えていない。
+Decision 1 の「外部参照」で数えないものに、ADR の中の書式の例と、ADR と調査資料がある時点の HLD の字句を変更や仕分けの記録として写したものを足した（[ADR-HLD-009](ADR-HLD-009-external-reference-criterion-excludes-record-quotes.md)）。Decision 1 の表の行は、この追記の前の記録として残す。ほかの基準と、今ある印は変えていない。
