@@ -64,3 +64,7 @@ Decision 2 の付録 A の「重要」列は、ADR-HLD-007 の Decision 2・4 �
 ## 追記（2026-10-12）: 未決事項の小節の廃止
 
 Decision 3（HLD 全体の最終周回の最後に、未決事項の解決済みの項目を消して番号を振り直す）は、[ADR-HLD-008](ADR-HLD-008-remove-hld-open-items-subsections.md) で小節ごと廃止したので用いない。最終周回の範囲は ADR-HLD-008 の後に決め直す。
+
+## 追記（2026-10-13）: 外部参照の数え方
+
+Decision 1 の「外部参照」で数えないものに、ADR の中の書式の例と、ADR と調査資料がある時点の HLD の字句を記録として写したものを足した（[ADR-HLD-009](ADR-HLD-009-external-reference-criterion-excludes-record-quotes.md)）。Decision 1 の表の行は、この追記の前の記録として残す。ほかの基準と、今ある印は変えていない。
