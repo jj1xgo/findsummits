@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-10-12 |
+| 最終更新日 | 2026-10-13 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -1315,23 +1315,24 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | localStorage 編集内容 | 内部データ | JSON（ブラウザ localStorage） | 詳細は [§8.2.2](#822-localstorage-編集内容詳細仕様) 参照 |
 | 除外台帳 | 内部データ | レコード集合 | [8.2.3](#823-除外台帳)。現在状態とブラウザ保存・判断ファイルの生成に使用 |
 | 除外判断 JSON | 外部I/F | JSON | 台帳全体を独立したファイルとしてダウンロード。[6.2.10](#6210-除外判断-json) |
-| 各エクスポート | 外部I/F | XLSX / ZIP | 各形式の詳細は [FR-011](#fr-011-申請書-xlsx-生成)（XLSX）・[FR-021](#fr-021-申請エビデンス-zip-生成)（ZIP）。[FR-012](#fr-012-サミット一覧申請内容反映版生成) のサミット一覧（申請内容反映版）XLSX は単独ダウンロードせず [FR-021](#fr-021-申請エビデンス-zip-生成) の ZIP に同梱 |
+| 申請書 XLSX | 外部I/F | XLSX | 「申請書」ボタンでダウンロード。詳細は [FR-011](#fr-011-申請書-xlsx-生成) |
+| 申請エビデンス ZIP（パッケージング仕様） | 外部I/F | ZIP | 「申請エビデンス」ボタンでダウンロード。詳細は [FR-021](#fr-021-申請エビデンス-zip-生成)。[FR-012](#fr-012-サミット一覧申請内容反映版生成) のサミット一覧（申請内容反映版）XLSX は単独ダウンロードせずこの ZIP に同梱（[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)） |
 
 **説明**:
 
   - 本 FR は [FR-013](#fr-013-html-ビューア生成) が生成した `merged_viewer.html` をブラウザで開いた際に提供される機能（マップ表示・編集 UI・localStorage・エクスポート機能）を定義する。HTML テンプレートの同梱・データファイルの出力といった生成機構は [FR-013](#fr-013-html-ビューア生成) を参照
   - **使用ライブラリ（CDN 経由）**: Leaflet（地図）・SheetJS/xlsx.js（XLSX エクスポート）・JSZip（ZIP 生成）
   - 背景タイル切り替え機能（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap）を持つ（選定経緯: [ADR-SRS-006](decisions/ADR-SRS-006-viewer-background-tile-selection.md)）。OSM は等高線なしのため、後述の等高線オーバーレイで補完できる（[ADR-SRS-015](decisions/ADR-SRS-015-contour-overlay.md)）
-  - **地図操作・表示範囲**: 日本を中心に配置した世界地図表示とし、パン範囲を制限する。ズームは 1 段ずつ行う。左下にメートル単位のスケールバーを表示する（`maxBounds` の具体値・`zoomSnap`・ホイール感度等のパラメータは HLD に委ねる）
-  - 各マーカーの色は `points` プロパティに基づく標高バンド色（1pt=濃緑〜10pt=赤）を使用する
+  - **地図操作・表示範囲**: 日本を中心に配置した世界地図表示とし、パン範囲を制限する。ズームは 1 段ずつ行う。左下にメートル単位のスケールバーを表示する（パン範囲の具体値・ズームの刻み・ホイール感度等のパラメータは HLD に委ねる。[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）
+  - 各マーカーの色は標高バンド色（1pt=濃緑〜10pt=赤）とし、ピークと Keyコルは `points`、サミットは `sota_points` プロパティから決める（サミットは `points` を持たない。どちらも 150m 未満は null で、そのときの色は HLD に委ねる）。後述のカテゴリの配色はマーカーの色には使わない（[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）
   - 各マーカーは `feature_type` に応じた形状で区別する: **summit=●（円）/ peak=▲（上向き三角）/ key_col=▼（下向き三角）**。形状の具体的描画方式（Canvas 等）は HLD に委ねる（根拠: [ADR-URD-017](decisions/ADR-URD-017-viewer-marker-rendering-performance.md)）
   - マーカーはクライアント側（ブラウザ内）で描画し、外部サーバ（地理院等）のアイコン画像取得に依存しない（[NFR-010](#nfr-010-描画応答性連続操作の滑らかさ) 参照）
   - 各マーカーはズームレベルに応じてサイズを変える（ズームアウト時は小さく、ズームイン時は大きく。具体的なサイズ段階は HLD に委ねる）
-  - アクティベーションゾーン（AZ）は半透明の塗りで表示する（外枠線なし・クリック不可）。なお `area_complete=false`（解析範囲内で完結しなかった AZ）を持つピークは上流（[FR-009](#fr-009-sotaリスト突合match_status-判定) の `is_area_incomplete` 不備フラグ）で処理が停止し viewer には到達しないため、viewer 側に不完全 AZ の警告表示の責務は持たない
+  - アクティベーションゾーン（AZ）は半透明の塗りで表示する（外枠線なし・クリック不可）。なお `area_complete=false`（解析範囲内で完結しなかった）の AZ か delete判定ゾーンがあるピークは上流（[FR-009](#fr-009-sotaリスト突合match_status-判定) の `is_area_incomplete` 不備フラグ）で処理が停止し viewer には到達しないため、viewer 側に不完全なゾーンの警告表示の責務は持たない（[ADR-SRS-080](decisions/ADR-SRS-080-srs-section-4-5-second-review-read-errors-and-delete-zone-completeness.md)・[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）
   - delete判定ゾーンポリゴンを独立したトグルレイヤーとして追加（デフォルト ON・半透明）。new は delete判定ゾーン内に既存サミットが存在しないことを、dominant・matched（従属 delete サミットを持つ場合）は delete判定ゾーン内に削除候補サミットが存在することを可視化する（matched の delete判定ゾーン内に従属 delete サミットが存在しない場合はゾーンのみ表示。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md) 参照）
   - ambiguous ピークの delete 判定ゾーンも同じトグルで表示し、AZ 外保留削除候補との位置関係を確認できるようにする
   - delete判定ゾーンは AZ と重なる範囲を除外し、AZ に覆われていない部分のみ表示する（AZ＝活性化範囲を優先。重なり除外の計算方式は HLD に委ねる）
-  - **カテゴリ別表示フィルター**: フィーチャを add / band_change / no_change / delete / review の 5 カテゴリに分類し、カテゴリ単位で表示の ON/OFF を切り替えられる（初期は全カテゴリ表示）。カテゴリは配色でも区別する（add=緑系 / delete=赤系 / band_change=橙系 / no_change=灰系 / review=紫系。具体的な配色値は HLD に委ねる）。後述「検索確定時にフィルターを自動 ON」はこのカテゴリ分類に基づく。各フィーチャのカテゴリは現在の表示・編集状態の `category` プロパティを参照する（初期値は [FR-009](#fr-009-sotaリスト突合match_status-判定) の付与値。担当者指定削除のみ本 FR で更新）（根拠: [ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md)）:
+  - **カテゴリ別表示フィルター**: フィーチャを add / band_change / no_change / delete / review の 5 カテゴリに分類し、カテゴリ単位で表示の ON/OFF を切り替えられる（初期は全カテゴリ表示）。カテゴリは配色でも区別し、その配色はカテゴリの切り替えの表示に使う（add=緑系 / delete=赤系 / band_change=橙系 / no_change=灰系 / review=紫系。マーカーの色は上の標高バンド色のまま。具体的な配色値と表示の置き方は HLD に委ねる。[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）。後述「検索確定時にフィルターを自動 ON」はこのカテゴリ分類に基づく。各フィーチャのカテゴリは現在の表示・編集状態の `category` プロパティを参照する（初期値は [FR-009](#fr-009-sotaリスト突合match_status-判定) の付与値。担当者指定削除のみ本 FR で更新）（根拠: [ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md)）:
 
     | `category` | 表示ラベル | 対象フィーチャの概要 |
     |---|---|---|
@@ -1361,11 +1362,11 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - **等高線オーバーレイ**: 地理院標高タイル（dem1a/dem5a/dem5b/dem5c/dem10b。dem1a は大きいズームだけで使い、無い地域は dem5a〜dem5c・dem10b で描く。[ADR-SRS-067](decisions/ADR-SRS-067-contour-uses-dem1a-at-high-zoom.md)）をブラウザからリアルタイム取得し、Canvas でピクセル単位に等高線を描画するオーバーレイレイヤーを設ける。主用途は OSM 選択時の等高線欠落の補完。レイヤーコントロールから ON/OFF 可能（デフォルト OFF）。描画は基図より上・GeoJSON より下の独立レイヤーとして表示する（重ね順の詳細は HLD、ズーム別描画パラメータは HLD に委ねる）。簡易的な描画のため、地理院地図の等高線と位置がずれることがある。地形のおおまかな確認に使う目安であり、標高・コル位置の根拠には使わない。レイヤー名等で目安であることを利用者に示す（表記は HLD。[ADR-SRS-015](decisions/ADR-SRS-015-contour-overlay.md)）
   - **補助参照レイヤー**（いずれもレイヤーコントロールから ON/OFF・デフォルト OFF）:
     - **1次メッシュグリッド**: 日本国土の1次メッシュ境界を表示する（一定ズーム以上でメッシュコードのラベルを表示）。解析単位の確認用
-    - **基準点レイヤー**: 国土地理院の基準点（電子基準点・一等／二等／三等三角点）を表示する。種別ごとに配色し、点名・基準点種別・基準点コードを popup 表示する。データは地理院基準点タイル（`https://cyberjapandata.gsi.go.jp/xyz/cp/{z}/{x}/{y}.geojson`）をブラウザから実行時取得する（出典・利用形態は [SOURCES.md](../ref/SOURCES.md) 参照。採用経緯: [ADR-SRS-034](decisions/ADR-SRS-034-viewer-reference-layers.md)）
+    - **基準点レイヤー**: 国土地理院の基準点（電子基準点・一等／二等／三等三角点）を表示する。種別ごとに配色し、点名・基準点種別・基準点コードを popup 表示する。データは地理院基準点タイルをブラウザから実行時取得する（出典・利用形態は [SOURCES.md](../ref/SOURCES.md) 参照。採用経緯: [ADR-SRS-034](decisions/ADR-SRS-034-viewer-reference-layers.md)）
   - 地図帰属表示: peak/col/summit/AZ/delete_zone 等の GeoJSON データは地理院標高タイル解析由来であるため、**基図の選択に関わらず** `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を常時表示する。等高線レイヤー ON/OFF 状態によらず同 attribution を維持する。OSM 選択時は加えて `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を表示する。基準点レイヤー ON 時は基準点データの出典として `国土地理院` を併記する（地理院由来のため提供元は上記 `© 国土地理院` と同一）。地理院タイルデータを加工して作成した旨を明示する（[UR-011](10_URD.md#ur-011)）
   - **ピーク popup の情報表示**: ピークの popup には標高・プロミネンスに加え、プロミネンスの根拠となる **Keyコル標高（`col_elev`）** を表示する。key_col Point が GeoJSON に含まれない場合（陸地最高峰・島嶼部最高峰は `col_lat/col_lon=0.0` sentinel のため key_col feature が除外される）は「海面（0m）」と表示する（Key コルが海面で確定しており、申請書の根拠 [FR-009](#fr-009-sotaリスト突合match_status-判定) の ※2 の「コル標高：0.00m」（`merged_peak.csv` の小数 2 桁）と同じコル標高を指す。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。陸地最高峰と島嶼部最高峰はビューア上で区別しない（`is_island` プロパティは使用しない）。どちらも `col_lat`/`col_lon`=0.0 sentinel で統一されておりビューアが区別できる内部属性を持たないため、「海面（0m）」を統一ラベルとして使用する
   - **Keyコル（key_col）popup の表示**: Keyコルのマーカー popup には、Keyコル標高・対応するピークのコード（new / dominant の場合は仮コード）・緯度経度を表示する。ambiguous 親ではコードに代えて「要確認ピーク」と親座標・組の登録一覧を表示する
-  - **ピーク↔Keyコル相互ジャンプ**: ピーク popup に「Keyコルへ移動」ボタン（`key_col_resolved=true` のときのみ）、Keyコル popup に「ピークへ移動」ボタンを設け、押下で対応するフィーチャへ地図移動して popup を開く
+  - **ピーク↔Keyコル相互ジャンプ**: ピーク popup に「Keyコルへ移動」ボタン（対応する Keyコルの点がある場合のみ。Key コルが海面で確定したピークには出さない。[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）、Keyコル popup に「ピークへ移動」ボタンを設け、押下で対応するフィーチャへ地図移動して popup を開く
   - **複数登録の要確認表示**:
     - 要確認フィルターで保留組の地形・全登録・接続線を表示する。ピークの表示名は「要確認ピーク」と座標とし、popup に申請保留中であること、AZ 内コード一覧、主ピーク依存の AZ 外保留コード一覧を区別して表示する。個別 summit popup にも保留理由と同じ組の登録を確認する手段を設ける。
     - 既存コード・名称検索は個々の summit Point に到達する。親ピークとの対応付け・ピーク↔コル移動は `review_group_id` を使い、空コードを共通キーとして別組を混同しない。
@@ -1397,7 +1398,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - `category=add` のピーク（`match_status` が `new` または `dominant`）: クリックで開くポップアップまたはサイドパネルに「山岳名JP」（必須）「山岳名EN」（任意）入力フィールドを表示する。今回の申請対象に山岳名JP が未入力のピークが存在する状態で申請書（[FR-011](#fr-011-申請書-xlsx-生成)）をエクスポートする場合は、該当ピーク一覧を警告表示する。ただし公式申請の最終判断は SOTA 日本支部担当者が行うため、エクスポートはブロックせず空欄のままの続行も許容する（ソフト必須。[ADR-SRS-036](decisions/ADR-SRS-036-new-peak-name-input-requirement.md)）
     - `category=band_change` / `no_change` のピーク（`match_status="matched"`）: 入力フィールド不要（名称変更は申請対象外。`band_change` かつ application_exclusion が空文字の場合は申請書エクスポート時に「変更」行を出力する）
   - **rationale 編集 UI**:
-    - `category` ∈ {add, delete, band_change} の通常フィーチャ（担当者指定削除は上記専用 UI）: ポップアップまたはサイドパネルに `rationale` プロパティを表示する textarea を設ける
+    - 申請書の行のもとになる点（`category=add` と `category=band_change` のピーク、`category=delete` の通常削除のサミット。申請から除外している間も含む。担当者指定削除は上記専用 UI。[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）: ポップアップまたはサイドパネルに `rationale` プロパティを表示する textarea を設ける
     - 初期値: `merged_summit.geojson` の `rationale` プロパティ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成したテンプレート文字列）
     - ユーザーが textarea を編集した場合、その内容が申請書 XLSX（[FR-011](#fr-011-申請書-xlsx-生成)）の列 I に反映される
     - 未編集の場合は初期値（自動生成テンプレート）がそのまま使用される
@@ -1411,7 +1412,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - add を manual 除外すると、そのピークが選ばれた主ピークである通常 delete も保留する。子自身の有効な manual を優先し、それ以外は parent_add と固定理由を付ける。親を解除すると parent_add だけを解除し、子の manual は残す。parent_add の直接解除は設けず、親の追加候補へ移動できるようにする。派生状態 parent_add は台帳に保存しない。
     - 子の delete だけを除外しても親 add は残す。存続予定登録と追加候補の併存を関連コード付きで警告し、ドラフトとして出力を許す。matched 親の band_change 除外は既存登録の存続を変えないため子 delete へ波及しない。主ピークの再選択・ゾーンの重なりによる連鎖は行わない。
     - 同じ行へ集約するフィーチャの除外属性を揃える。add は peak/key_col/AZ/delete_zone/peak_col_link、band_change はこれらと matched summit/coord_diff、通常 delete は自身の summit/coord_diff。子の coord_diff は子の除外属性を持つ。存在しないフィーチャは作らず、no_change・review・担当者指定 delete の除外属性は空文字とする。
-    - 5カテゴリの分類と配色は維持し、除外中であることを明瞭に添える。「除外を含む」表示切替は初期 ON。除外直後は対象と popup を保持し、非表示になる設定なら除外を含む表示を ON にする。検索から移動するときも必要なカテゴリ・除外表示を ON にする。
+    - 5カテゴリの分類とその配色、マーカーの色と形は維持し、除外中であることを明瞭に添える（[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）。「除外を含む」表示切替は初期 ON。除外直後は対象と popup を保持し、非表示になる設定なら除外を含む表示を ON にする。検索から移動するときも必要なカテゴリ・除外表示を ON にする。
     - 適用中/未適用の台帳一覧と件数、未適用の識別子・理由・判断時条件を示す。不在の記録を架空の現行フィーチャとして地図へ作らない。現行候補があれば現在の申請可否を併記し、申請対象の場合は「前回の除外は未適用。今回は申請対象」と明示する。
   - **除外判断の保存・読込操作**:
     - 「除外判断を保存」で [6.2.10](#6210-除外判断-json) の JSON をダウンロードし、「除外判断を読み込む」で [7.2.8](#728-除外判断ファイル) に従って検証・差分プレビュー・確認後に台帳を一括置換する。通常名称・rationale・担当者指定削除の判断は置換しない。保存・復元・継承は [8.2.2](#822-localstorage-編集内容詳細仕様) に従う。
