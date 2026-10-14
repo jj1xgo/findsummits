@@ -2,7 +2,7 @@
 """要求の追跡と整合の検査（docs/03_development.md「6. 要求の追跡と整合」、ADR-URD-020）
 
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
-T2: 参照先（ID・見出しのアンカー・ファイル）の実在
+T2: 参照先（ID・見出しのアンカー・ファイル）の実在（LLD の「ファイル」のパスは LLD が確定した後だけ）
 T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、HLD 2.2.4 の FR の表と第 3 章の宣言の照合、
     SRS の検証の表と品質特性の表の照合、IT の対応表と ST の印の照合
@@ -1052,7 +1052,9 @@ def check_lld(repo, hld_sections, confirmed):
             if not files:
                 out.append(finding('T1', f'{mid}:ファイル', f'{LLD}:{fno}',
                                    f'{mid} の「ファイル」にコード表記のパスがありません'))
-            for f in sorted(files):
+            # パスの実在は COD の段（LLD がフェーズゲートを通った後）から見る。それまではコードが
+            # HLD の名前にそろっていない（ADR-LLD-001）
+            for f in sorted(files) if 'LLD' in confirmed else ():
                 if not repo.has(f):
                     out.append(finding('T2', f'{mid}->{f}', f'{LLD}:{fno}',
                                        f'{mid} のファイル {f} は git にありません'))

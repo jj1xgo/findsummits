@@ -1208,9 +1208,12 @@ class LldTest(TraceTestCase):
         lld = LLD.replace('- **ファイル**: `src/one.cpp`\n', '')
         self.assertIn('T1:LLD-one:ファイル', self.keys(self.files(**{'docs/40_LLD.md': lld})))
 
-    def test_file_not_in_git(self):
+    def test_file_not_in_git_only_when_lld_confirmed(self):
+        # COD の段（LLD がフェーズゲートを通った後）までは、コードが HLD の名前にそろっていない（ADR-LLD-001）
         lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/two.cpp`')
-        self.assertIn('T2:LLD-one->src/two.cpp', self.keys(self.files(**{'docs/40_LLD.md': lld})))
+        files = self.files(**{'docs/40_LLD.md': lld})
+        self.assertIn('T2:LLD-one->src/two.cpp', self.keys(files, confirmed={'LLD'}))
+        self.assertNotIn('T2:LLD-one->src/two.cpp', self.keys(files))
 
     def test_unknown_hld_section(self):
         lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)', '[4.9](30_HLD.md#41-fr-001-一)')
