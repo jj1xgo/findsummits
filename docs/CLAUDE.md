@@ -150,6 +150,7 @@ HLD（`30_HLD.md`）は、§2 に横断の規約、§3 にプログラム構造�
 - UT は LLD に、IT は HLD §3 の結合のつなぎ目に対応する（[テスト方針書 §2](02_test_policy.md#2-テストレベル定義と役割分担)）。
 - この章の並びを最終形とし、§4・§5 を付随文書へ移さない（[ADR-HLD-002](decisions/ADR-HLD-002-hld-chapter-order-program-structure-first.md)）。
 - HLD に節を足すか、節の受け持ちを変えるときは、§2.11.2 の関心事の表の「答える節」と §2.11.3 の表と照らし、古くなる行を直す（[ADR-HLD-003](decisions/ADR-HLD-003-stakeholders-concerns-and-views-section.md)）。
+- LLD（`40_LLD.md`）は、§1 に用語と規約、§2 に共通部品と横断の節、§3 以降に CMP1〜CMP8 の順でコンポーネントごとの章を置き、その下にモジュールの節を置く。モジュールの節は、見出しの直下の追跡の宣言の後に、小節「ファイル割付」「型とデータ」「関数の細部」「メッセージ文面」「UT 候補」をこの順に置く。横断の節は追跡の宣言を持たず、モジュールの節から指す。モジュールの単位と名前は [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。
 
 ## HLD の記号の書き方
 

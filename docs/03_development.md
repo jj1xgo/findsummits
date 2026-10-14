@@ -130,7 +130,7 @@ make clean                                 # build/ を削除
 ### 6.1 宣言と追跡マトリクス
 
 - 各要素は自分の上位を宣言する。書式は [文書管理ルール「追跡の宣言」](CLAUDE.md#追跡の宣言) に従う。
-- 宣言が正で、各文書末尾の追跡マトリクスは宣言から組み立て直して照合する。照合するのは今は SRS §10、ST §5、HLD §6 で、結合テスト仕様書（IT）の §5 の対応表は ST の行の印と照合する。LLD 末尾の表は LLD を作るときに検査に足す。HLD 2.2.4 の FR の表（プログラムの割り当て）も、第 3 章の宣言と照合する（[ADR-HLD-005](decisions/ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。
+- 宣言が正で、各文書末尾の追跡マトリクスは宣言から組み立て直して照合する。照合するのは今は SRS §10、ST §5、HLD §6 で、結合テスト仕様書（IT）の §5 の対応表は ST の行の印と照合する。LLD は末尾の表を置かず、モジュールの宣言から T3 で検査する（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md)）。HLD 2.2.4 の FR の表（プログラムの割り当て）も、第 3 章の宣言と照合する（[ADR-HLD-005](decisions/ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。
   表を直すときは宣言を先に直す。
 - SRS §9 の検証の表は、FR/NFR の見出しと ST のテストケースに照らして、行の形と過不足、検証方法の書き方、検証先を照合する。検証方法の値が[用語集「要求の検証」](00_GLOSSARY.md#要求の検証)の決め方に合っているかは照合しない（[ADR-SRS-070](decisions/ADR-SRS-070-requirement-verification-section.md)）。
 - SRS §5 の品質特性の表は、25010:2023 の 9 特性と NFR の見出しに照らして、行の形と過不足、理由の列の書き分け、NFR の取りこぼしを照合する。対応づけの正しさは照合しない（[ADR-SRS-071](decisions/ADR-SRS-071-nfr-quality-characteristics-mapping.md)）。
@@ -149,7 +149,7 @@ make clean                                 # build/ を削除
 
 - 段の名前と文書の対応は `STAGE_DOCS` にあり、文書のパスの正本は `SRS`・`HLD`・`LLD`・`CASE_DOCS` の定数（`STAGE_DOCS` はそこから組み立てる）。確定した段の文書を改名するときは、その定数を同じ変更で直す。段・URD・SRS の欠落、上位の段、読めないファイルの指摘は `EXEMPTIONS` で外せない。URD・SRS が git に無いときは、リンクの検査（T2）以外は走らない。
 - 欠番は `RETIRED_IDS` に、構造上の例外は `EXEMPTIONS` に、どちらも根拠の ADR と一緒に書く。ADR が無い項目は通らない。
-- 製品のコードは [HLD §2.6.4](30_HLD.md#264-ディレクトリ構成) の「製品」区分（`src/`・`scripts/`）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
+- 製品のコードは [HLD §2.6.4](30_HLD.md#264-ディレクトリ構成) の「製品」区分のうち `src/`・`scripts/`。同じ区分の `public/index.html` と、そのテストの `tests/public/` は、今は T5 の対象に入っていない（扱いは [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Consequences）。テストのコードは `tests/src/`・`tests/scripts/` にある。開発用の道具（`tools/`）とそのテスト（`tests/tools/`）、`tests/` 直下の試作の `test_*.c` は T5 の対象にしない。試作の `test_*.c` は C++ 化で `tests/src/` へ移る。
 - 検査そのもののテストは `make test-tools` で走り、CI でも実行する。`tools/lint_trace.py` を直したときは、`make lint` に加えて `make test-tools` も実行する。
 
 ### 6.3 変更するときの手順
