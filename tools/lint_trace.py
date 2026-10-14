@@ -561,6 +561,45 @@ def hld_seams(text):
     return seams
 
 
+SEAM_CELL_RE = re.compile(r'CMP[1-8]-(?:INT|EXT)\d')
+
+
+def check_hld_seam_tables(text, has_it):
+    """つなぎ目の表の形の崩れで hld_seams がつなぎ目を数え落とす経路を止める（ADR-HLD-001）。
+
+    3.1.5〜3.8.5 の表で 1 列目につなぎ目の ID を含むのに形が違う行、それらの小節の外の表の 1 列目に
+    つなぎ目の ID だけを書いた行、IT の文書があるのにつなぎ目が 1 つも読めないことを T1 にする。
+    """
+    out, inside, found = [], False, False
+    for no, line in iter_lines(text):
+        h = HEADING_RE.match(line)
+        if h:
+            if len(h.group(1)) <= 4:
+                inside = bool(HLD_SEAM_HEAD_RE.match(line))
+            continue
+        if not line.startswith('|'):
+            continue
+        first = line.strip()[1:].split('|')[0].strip()
+        m = SEAM_ROW_RE.match(line)
+        where = f'{HLD}:{no}'
+        if inside:
+            if m:
+                found = True
+            elif SEAM_CELL_RE.search(first):
+                out.append(finding('T1', f'HLD-seam-row:{first}', where,
+                                   f'結合のつなぎ目の表の 1 列目 {first} が、'
+                                   'コード表記のつなぎ目の ID 1 つではありません'))
+        elif m:
+            out.append(finding('T1', f'HLD-seam-outside:{m.group(1)}', where,
+                               f'つなぎ目の ID {m.group(1)} の行が、'
+                               '3.1.5〜3.8.5 の「結合のつなぎ目」の小節の外にあります'))
+    if has_it and not found:
+        out.append(finding('T1', 'HLD-seam:none', HLD,
+                           '結合のつなぎ目の表が読めません'
+                           '（3.1.5〜3.8.5 の表の 1 列目に、つなぎ目の ID が 1 つもありません）'))
+    return out
+
+
 def moved_marked(note):
     """ST の行の ID の直後の全角の括弧の中に、「。」で区切った項目として「UT/IT で実施」があるか"""
     m = MARK_PAREN_RE.match(note)
@@ -1194,6 +1233,8 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     lld_out, modules = check_lld(repo, hld_sections, confirmed)
     out += lld_out
     seams = hld_seams(repo.read(HLD)) if repo.has(HLD) else None
+    if repo.has(HLD):
+        out += check_hld_seam_tables(repo.read(HLD), repo.has(CASE_DOCS['IT']))
     cases, case_out = load_cases(repo)
     out += case_out + check_cases(cases, req_ids, urs, modules, seams, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)

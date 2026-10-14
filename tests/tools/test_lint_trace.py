@@ -1171,6 +1171,19 @@ class ItTest(TraceTestCase):
         it = IT + '| `ST-FR-002-01` | ' + TO_UT + ' | r |\n'
         self.assertIn('T1:IT-moved:ST-FR-002-01:重複', self.it_keys(self.files(**{'docs/60_IT.md': it})))
 
+    def test_seam_row_with_note_is_flagged(self):
+        hld = HLD_SEAM.replace('| `CMP1-INT1` | a → b |', '| `CMP1-INT1`（補足） | a → b |')
+        self.assertIn('T1:HLD-seam-row:`CMP1-INT1`（補足）', self.keys(self.files(**{'docs/30_HLD.md': hld})))
+
+    def test_seam_row_outside_seam_section_is_flagged(self):
+        hld = HLD_SEAM.replace('#### 3.1.5 結合のつなぎ目', '#### 3.1.4 共通部品\n\n| ID | 説明 |\n|---|---|\n'
+                               '| `CMP1-INT8` | 別の小節 |\n\n#### 3.1.5 結合のつなぎ目')
+        self.assertIn('T1:HLD-seam-outside:CMP1-INT8', self.keys(self.files(**{'docs/30_HLD.md': hld})))
+
+    def test_no_seams_with_it_doc_is_flagged(self):
+        self.assertIn('T1:HLD-seam:none', self.keys(self.files(**{'docs/30_HLD.md': HLD_PROGRAM})))
+        self.assertNotIn('T1:HLD-seam:none', self.keys(dict(BASE, **{'docs/30_HLD.md': HLD_PROGRAM})))
+
     def test_no_moved_check_without_it_doc(self):
         files = dict(BASE, **{'docs/30_HLD.md': HLD_SEAM, 'docs/70_ST.md': ST_MOVED})
         self.assertEqual([k for k in self.keys(files) if 'IT-moved' in k], [])
