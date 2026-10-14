@@ -1042,6 +1042,141 @@ UT = '''# UT
 '''
 
 
+HLD_SEAM = HLD_PROGRAM.replace('- **担当コンポーネント**: CMP1\n\n## 4. FR 設計', '''- **担当コンポーネント**: CMP1
+
+#### 3.1.5 結合のつなぎ目
+
+**内部結合**
+
+| ID | つなぎ目 | 渡すもの | 確かめること |
+|---|---|---|---|
+| `CMP1-INT1` | a → b | x | y |
+
+**外部結合**
+
+| ID | つなぎ目 | 渡すもの | 確かめること |
+|---|---|---|---|
+| `CMP1-EXT1` | c → a | z | w |
+
+## 4. FR 設計''')
+
+ST_MOVED = ST.replace('`ST-FR-002-01`（異常系）', '`ST-FR-002-01`（異常系。UT/IT で実施）')
+
+IT = '''# IT
+
+## 3. 第1部 内部結合
+
+#### CMP1-INT1
+
+| ID | 前提条件 | 手順 | 期待結果 | 合否判定基準 |
+|---|---|---|---|---|
+| `IT-CMP1-INT1-01` | a | b | c | d |
+
+## 4. 第2部 外部結合
+
+#### CMP1-EXT1
+
+| ID | 前提条件 | 手順 | 期待結果 | 合否判定基準 |
+|---|---|---|---|---|
+| `IT-CMP1-EXT1-01` | a | b | c | d |
+
+## 5. ST から移したケースの対応表
+
+| ST のケース | 移した先 | 理由 |
+|---|---|---|
+| `ST-FR-002-01` | `IT-CMP1-EXT1-01` | r |
+'''
+
+TO_UT = 'UT（`50_UT.md` で作る）'
+
+
+class ItTest(TraceTestCase):
+    def files(self, **over):
+        files = dict(BASE, **{'docs/30_HLD.md': HLD_SEAM, 'docs/60_IT.md': IT, 'docs/70_ST.md': ST_MOVED})
+        files.update(over)
+        return files
+
+    def it_keys(self, files, **kwargs):
+        return [k for k in self.keys(files, **kwargs) if 'IT' in k]
+
+    def test_clean(self):
+        self.assertEqual(self.check(self.files()), [])
+
+    def test_bad_format(self):
+        it = IT.replace('`IT-CMP1-INT1-01`', '`IT-CMP9-INT1-01`').replace('`IT-CMP1-EXT1-01` | a', '`IT-foo-01` | a')
+        keys = self.it_keys(self.files(**{'docs/60_IT.md': it}))
+        self.assertIn('T1:IT-CMP9-INT1-01', keys)
+        self.assertIn('T1:IT-foo-01', keys)
+
+    def test_unknown_seam(self):
+        it = IT.replace('`IT-CMP1-INT1-01`', '`IT-CMP1-INT2-01`')
+        self.assertIn('T2:IT-CMP1-INT2-01', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_seams_only_from_seam_tables(self):
+        hld = HLD_SEAM.replace('#### 3.1.5 結合のつなぎ目', '#### 3.1.4 共通部品\n\n| ID | 説明 |\n|---|---|\n'
+                               '| `CMP1-INT8` | 別の小節 |\n\n#### 3.1.5 結合のつなぎ目')
+        it = IT.replace('`IT-CMP1-INT1-01`', '`IT-CMP1-INT8-01`')
+        self.assertIn('T2:IT-CMP1-INT8-01', self.it_keys(self.files(**{'docs/30_HLD.md': hld, 'docs/60_IT.md': it})))
+
+    def test_seam_table_under_subheading(self):
+        hld = HLD_SEAM.replace('**外部結合**', '##### 補足\n\n| ID | つなぎ目 | 渡すもの | 確かめること |\n'
+                               '|---|---|---|---|\n| `CMP1-INT5` | d → e | v | u |\n\n**外部結合**')
+        files = self.files(**{'docs/30_HLD.md': hld})
+        self.assertIn('T3:IT:CMP1-INT5', self.it_keys(files, confirmed={'SRS', 'HLD', 'IT'}))
+        self.assertNotIn('T3:IT:CMP1-EXT1', self.it_keys(files, confirmed={'SRS', 'HLD', 'IT'}))
+
+    def test_seam_without_it_only_when_confirmed(self):
+        it = IT.replace('| `IT-CMP1-EXT1-01` | a | b | c | d |\n', '').replace('`IT-CMP1-EXT1-01` | r', TO_UT + ' | r')
+        files = self.files(**{'docs/60_IT.md': it})
+        self.assertIn('T3:IT:CMP1-EXT1', self.it_keys(files, confirmed={'SRS', 'HLD', 'IT'}))
+        self.assertNotIn('T3:IT:CMP1-EXT1', self.it_keys(files))
+
+    def test_moved_row_missing(self):
+        st = ST_MOVED.replace('`ST-FR-001-01` | a', '`ST-FR-001-01`（UT/IT で実施） | a')
+        self.assertIn('T4:IT-moved:ST-FR-001-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+
+    def test_moved_row_without_mark(self):
+        it = IT + '| `ST-NFR-001-01` | ' + TO_UT + ' | r |\n'
+        self.assertIn('T4:IT-moved:ST-NFR-001-01', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_mark_outside_note_is_not_counted(self):
+        st = ST_MOVED.replace('`ST-FR-001-01` | a', '`ST-FR-001-01` | UT/IT で実施')
+        self.assertNotIn('T4:IT-moved:ST-FR-001-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+
+    def test_mark_must_be_an_item_in_parentheses(self):
+        for note in ('（境界値）UT/IT で実施', '（UT/IT で実施しない）'):
+            st = ST_MOVED.replace('`ST-FR-001-01` | a', f'`ST-FR-001-01`{note} | a')
+            self.assertNotIn('T4:IT-moved:ST-FR-001-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+
+    def test_moved_refs_resolve(self):
+        it = IT.replace('| `ST-FR-002-01` | `IT-CMP1-EXT1-01` | r |',
+                        '| `ST-FR-002-01` | `IT-CMP1-EXT1-02` | r |\n| `ST-FR-002-09` | ' + TO_UT + ' | r |')
+        keys = self.it_keys(self.files(**{'docs/60_IT.md': it}))
+        self.assertIn('T2:IT-moved:ST-FR-002-01->IT-CMP1-EXT1-02', keys)
+        self.assertIn('T2:IT-moved:ST-FR-002-09', keys)
+
+    def test_moved_destination_form(self):
+        for ok in (TO_UT, '`IT-CMP1-EXT1-01`・`IT-CMP1-INT1-01`'):
+            it = IT.replace('`IT-CMP1-EXT1-01` | r', ok + ' | r')
+            self.assertEqual(self.check(self.files(**{'docs/60_IT.md': it})), [], ok)
+        for bad in ('あとで', '`IT-CMP1-EXT1-01` と `IT-CMP1-EXT1-99', '`ST-FR-001-01`', ''):
+            it = IT.replace('`IT-CMP1-EXT1-01` | r', bad + ' | r')
+            self.assertIn('T1:IT-moved:ST-FR-002-01', self.it_keys(self.files(**{'docs/60_IT.md': it})), bad)
+
+    def test_moved_source_cell_form(self):
+        it = IT.replace('| `ST-FR-002-01` | `IT', '| `ST-FR-002-01` 補足 | `IT')
+        self.assertIn('T1:IT-moved:`ST-FR-002-01` 補足', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_moved_duplicate_row(self):
+        it = IT + '| `ST-FR-002-01` | ' + TO_UT + ' | r |\n'
+        self.assertIn('T1:IT-moved:ST-FR-002-01:重複', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_no_moved_check_without_it_doc(self):
+        files = dict(BASE, **{'docs/30_HLD.md': HLD_SEAM, 'docs/70_ST.md': ST_MOVED})
+        self.assertEqual([k for k in self.keys(files) if 'IT-moved' in k], [])
+
+
+
 class LldTest(TraceTestCase):
     def files(self, **over):
         files = dict(BASE, **{

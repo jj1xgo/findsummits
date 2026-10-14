@@ -5,7 +5,7 @@ T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書�
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在
 T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、HLD 2.2.4 の FR の表と第 3 章の宣言の照合、
-    SRS の検証の表と品質特性の表の照合
+    SRS の検証の表と品質特性の表の照合、IT の対応表と ST の印の照合
 T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
 """
 import io
@@ -528,11 +528,43 @@ CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_-]+)(.*)$')
 BARE_CASE_ROW_RE = re.compile(r'^\|\s*((?:UT|IT|ST)-[A-Za-z0-9_-]+)')
 CASE_FORMAT = {
     'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-(?:0[1-9]|[1-9]\d)$'),
-    'IT': re.compile(r'^IT-([A-Za-z0-9_-]+)-(?:0[1-9]|[1-9]\d)$'),
+    'IT': re.compile(r'^IT-(CMP[1-8]-(?:INT|EXT)[1-9]\d*)-(?:0[1-9]|[1-9]\d)$'),
     'ST': re.compile(r'^ST-((?:FR|NFR|UR)-\d{3})-(?:0[1-9]|[1-9]\d)$'),
 }
 ST_COVERAGE_HEAD_RE = re.compile(r'^## \d+\. URカバレッジ表')
 CASE_REF_RE = re.compile(r'`(ST-(?:FR|NFR|UR)-\d{3}-)(\d{2}|\*)`(?:〜`(\d{2})`)?')
+# HLD 3.1.5〜3.8.5 の結合のつなぎ目の表（ADR-HLD-001）。表の 1 列目のコード表記の ID だけを数える
+HLD_SEAM_HEAD_RE = re.compile(r'^#### 3\.[1-8]\.5 ')
+SEAM_ROW_RE = re.compile(r'^\|\s*`(CMP[1-8]-(?:INT|EXT)[1-9]\d*)`\s*\|')
+# 60_IT.md の、ST から移したケースの対応表と、ST の行の印（ADR-IT-001）
+IT_MOVED_HEAD_RE = re.compile(r'^## \d+\. ST から移したケースの対応表')
+MOVED_MARK = 'UT/IT で実施'
+MOVED_TO_UT = 'UT（`50_UT.md` で作る）'
+MARK_PAREN_RE = re.compile(r'^\s*（([^（）]*)）')
+MOVED_SOURCE_RE = re.compile(r'`(ST-[A-Za-z0-9_-]+)`')
+MOVED_DEST_RE = re.compile(r'`(?:UT|IT)-[A-Za-z0-9_-]+`(?:・`(?:UT|IT)-[A-Za-z0-9_-]+`)*')
+MOVED_DEST_ID_RE = re.compile(r'`((?:UT|IT)-[A-Za-z0-9_-]+)`')
+
+
+def hld_seams(text):
+    """HLD の結合のつなぎ目の小節（3.1.5〜3.8.5）の表の 1 列目にある ID。小節の中の下位の見出し（#####）の下も数える"""
+    seams, inside = set(), False
+    for _, line in iter_lines(text):
+        h = HEADING_RE.match(line)
+        if h:
+            if len(h.group(1)) <= 4:
+                inside = bool(HLD_SEAM_HEAD_RE.match(line))
+            continue
+        m = SEAM_ROW_RE.match(line) if inside else None
+        if m:
+            seams.add(m.group(1))
+    return seams
+
+
+def moved_marked(note):
+    """ST の行の ID の直後の全角の括弧の中に、「。」で区切った項目として「UT/IT で実施」があるか"""
+    m = MARK_PAREN_RE.match(note)
+    return bool(m) and MOVED_MARK in m.group(1).split('。')
 
 
 def load_cases(repo):
@@ -555,13 +587,13 @@ def load_cases(repo):
             if cid in cases:
                 out.append(finding('T1', f'{cid}:重複', f'{path}:{no}', f'テストケース ID {cid} が重複しています'))
                 continue
-            cases[cid] = {'level': level, 'path': path, 'line': no,
+            cases[cid] = {'level': level, 'path': path, 'line': no, 'note': m.group(2),
                           'manual': m.group(2).lstrip().startswith(MANUAL_MARK)}
     return cases, out
 
 
-def check_cases(cases, req_ids, urs, modules, confirmed):
-    out, st_parents, ut_modules = [], set(), set()
+def check_cases(cases, req_ids, urs, modules, seams, confirmed):
+    out, st_parents, ut_modules, it_seams = [], set(), set(), set()
     for cid, c in sorted(cases.items()):
         where = f'{c["path"]}:{c["line"]}'
         m = CASE_FORMAT[c['level']].match(cid)
@@ -577,12 +609,20 @@ def check_cases(cases, req_ids, urs, modules, confirmed):
             ut_modules.add(f'LLD-{m.group(1)}')
             if modules is not None and f'LLD-{m.group(1)}' not in modules:
                 out.append(finding('T2', cid, where, f'{cid} の対象 LLD-{m.group(1)} は LLD にありません'))
+        elif c['level'] == 'IT':
+            it_seams.add(m.group(1))
+            if seams is not None and m.group(1) not in seams:
+                out.append(finding('T2', cid, where,
+                                   f'{cid} の対象 {m.group(1)} は HLD 第 3 章の結合のつなぎ目にありません'))
     if 'ST' in confirmed:
         for rid in sorted(req_ids - st_parents):
             out.append(finding('T3', f'ST:{rid}', CASE_DOCS['ST'], f'{rid} の ST がありません'))
     if 'UT' in confirmed and modules is not None:
         for mid in sorted(set(modules) - ut_modules):
             out.append(finding('T3', f'UT:{mid}', CASE_DOCS['UT'], f'{mid} の UT がありません'))
+    if 'IT' in confirmed and seams is not None:
+        for s in sorted(seams - it_seams):
+            out.append(finding('T3', f'IT:{s}', CASE_DOCS['IT'], f'{s} の IT がありません'))
     return out
 
 
@@ -627,6 +667,50 @@ def check_st_matrix(repo, urs, declared, cases):
                                f'{u} の行のテストケース {ref} は ST にありません'))
     for u in sorted(urs - seen):
         out.append(finding('T4', f'ST-coverage:{u}', path, f'URカバレッジ表に {u} の行がありません'))
+    return out
+
+
+def check_it_moved(repo, cases):
+    """60_IT.md の対応表と、ST で「UT/IT で実施」の印を付けたケースを照合する（ADR-IT-001）"""
+    path = CASE_DOCS['IT']
+    if not repo.has(path):
+        return []
+    marked = {cid for cid, c in cases.items() if c['level'] == 'ST' and moved_marked(c['note'])}
+    out, seen = [], set()
+    for no, cells in table_rows(repo.read(path), IT_MOVED_HEAD_RE):
+        where = f'{path}:{no}'
+        if not cells or cells[0] == 'ST のケース' or not cells[0].strip('-: '):
+            continue
+        src = MOVED_SOURCE_RE.fullmatch(cells[0])
+        if not src:
+            out.append(finding('T1', f'IT-moved:{cells[0]}', where,
+                               f'対応表の 1 列目 {cells[0]} が、コード表記の ST のケース ID 1 つではありません'))
+            continue
+        sid = src.group(1)
+        if sid in seen:
+            out.append(finding('T1', f'IT-moved:{sid}:重複', where, f'対応表に {sid} の行が重複しています'))
+            continue
+        seen.add(sid)
+        if sid not in cases or cases[sid]['level'] != 'ST':
+            out.append(finding('T2', f'IT-moved:{sid}', where, f'対応表の {sid} は ST にありません'))
+            continue
+        dest = cells[1] if len(cells) > 1 else ''
+        if dest == MOVED_TO_UT:
+            continue
+        if not MOVED_DEST_RE.fullmatch(dest):
+            out.append(finding('T1', f'IT-moved:{sid}', where,
+                               f'{sid} の移した先が、コード表記の UT・IT のケース ID を「・」で並べたものでも'
+                               f'「{MOVED_TO_UT}」でもありません'))
+            continue
+        for t in MOVED_DEST_ID_RE.findall(dest):
+            if t not in cases:
+                out.append(finding('T2', f'IT-moved:{sid}->{t}', where, f'{sid} の移した先 {t} は UT・IT にありません'))
+    for sid in sorted(marked - seen):
+        out.append(finding('T4', f'IT-moved:{sid}', path,
+                           f'{sid} は ST で「{MOVED_MARK}」としているのに、対応表に行がありません'))
+    for sid in sorted({s for s in seen if s in cases and cases[s]['level'] == 'ST'} - marked):
+        out.append(finding('T4', f'IT-moved:{sid}', f'{cases[sid]["path"]}:{cases[sid]["line"]}',
+                           f'{sid} は対応表にあるのに、ST の ID の直後の括弧に「{MOVED_MARK}」がありません'))
     return out
 
 
@@ -1109,9 +1193,11 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += check_hld_program_table(repo, req_ids, comps)
     lld_out, modules = check_lld(repo, hld_sections, confirmed)
     out += lld_out
+    seams = hld_seams(repo.read(HLD)) if repo.has(HLD) else None
     cases, case_out = load_cases(repo)
-    out += case_out + check_cases(cases, req_ids, urs, modules, confirmed)
+    out += case_out + check_cases(cases, req_ids, urs, modules, seams, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)
+    out += check_it_moved(repo, cases)
     out += check_code(repo, modules, cases, confirmed)
     return apply_exemptions(out, exemptions, repo) + gate + read_errors(repo)
 
