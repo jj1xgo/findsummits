@@ -58,4 +58,4 @@
 
 ## 追記（2026-10-15）: 段を外す場面
 
-Consequences の最後の箇条の「本 ADR では、`CONFIRMED_STAGES`・`IMPLEMENTED_STAGES` から段を外す場面を想定しない」のうち、ゲートの判定で `CONFIRMED_STAGES` に足す段が再審査で No-Go になったときは、その段と、それを上位に持つ段（上位をたどった先まで。テスト文書の段を含む）を `CONFIRMED_STAGES` から外し（`IMPLEMENTED_STAGES` にあれば、そこからも外す）、外した段の文書のヘッダーのステータスを「ドラフト」に戻すことにした（[ADR-OPS-006](ADR-OPS-006-conditional-go-deadlines-and-gate-re-review.md)）。テスト文書自身の再評価による取り消しは決めていないが、上位の段の取り消しに伴う連鎖は対象になる。
+Consequences の最後の箇条の「本 ADR では、`CONFIRMED_STAGES`・`IMPLEMENTED_STAGES` から段を外す場面を想定しない」のうち、ゲートの判定で `CONFIRMED_STAGES` に足す段が再審査で No-Go になったときは、その段と、それを上位に持つ段（下位へたどった先まで。テスト文書の段を含む。たとえば HLD を外すなら LLD・UT・IT も）を `CONFIRMED_STAGES` から外し（`IMPLEMENTED_STAGES` にあれば、そこからも外す）、外した段の文書のヘッダーのステータスを「ドラフト」に戻すことにした（[ADR-OPS-006](ADR-OPS-006-conditional-go-deadlines-and-gate-re-review.md)）。テスト文書自身の再評価による取り消しは決めていないが、上位の段の取り消しに伴う連鎖は対象になる。
