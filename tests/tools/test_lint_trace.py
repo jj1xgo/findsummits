@@ -105,7 +105,7 @@ BASE = {'docs/10_URD.md': URD, 'docs/20_SRS.md': SRS, 'docs/70_ST.md': ST}
 
 
 class TraceTestCase(unittest.TestCase):
-    def check(self, files, confirmed=frozenset(), retired=None, exemptions=None):
+    def check(self, files, confirmed=frozenset(), implemented=frozenset(), retired=None, exemptions=None):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
@@ -114,7 +114,7 @@ class TraceTestCase(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding='utf-8')
         repo = lt.Repo(root, list(files))
-        return lt.run_checks(repo, confirmed=confirmed, retired=retired or {},
+        return lt.run_checks(repo, confirmed=confirmed, implemented=implemented, retired=retired or {},
                              exemptions=exemptions or {})
 
     def keys(self, *args, **kwargs):
@@ -280,7 +280,7 @@ class GapTest(TraceTestCase):
         ut = UT.replace('| `UT-one-01` | a |', '| `UT-one-01` 説明（手動） | a |')
         files = self.lld_files(LLD)
         files.update({'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// trace: UT-one-02\n'})
-        self.assertIn('T5:UT-one-01', self.keys(files, confirmed={'SRS', 'HLD', 'LLD', 'UT'}))
+        self.assertIn('T5:UT-one-01', self.keys(files, confirmed={'SRS', 'HLD', 'LLD', 'UT'}, implemented={'UT'}))
 
 
 class StageTest(TraceTestCase):
@@ -338,6 +338,23 @@ class StageTest(TraceTestCase):
     def test_stage_with_its_upper_stages_is_in_order(self):
         files = dict(BASE, **{'docs/30_HLD.md': HLD})
         self.assertNotIn('T1:stage:HLD:order', self.keys(files, confirmed={'SRS', 'HLD'}))
+
+    def test_implemented_stage_must_be_confirmed(self):
+        self.assertIn('T1:stage:ST:implemented', self.keys(dict(BASE), confirmed={'SRS'}, implemented={'ST'}))
+        keys = self.keys(dict(BASE), confirmed={'SRS', 'ST'}, implemented={'ST'})
+        self.assertNotIn('T1:stage:ST:implemented', keys)
+
+    def test_implemented_stage_must_be_a_test_level(self):
+        files = dict(BASE, **{'docs/30_HLD.md': HLD})
+        keys = self.keys(files, confirmed={'SRS', 'HLD'}, implemented={'HLD'})
+        self.assertIn('T1:stage:HLD:implemented', keys)
+
+    def test_implemented_stage_finding_cannot_be_exempted(self):
+        files = dict(BASE, **{self.ADR: '# X\n'})
+        keys = self.keys(files, confirmed={'SRS'}, implemented={'ST'},
+                         exemptions={'T1:stage:ST:implemented': self.ADR})
+        self.assertIn('T1:stage:ST:implemented', keys)
+        self.assertIn('T1:exemption:T1:stage:ST:implemented', keys)
 
 class SrsTest(TraceTestCase):
     def test_base_is_clean(self):
@@ -640,6 +657,16 @@ class StTest(TraceTestCase):
         files = dict(BASE, **{'docs/70_ST.md': st})
         self.assertIn('T3:ST:FR-002', self.keys(files, confirmed={'ST'}))
         self.assertNotIn('T3:ST:FR-002', self.keys(files))
+
+    def test_confirmed_st_has_t3_but_no_t5_until_implemented(self):
+        st = ST.replace('| `ST-FR-002-01`（異常系） | b |\n', '')
+        keys = self.keys(dict(BASE, **{'docs/70_ST.md': st}), confirmed={'SRS', 'ST'})
+        self.assertIn('T3:ST:FR-002', keys)
+        self.assertEqual([k for k in keys if k.startswith('T5:')], [])
+
+    def test_implemented_st_reports_case_without_test_code(self):
+        keys = self.keys(dict(BASE), confirmed={'SRS', 'ST'}, implemented={'ST'})
+        self.assertIn('T5:ST-FR-001-01', keys)
 
     def test_coverage_case_refs_resolve(self):
         row_end = '| `ST-FR-001-01` |\n'
@@ -1131,6 +1158,11 @@ class ItTest(TraceTestCase):
         self.assertIn('T3:IT:CMP1-EXT1', self.it_keys(files, confirmed={'SRS', 'HLD', 'IT'}))
         self.assertNotIn('T3:IT:CMP1-EXT1', self.it_keys(files))
 
+    def test_confirmed_it_has_no_t5_until_implemented(self):
+        confirmed = {'SRS', 'HLD', 'IT'}
+        self.assertEqual([k for k in self.keys(self.files(), confirmed=confirmed) if k.startswith('T5:')], [])
+        self.assertIn('T5:IT-CMP1-INT1-01', self.keys(self.files(), confirmed=confirmed, implemented={'IT'}))
+
     def test_moved_row_missing(self):
         st = ST_MOVED.replace('`ST-FR-001-01` | a', '`ST-FR-001-01`（UT/IT で実施） | a')
         self.assertIn('T4:IT-moved:ST-FR-001-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
@@ -1201,7 +1233,7 @@ class LldTest(TraceTestCase):
         return files
 
     def test_clean_when_confirmed(self):
-        keys = self.keys(self.files(), confirmed={'LLD', 'UT'})
+        keys = self.keys(self.files(), confirmed={'LLD', 'UT'}, implemented={'UT'})
         self.assertEqual([k for k in keys if not k.startswith('T1:stage:')], [])
 
     def test_missing_file_field(self):
@@ -1254,7 +1286,7 @@ class LldTest(TraceTestCase):
 
     def test_unimplemented_automated_case(self):
         files = self.files(**{'tests/src/test_one.cpp': '// 空\n'})
-        keys = self.keys(files, confirmed={'UT'})
+        keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
         self.assertIn('T5:UT-one-01', keys)
         self.assertNotIn('T5:UT-one-02', keys)
 
@@ -1288,14 +1320,16 @@ class LldTest(TraceTestCase):
 
     def test_tool_tests_and_prototype_tests_are_not_test_code(self):
         files = self.files(**{'tests/tools/test_t.py': 'x = 1\n', 'tests/test_proto.c': 'int x;\n'})
-        keys = self.keys(files, confirmed={'UT'})
+        keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
         self.assertNotIn('T5:tests/tools/test_t.py', keys)
         self.assertNotIn('T5:tests/test_proto.c', keys)
 
-    def test_untraced_test_file_when_tests_confirmed(self):
+    def test_untraced_test_file_only_when_tests_implemented(self):
         files = self.files(**{'tests/src/helper.cpp': 'int helper;\n'})
-        self.assertIn('T5:tests/src/helper.cpp', self.keys(files, confirmed={'UT'}))
-        self.assertNotIn('T5:tests/src/helper.cpp', self.keys(files))
+        self.assertIn('T5:tests/src/helper.cpp', self.keys(files, confirmed={'UT'}, implemented={'UT'}))
+        self.assertNotIn('T5:tests/src/helper.cpp', self.keys(files, confirmed={'UT'}))
+        files = self.files(**{'tests/scripts/test_it_helper.py': 'x = 1\n'})
+        self.assertIn('T5:tests/scripts/test_it_helper.py', self.keys(files, confirmed={'UT'}, implemented={'UT'}))
 
     def test_module_without_ut_when_confirmed(self):
         ut = UT.replace('| `UT-one-01` | a |\n| `UT-one-02`（手動） | b |\n', '')
@@ -1305,7 +1339,7 @@ class LldTest(TraceTestCase):
 
     def test_several_ids_in_one_trace_comment(self):
         files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-01, UT-one-09\n'})
-        keys = self.keys(files, confirmed={'UT'})
+        keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
         self.assertIn('T2:tests/src/test_one.cpp->UT-one-09', keys)
         self.assertNotIn('T5:UT-one-01', keys)
 

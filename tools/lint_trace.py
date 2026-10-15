@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """要求の追跡と整合の検査（docs/03_development.md「6. 要求の追跡と整合」、ADR-URD-020）
 
-T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、読めないファイル
+T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、IMPLEMENTED_STAGES の段の名前と確定、
+    読めないファイル
 T2: 参照先（ID・見出しのアンカー・ファイル）の実在（LLD の「ファイル」のパスは LLD が確定した後だけ）
 T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、HLD 2.2.4 の FR の表と第 3 章の宣言の照合、
     SRS の検証の表と品質特性の表の照合、IT の対応表と ST の印の照合
-T5: 製品のコード・テストのコードと文書の双方向（確定済みの段だけ）
+T5: 製品のコード・テストのコードと文書の双方向（製品のコードは LLD の確定後、
+    テストのコードはそのレベルのコードがそろった後だけ）
 """
 import io
 import os
@@ -22,9 +24,14 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# フェーズゲートを通った段。ゲートの判定が Go / 条件付きGo なら段を足す（docs/03_development.md §4）。
-# T3・T5 は下位の段の名前で効くので、最上位の URD は入れない。
+# 確定した段。設計の文書の段はゲートの判定が Go / 条件付きGo なら、テスト文書の段はヘッダーのステータスを
+# 「確定」にしたときに足す（docs/03_development.md §4、ADR-OPS-005）。
+# T3 と LLD の T5 は下位の段の名前で効くので、最上位の URD は入れない。
 CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
+
+# テストのコードがそろった、テストのレベルの段（UT・IT・ST）。テストのコードとテスト文書の T5 は、この段だけで効く。
+# そのレベルの自動のケースのテストのコードをそろえたときに足す。CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005）。
+IMPLEMENTED_STAGES = frozenset()
 
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
@@ -1132,7 +1139,7 @@ def code_traces(repo, dirs):
     return out
 
 
-def check_code(repo, modules, cases, confirmed):
+def check_code(repo, modules, cases, confirmed, implemented):
     out = []
     if modules is not None and 'LLD' in confirmed:
         traces = code_traces(repo, PRODUCT_DIRS)
@@ -1153,27 +1160,29 @@ def check_code(repo, modules, cases, confirmed):
                                        'ではありません'))
                 elif mid not in traces[f]:
                     out.append(finding('T5', f'{mid}->{f}', m['where'], f'{f} に trace: {mid} がありません'))
-    implemented = set()
-    tests_confirmed = bool(confirmed & {'UT', 'IT', 'ST'})
+    traced_cases = set()
+    tests_implemented = bool(implemented & set(CASE_DOCS))
     for f, ids in code_traces(repo, TEST_DIRS).items():
         case_ids = {i for i in ids if not i.startswith('LLD-')}
-        if tests_confirmed and not case_ids:
+        if tests_implemented and not case_ids:
             out.append(finding('T5', f, f, 'どのテストケースも名乗っていません（trace: <テストケース ID>）'))
         for i in sorted(case_ids):
-            implemented.add(i)
+            traced_cases.add(i)
             if i not in cases:
                 out.append(finding('T2', f'{f}->{i}', f, f'テストケース {i} はテスト文書にありません'))
     for cid, c in sorted(cases.items()):
-        if c['level'] in confirmed and not c['manual'] and cid not in implemented:
+        if c['level'] in implemented and not c['manual'] and cid not in traced_cases:
             out.append(finding('T5', cid, f'{c["path"]}:{c["line"]}',
                                f'{cid} を実装したテストのコードがありません（trace: {cid}）'))
     return out
 
 
-def check_stages(repo, confirmed):
-    """フェーズゲートを通った段の文書が git にあり、上位の段（たどった先まで）もすべて通っているか。
+def check_stages(repo, confirmed, implemented):
+    """確定した段（confirmed）の文書が git にあり、上位の段（たどった先まで）もすべて確定しているか。
+    テストのコードがそろった段（implemented）が、テストのレベルで、確定した段でもあるか。
 
     どちらかが欠けると、その段の T3・T5 が黙って外れる（下位の段の検査は上位の段の文書を読んで組み立てるため）。
+    implemented の段がテストのレベルでないと何も効かず、確定していないと T5 が T3 より先に効く。
     """
     out = []
     for stage in sorted(confirmed):
@@ -1184,7 +1193,7 @@ def check_stages(repo, confirmed):
             continue
         if not repo.has(path):
             out.append(finding('T1', f'stage:{stage}', path,
-                               f'フェーズゲートを通った段 {stage} の文書が git にありません'))
+                               f'確定した段 {stage} の文書が git にありません'))
         upper, s = [], STAGE_PARENT.get(stage)
         while s:
             if s not in confirmed:
@@ -1194,6 +1203,14 @@ def check_stages(repo, confirmed):
             out.append(finding('T1', f'stage:{stage}:order', 'tools/lint_trace.py',
                                f'段 {stage} を確定扱いにするには、上位の段 {"・".join(upper)} '
                                'も CONFIRMED_STAGES に入れます'))
+    for stage in sorted(implemented):
+        if stage not in CASE_DOCS:
+            levels = '・'.join(CASE_DOCS)
+            out.append(finding('T1', f'stage:{stage}:implemented', 'tools/lint_trace.py',
+                               f'IMPLEMENTED_STAGES の段 {stage} は {levels} のどれでもありません'))
+        elif stage not in confirmed:
+            out.append(finding('T1', f'stage:{stage}:implemented', 'tools/lint_trace.py',
+                               f'段 {stage} を IMPLEMENTED_STAGES に入れるには、CONFIRMED_STAGES にも入れます'))
     return out
 
 
@@ -1208,9 +1225,10 @@ def read_errors(repo):
     return [finding('T1', f'{p}:read', p, f'読めません（{e}）') for p, e in sorted(repo.unreadable.items())]
 
 
-def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions=EXEMPTIONS):
+def run_checks(repo, confirmed=CONFIRMED_STAGES, implemented=IMPLEMENTED_STAGES, retired=RETIRED_IDS,
+               exemptions=EXEMPTIONS):
     # 段・URD・SRS の欠落は EXEMPTIONS を通さない
-    gate = check_stages(repo, confirmed) + check_unexemptable(exemptions)
+    gate = check_stages(repo, confirmed, implemented) + check_unexemptable(exemptions)
     # URD・SRS は以降のすべての検査が読む。無ければ指摘して止める（段の指摘と重ねない）
     reported = {STAGE_DOCS.get(s) for s in confirmed}
     missing = [p for p in (URD, SRS) if not repo.has(p)]
@@ -1241,7 +1259,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, retired=RETIRED_IDS, exemptions
     out += case_out + check_cases(cases, req_ids, urs, modules, seams, confirmed)
     out += check_st_matrix(repo, urs, declared, cases)
     out += check_it_moved(repo, cases)
-    out += check_code(repo, modules, cases, confirmed)
+    out += check_code(repo, modules, cases, confirmed, implemented)
     return apply_exemptions(out, exemptions, repo) + gate + read_errors(repo)
 
 
