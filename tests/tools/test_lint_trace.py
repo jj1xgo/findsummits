@@ -668,6 +668,10 @@ class StTest(TraceTestCase):
         keys = self.keys(dict(BASE), confirmed={'SRS', 'ST'}, implemented={'ST'})
         self.assertIn('T5:ST-FR-001-01', keys)
 
+    def test_untraced_test_file_without_lld_or_ut(self):
+        files = dict(BASE, **{'tests/src/helper.cpp': 'int helper;\n'})
+        self.assertIn('T5:tests/src/helper.cpp', self.keys(files, confirmed={'SRS', 'ST'}, implemented={'ST'}))
+
     def test_coverage_case_refs_resolve(self):
         row_end = '| `ST-FR-001-01` |\n'
         for ref, expected in (('`ST-FR-001-09`', 'ST-FR-001-09'), ('`ST-FR-009-*`', 'ST-FR-009-*'),
@@ -1162,6 +1166,15 @@ class ItTest(TraceTestCase):
         confirmed = {'SRS', 'HLD', 'IT'}
         self.assertEqual([k for k in self.keys(self.files(), confirmed=confirmed) if k.startswith('T5:')], [])
         self.assertIn('T5:IT-CMP1-INT1-01', self.keys(self.files(), confirmed=confirmed, implemented={'IT'}))
+
+    def test_t5_is_selective_by_implemented_level(self):
+        confirmed = {'SRS', 'HLD', 'IT', 'ST'}
+        keys = self.keys(self.files(), confirmed=confirmed, implemented={'IT'})
+        self.assertIn('T5:IT-CMP1-INT1-01', keys)
+        self.assertNotIn('T5:ST-FR-001-01', keys)
+        keys = self.keys(self.files(), confirmed=confirmed, implemented={'ST'})
+        self.assertIn('T5:ST-FR-001-01', keys)
+        self.assertNotIn('T5:IT-CMP1-INT1-01', keys)
 
     def test_moved_row_missing(self):
         st = ST_MOVED.replace('`ST-FR-001-01` | a', '`ST-FR-001-01`（UT/IT で実施） | a')
