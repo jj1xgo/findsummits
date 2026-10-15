@@ -40,3 +40,7 @@
 ## 追記（2026-10-10）: HLD の末尾の表と 2.2.4 の扱い
 
 Consequences の「HLD 末尾の追跡マトリクスと §2.2.4 の置き換え」は、2.2.4 を置き換えず、プログラムの割り当ての表として残して第 3 章の宣言と照合する形にした。HLD の末尾の表は [6. 要求追跡マトリクス](../30_HLD.md#6-要求追跡マトリクス) に置き、T4 で照合する（[ADR-HLD-005](ADR-HLD-005-hld-traceability-matrix-and-program-table.md)）。Decision 3 の「SRS §12」は、SRS の章の付け替えの後は [SRS §10](../20_SRS.md#10-要求追跡マトリクス) である。
+
+## 追記（2026-10-15）: テストのコードの T5 の時期
+
+Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通った後に効かせる」のうち、テストのコードとテスト文書の T5 は、そのテストのレベルのテストのコードがそろった段（`tools/lint_trace.py` の `IMPLEMENTED_STAGES`）から効かせるように改めた。テスト文書の段（UT・IT・ST）は、ゲートの判定ではなく、ヘッダーのステータスを「確定」にしたときに `CONFIRMED_STAGES` に入れ、T3 を効かせる。Consequences の「フェーズゲートの判定のたびに `CONFIRMED_STAGES` を書き換える」は、テスト文書の段ではヘッダーを確定にする変更と、テストのコードをそろえる変更（`IMPLEMENTED_STAGES`）に読み替える。製品のコードの T5 は変えていない（[ADR-OPS-005](ADR-OPS-005-test-document-status-and-t5-timing.md)）。
