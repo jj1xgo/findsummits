@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # フェーズゲートを通った段。ゲートの判定が Go / 条件付きGo なら段を足す（docs/03_development.md §4）。
 # T3・T5 は下位の段の名前で効くので、最上位の URD は入れない。
-CONFIRMED_STAGES = frozenset({'SRS'})
+CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
 
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
