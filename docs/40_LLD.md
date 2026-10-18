@@ -124,7 +124,7 @@ def main() -> None:
 2. `path = os.path.abspath(config_path)`（相対パスは起動した作業ディレクトリが基準。[HLD 2.3.2](30_HLD.md#232-設定ファイル)）。`os.path.isfile(path)` が偽なら CF1 を出して `EXIT_USAGE`。`path` が `_DEFAULT_CONFIG_PATH` と等しいときだけ CF1 の既定の対処にする。
 3. `open(path, encoding='utf-8-sig')` で全部を読む。`OSError` か `UnicodeDecodeError` なら CF2 で `EXIT_USAGE`。読んだ文字列に NUL（`'\x00'`）があれば、CF3（`{reason}` は `NUL の文字がある`）で `EXIT_USAGE`（4 で `default_section` に NUL を使うので、`[\x00]` の節を既定の節として読ませないため）。
 4. `configparser.ConfigParser(interpolation=None, strict=True, default_section='\x00', inline_comment_prefixes=None)` を作り、`optionxform = str`（キーの大文字と小文字を区別する）にして `read_string(text, source=path)` する。`configparser.Error` なら CF3 で `EXIT_USAGE`。`default_section` をファイルに書けない名前にするので、`[DEFAULT]` もふつうの節として読まれ、下の 5 で知らない節になる。`#` と `;` で始まる行は注釈（`configparser` の既定）。
-5. ファイル全体の検査: ファイルの順に、`_CONFIG_KEYS` に無い節は CF4、ある節の中で `_CONFIG_KEYS` のその節に無いキーは CF5 を、誤りの一覧に足す（別の節にあるキー、大文字の違うキーも CF5）。
+5. ファイル全体の検査: ファイルの順に、`_CONFIG_KEYS` に無い節は CF4、ある節の中で `_CONFIG_KEYS` のその節に無いキーは CF5 を、誤りの一覧に足す（知らない節の中のキーには CF5 を出さず、その節の CF4 だけにする。別の節にあるキー、大文字の違うキーも CF5）。
 6. キーごとの検査: `_CONFIG_KEYS` の順に、`keys` にあって、ファイルのその節に書いてあるキー（別の節に書いてあるものは書いていないものとして扱う）の値を [2.1.2](#212-型とデータ)の判定に掛け、合わなければ CF6 を足す。
 7. 必須の検査: `_CONFIG_KEYS` の順に、`required` にあってファイルのその節に書いていないキーは CF7 を足す（`[fetch] data_dir` と書いたときは、5 の CF5 と、この CF7 の両方が出る）。
 8. 誤りの一覧が空でなければ、一覧の順に各誤りのメッセージ（2 行ずつ）を `log_error` で出し、`EXIT_USAGE`。1 つでも誤りがあれば、全部を出してから 1 回だけ止まる。
@@ -173,7 +173,7 @@ def main() -> None:
 
 `log_info(message: str) -> None`・`log_warning(what: str, action: str) -> None`・`log_error(what: str, action: str) -> None`
 
-- 出す行: `log_info` は `message` を、`log_warning` は `WARNING: {what}` と `対処: {action}` の 2 行を、`log_error` は `ERROR: {what}` と `対処: {action}` の 2 行を出す（[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)）。`what`・`action` の中に改行があれば、改行で分けたそれぞれが 1 行で、接頭辞（`WARNING:`・`ERROR:`・`対処:`）は `what` と `action` の最初の行にだけ付け、続きの行には付けない。
+- 出す行: `log_info` は `message` を（改行があれば、改行で分けたそれぞれが 1 行）、`log_warning` は `WARNING: {what}` と `対処: {action}` の 2 行を、`log_error` は `ERROR: {what}` と `対処: {action}` の 2 行を出す（[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)）。`what`・`action` の中に改行があれば、改行で分けたそれぞれが 1 行で、接頭辞（`WARNING:`・`ERROR:`・`対処:`）は `what` と `action` の最初の行にだけ付け、続きの行には付けない。
 - 画面: `log_info` は標準出力、ほかの 2 つは標準エラー出力に、時刻を付けずに出し、そのつど flush。
 - ログファイル: `_state.file` があり `broken` でないときだけ、各行の先頭に `datetime.now().astimezone().isoformat(timespec='seconds')` と空白 1 つを付けて書き、flush（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 3「行の書式」）。書けなければ（`OSError`）`broken = True` にし、G5 を標準エラー出力にだけ出し、`raise LogWriteError(path) from e`。`broken` の後は、`log_info` は何も出さず（結果の要約を出さないため。HLD 5.7.2 の 7「結果の要約」）、`log_warning`・`log_error` は標準エラー出力にだけ出す。
 
@@ -265,7 +265,7 @@ def main() -> None:
 | `UT-common-11` | 呼ぶ側の誤り | `keys` に `data_dir` が無い、`keys` に表に無い名前 | `ValueError` |
 | `UT-common-12` | `--mesh` の値を読む | `5339`、`0123`、空白と CR と空行と `#` の行と重複を含むファイル、相対パス | `{'5339'}`、`{'0123'}`、重なりを除いた集合、作業ディレクトリ基準で読む |
 | `UT-common-13` | `--mesh` の誤り | 空の値、無いファイル、ディレクトリ、2 行目と 4 行目が誤りのファイル、全角の数字の `5339`（コードポイント U+FF15、U+FF13、U+FF13、U+FF19）の行、有効な行が無いファイル、`533` | どれも 2。誤りの行は最初の 2 行目を示す（A1〜A5）。`533` はパスとして読む |
-| `UT-common-14` | リストを読む | 正しいリスト、空のファイル、無いファイル（案内あり・なし）、誤りの行 | 集合、空の集合、1 と R1 の対処（案内か既定）、1 と R3 |
+| `UT-common-14` | リストを読む | 正しいリスト、空のファイル、無いファイル（案内あり・なし）、誤りの行、ディレクトリ | 集合、空の集合、1 と R1 の対処（案内か既定）、1 と R3、1 と R2 |
 | `UT-common-15` | `start_log` の前の出し先 | `log_info`・`log_warning`・`log_error` | 標準出力か標準エラー出力にだけ出て、`WARNING:`・`ERROR:` と `対処:` の 2 行、時刻なし |
 | `UT-common-16` | ログファイルの始まり | `start_log` と、その後の `log_info` | `log_dir` を作る、名前が `<program>_<YYYYMMDDTHHMMSS>_<pid>.log`、L1・L2 の行、後の行の先頭に時刻と空白 1 つ（正規表現 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}` と空白）、画面の行には時刻なし、2 行のメッセージは各行に時刻 |
 | `UT-common-17` | 終わりの行 | 子のプロセスで `start_log` の後に `sys.exit(0)`・`sys.exit(3)`・`sys.exit` を呼ばずに終わる | 終了コード 0・3・0、最後の行が L3 で同じ終了コード、所要時間が 0 以上で小数 3 桁 |
@@ -281,7 +281,7 @@ def main() -> None:
 | `UT-common-27` | メッシュ → 緯度経度 | 2.4 の表 1 の行 | 期待の値と `==` で等しい |
 | `UT-common-28` | 緯度経度 → タイル | 2.4 の表 2 の行 | 期待の値と等しい |
 | `UT-common-29` | メッシュコードの誤り | `533`、`53a9` | `ValueError` |
-| `UT-common-30` | 書けない字と長い数 | 値ごとに別の設定ファイルを使う（同じキーを 2 回書くと CF3 になるため）。節の見出しに NUL のある設定（`[\x00]` の節と `[paths]`）、`max_parallel` に 19 桁の数、`unmatched_summit_threshold` に先頭の 0 を除いて 18 桁の数と 19 桁の数と 4301 桁の数と、`0` を 4300 個並べた後に `1` の値 | NUL は 2（CF3）、19 桁と 4301 桁は 2（CF6）、18 桁は読める、`0` が並んだ値は `1` として読める |
+| `UT-common-30` | 書けない字と長い数 | 値ごとに別の設定ファイルを使う（同じキーを 2 回書くと CF3 になるため）。(i) `[\x00]` という節を足した設定、(ii) `[paths]` の `data_dir` の値の末尾に NUL を入れた設定、(iii) `max_parallel` に 19 桁の数、`unmatched_summit_threshold` に (iv) 先頭の 0 を除いて 18 桁の数、(v) 19 桁の数、(vi) 4301 桁の数、(vii) `0` を 4300 個並べた後に `1` の値 | (i)(ii) は 2（CF3）、(iii)(v)(vi) は 2（CF6）、(iv) は読める、(vii) は `1` として読める |
 | `UT-common-31` | 2 回目のシグナル | 子のプロセスで `start_log` の後に `SIGTERM` を受け、`finally` の中で自分へもう 1 回 `SIGTERM` を送ってから、標準出力に `MARK` と書く | 標準出力に `MARK` が出る、終了コード 143、終わりの行は 1 つ |
 | `UT-common-32` | 始まりの行の引数 | 子のプロセスで `argv` に `--config`・`/a b`・`it's`・空の引数を渡して `start_log` | 最初の行が `開始: <program> --config '/a b' 'it'"'"'s' ''` |
 
@@ -305,7 +305,7 @@ def main() -> None:
 
 引用の決まり（L1 の `{args}`。[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 4「始まりと終わりの行」の「最初の行にプログラムの名前と、起動の引数を受け取ったとおりに書く」を、引数の切れ目と中身が読み取れる形で 1 行に書くため）: 引数が空でなく、どの字も ASCII の英数字か `_@%+=:,./-` のどれかなら、そのまま書く。それ以外は、`'` で囲み、中の `'` を `'"'"'` に置き換える（空の引数は `''`）。Python の `shlex.join` と同じ結果になる（Python は `shlex.join(argv)` を使ってよい）。引数に改行があれば、その改行でファイルの行が分かれ、分かれた各行に時刻を付ける（[2.1.3](#213-関数の細部)の `_emit`）。bash の `run_pipeline` は L2 を書かない（[HLD 3.3.3](30_HLD.md#333-関数)の `open_log`）。
 
-全体に共通する場面のメッセージ（HLD 2.5.3 の表と[HLD 5.7.3](30_HLD.md#573-異常系)の表の場面のうち、今回の分）:
+全体に共通する場面のメッセージ（HLD 2.5.3 の表と[HLD 5.7.3](30_HLD.md#573-異常系)の表の場面のうち、今回の分。`{config_path}` は `start_log` に渡された `Config` の `path`〈設定ファイルの絶対パス〉）:
 
 | 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
 |---|---|---|---|---|
