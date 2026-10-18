@@ -120,7 +120,7 @@ def main() -> None:
 
 `load_config(config_path: str, keys: Collection[str], required: Collection[str]) -> Config`
 
-1. `keys` に `data_dir` か `log_dir` が無いとき、`required` に `data_dir` が無いとき（どれか 1 つでも欠けていれば）`ValueError`（呼ぶ側の誤り。利用者の誤りではない。[HLD 3.9](30_HLD.md#39-共通部品)の「`data_dir`・`log_dir` はどのバッチも使うので、どのバッチでも当たる」）。`keys` に `_CONFIG_KEYS` に無い名前があるとき、`required` に `keys` に無い名前があるときも `ValueError`。
+1. 次のどれかに当たれば `ValueError`（(i) `keys` に `data_dir` が無い、(ii) `keys` に `log_dir` が無い、(iii) `required` に `data_dir` が無い。呼ぶ側の誤り。利用者の誤りではない。[HLD 3.9](30_HLD.md#39-共通部品)の「`data_dir`・`log_dir` はどのバッチも使うので、どのバッチでも当たる」）。このほか、`keys` に `_CONFIG_KEYS` に無い名前があるとき、`required` に `keys` に無い名前があるときも `ValueError`。
 2. `path = os.path.abspath(config_path)`（相対パスは起動した作業ディレクトリが基準。[HLD 2.3.2](30_HLD.md#232-設定ファイル)）。`os.path.isfile(path)` が偽なら CF1 を出して `EXIT_USAGE`。`path` が `_DEFAULT_CONFIG_PATH` と等しいときだけ CF1 の既定の対処にする。
 3. `open(path, encoding='utf-8-sig')` で全部を読む。`OSError` か `UnicodeDecodeError` なら CF2 で `EXIT_USAGE`。読んだ文字列に NUL（`'\x00'`）があれば、CF3（`{reason}` は `NUL の文字がある`）で `EXIT_USAGE`（4 で `default_section` に NUL を使うので、`[\x00]` の節を既定の節として読ませないため）。
 4. `configparser.ConfigParser(interpolation=None, strict=True, default_section='\x00', inline_comment_prefixes=None)` を作り、`optionxform = str`（キーの大文字と小文字を区別する）にして `read_string(text, source=path)` する。`configparser.Error` なら CF3 で `EXIT_USAGE`。`default_section` をファイルに書けない名前にするので、`[DEFAULT]` もふつうの節として読まれ、下の 5 で知らない節になる。`#` と `;` で始まる行は注釈（`configparser` の既定）。
@@ -137,9 +137,9 @@ def main() -> None:
 `start_log(log_dir: str, config: Config, program: str, argv: Sequence[str], start: StartTime) -> None`
 
 1. 2 回目の呼び出しは `RuntimeError`。
-2. `os.makedirs(log_dir, exist_ok=True)`。`OSError`（`log_dir` がファイルのときの `FileExistsError` を含む）なら [2.2](#22-ログとメッセージの文面)の G3 を出して `EXIT_ERROR`。
-3. `path = os.path.join(log_dir, f'{program}_{start.wall:%Y%m%dT%H%M%S}_{os.getpid()}.log')`（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 2「ファイルの名前」）。`open(path, 'x', encoding='utf-8', newline='\n')`。`FileExistsError` なら G4、ほかの `OSError` なら G3 を出して `EXIT_ERROR`（既にあるファイルには触れない）。
-4. ここで初めて `_state` に `file`・`path`・`program`・`start` を入れ、次を取り付ける: `sys.exit` を内部の関数 `_exit` に差し替える（`_exit(code=0)` は `code` が `None` なら 0、`int` でなければ 1 を `_state.exit_code` に記録してから、元の `sys.exit(code)` を呼ぶ）、`sys.excepthook` を `_excepthook` に、`SIGINT` と `SIGTERM` のハンドラを `_on_signal` にし、`atexit.register(_finish_log)`。
+2. `os.makedirs(log_dir, exist_ok=True)`。`OSError`（`log_dir` がファイルのときの `FileExistsError` を含む）なら [2.2](#22-ログとメッセージの文面)の G3（`{path}` は `log_dir`）を出して `EXIT_ERROR`。
+3. `path = os.path.join(log_dir, f'{program}_{start.wall:%Y%m%dT%H%M%S}_{os.getpid()}.log')`（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 2「ファイルの名前」）。`open(path, 'x', encoding='utf-8', newline='\n')`。`FileExistsError` なら G4、ほかの `OSError` なら G3（`{path}` は開けなかったログファイルのパス）を出して `EXIT_ERROR`（既にあるファイルには触れない）。
+4. ここで初めて `_state` に `file`・`path`・`program`・`start` を入れ、次を取り付ける: `sys.exit` を内部の関数 `_exit` に差し替える（`_exit(code=None)` は `code` が `None` なら 0、`int` でなければ 1 を `_state.exit_code` に記録してから、元の `sys.exit(code)` を呼ぶ）、`sys.excepthook` を `_excepthook` に、`SIGINT` と `SIGTERM` のハンドラを `_on_signal` にし、`atexit.register(_finish_log)`。
 5. 2.2 の L1・L2 の行（始まりと引数、設定ファイル、設定値）を書く。書けなければ下の `log_info`・`log_warning`・`log_error` と同じく `LogWriteError`。`argv` は起動の部分が渡す `sys.argv[1:]`（プログラムの名前を含まない）。
 
 `sys.exit` を差し替える理由: Python の `atexit` の処理からは終了コードが読めない（2026-10-18 に CPython で確かめた）。HLD 3.9 は「プログラムが終わるときに終わりの行を書く」を `start_log` に持たせ、終わりの行には終了コードが要る（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 4「始まりと終わりの行」）。選ばなかった案: HLD 3.9 に終わりの行を書く部品を足す（確定した HLD の部品を増やすことになる）。各プログラムが終わりの行を書く（HLD 3.9 の「`start_log` が書く」と食い違う）。
@@ -161,7 +161,7 @@ def main() -> None:
 
 - `SignalStop`: `_state.exit_code = 128 + exc.signum`。メッセージは出さない（終わりの行にシグナルの名前を書く）。
 - `LogWriteError`: `_state.exit_code = EXIT_ERROR`。メッセージは書けなくなったときに出してある。
-- そのほか: `_state.exit_code = EXIT_ERROR`。2.2 の G7 を `log_error` で出し、続けて `''.join(traceback.format_exception(exc_type, exc, tb))` を改行で分けた各行を、内部の関数 `_emit(lines: list[str], stream: TextIO) -> None`（`log_info`・`log_warning`・`log_error` と同じく、画面には時刻なし、ログファイルには時刻付きで書く関数。`log_info`・`log_warning`・`log_error` もこれで出す）で標準エラー出力とログファイルに出す。G7 の `log_error` と Traceback の `_emit` は、別々の `try` で囲み、どちらかで `LogWriteError` が上がったら、その `try` の中で捕まえて次へ進む（G7 の書き込みが失敗しても、Traceback は画面に出る。`broken` は真になっているので、`_finish_log` が 1 で終える）。
+- そのほか: `_state.exit_code = EXIT_ERROR`。2.2 の G7 を `log_error` で出し、続けて `''.join(traceback.format_exception(exc_type, exc, tb))` を改行で分けた各行を、内部の関数 `_emit(lines: list[str], stream: TextIO | None) -> None`（画面〈`stream`〉には時刻なし、ログファイルには時刻付きで書く関数。`log_info`・`log_warning`・`log_error` もこれで出す。`stream` が `None` のときは画面に出さず、ログファイルにだけ書く。L1〜L3 の行はこれで書く）で標準エラー出力とログファイルに出す。G7 の `log_error` と Traceback の `_emit` は、別々の `try` で囲み、どちらかで `LogWriteError` が上がったら、その `try` の中で捕まえて次へ進む（G7 の書き込みが失敗しても、Traceback は画面に出る。`broken` は真になっているので、`_finish_log` が 1 で終える）。
 
 ##### _on_signal
 
@@ -270,19 +270,19 @@ def main() -> None:
 | `UT-common-16` | ログファイルの始まり | `start_log` と、その後の `log_info` | `log_dir` を作る、名前が `<program>_<YYYYMMDDTHHMMSS>_<pid>.log`、L1・L2 の行、後の行の先頭に時刻と空白 1 つ（正規表現 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}` と空白）、画面の行には時刻なし、2 行のメッセージは各行に時刻 |
 | `UT-common-17` | 終わりの行 | 子のプロセスで `start_log` の後に `sys.exit(0)`・`sys.exit(3)`・`sys.exit` を呼ばずに終わる | 終了コード 0・3・0、最後の行が L3 で同じ終了コード、所要時間が 0 以上で小数 3 桁 |
 | `UT-common-18` | 捕まらなかった例外 | 子のプロセスで `start_log` の後に `raise RuntimeError('x')` | 終了コード 1、G7 と Traceback が標準エラー出力とログに出る、終わりの行は 1 |
-| `UT-common-19` | シグナル | 子のプロセスで `start_log` の後に自分へ `SIGTERM` と `SIGINT` | 終了コード 143・130、`finally` の後始末が動く、終わりの行に `SIGTERM`・`SIGINT` |
-| `UT-common-20` | 同じ名前のログファイル | 同じ `StartTime` と同じ PID の名前のファイルを先に置く | 1、G4、置いたファイルは変わらない |
+| `UT-common-19` | シグナル | 子のプロセスで `start_log` の後に自分へ `SIGTERM` を送る子と、`SIGINT` を送る子を別々に動かす（1 つの子に 2 つ送っても、最初の 1 つで止まる）。どちらも `try`/`finally` の中で送り、`finally` で標準出力に `CLEANUP` と書く | 終了コード 143・130、標準出力に `CLEANUP` が出る、終わりの行に `SIGTERM`・`SIGINT` |
+| `UT-common-20` | 同じ名前のログファイル | 子のプロセスの中で、`start_log` を呼ぶ前に、同じ `StartTime` と自分の PID の名前のファイルを作っておく（親は子の PID を起動の前に知れない） | 1、G4、置いたファイルは変わらない |
 | `UT-common-21` | ログの出力先を用意できない | `log_dir` がファイル | 1、G3 が標準エラー出力だけに出る |
 | `UT-common-22` | ログファイルに書けなくなった | 子のプロセスで、開いた後の書き込みを失敗させて `log_info('x')` を呼ぶ。(a) そのまま、(b) `try`/`except Exception` で囲んで、`except` の中で `sys.exit(0)`、(c) `try` の中の `log_info('x')` で書き込みが失敗し、`finally` の中の 2 つ目の `log_info('要約')` で要約を出す形 | どれも終了コード 1、G5 が標準エラー出力に 1 回出る、ログファイルに終わりの行が無い。(b) の `except Exception` は `LogWriteError` を捕まえない。(c) の 2 つ目の `log_info` は標準出力に何も出さない（1 つ目の `x` は、書き込みの失敗の前に画面へ出る） |
 | `UT-common-23` | 終わりの行だけ書けなかった | 子のプロセスで終わりの行の書き込みだけを失敗させ、`sys.exit(0)` | 終了コード 1、G6 が標準エラー出力に出る |
-| `UT-common-24` | ロック | 1 つ目の子のプロセスがロックを持つ間に 2 つ目、無い `data_dir` | 2 つ目は 1 で G1（ロックファイルのパスを含む）、ログファイルを作らない。無い `data_dir` は 1 で G2。終わってもロックファイルが残る |
+| `UT-common-24` | ロック | 1 つ目の子のプロセスがロックを持つ間に 2 つ目、無い `data_dir` | 2 つ目は 1 で G1（ロックファイルのパスを含む）、`data_dir` の下に `*.log` を作らない。無い `data_dir` は 1 で G2。終わってもロックファイルが残る |
 | `UT-common-25` | 取得完了の記録のパス | `/d` | `/d/tiles/<2.3 の取得完了の記録の名前>` |
 | `UT-common-26` | 終了コードの定数 | — | 0・1・2・3・4 |
 | `UT-common-27` | メッシュ → 緯度経度 | 2.4 の表 1 の行 | 期待の値と `==` で等しい |
 | `UT-common-28` | 緯度経度 → タイル | 2.4 の表 2 の行 | 期待の値と等しい |
 | `UT-common-29` | メッシュコードの誤り | `533`、`53a9` | `ValueError` |
-| `UT-common-30` | 書けない字と長い数 | 節の見出しに NUL のある設定（`[\x00]` の節と `[paths]`）、`max_parallel` に 19 桁の数、`unmatched_summit_threshold` に先頭の 0 を除いて 18 桁の数と 19 桁の数と 4301 桁の数と、`0` を 4300 個並べた後に `1` の値 | NUL は 2（CF3）、19 桁と 4301 桁は 2（CF6）、18 桁は読める、`0` が並んだ値は `1` として読める |
-| `UT-common-31` | 2 回目のシグナル | 子のプロセスで `start_log` の後に `SIGTERM` を受け、`finally` の中で自分へもう 1 回 `SIGTERM` を送ってから後始末の印を書く | 印が書かれる、終了コード 143、終わりの行は 1 つ |
+| `UT-common-30` | 書けない字と長い数 | 値ごとに別の設定ファイルを使う（同じキーを 2 回書くと CF3 になるため）。節の見出しに NUL のある設定（`[\x00]` の節と `[paths]`）、`max_parallel` に 19 桁の数、`unmatched_summit_threshold` に先頭の 0 を除いて 18 桁の数と 19 桁の数と 4301 桁の数と、`0` を 4300 個並べた後に `1` の値 | NUL は 2（CF3）、19 桁と 4301 桁は 2（CF6）、18 桁は読める、`0` が並んだ値は `1` として読める |
+| `UT-common-31` | 2 回目のシグナル | 子のプロセスで `start_log` の後に `SIGTERM` を受け、`finally` の中で自分へもう 1 回 `SIGTERM` を送ってから、標準出力に `MARK` と書く | 標準出力に `MARK` が出る、終了コード 143、終わりの行は 1 つ |
 | `UT-common-32` | 始まりの行の引数 | 子のプロセスで `argv` に `--config`・`/a b`・`it's`・空の引数を渡して `start_log` | 最初の行が `開始: <program> --config '/a b' 'it'"'"'s' ''` |
 
 ### 2.2 ログとメッセージの文面
