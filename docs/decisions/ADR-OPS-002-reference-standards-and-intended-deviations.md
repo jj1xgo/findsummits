@@ -62,8 +62,8 @@
 - 2026-10-08: Decision 3 の表の 5 行目を、道具に依る手順と個人の運用だけを個人の補足に置く形に狭めた（[ADR-OPS-004](ADR-OPS-004-scope-of-public-defect-and-review-rules.md)）。
 - 2026-10-08: Decision 3 の表に、要求に優先度と根拠の属性を持たせない 2 行（6・7 行目）を足した（[ADR-SRS-070](ADR-SRS-070-requirement-verification-section.md)）。
 - 2026-10-08: Decision 3 の表に、テスト計画と報告を別の文書にしない 1 行（8 行目）を足した（[テスト方針書 1](../02_test_policy.md#1-目的位置づけ)・[5.5](../02_test_policy.md#55-テスト結果の記録)）。
-- 2026-10-18: Decision 3 の表の 5 行目に、どの欠陥と指摘にメンテナの確認と承認が要るかを個人の補足に置くことを足した（[ADR-OPS-008](ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md)）。
 - 2026-10-08: Decision 3 の表の 8 行目の確認の程度を、テスト方針書 1 の対応表を CTFL シラバス v4.0.1 の 5.1.1 の原文と照らした結果に改めた。29119-3 の文書の構成は未確認のまま。
 - 2026-10-08: Decision 3 の表の 3・4 行目の確認の程度を、CTFL シラバス v4.0.1 の 2.2.1 の原文と照らした結果に改めた。規格がどうしているかの記載は原文どおりで、今の形を保つ判断は変えていない。
 - 2026-10-09: Decision 3 の表に、テストレベルを略語 UT・IT・ST で呼ぶ 1 行（9 行目）を足し、書き出しの点の数と保留にあたる行の範囲を改めた（[文書管理ルール「ドキュメントフォーマット標準」](../CLAUDE.md#ドキュメントフォーマット標準)）。
 - 2026-10-14: Decision 2 の表に、設計（LLD）の行（IEEE 1016-2009）を足した（[ADR-LLD-001](ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md)）。
+- 2026-10-18: Decision 3 の表の 5 行目に、どの欠陥と指摘にメンテナの確認と承認が要るかを個人の補足に置くことを足した（[ADR-OPS-008](ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md)）。
