@@ -1624,7 +1624,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | `no_change.geojson` | 変更なし既存サミットおよび関連フィーチャ | `category="no_change"` のフィーチャ全て（フィーチャ構成は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)） |
 | `review.geojson` | 要確認サミット・複数登録の保留組全体 | `category="review"` のフィーチャ全て（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)） |
 
-  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates`）を複製する（`updatelist_file`・`updatelist_updates` は、公開用データだけで、どの登録変更リストに基づく申請済みかを後から確かめられるようにするために複製し、公開用ビューアの画面表示は求めない。`updatelist_notices` は担当者の作業の材料なので複製しない。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)。`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
+  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates`）を複製する（`updatelist_file`・`updatelist_updates` は、公開用ビューアが Update の日付を画面に示すために（[FR-020](#fr-020-公開用ビューア配信)）、また公開用データだけで、どの登録変更リストに基づく申請済みかを後から確かめられるようにするために複製する。`updatelist_notices` は担当者の作業の材料なので複製しない。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)。`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
   - 各 GeoJSON は [FR-009](#fr-009-sotaリスト突合match_status-判定) で定義した category 別フィーチャ構成に基づき、関連フィーチャ（key_col・activation_zone・delete_zone・peak_col_link・coord_diff）を通常は同一 `summit_code`、複数登録の保留組は `review_group_id` で紐付けて格納する（category によって含まれるフィーチャ種類は異なる）
   - 対象 category のフィーチャが 0 件の場合も空 FeatureCollection（`{"type":"FeatureCollection","metadata":{...},"features":[]}`。`metadata` は省略不可）として ZIP に同梱する（5 ファイルを常に出力し、エビデンスの完全性を保つ）
   - GeoJSON の生成は [FR-019](#fr-019-html-ビューア機能仕様) が入力の適格性を検証して構成した現在の表示・編集状態（許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外状態・理由、申請に戻した記録から適用した状態）を使う。localStorage を直接読まず、出力側で category や判断を再導出しない。
@@ -1671,7 +1671,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - 担当者指定削除の孤立 Point は親ピーク・コル・線なしで正常表示する。削除カテゴリの popup に「担当者判断による削除申請」、根拠（未記入ならその旨）と元の unmatched を示す。配信データの category・判断を再導出せず、採用・取消・入力 UI は設けない。
   - 除外状態・理由（空欄なら未記入）と元の category を表示する。除外を含む表示切替（初期 ON）・検索時の必要フィルター ON・parent_add から親への移動は作業用と同様。除外/解除/理由編集・台帳一覧/入出力は提供せず、配信された除外属性を再計算しない。
   - 申請済みの候補は、元の category のまま、申請済みの印と `pending_note`（申請者を含まない）と出典（「山岳データ登録変更リスト（ジオサミットでひとこえ）」と入手の入口の URL）を示す。申請者は示さない（「全データ」でも `pending_applications` の申請者を示さない）。「申請済みを含む」表示切替（初期 ON。切り替えの対象は申請済みとして外れた候補だけ）・検索時の必要フィルター ON は作業用と同様。`pending_match=different` の候補は、申請済みの印を付けず、`pending_note` と「同じ対象に内容の違う申請がある」ことを示す（作業用と同様）。`pending_return=true`（申請に戻した）候補は、申請済みの印を付けず、申請に戻したことを示す。申請に戻す/申請済みに戻す操作・知らせる行・「登録変更リスト」の欄は提供せず、配信された申請済みの属性を再計算しない。登録変更リスト由来の文字列は文字として表示し、HTML やコードとして実行しない（[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。
-  - **メタデータ表示**: 各 GeoJSON に複製された `metadata`（`summitslist_date`・`gsi_tile_latest_date`・`generated_at`・`software_version`）から、[FR-019](#fr-019-html-ビューア機能仕様) と同様に基準日等を画面表示する（UTC 付記）
+  - **メタデータ表示**: 各 GeoJSON に複製された `metadata`（`summitslist_date`・`gsi_tile_latest_date`・`generated_at`・`software_version`）から、[FR-019](#fr-019-html-ビューア機能仕様) と同様に基準日等を画面表示する（UTC 付記）。あわせて `updatelist_updates` から、登録変更リストの年の表ごとの Update の日付を画面表示する（ページの日付のまま示し、UTC は付記しない。日付が読めない年の表は日付が不明であることを示す。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）
   - **帰属表示**: [UR-011](10_URD.md#ur-011) に従い、公開用テンプレートにも [FR-019](#fr-019-html-ビューア機能仕様) と同等の地図帰属表示（`© 国土地理院` 常時表示＋OSM/OpenTopoMap 各選択時の attribution 併記＋「加工して作成」の旨の明示）を備える。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照
   - リリース版と開発版を同時に配信でき、閲覧者がどちらかを判別できること（判別手段は URL と画面表示。詳細は HLD。`software_version` は解析ソフトウェアの版として併記する）。リリース版も開発版も、ログインを求めずに誰でも閲覧できること。版ごとに、配信のたびに変わらない URL を 1 つずつ持ち、閲覧者が同じ URL で最新の配信を開けること（[ADR-SRS-074](decisions/ADR-SRS-074-public-viewer-access-url-and-build-failure.md)）。ブランチとの対応・配信サービス・組み立て手順・URL の形・公開用データ置き場のパスは HLD
   - 詳細仕様は [6.2.7 公開用ビューア](#627-公開用ビューア閲覧専用静的ホスティング配信) を参照
@@ -2018,7 +2018,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | GeoJSON 参照方式 | 公開用データの GeoJSON 5 本をそのまま配信し表示する（配置したファイルとバイト単位で同一。読み込み機構は HLD）。公開用データが 0 本でも配信する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 版の区分 | 組み立てが版の区分（リリース版か開発版か）、ブランチの名前、commit の ID を持つ `site.json` を書いて配信し、画面はそれで版の区分を示す（キーの名前と読み方は HLD。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 提供機能 | [FR-019](#fr-019-html-ビューア機能仕様) の閲覧系機能のうち編集 UI・エクスポート・localStorage・除外台帳と申請に戻した記録の管理/読込を除く全て（「全データ」popup を含む。申請済みの印・`pending_note`・出典の表示を含み、申請者は示さない）。詳細は [FR-020](#fr-020-公開用ビューア配信) 参照 |
-| メタデータ表示 | 各 GeoJSON に複製された `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時・解析ソフトウェアバージョンを画面表示 |
+| メタデータ表示 | 各 GeoJSON に複製された `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時・解析ソフトウェアバージョンを画面表示。登録変更リストの年の表ごとの Update の日付も画面表示（[FR-020](#fr-020-公開用ビューア配信)） |
 | 帰属表示 | `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を基図選択によらず常時表示。OSM 選択時は `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を併記。「加工して作成」の旨を明示する（[UR-011](10_URD.md#ur-011)） |
 | 特徴 | 閲覧専用（編集 UI なし・エクスポートなし・localStorage 不使用）。Leaflet（CDN）・各タイルサーバー・同一サイトの GeoJSON への疎通を要する |
 
