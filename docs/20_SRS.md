@@ -1157,7 +1157,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | `review_note` | 担当者指定削除の根拠本文（文字列）。前後の空白を除き内部改行を保持する。バッチ生成時・未選択・取消後は空文字。下書きは本属性と分離して保存する |
 | `application_exclusion` | 今回の申請除外状態。空文字: 除外なし、`manual`: 有効な担当者の除外判断、`parent_add`: 親の追加除外による従属削除の保留。バッチは全件空文字。[FR-019](#fr-019-html-ビューア機能仕様) が現在状態だけを更新する |
 | `exclusion_note` | `manual`: 前後の空白を除いた任意の除外理由（内部改行を保持）。未記入・空白のみは空文字。`parent_add`: 「追加候補 {現在の親の仮コード} を除外したため削除申請を保留」。除外なしは空文字。バッチは全件空文字 |
-| `pending_applications` | 当たった申請と保持した申請の一覧（正本）。要素は、アクション、山岳 ID（SOTA サミットリストの表記に揃えたもの）か追加の座標（揃えた値）、変更後の標高とそのバンド、申請者、申請日、載っている年の表の一覧、その候補への当たり方（`same`・`different`・保持。担当者指定削除に含めたときは [FR-019](#fr-019-html-ビューア機能仕様) が保持の申請を評価し直す）。並びは申請日の昇順 → アクション → 山岳 ID か座標 → 申請者。ピークの Point とサミットの Point に付け、ほかのフィーチャは同じ行に集まるフィーチャと同じ値。無ければ空配列。項目名と入れ子は HLD に委ねる |
+| `pending_applications` | 当たった申請と保持した申請の一覧（正本）。要素は、アクション、山岳 ID（SOTA サミットリストの表記に揃えたもの）か追加の座標（揃えた値）、変更後の標高とそのバンド、申請者、申請日、載っている年の表の一覧、その候補への当たり方（`same`・`different`・保持。担当者指定削除に含めたときは [FR-019](#fr-019-html-ビューア機能仕様) が保持の申請を評価し直す）。並びは申請日の昇順 → アクション → 山岳 ID か座標 → 申請者。ピークの Point とサミットの Point に付け、ほかのフィーチャは同じ行に集まるフィーチャと同じ値。無ければ空配列。申請エビデンス ZIP の GeoJSON では、[FR-021](#fr-021-申請エビデンス-zip-生成) が申請者を空文字にする。項目名と入れ子は HLD に委ねる |
 | `pending_match` | 申請済みの判定。空文字: 当たる申請なし（または保持だけ）、`same`: 同じ内容の申請あり（既定で申請書から外れる）、`different`: 内容の違う申請だけある（外さず示す）。`application_exclusion` とは別の属性で、混ぜない。[FR-019](#fr-019-html-ビューア機能仕様) は担当者指定削除のときに判定し直す |
 | `pending_note` | `pending_applications` から作る表示用の文。各申請を「{アクション} {申請日}（{年}年の表）」で書き（複数の年の表に載る申請は、年を新しい順に「・」でつないで「（2026・2025年の表）」とする）、`／` でつなぐ。並びは `pending_applications` と同じ。無ければ空文字。申請者を含まない |
 | `pending_return` | 担当者が申請に戻した状態（真偽値）。バッチは全件 `false`。[FR-019](#fr-019-html-ビューア機能仕様) が現在状態だけを更新する。申請書から外す条件は「`application_exclusion` が空でない、または `pending_match=same` かつ `pending_return=false`」|
@@ -1630,7 +1630,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - GeoJSON の生成は [FR-019](#fr-019-html-ビューア機能仕様) が入力の適格性を検証して構成した現在の表示・編集状態（許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外状態・理由）を使う。localStorage を直接読まず、出力側で category や判断を再導出しない。
   - 保留組の review フィーチャには過去の編集値をマージしない。孤立 unmatched も通常の名称・rationale 編集では変更せず、[FR-019](#fr-019-html-ビューア機能仕様) の適格性検証と明示判断を経た担当者指定削除だけを例外とする。保留組全体は review.geojson のみに含める。担当者指定削除は delete.geojson のみに入り、取消後は review.geojson のみに戻る。
   - 全フィーチャの review_decision・review_note を保持し、担当者指定削除では rationale に専用テンプレートを保持する。未選択・取消後の下書きは出力しない。孤立 Point に親ピーク・接続線・コル・ゾーンを補わない。分割後も元のフィーチャ列の相対順を保持し、同じ現在状態なら操作順によらず同じ出力とする。
-  - application_exclusion/exclusion_note と pending_applications/pending_match/pending_note/pending_return を全フィーチャで保持し、除外・申請済みの候補と関連フィーチャも元の category のファイルへ残す。第6ファイルや架空フィーチャを作らず、申請書の除外・申請済みのフィルターを ZIP へ適用しない。理由下書き・不在対象の記録・除外判断 JSON は同梱しない。除外関連の通知と公開理由の告知は [FR-019](#fr-019-html-ビューア機能仕様) の両ボタン共通規則に従う。
+  - application_exclusion/exclusion_note と pending_applications/pending_match/pending_note/pending_return を全フィーチャで保持し（ただし `pending_applications` の申請者は空文字にする。公開用ビューアに出さないと決めたものを、利用者が公開用データとして置く GeoJSON にも残さないため。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）、除外・申請済みの候補と関連フィーチャも元の category のファイルへ残す。第6ファイルや架空フィーチャを作らず、申請書の除外・申請済みのフィルターを ZIP へ適用しない。理由下書き・不在対象の記録・除外判断 JSON は同梱しない。除外関連の通知と公開理由の告知は [FR-019](#fr-019-html-ビューア機能仕様) の両ボタン共通規則に従う。
   - 根拠未記入の担当者指定削除は件数・コードを警告して ZIP 出力を許す（[FR-019](#fr-019-html-ビューア機能仕様)）。
   - JSZip ライブラリを使用して ZIP をブラウザ内で生成する
   - `no_change.geojson`・`review.geojson` は申請対象外だが、SOTA 日本支部担当者が現行サミット全件の状態をエビデンスとして確認できるよう同梱する
@@ -2042,7 +2042,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 
 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates`）を複製する（`updatelist_notices` は複製しない。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）。フィーチャ 0 件の空 FeatureCollection にも複製する。
 
-除外された候補も上記5 GeoJSON と一覧に保持する。除外判断 JSON は同梱しない。今回適用した理由は公開データにも含まれる。
+除外された候補も上記5 GeoJSON と一覧に保持する。5 GeoJSON の `pending_applications` では申請者を空文字にする（[FR-021](#fr-021-申請エビデンス-zip-生成)）。除外判断 JSON は同梱しない。今回適用した理由は公開データにも含まれる。
 
 申請書 XLSX（[6.2.1](#621-申請書-xlsx)）と本 ZIP は別の操作で、それぞれの操作時点の表示・編集状態から生成する。提出する一組は、編集を終えた同じ状態から続けて出力する（利用者手順として [NFR-011](#nfr-011-手順文書による環境構築成果物生成の完遂性) の手順文書に記載する）。
 
