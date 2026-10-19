@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-18 |
+| 最終更新日 | 2026-10-19 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -161,7 +161,7 @@ def main() -> None:
 1. まず `SIGINT`・`SIGTERM` を無視にする。`_state.broken` が真なら、終わりの行を書かず（HLD 5.7.2 の 4「始まりと終わりの行」の「ログファイルに書けなくなって止まるときは、終わりの行を書こうとせず」）、標準出力と標準エラー出力を flush して `os._exit(EXIT_ERROR)`（呼ぶ側が規約に反して `LogWriteError` を捕まえて続けても、終了コードを 1 にする。[HLD 5.7.3](30_HLD.md#573-異常系)）。
 2. `_state.signum` があれば `code = 128 + _state.signum`（シグナルの後の `finally` の後始末で別の例外が上がって `SignalStop` が置き換わり、`_excepthook` が `exit_code` を 1 にしたときも、シグナルで止まったことを優先する。[HLD 2.5.1](30_HLD.md#251-終了コード) の「シグナルで止まったときは 128＋シグナル番号」。ログに書けなくなったとき（上の 1）と、終わりの行を書けなかったとき（下の 3）の終了コード 1 は、これより先に決まる）。無ければ `code = _state.exit_code`、`None` なら 0（`sys.exit` を呼ばずに最後まで進んだとき）。[2.2](#22-ログとメッセージの文面)の L3 の終わりの行を、`_state.file` へ時刻付きで直接書き、flush して閉じる（書く・flush・閉じるのどれかの `OSError` を、次の 3 の「書けなければ」とする。`_emit` は使わない。書き込みの失敗を `LogWriteError` と G5 でなく、次の 3 の G6 にするため）。書けたら、同じ文面を標準出力へ時刻なしで出す（失敗は下の「画面への出力の失敗」のとおり無視する）。
 3. 書けなければ（`OSError`）G6 を標準エラー出力にだけ出し、標準出力と標準エラー出力を flush して `os._exit(EXIT_ERROR)`（終了コード 0 などで終わるはずだったときも 1。HLD 5.7.3）。
-4. `_state.signum` があれば flush して `os._exit(code)`（`code` は 2 の 128＋シグナルの番号。Python は捕まらなかった例外で 1 を返すので、この値にするため）。それ以外は何もせず戻る（終了コードは Python のとおり）。
+4. `_state.signum` があれば flush して `os._exit(code)`（`code` は 2 の 128＋シグナルの番号。Python は捕まらなかった例外で 1 を返すので、この値にするため）。それ以外は、標準出力と標準エラー出力をこの順にそれぞれ flush し、失敗した（`OSError`・`ValueError`）ものは `sys.stdout`・`sys.stderr` の属性を `open(os.devnull, 'w')` に差し替えてから戻る（終了コードは Python のとおり）。差し替えるのは、Python が `atexit` の処理の後に `sys.stdout`・`sys.stderr` をもう一度 flush し、それが失敗すると終了コードを 120 にするため（標準出力が切れたパイプのとき、L3 の画面出力の失敗を無視しても、出せなかった字がバッファに残って起きる。2026-10-19 に CPython 3.14.7 で、差し替えなければ 120、差し替えれば `sys.exit(3)` の 3 になることを確かめた）。差し替えた後の出力は捨てる（どのみち出せない）。
 
 画面への出力の失敗: 1〜4 の画面への出力と flush（1・3・4 の標準出力と標準エラー出力の flush、2 の L3 の画面出力、3 の G6）は、それぞれ `OSError` と `ValueError`（閉じたストリームへの書き込み）を捕まえて無視し、必ず次へ進む（`os._exit` か、戻るところまで届かせる）。`atexit` の処理の中で例外が上がると Python はそれを無視して進むので、`os._exit` に届かず、終了コードが 1 や 128＋シグナルの番号にならないため（HLD 5.7.3、[HLD 2.5.1](30_HLD.md#251-終了コード)）。終わる途中で、止める先も知らせる先も無い。ログファイルへの書き込みの失敗は 2・3 のとおりで、これに当たらない。
 
@@ -173,16 +173,17 @@ def main() -> None:
 
 - `SignalStop`: `_state.exit_code = 128 + exc.signum`。メッセージは出さない（終わりの行にシグナルの名前を書く）。
 - `LogWriteError`: `_state.exit_code = EXIT_ERROR`。メッセージは書けなくなったときに出してある。
-- そのほか: `_state.exit_code = EXIT_ERROR`。2.2 の G7 を `log_error` で出し、続けて `''.join(traceback.format_exception(exc_type, exc, tb))` の末尾の改行を 1 つ除いてから改行で分けた各行（最後に空の行を出さない）を、下の `_emit` で標準エラー出力とログファイルに出す。G7 の `log_error` と Traceback の `_emit` は、別々の `try` で囲み、どちらかで `LogWriteError` が上がったら、その `try` の中で捕まえて次へ進む（G7 の書き込みが失敗しても、Traceback は画面に出る。`broken` は真になっているので、`_finish_log` が 1 で終える）。
+- そのほか: `_state.exit_code = EXIT_ERROR`。2.2 の G7 の 2 行（`log_error` と同じ形の `ERROR:` と `対処:` の行）を下の `_emit` で標準エラー出力とログファイルに出し、続けて `''.join(traceback.format_exception(exc_type, exc, tb))` の末尾の改行を 1 つ除いてから改行で分けた各行（最後に空の行を出さない）を、下の `_emit` で標準エラー出力とログファイルに出す。G7 の `_emit` と Traceback の `_emit` は、別々の `try` で囲み、どちらかで `LogWriteError` が上がったら、その `try` の中で捕まえて次へ進む（G7 の書き込みが失敗しても、Traceback は画面に出る。`broken` は真になっているので、`_finish_log` が 1 で終える）。G7 と Traceback の画面への出力と flush の `OSError`・`ValueError`（標準エラー出力が切れたパイプのときなど）は、`_excepthook` の中に限って捕まえて無視し、ログファイルへの書き込みを続ける（どちらの `_emit` も `ignore_screen_errors=True` で呼ぶ）。画面に出せないときも、止まった理由をログファイルに残すため（G7 の対処は「ログファイルから写して」）。
 
 ##### _emit
 
-`_emit(lines: list[str], stream: TextIO) -> None`（内部）
+`_emit(lines: list[str], stream: TextIO, ignore_screen_errors: bool = False) -> None`（内部）
 
-渡された全行（下の改行での分け方の後の行）を、先に画面（`stream`）へ時刻なしで出して flush し、その後で全行をログファイルに時刻付きで書く（1 行ずつ画面とファイルに交互に書かない。ログファイルに書けなくなっても、渡された行は画面にすべて出るようにするため）。`log_info`・`log_warning`・`log_error`、`start_log` の 5 の L1・L2 の行、`_excepthook` の Traceback の行は、どれもこれで出す。
+渡された全行（下の改行での分け方の後の行）を、先に画面（`stream`）へ時刻なしで出して flush し、その後で全行をログファイルに時刻付きで書く（1 行ずつ画面とファイルに交互に書かない。ログファイルに書けなくなっても、渡された行は画面にすべて出るようにするため）。`log_info`・`log_warning`・`log_error`、`start_log` の 5 の L1・L2 の行、`_excepthook` の G7 と Traceback の行は、どれもこれで出す。
 
 - 渡された各行の中に改行（`\n`）があれば、`str.split('\n')` でさらに行を分けてから出す（`\r` などのほかの字では分けない。画面には分けた行をそのまま、ログファイルには分けた各行に時刻を付けて書く）。`start_log` の L1 の引数の改行も、この規則で複数の行になる。
 - 画面とログファイルへの書き方の細部（flush、出力先の引き方、書けないときの G5 と `LogWriteError`、`broken` の後の扱い）は、下の `log_info`・`log_warning`・`log_error` の「画面」と「ログファイル」の箇条のとおり。
+- `ignore_screen_errors` が真なら、画面への出力と flush の `OSError`・`ValueError` を捕まえて無視し、ログファイルへの書き込みに進む（`_excepthook` だけが真で呼ぶ）。偽なら、画面の失敗はそのまま呼ぶ側へ伝わる（「画面」の箇条）。
 
 ##### _on_signal
 
@@ -224,7 +225,7 @@ def main() -> None:
 2. 各行の前後から `' '`・`'\t'`・`'\r'` を除き（`line.strip(' \t\r')`。全角の空白は除かない）、空なら飛ばし、`#` で始まれば飛ばす。
 3. 残りが `[0-9]{4}` に合わなければ、最初に見つけた行の番号と中身を誤りとして返す。合う行の値を集合に入れる（重なりは 1 つ）。
 
-この行の読み方（除く空白の字、空行と `#` の行、4 桁の数字の判定、行番号の数え方）は、bash の `run_pipeline` と C++ の CMP4 が同じ決まりで別に実装するときの正本で、それらのモジュールの節はここを指す（[DEC149](30_HLD.md#4234-設計判断)「`--mesh` は bash と Python で別に読む」・[DEC150](30_HLD.md#444-設計判断)「CMP4 は共通部品の決まりを C++ で別に実装する」）。
+この行の読み方（除く空白の字、空行と `#` の行、4 桁の数字の判定、行番号の数え方）と、ファイルの読み方（UTF-8 で読み、先頭の BOM〈U+FEFF〉を 1 つだけ除く。UTF-8 として読めないファイルは読めない誤りにする〈`read_mesh_arg` は A3、`read_mesh_list_file` は R2〉。Python は `encoding='utf-8-sig'` で開いてこれを満たす）は、bash の `run_pipeline` と C++ の CMP4 が同じ決まりで別に実装するときの正本で、それらのモジュールの節はここを指す（[DEC149](30_HLD.md#4234-設計判断)「`--mesh` は bash と Python で別に読む」・[DEC150](30_HLD.md#444-設計判断)「CMP4 は共通部品の決まりを C++ で別に実装する」）。
 
 ##### acquire_lock
 
@@ -325,6 +326,10 @@ def main() -> None:
 | `UT-common-35` | G5 を画面に出せない | 子のプロセス。`start_log` の後に、`common._state.file` を `write` が `OSError(errno.ENOSPC)` を上げる物に、`sys.stderr` を `write` が `OSError(errno.EPIPE)` を上げる物に差し替える | `try`/`except Exception` で囲んで `log_info('x')` を呼び、`except` の中で標準出力に `CAUGHT` と書いてから `sys.exit(0)` | 終了コード 1、標準出力に `CAUGHT` が出ない（G5 の出力の失敗でも `LogWriteError` になる） |
 | `UT-common-36` | 呼ぶ側が `LogWriteError` を捕まえて続ける | 子のプロセス。書き込みの失敗は前置きの差し替え（`start_log` の後に `common._state.file` を差し替える） | `try`/`except common.LogWriteError` で囲んで `log_info('x')` を呼び、`except` の中で標準出力に `CAUGHT` と書いてから `sys.exit(0)`（1.2 の規約に反する書き方を、わざと試す） | 終了コード 1、標準出力に `CAUGHT` が出る、ログファイルに終わりの行が無い |
 | `UT-common-37` | シグナルの後の後始末で例外 | 子のプロセス | `start_log` の後の `try` の中で自分へ `SIGTERM` を送り、`finally` の中で `raise RuntimeError('cleanup')` | 終了コード 143、G7 と Traceback（最後の行が `RuntimeError: cleanup`）が標準エラー出力とログに出る、ログファイルの最後の行が `SIGTERM` を受けて止まった形の L3 で終了コード 143 |
+| `UT-common-38` | 先頭の BOM | 同じプロセス。3 つのファイルを、それぞれ先頭に BOM（バイト列 `EF BB BF`）を付けて書く | `data_dir` を書いた設定ファイルを `load_config` に、1 行目が `5339` の `--mesh` のファイルを `read_mesh_arg` に、1 行目が `5339` のリストを `read_mesh_list_file` に渡す | 設定は読める（`data_dir` の値に BOM が付かない）、`--mesh` とリストはどちらも `{'5339'}` |
+| `UT-common-39` | UTF-8 でないメッシュのファイル | 同じプロセス。UTF-8 として読めないバイト列（例 `FF FE`）だけのファイルを 1 つ置く | そのファイルを `read_mesh_arg` と、`guidance` を `None` にした `read_mesh_list_file` に渡す | `read_mesh_arg` は 2 で A3（`{reason}` は `UTF-8 として読めない`）、`read_mesh_list_file` は 1 で R2（同じ `{reason}`） |
+| `UT-common-40` | 標準出力が切れたパイプ | 子のプロセス（2 つの子を別々に）。子の試験用のプログラムの中で、`start_log` の後に `os.pipe()` を作り、書く側を `os.dup2` で記述子 1 に付けてから、読む側と書く側の元の記述子を閉じる（標準出力が読む相手の無いパイプになる） | (a) `sys.exit(3)`、(b) `log_info('x')`（`BrokenPipeError` が捕まらずに止まる） | 終了コード 3・1（120 にならない）。ログファイルの最後の行が L3 で、同じ終了コード。(b) はログファイルに G7（`BrokenPipeError`）がある |
+| `UT-common-41` | 標準エラー出力が切れたパイプ | 子のプロセス。`UT-common-40` と同じ形で、記述子 2 を読む相手の無いパイプにする | `start_log` の後に `raise RuntimeError('x')` | 終了コード 1。ログファイルに G7 の 2 行と Traceback（最後の行が `RuntimeError: x`）がこの順にあり、その後が L3 で終了コード 1 |
 
 ### 2.2 ログとメッセージの文面
 
