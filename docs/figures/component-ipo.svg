@@ -120,7 +120,7 @@ text { font-size: 18px; fill: #111827; }
   <text x="44" y="1044">N03 前処理済み GeoJSON・北方領土除外</text>
   <text x="44" y="1070">　メッシュリスト ← CMP1</text>
   <text x="44" y="1096"><tspan class="man">[手動配置]</tspan> SOTA サミットリスト CSV、</text>
-  <text x="44" y="1122">　SOTA 既存サミット GeoJSON</text>
+  <text x="44" y="1122">　SOTA 既存サミット GeoJSON、登録変更リスト</text>
   <text x="44" y="1148">陸地最高峰リスト等（ソース同梱）</text>
   <text x="44" y="1174">タイルの mtime ← CMP2、設定ファイル</text>
   <rect x="540" y="984" width="360" height="212" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
