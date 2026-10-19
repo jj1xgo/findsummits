@@ -176,8 +176,9 @@
 | タイトル | 山岳データ登録変更リスト（年ごと） |
 | 提供元 | [ジオサミットでひとこえ](https://little-ctc.com/) |
 | 参照URL | <https://little-ctc.com/wp_html/sota_updatelist_2024.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2025.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2026.xhtml> |
-| 確認日 | 2026-10-11 |
-| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）と、[URD §6](../docs/10_URD.md#6-スコープ外対象外) の既存サミットの座標変更の申請実績を確かめる資料（[ADR-URD-025](../docs/decisions/ADR-URD-025-coordinate-change-stays-out-of-scope.md)）。ツールの入力ではない。 |
+| 入手の入口 | <https://little-ctc.com/sota_hp/>（年ごとのページの URL は変わることがあるが、このページから必ずリンクされる。2026-10-19 に持ち主が確認し、リンクの実在も確かめた） |
+| 確認日 | 2026-10-19 |
+| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）と、[URD §6](../docs/10_URD.md#6-スコープ外対象外) の既存サミットの座標変更の申請実績を確かめる資料（[ADR-URD-025](../docs/decisions/ADR-URD-025-coordinate-change-stays-out-of-scope.md)）。あわせて、[UR-003](../docs/10_URD.md#ur-003) の突合の入力（申請済みで現行 SOTA リストに未反映の申請の識別。[ADR-URD-029](../docs/decisions/ADR-URD-029-pending-applications-in-matching.md)）。公開のページで、入力に使ってよいことを持ち主が 2026-10-19 に確かめた。入力の形と読み方はソフトウェア要件仕様書（SRS）で定める。 |
 
 ---
 
