@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-10-18 |
+| 最終更新日 | 2026-10-19 |
 | ステータス | 確定 |
 | 参照 URD | [`10_URD.md`](10_URD.md) |
 
@@ -92,6 +92,7 @@
      - [7.2.6 フェーズ指定オプション](#726-フェーズ指定オプション)
      - [7.2.7 公開用データ（申請エビデンス GeoJSON）](#727-公開用データ申請エビデンス-geojson)
      - [7.2.8 除外判断ファイル](#728-除外判断ファイル)
+     - [7.2.9 山岳データ登録変更リスト](#729-山岳データ登録変更リスト)
 8. [内部データ](#8-内部データ)
    - [8.1 内部データ一覧](#81-内部データ一覧)
    - [8.2 内部データ詳細仕様](#82-内部データ詳細仕様)
@@ -129,6 +130,8 @@
 #### 2.2.1 設定可能項目
 
 ユーザーまたは運用者が調整できる閾値・パラメータ。「どのファイル・引数で渡すか」の受け渡し形式は HLD で定義する。
+
+許容範囲に上限を書いていない整数の項目は、18 桁までとする（[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。
 
 「`SOTA 既存サミット GeoJSON バージョン`」は**データ識別子（バージョン番号）**であり、対応するデータ本体は [7.2.5](#725-sota-既存サミット-geojsongeojson_vn) に定義する。
 
@@ -170,6 +173,7 @@
   - 国土交通省 国土数値情報 N03 行政区域 ZIP（ユーザーが手動配置。[7.2.3 参照](#723-n03-行政区域-zip)）
   - SOTA データベース summitslist.csv（ユーザーが手動配置。[7.2.4 参照](#724-sota-サミットリスト-csv)）
   - ジオサミットでひとこえ SOTA 既存サミット GeoJSON（ユーザーが手動配置。[7.2.5 参照](#725-sota-既存サミット-geojsongeojson_vn)）
+  - ジオサミットでひとこえ 山岳データ登録変更リスト（ユーザーが保存して手動配置。[7.2.9 参照](#729-山岳データ登録変更リスト)）
   - 背景タイル（国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap、ブラウザから実行時取得）
   - 地理院基準点タイル（ベクトルタイル、ブラウザから実行時取得）
 - **外部アクター**
@@ -199,9 +203,9 @@
 | CMP2 | タイル取得コンポーネント | DEM タイルを国土地理院から取得・ローカルキャッシュ | メッシュコード、取得設定、北方領土除外タイルリスト、北方領土除外メッシュリスト | ローカルキャッシュ済み PNG タイル |
 | CMP3 | パイプライン制御コンポーネント | フェーズ2〜4 の実行順序・N エスカレーションループを管理 | merged_peak.csv・コル未確定ピーク座標リスト（[FR-022](#fr-022-コル充足判定) 出力） | （各 FR への委譲によって成果物が生成される） |
 | CMP4 | 地形解析エンジン | DEM からピーク／コル／プロミネンス／AZ・delete判定ゾーンを検出 | ローカルキャッシュ済み PNG タイル、北方領土除外メッシュリスト | 処理モードにより異なる（通常モード: per-mesh CSV / per-mesh ピーク候補 GeoJSON / 標高地形図 PNG、広域モード: per-mesh CSV / 標高地形図 PNG。広域モードは per-mesh ピーク候補 GeoJSON を生成しない） |
-| CMP5 | 統合・突合コンポーネント | per-mesh 成果物を統合し SOTA リストと突合、rationale 生成・不備フラグ判定・exit code 制御 | per-mesh CSV／GeoJSON、SOTA サミットリスト CSV、SOTA 既存サミット GeoJSON、N03 前処理済み GeoJSON 群（地域・市区町村）、北方領土除外メッシュリスト | **merged_summit.geojson**（中心データ）、merged_summit.xlsx（サミット一覧（突合後））、merged_peak.csv（内部 work CSV）、merged_peak.geojson（内部中間） |
+| CMP5 | 統合・突合コンポーネント | per-mesh 成果物を統合し SOTA リストと突合、rationale 生成・不備フラグ判定・exit code 制御 | per-mesh CSV／GeoJSON、SOTA サミットリスト CSV、SOTA 既存サミット GeoJSON、山岳データ登録変更リスト、N03 前処理済み GeoJSON 群（地域・市区町村）、北方領土除外メッシュリスト | **merged_summit.geojson**（中心データ）、merged_summit.xlsx（サミット一覧（突合後））、merged_peak.csv（内部 work CSV）、merged_peak.geojson（内部中間） |
 | CMP6 | 可視化生成コンポーネント | merged_summit.geojson から HTML ビューアを生成 | merged_summit.geojson | merged_viewer.html・merged_viewer_data.js |
-| CMP7 | 申請書生成 UI | HTML ビューア内でユーザー操作に応じて申請書 XLSX を生成 | ユーザー操作（HTML ビューア上）、除外判断ファイル（任意） | 申請書 XLSX・サミット一覧（申請内容反映版）・申請エビデンス ZIP・除外判断 JSON |
+| CMP7 | 申請書生成 UI | HTML ビューア内でユーザー操作に応じて申請書 XLSX を生成 | ユーザー操作（HTML ビューア上）、除外判断ファイル（任意。除外の台帳と申請に戻した記録を含む） | 申請書 XLSX・サミット一覧（申請内容反映版）・申請エビデンス ZIP・除外判断 JSON（除外の台帳と申請に戻した記録を含む） |
 | CMP8 | 公開用ビューア | 静的ホスティング上で公開用データ（申請エビデンス GeoJSON）を閲覧専用表示 | 公開用データ（申請エビデンス GeoJSON）・テンプレート | 公開用ビューア（HTML + GeoJSON + JSON） |
 
 ### 3.3 フェーズ分割
@@ -253,6 +257,7 @@
 | SOTA データベース（`sotadata.org.uk`） | サミットリスト CSV 取得（[7.2.4](#724-sota-サミットリスト-csv)）。ユーザーが手動ダウンロード・`$DATA_DIR/ref/summitslist.csv` として配置。ツールは自動取得しない（詳細: [§7.2.4](#724-sota-サミットリスト-csv)） |
 | 国土数値情報 N03（国土交通省） | 行政区域データ取得（[FR-017](#fr-017-n03-行政区域前処理データ準備)）。ユーザーが手動ダウンロード・`$DATA_DIR/ref/` に配置。ツールは自動取得しない（詳細: [§7.2.3](#723-n03-行政区域-zip)） |
 | ジオサミットでひとこえ（`little-ctc.com`） | SOTA 既存サミット GeoJSON 取得（[FR-009](#fr-009-sotaリスト突合match_status-判定)）。ユーザーが手動ダウンロード・`$DATA_DIR/ref/geojson_v{N}/` に配置。ツールは自動取得しない（詳細: [§7.2.5](#725-sota-既存サミット-geojsongeojson_vn)） |
+| ジオサミットでひとこえ（`little-ctc.com`）の登録変更リスト | 山岳データ登録変更リスト取得（[FR-009](#fr-009-sotaリスト突合match_status-判定)）。ユーザーがページを保存して `$DATA_DIR/ref/` 直下に配置。ツールは接続しない（詳細: [§7.2.9](#729-山岳データ登録変更リスト)） |
 | 地図タイル配信（OSM・OpenTopoMap） | HTML ビューアの背景地図（[6.2.5](#625-作業用-html-ビューア)・[6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信)） |
 | CDN（Leaflet・SheetJS・JSZip） | HTML ビューアの地図・XLSX エクスポート・ZIP 生成ライブラリ（[6.2.5](#625-作業用-html-ビューア)。公開用ビューア（[6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信)）は Leaflet のみ） |
 | 静的ホスティング（サービスは HLD） | 公開用ビューアの配信（[6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信)） |
@@ -270,6 +275,7 @@
 - 以下の参照データはツールが自動取得しない。ユーザーが手動で管理することが前提:
   - N03 行政区域 ZIP（[7.2.3 参照](#723-n03-行政区域-zip)）— サイズが大きいため git 管理外。国土交通省 国土数値情報サイトから ZIP 形式で手動ダウンロードして `$DATA_DIR/ref/` 直下に配置する
   - `$DATA_DIR/ref/summitslist.csv`（SOTA データベース由来）/ `$DATA_DIR/ref/geojson_v{N}/`（ジオサミットでひとこえ由来）— git 管理外・ユーザー手動配置。それぞれの提供元データの更新に合わせてユーザーが手動で差し替える（[7.2.4 参照](#724-sota-サミットリスト-csv)・[7.2.5 参照](#725-sota-既存サミット-geojsongeojson_vn)）
+  - `$DATA_DIR/ref/sota_updatelist_YYYY.xhtml`（山岳データ登録変更リスト。ジオサミットでひとこえ由来）— git 管理外。利用者が年のページをブラウザで保存して `$DATA_DIR/ref/` 直下に配置し、提供元の更新に合わせて差し替える（[7.2.9 参照](#729-山岳データ登録変更リスト)）
 - タイル取得時はインターネット接続が必要。バッチ処理による解析・成果物生成はオフラインで可。HTML ビューアの利用にはインターネット接続が必要（背景地図タイル・ライブラリ（CDN）を実行時取得するため。ビューア上のエクスポート（申請書 XLSX・申請エビデンス ZIP）もこれに含む）。公開用ビューアの閲覧にもインターネット接続が必要
 - 地理院サーバへのアクセスは[国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)に従い、サーバへの過度な負荷を避けること
 - 本ツールは [`01_environment.md`](01_environment.md) に定める仕様と同等以上の環境での動作を前提とする
@@ -439,6 +445,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
 | 標高タイル取得完了記録 | 内部データ | 必須（フェーズ2〜フェーズ4 を実行するとき） | — | [FR-001](#fr-001-標高タイル事前取得) 出力。フェーズ2〜フェーズ4 の起動前提条件「標高タイルのローカルキャッシュ取得完了」の判定に使用（[8.1 参照](#81-内部データ一覧)、[ADR-SRS-059](decisions/ADR-SRS-059-tile-fetch-completion-record.md)・[ADR-SRS-060](decisions/ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)） |
 | 陸地最高峰リスト | 内部データ | 必須（通し・フェーズ2・フェーズ3 を実行するとき） | — | [8.1 参照](#81-内部データ一覧)。起動前提条件の検査で、書式が読めることだけを確かめる（[FR-008](#fr-008-per-mesh-csv-統合) の検査だけの呼び方。フェーズ4 では確かめない。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | SOTA サミットリスト CSV | ユーザー入力 | 必須（通し・フェーズ4 を実行するとき） | — | [7.2.4 参照](#724-sota-サミットリスト-csv)。起動前提条件の検査で、あることだけを確かめる（フェーズ4 で [FR-009](#fr-009-sotaリスト突合match_status-判定) が読むので、欠けたまま解析を終えてから止まらないように。[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)） |
+| 山岳データ登録変更リスト | ユーザー入力 | 必須（通し・フェーズ4 を実行するとき） | — | [7.2.9 参照](#729-山岳データ登録変更リスト)。起動前提条件の検査で、ファイル名のパターンに合うファイルがあることだけを確かめる（フェーズ4 で [FR-009](#fr-009-sotaリスト突合match_status-判定) が読むので、欠けたまま解析を終えてから止まらないように。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)） |
 | 日本全土1次メッシュコードリスト | 内部データ | 必須（フェーズ2〜フェーズ4 を実行するとき） | — | [8.1 参照](#81-内部データ一覧)。起動前提条件の検査で、解析に要るメッシュを求めるのに使う（[ADR-SRS-060](decisions/ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)） |
 | 北方領土除外メッシュリスト | 内部データ | 必須（フェーズ2〜フェーズ4 を実行するとき） | — | [FR-017](#fr-017-n03-行政区域前処理データ準備) が生成。詳細仕様は [8.2.1](#821-n03-前処理済みファイル詳細仕様) 参照。起動前提条件の検査で、解析に要るメッシュから除くのに使う（[ADR-SRS-060](decisions/ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)） |
 
@@ -461,7 +468,7 @@ URD セクション 6 に基づき（SRS で詳細化）:
     - [FR-022](#fr-022-コル充足判定) の未確定有無が「ゼロ」→ フェーズ4 へ移行
     - N = 6 で広域解析完了後も未確定が残る → そのままフェーズ4 へ移行（[FR-009](#fr-009-sotaリスト突合match_status-判定) が `is_key_col_unresolved` 不備フラグで異常終了する。ユーザー向けエラーメッセージおよび対処方法（`merged_summit.xlsx` の確認・未確定ピークの手動解決等）の詳細は HLD で定義する）
   - **異常系**: エラー伝播。呼び出した FR がエラー終了した場合は [FR-023](#fr-023-解析パイプライン制御) も即時終了する（フェイルファースト方針。具体的な実装手段は HLD に委ねる）。起動時（通しの実行・各段の独立起動）に起動前提条件を満たさない場合もエラー終了する（詳細は下記「各段の独立起動」参照。[ADR-SRS-078](decisions/ADR-SRS-078-srs-section-4-1-4-4-second-review-wording.md)）
-  - **各段の独立起動**: フェーズ2 / フェーズ3（各 N）/ フェーズ4 はそれぞれ単独で起動できる（フェーズ指定の起動オプションを提供する。具体的な構文は HLD で定義）。各段で中間成果物の目視確認が可能（自動ループは各段の動作が確認できてから利用することを推奨）。起動前提条件: フェーズ2 単独起動には [FR-001](#fr-001-標高タイル事前取得) による標高タイルのローカルキャッシュ取得完了が必要（標高タイル取得完了記録で判定する。[8.1 参照](#81-内部データ一覧)）。フェーズ3 単独起動には `merged_peak.csv` と `key_col_unresolved_peaks-<前段N>.csv` の存在と、標高タイルのローカルキャッシュ（[FR-014](#fr-014-広域結合解析オーケストレーション) が読む）の取得完了が必要（標高タイル取得完了記録で判定する。[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)）。フェーズ4 単独起動には `merged_peak.csv`・`merged_peak.geojson`・SOTA サミットリスト CSV の存在と、標高タイルのローカルキャッシュ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が `gsi_tile_latest_date` の算出に使う）の取得完了が必要（標高タイル取得完了記録で判定する。[ADR-SRS-060](decisions/ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)）。取得完了の判定では、解析に要るメッシュがすべて記録にあるかを見る。解析に要るメッシュは、1次メッシュコードリストを指定しないときは日本全土1次メッシュコードリストから北方領土除外メッシュを除いたもの、指定したときはそのコードから日本全土1次メッシュコードリストに無いものと北方領土除外メッシュを除いたもの（[FR-004](#fr-004-33メッシュ結合解析オーケストレーション) がスキップするのと同じ基準）とする。フェーズ3・フェーズ4 単独起動での範囲は HLD で定義する。通しの実行の起動前提条件は、フェーズ2 単独起動の起動前提条件に、フェーズ4 で使う SOTA サミットリスト CSV の存在を足したものとする（[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)・[ADR-SRS-078](decisions/ADR-SRS-078-srs-section-4-1-4-4-second-review-wording.md)）。通し・フェーズ2・フェーズ3 の起動前提条件には、陸地最高峰リストの書式が読めること（[FR-008](#fr-008-per-mesh-csv-統合) の検査だけの呼び方で確かめる）も含む。フェーズ4 では確かめない（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。起動前提条件の充足検査は本 FR が行い、不足時はエラー終了する（フェイルファースト）。エラーメッセージの詳細は HLD で定義する
+  - **各段の独立起動**: フェーズ2 / フェーズ3（各 N）/ フェーズ4 はそれぞれ単独で起動できる（フェーズ指定の起動オプションを提供する。具体的な構文は HLD で定義）。各段で中間成果物の目視確認が可能（自動ループは各段の動作が確認できてから利用することを推奨）。起動前提条件: フェーズ2 単独起動には [FR-001](#fr-001-標高タイル事前取得) による標高タイルのローカルキャッシュ取得完了が必要（標高タイル取得完了記録で判定する。[8.1 参照](#81-内部データ一覧)）。フェーズ3 単独起動には `merged_peak.csv` と `key_col_unresolved_peaks-<前段N>.csv` の存在と、標高タイルのローカルキャッシュ（[FR-014](#fr-014-広域結合解析オーケストレーション) が読む）の取得完了が必要（標高タイル取得完了記録で判定する。[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)）。フェーズ4 単独起動には `merged_peak.csv`・`merged_peak.geojson`・SOTA サミットリスト CSV・山岳データ登録変更リストの存在と、標高タイルのローカルキャッシュ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が `gsi_tile_latest_date` の算出に使う）の取得完了が必要（標高タイル取得完了記録で判定する。[ADR-SRS-060](decisions/ADR-SRS-060-fr023-reads-mesh-lists-for-precondition.md)）。取得完了の判定では、解析に要るメッシュがすべて記録にあるかを見る。解析に要るメッシュは、1次メッシュコードリストを指定しないときは日本全土1次メッシュコードリストから北方領土除外メッシュを除いたもの、指定したときはそのコードから日本全土1次メッシュコードリストに無いものと北方領土除外メッシュを除いたもの（[FR-004](#fr-004-33メッシュ結合解析オーケストレーション) がスキップするのと同じ基準）とする。フェーズ3・フェーズ4 単独起動での範囲は HLD で定義する。通しの実行の起動前提条件は、フェーズ2 単独起動の起動前提条件に、フェーズ4 で使う SOTA サミットリスト CSV と山岳データ登録変更リストの存在を足したものとする（[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)・[ADR-SRS-078](decisions/ADR-SRS-078-srs-section-4-1-4-4-second-review-wording.md)）。通し・フェーズ2・フェーズ3 の起動前提条件には、陸地最高峰リストの書式が読めること（[FR-008](#fr-008-per-mesh-csv-統合) の検査だけの呼び方で確かめる）も含む。フェーズ4 では確かめない（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。起動前提条件の充足検査は本 FR が行い、不足時はエラー終了する（フェイルファースト）。エラーメッセージの詳細は HLD で定義する
   - **自動ループ**: 各段完了後に自動的に次段へ進む自動ループ実行も提供する
   - 詳細・設計判断: [ADR-SRS-027](decisions/ADR-SRS-027-fr022-purification-fr023-pipeline-control.md)
 
@@ -952,6 +959,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | 統合ピーク候補 work CSV（`merged_peak.csv`） | 内部データ | 必須 | — | 全ピーク `key_col_resolved=true` が期待。不備は不備フラグで後続に引き継ぐ。analysis_count・expected_count・stability 列を含む（[FR-008](#fr-008-per-mesh-csv-統合) 算出済み。列の一覧は [FR-008](#fr-008-per-mesh-csv-統合) の出力。本 FR は読むだけ） |
 | 統合ピーク候補 GeoJSON（`merged_peak.geojson`） | 内部データ | 必須 | — | 通常 per-mesh の GeoJSON のみから統合。point-in-polygon 突合のポリゴン形状として使用。全ポリゴン `area_complete=true` が期待（不備は不備フラグで後続に引き継ぐ） |
 | SOTA サミットリスト CSV | ユーザー入力 | 必須 | — | JA プレフィックスサミット一覧（[7.2.4 参照](#724-sota-サミットリスト-csv)） |
+| 山岳データ登録変更リスト | ユーザー入力 | 必須 | — | 申請済みで未反映の申請の識別に使う（[7.2.9 参照](#729-山岳データ登録変更リスト)。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)） |
 | N03 前処理済み地域 GeoJSON | 内部データ | 任意 | 未生成時はエリアコード付与をスキップ（`ZZ/ZZ-A00` 形式。警告ログ出力） | [FR-017](#fr-017-n03-行政区域前処理データ準備) 出力。仮サミットコード（SOTA エリアコード）付与に使用 |
 | N03 前処理済み市区町村 GeoJSON | 内部データ | 任意 | 未生成時は市区町村名を空文字付与 | [FR-017](#fr-017-n03-行政区域前処理データ準備) 出力。市区町村名付与に使用 |
 | SOTA 既存サミット GeoJSON | ユーザー入力 | 任意 | バージョン未設定時または未存在時は `summit_name_jp` を空文字付与 | 日本語山岳名取得用（[7.2.5 参照](#725-sota-既存サミット-geojsongeojson_vn)）。10 個のファイルのうち無いものや読めないものがあるときなどの扱いは、説明の geojson_v{N} の項 |
@@ -1050,7 +1058,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - 既存サミット行で `summit.match_status="unmatched"` の件数が **要確認サミット件数しきい値**（[データ辞書参照](#221-設定可能項目)）を超える（解析異常の疑い。しきい値以下の `unmatched` は要確認として続行し停止しない。[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）
     - ピーク行で AZ または delete判定ゾーンポリゴンの `area_complete=false` が1件以上存在する（[FR-016](#fr-016-ピーク域ポリゴン生成) で 3×3 完結が想定されているが想定外に発生した場合）
     - ピーク行で `key_col_resolved=false` が1件以上存在する（`is_key_col_unresolved` フラグ。解析パイプライン制御（[FR-023](#fr-023-解析パイプライン制御)）の N=4→5→6 エスカレーションでも解消せず）
-    - 入力の誤りでは、突合の前に出力を書かずに異常終了する。入力の誤りは、`merged_peak.csv`・`merged_peak.geojson`・SOTA サミットリスト CSV が存在しないか読み取りエラーの場合、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違う場合（表に無いピークのゾーン、同じピークの同じ種類のゾーンが 2 つ以上、ゾーンの欠けたピーク）、N03 前処理済み地域 GeoJSON か N03 前処理済み市区町村 GeoJSON があって読み取りエラーの場合とする（読み取りエラーは書式の違いを含む。[ADR-SRS-079](decisions/ADR-SRS-079-srs-section-4-5-zone-mismatch-and-wording-review.md)）。SOTA サミットリスト CSV が [7.2.4](#724-sota-サミットリスト-csv) の「正常入力の前提」に反する場合を含む（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
+    - 入力の誤りでは、突合の前に出力を書かずに異常終了する。入力の誤りは、`merged_peak.csv`・`merged_peak.geojson`・SOTA サミットリスト CSV・山岳データ登録変更リストが存在しないか読み取りエラーの場合（山岳データ登録変更リストは、XHTML として読めない場合と、使う列を見出しの文字で特定できない場合を含む。[7.2.9 参照](#729-山岳データ登録変更リスト)）、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違う場合（表に無いピークのゾーン、同じピークの同じ種類のゾーンが 2 つ以上、ゾーンの欠けたピーク）、N03 前処理済み地域 GeoJSON か N03 前処理済み市区町村 GeoJSON があって読み取りエラーの場合とする（読み取りエラーは書式の違いを含む。[ADR-SRS-079](decisions/ADR-SRS-079-srs-section-4-5-zone-mismatch-and-wording-review.md)）。SOTA サミットリスト CSV が [7.2.4](#724-sota-サミットリスト-csv) の「正常入力の前提」に反する場合を含む（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
     - 不備ゲートより先に、次の場合は出力を書かずに異常終了する（不備ゲートとは区別する。全件を調べ終えてから、当たったものをすべて挙げる）: 2 つ以上の `key_col_resolved=true` のピークの AZ に含まれるサミットがある場合（AZ が互いに素であるという前提に反する）、仮サミットコードの連番上限を超えるエリアがある場合。AZ の重なりで止まれば、連番上限は調べない。含む AZ のピークに確定したものが 1 つ以下のときは止まらず、確定したピークがあればその AZ に、無ければ未確定のピークのうち `peak_elev` の降順・`peak_lat` の降順・`peak_lon` の昇順で最初のものの AZ に含めて続行し、警告する（未確定のピークがあるので、不備ゲートで止まる）（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
     - 複数登録の組数・登録件数自体では停止せず、`unmatched` 件数しきい値にも加算しない。`ambiguous` ピークも AZ / delete 判定ゾーン不完結・コル未確定の全ピーク検査から除外しない。件数ゲートを設けない制約と実測後の再検討は [ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md) に記録する
     - 不備ゲート発動時は `merged_summit.geojson` および `merged_summit.xlsx` をともに不備エントリを含めて**必ず出力してから停止**する（調査用）。ハードクラッシュ時と、上の出力を書かずに異常終了する場合（入力の誤り、AZ の重なり、連番上限の超過）が先に当たったときは、出力を保証しない。[FR-013](#fr-013-html-ビューア生成)（HTML ビューア生成）は本 FR の exit code を見てスキップする（exit code の詳細は HLD 参照）
@@ -1064,6 +1072,9 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
   - **metadata 付与**（`merged_summit.geojson` の top-level `metadata` オブジェクトとして格納。[ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md)・[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md) 準拠）:
     - `summitslist_date`: `$DATA_DIR/ref/summitslist.csv` 1行目（`SOTA Summits List (Date=DD/MM/YYYY)` 形式）からパースした日付文字列
     - `generated_at`: 本 FR 実行時の ISO 8601 形式の日時文字列（パイプライン最終実行日時）
+    - `updatelist_file`: 採った山岳データ登録変更リストのファイル名（[7.2.9 参照](#729-山岳データ登録変更リスト)）
+    - `updatelist_updates`: 年の表ごとの年と Update の日付（日付が読めない年の表は日付を空文字にする）。並びは表の順（新しい年から）
+    - `updatelist_notices`: 知らせる行。要素は、種類、理由、年の表、その表の中の申請の行の通し番号（見出しの後の 1 から）、アクションの欄の値、山岳 ID か県名、申請者、申請日、問題の値。並びはファイルの中の順
     - `gsi_tile_latest_date`: `$DATA_DIR/tiles/` 配下の全 PNG ファイルの mtime 最大値（ISO 8601 UTC 形式）。タイルの提供元更新日を表す（[ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)。部分解析時は過大評価の可能性あり）。PNG が 1 枚も無いか、ディレクトリをたどれないときは空文字とし、警告して続行する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
     - `attribution`: `"地理院タイル（標高タイル）を加工して作成。出典: 国土地理院"`（固定文字列。[UR-011](10_URD.md#ur-011)・[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md) 準拠）
     - `source_url`: `"https://maps.gsi.go.jp/development/ichiran.html"`（固定文字列）
@@ -1080,6 +1091,14 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - 標高が算出表に無い（150m 未満）ときは、`peak_points`・`sota_points` を null とする。`matched` のピークで、`peak_points` か AZ の中のサミットの `sota_points` のどちらかが null なら `is_band_change_candidate=false` とし（`category` は `no_change`、rationale は作らない）、該当するピークとサミットを警告ログに出力する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
     - `is_band_change_candidate = (peak_points ≠ sota_points)`（`peak_points` か `sota_points` が null のときは false）: true の場合、変更申請の候補とする（今回の出力可否は category と application_exclusion で判定）
     - バンド定義は [`00_GLOSSARY.md` 標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) を参照
+  - **申請済みの判定**（山岳データ登録変更リストとの照合。[UR-003](10_URD.md#ur-003)。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）: 変更申請判定の後に行う。候補・`category`・`match_status`・件数・不備ゲートは変えず、申請の情報を候補の属性（`pending_applications`・`pending_match`・`pending_note`。[各フィーチャのプロパティ](#各フィーチャのプロパティ)）として付けるだけにする。担当者の判断（申請に戻す）は読まない（読むのはブラウザの [FR-019](#fr-019-html-ビューア機能仕様)）。未反映かどうかは別に判定しない。反映済みの申請は、追加は既存サミットの AZ に入り、削除は廃止済みの ID になり、変更は今の標高とバンドが同じになるので、どの候補にも当たらない
+    - 読み方と取り込む申請は [7.2.9](#729-山岳データ登録変更リスト) による（年の表をすべて読む。アクション・山岳 ID・変更後の標高・追加の位置で照合し、名称・座標だけの変更とバンドの変わらない変更は取り込まない）。山岳 ID は SOTA サミットリストの SummitCode とそのまま照合し、無ければ地域コードと番号で照合する。登録変更リスト由来の文字列（申請者、県名、山岳 ID など）は文字として扱い、HTML やコードとして実行しない
+    - 追加の申請: 位置の座標を、上の point-in-polygon の判定と同じく Z15 の画素の中心に直し、`category=add` のピーク（`match_status` が `new`・`dominant`）の AZ に入れば、そのピークに「同じ内容」で当てる。どの追加の候補の AZ にも、既存サミット（`matched`・`ambiguous` のピーク）の AZ にも入らない追加の申請は「当たらなかった追加の申請」とする
+    - 削除の申請: その山岳 ID のサミットに当てる。サミットが削除の候補（`category=delete`）なら「同じ内容」。その ID に対応するピークが変更の候補なら、そのピークに「違う内容」で当てる
+    - 変更の申請: その山岳 ID のサミットに当てる。対応するピークが変更の候補で、申請の変更後のバンドがピークの `points` と同じなら「同じ内容」、違えば「違う内容」。サミットが削除の候補なら「違う内容」
+    - 候補でないもの（`no_change`・`review`）に当たった申請は、候補の判定を付けない。ただし、担当者指定削除（[FR-019](#fr-019-html-ビューア機能仕様)）で後から削除の候補になる `unmatched` のサミットのために、そのサミットへの削除・変更の申請は、サミットの Point の `pending_applications` に保持する（`pending_match` は空文字）
+    - 1 つの候補に複数の申請が当たれば、「同じ内容」が 1 つでもあれば `pending_match=same`、無ければ `different` とする。既存サミットの近くにある追加の申請と、管理者が座標を直して反映した追加の申請は、特別に扱わず、上の AZ による照合で決まる
+    - 知らせる行（読めない行、SOTA サミットリストに無い ID の行、当たらなかった追加の申請、Update の日付が読めない年の表。[7.2.9 参照](#729-山岳データ登録変更リスト)）は、件数と行をログに警告として出し、`metadata.updatelist_notices` に残す。止めない（不備ゲートに足さない。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）
   - **`merged_summit.geojson` のフィーチャ構成とプロパティ**（本 FR が生成する中心データの構造定義＝スキーマ正本。[ADR-SRS-013](decisions/ADR-SRS-013-merged-geojson-as-central-data.md) 準拠。消費側の [FR-013](#fr-013-html-ビューア生成)・[FR-019](#fr-019-html-ビューア機能仕様) はこの定義を参照する）:
   - **`category` プロパティの算出**（[ADR-SRS-044](decisions/ADR-SRS-044-category-property-summit-centric-5class.md)）: 本 FR は全フィーチャに `category` プロパティを算出・付与する。`match_status`/`feature_type`/`is_band_change_candidate` は廃止せず存続し、`category` はそれらから算出する直交プロパティ。消費側（ビューア・XLSX・ZIP）は `category` を読むことで導出ロジックを持たずに分類できる。以下はバッチ生成時の規則であり、担当者指定削除に限り [FR-019](#fr-019-html-ビューア機能仕様) が現在の表示・編集状態の `category` を更新する（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。元のバッチデータは更新せず、各エクスポートは同じ現在状態を読む。category は候補種別であり、申請書の行選定は application_exclusion と組み合わせる（[ADR-SRS-050](decisions/ADR-SRS-050-persistent-exclusion-decisions.md)）:
 
@@ -1137,6 +1156,10 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | `review_note` | 担当者指定削除の根拠本文（文字列）。前後の空白を除き内部改行を保持する。バッチ生成時・未選択・取消後は空文字。下書きは本属性と分離して保存する |
 | `application_exclusion` | 今回の申請除外状態。空文字: 除外なし、`manual`: 有効な担当者の除外判断、`parent_add`: 親の追加除外による従属削除の保留。バッチは全件空文字。[FR-019](#fr-019-html-ビューア機能仕様) が現在状態だけを更新する |
 | `exclusion_note` | `manual`: 前後の空白を除いた任意の除外理由（内部改行を保持）。未記入・空白のみは空文字。`parent_add`: 「追加候補 {現在の親の仮コード} を除外したため削除申請を保留」。除外なしは空文字。バッチは全件空文字 |
+| `pending_applications` | 当たった申請と保持した申請の一覧（正本）。要素は、アクション、山岳 ID（SOTA サミットリストの表記に揃えたもの）か追加の座標（揃えた値）、変更後の標高とそのバンド、申請者、申請日、載っている年の表の一覧、その候補への当たり方（`same`・`different`・保持）。並びは申請日の昇順 → アクション → 山岳 ID か座標 → 申請者。ピークの Point とサミットの Point に付け、ほかのフィーチャは同じ行に集まるフィーチャと同じ値。無ければ空配列。項目名と入れ子は HLD に委ねる |
+| `pending_match` | 申請済みの判定。空文字: 当たる申請なし（または保持だけ）、`same`: 同じ内容の申請あり（既定で申請書から外れる）、`different`: 内容の違う申請だけある（外さず示す）。`application_exclusion` とは別の属性で、混ぜない。[FR-019](#fr-019-html-ビューア機能仕様) は担当者指定削除のときに判定し直す |
+| `pending_note` | `pending_applications` から作る表示用の文。各申請を「{アクション} {申請日}（{年}年の表）」で書き（複数の年の表に載る申請は、年を新しい順に「・」でつないで「（2026・2025年の表）」とする）、`／` でつなぐ。並びは `pending_applications` と同じ。無ければ空文字。申請者を含まない |
+| `pending_return` | 担当者が申請に戻した状態（真偽値）。バッチは全件 `false`。[FR-019](#fr-019-html-ビューア機能仕様) が現在状態だけを更新する。申請書から外す条件は「`application_exclusion` が空でない、または `pending_match=same` かつ `pending_return=false`」|
 
 `review_group_id` は `az:` に AZ 内登録の SummitCode を文字列昇順で `|` 連結したものを続ける
 （例: `az:JA/XX-001|JA/XX-002`）。AZ 外保留削除候補のコードは含めない。同じ集合なら入力順に依存せず同じ値となる。
@@ -1586,7 +1609,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | `no_change.geojson` | 変更なし既存サミットおよび関連フィーチャ | `category="no_change"` のフィーチャ全て（フィーチャ構成は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)） |
 | `review.geojson` | 要確認サミット・複数登録の保留組全体 | `category="review"` のフィーチャ全て（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)） |
 
-  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url`）を複製する（`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
+  - 各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates`）を複製する（`updatelist_notices` は担当者の作業の材料なので複製しない。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)。`attribution` 等は [UR-011](10_URD.md#ur-011) 準拠の固定値。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）
   - 各 GeoJSON は [FR-009](#fr-009-sotaリスト突合match_status-判定) で定義した category 別フィーチャ構成に基づき、関連フィーチャ（key_col・activation_zone・delete_zone・peak_col_link・coord_diff）を通常は同一 `summit_code`、複数登録の保留組は `review_group_id` で紐付けて格納する（category によって含まれるフィーチャ種類は異なる）
   - 対象 category のフィーチャが 0 件の場合も空 FeatureCollection（`{"type":"FeatureCollection","metadata":{...},"features":[]}`。`metadata` は省略不可）として ZIP に同梱する（5 ファイルを常に出力し、エビデンスの完全性を保つ）
   - GeoJSON の生成は [FR-019](#fr-019-html-ビューア機能仕様) が入力の適格性を検証して構成した現在の表示・編集状態（許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外状態・理由）を使う。localStorage を直接読まず、出力側で category や判断を再導出しない。
@@ -1717,9 +1740,9 @@ NFR を ISO/IEC 25010:2023 の製品品質モデルの 9 特性に対応づけ�
 
 - **対応 UR**: [UR-004](10_URD.md#ur-004), [UR-005](10_URD.md#ur-005), [UR-015](10_URD.md#ur-015)
 - 複数登録の保留組の識別子・所属・ログと出力の並びは、[FR-009](#fr-009-sotaリスト突合match_status-判定) の規則に従い入力の列挙順に依存しない。
-- ブラウザ生成の申請書・一覧・ZIP は、同じバッチ入力と同じ最終の表示・編集状態（担当者指定削除・正規化後の根拠・除外台帳から適用した状態と理由を含む）を再現性の入力条件とする。操作順・未選択の根拠下書きによって内容・行位置・フィーチャ相対順を変えない。
+- ブラウザ生成の申請書・一覧・ZIP は、同じバッチ入力と同じ最終の表示・編集状態（担当者指定削除・正規化後の根拠・除外台帳から適用した状態と理由・申請に戻した記録から適用した状態を含む）を再現性の入力条件とする。操作順・未選択の根拠下書きによって内容・行位置・フィーチャ相対順を変えない。
 - 除外判断 JSON は同じ台帳から同じ論理内容を出力する。records の順序は対象種別→アクション→正式コード（文字列順）/座標（緯度→経度の数値昇順）とし、書出時刻を新たに付けて内容を変えない。除外解除後の理由下書きも出力しない。
-- 同一ローカルキャッシュ・同一パラメータで実行した場合、バッチ出力（CSV・GeoJSON・XLSX）が同一の内容になること（ブラウザ出力は上記の編集状態・台帳も入力条件に含める）（`metadata.generated_at` 等の実行時タイムスタンプおよび `metadata.software_version` を除く。ピーク座標・標高・突合結果・採番が同一であることを保証する。SOTA サミットリストの有効判定は CSV の基準日で行い、実行日に依存しない（[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)））（タイル再取得・キャッシュ削除によりローカルキャッシュの内容が変わった場合は再現性対象外）
+- 同一ローカルキャッシュ・同一パラメータで実行した場合、バッチ出力（CSV・GeoJSON・XLSX）が同一の内容になること（ブラウザ出力は上記の編集状態・台帳も入力条件に含める）（`metadata.generated_at` 等の実行時タイムスタンプおよび `metadata.software_version` を除く。ピーク座標・標高・突合結果・採番が同一であることを保証する。入力条件に、同じ山岳データ登録変更リストのファイルを含む。SOTA サミットリストの有効判定は CSV の基準日で行い、実行日に依存しない（[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)））（タイル再取得・キャッシュ削除によりローカルキャッシュの内容が変わった場合は再現性対象外）
 - ピーク候補検出時のピクセル走査順を決定論化するため、標高降順ソートに決定論的タイブレーク規則（ピクセルインデックス昇順）を設ける（詳細は [FR-005](#fr-005-ピーク候補検出) 参照。仮サミットコード採番順序とは別処理段階のタイブレークである）
 - 仮サミットコードの採番順序は [FR-009](#fr-009-sotaリスト突合match_status-判定) で規定する（標高降順 → プロミネンス降順 → `peak_lat` 降順 → `peak_lon` 昇順）。同一の入力（入力は [FR-009](#fr-009-sotaリスト突合match_status-判定) の採番タイミングのとおり）からは常に同一の仮サミットコードが得られる（[ADR-SRS-079](decisions/ADR-SRS-079-srs-section-4-5-zone-mismatch-and-wording-review.md)）
 - 統合時の代表採用ロジック（[FR-008](#fr-008-per-mesh-csv-統合)）・主ピーク特定のタイブレーク（[FR-009](#fr-009-sotaリスト突合match_status-判定)）・ピクセル座標→緯度経度変換（[FR-016](#fr-016-ピーク域ポリゴン生成)）も、それぞれの規定に従い決定論的に一意な結果を返す
@@ -1930,8 +1953,8 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | ファイル | `$DATA_DIR/results/merged_summit.geojson` |
 | 形式 | GeoJSON（RFC 7946） |
 | 座標参照系 | WGS84（EPSG:4326） |
-| メタデータ | トップレベルに `metadata` オブジェクトを付与。定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（`summitslist_date` / `generated_at` / `gsi_tile_latest_date` / `software_version` / `attribution` / `source_url` / `license_url`） |
-| 担当者判断属性 | review_decision・review_note・application_exclusion・exclusion_note は全フィーチャ空文字。ビューアでの判断はこのバッチファイルへ書き戻さない |
+| メタデータ | トップレベルに `metadata` オブジェクトを付与。定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（`summitslist_date` / `generated_at` / `gsi_tile_latest_date` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates` / `updatelist_notices`） |
+| 担当者判断属性 | review_decision・review_note・application_exclusion・exclusion_note は全フィーチャ空文字。pending_return は全フィーチャ `false`。pending_applications・pending_match・pending_note はバッチが書く（申請済みの判定。[FR-009](#fr-009-sotaリスト突合match_status-判定)）。ビューアでの判断はこのバッチファイルへ書き戻さない |
 | フィーチャ構成 | [FR-009 参照](#fr-009-sotaリスト突合match_status-判定)（Point / Polygon / MultiPolygon / LineString 全フィーチャ含む） |
 | `rationale` プロパティ | new / dominant ピーク Point に ※2 フォーマット、category=delete サミット Point に ※4 フォーマット（全 review の rationale は空文字）、`is_band_change_candidate=true` の matched ピーク Point に ※5 フォーマットで付与。HTML ビューアで編集可能。フォーマット定義は [FR-009 参照](#fr-009-sotaリスト突合match_status-判定) |
 
@@ -2001,7 +2024,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | `no_change.geojson` | 変更なし既存サミットおよび関連フィーチャ（申請対象外・参照用同梱） | `category="no_change"` のフィーチャ全て。[FR-021](#fr-021-申請エビデンス-zip-生成) 参照 |
 | `review.geojson` | 要確認サミットと複数登録の保留組全体（申請対象外・参照用同梱） | `category="review"` のフィーチャ全て。[FR-021](#fr-021-申請エビデンス-zip-生成) 参照 |
 
-各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url`）を複製する（定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）。フィーチャ 0 件の空 FeatureCollection にも複製する。
+各 GeoJSON には `metadata`（`summitslist_date` / `gsi_tile_latest_date` / `generated_at` / `software_version` / `attribution` / `source_url` / `license_url` / `updatelist_file` / `updatelist_updates`）を複製する（`updatelist_notices` は複製しない。定義は [FR-009 メタデータ付与](#fr-009-sotaリスト突合match_status-判定) を参照）。フィーチャ 0 件の空 FeatureCollection にも複製する。
 
 除外された候補も上記5 GeoJSON と一覧に保持する。除外判断 JSON は同梱しない。今回適用した理由は公開データにも含まれる。
 
@@ -2048,6 +2071,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 6 | フェーズ指定オプション | 起動時に指定 | [FR-023](#fr-023-解析パイプライン制御) | [7.2.6 参照](#726-フェーズ指定オプション) |
 | 7 | 公開用データ（申請エビデンス GeoJSON） | ユーザーが申請エビデンス ZIP から取り出し、リポジトリの公開用データ置き場に配置（パスは HLD） | [FR-020](#fr-020-公開用ビューア配信) | [7.2.7 参照](#727-公開用データ申請エビデンス-geojson) |
 | 8 | 除外判断ファイル | ブラウザで利用者が JSON ファイルを選択 | [FR-019](#fr-019-html-ビューア機能仕様) | [7.2.8](#728-除外判断ファイル)。バッチ・公開用ビューアでは読み込まない |
+| 9 | 山岳データ登録変更リスト | 利用者が入手の入口のページから年のページを保存し、`$DATA_DIR/ref/` 直下に配置 | [FR-009](#fr-009-sotaリスト突合match_status-判定)・[FR-023](#fr-023-解析パイプライン制御)（起動前提条件の検査） | [7.2.9 参照](#729-山岳データ登録変更リスト) |
 
 ### 7.2 ユーザー入力詳細仕様
 
@@ -2138,6 +2162,24 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 - 構造が有効だが対象不在や条件不一致のレコードは有効な未適用記録として読み込める。現行データへの適用は別途 [8.2.3](#823-除外台帳) で判定する。
 - 読み込みは台帳全体の置換。追加/変更/削除される判断と今回の適用/未適用件数をプレビューし、確認後に一括反映する。編集中の台帳は置換前に保存できること。自動マージや日時での勝者選択は行わない。
 - 通常の名称・rationale・担当者指定削除の判断を置換しない。同じファイルを再読込しても判断は増殖しない。古いファイルで解除済み判断が復活する場合も差分に示す。空 records は有効な空台帳であり、確認後に置換できる。
+
+#### 7.2.9 山岳データ登録変更リスト
+
+| 項目 | 仕様 |
+|---|---|
+| 用途 | 突合（[FR-009](#fr-009-sotaリスト突合match_status-判定)）で、SOTA 日本支部に申請済みで現行 SOTA リストに未反映の申請を識別する（[UR-003](10_URD.md#ur-003)） |
+| 取得方法 | ジオサミットでひとこえの SOTA のページからリンクされる年のページを、利用者がブラウザで保存して配置する（ツールは自動取得しない。入手の入口は [SOURCES](../ref/SOURCES.md#山岳データ登録変更リスト)） |
+| 配置場所 | `$DATA_DIR/ref/` 直下 |
+| ファイル名のパターン | ファイル名の全体が `sota_updatelist_(\d{4})\.xhtml` に合うもの。複数あれば年が最大のものを採る（N03 行政区域 ZIP の [7.2.3](#723-n03-行政区域-zip) と同じ考え方。各年のページは前の 2 年分の表も含む）。採ったファイル名をログと `metadata` に残す |
+| 形式 | XHTML。表が 1 つあり、年の表が新しい年から順に続く。各年の表は、題の行（「YYYY年 山岳データ登録変更リスト」）、Update の行（日付）、2 行の見出し、申請の行から成る。表の中は申請日の古い順で、年の表と申請日は一致しない（再申請、年をまたぐ申請、同じ申請が 2 つの年の表に載ることがある）。反映済みを示す目印の行が表の途中にあるが、本ツールは使わない。git 管理外 |
+| 使用カラム | アクション、既存山岳 ID もしくは県名、変更後の標高、新規追加詳細の位置、申請者・申請日。年の表ごとの Update の日付（その他は無視）。列は見出しの文字で特定する |
+| 正常入力の前提 | XHTML として読め、使う列を見出しの文字で特定できる。できなければ突合の前に止まる。ファイルの中の外部参照（画像・スタイル・スクリプト）は読み込まず、実行しない |
+| 行の分け方 | アクションの欄が空の行（年の題、Update、反映済みの目印など）と見出しの行は読み飛ばす。アクションの欄が「追加」「変更」「削除」の行を申請の行とする。それ以外の語がアクションの欄にある行は「読めない行」とする。表記の揺れ（全角・半角、前後の空白、標高の末尾の `m`、座標の区切り）は読むときに揃える。同じ申請（アクション、山岳 ID か追加の座標、変更後の標高、申請者・申請日が同じ）が複数の年の表にあれば 1 つに数え、載っている年をすべて残す |
+| 取り込む申請 | 追加（位置の座標がある行）、削除（山岳 ID がある行）、変更のうち、変更後の標高を `floor` してから [FR-009](#fr-009-sotaリスト突合match_status-判定) の `points` と同じ表でバンドにした値が null でなく、SOTA サミットリストの今の `AltM` のバンドとも null でなく違う行。名称・座標だけの変更（変更後の標高の欄が空の行）、バンドの変わらない変更、バンドが null になる変更は取り込まない（[URD §6](10_URD.md#6-スコープ外対象外) のスコープ外） |
+| 山岳 ID の照合 | SOTA サミットリストの SummitCode とそのまま照合し、無ければ地域コードと番号で照合する（地域コードが複数のアソシエーションに重なるときは、その行を知らせる行にする）。廃止済み（[7.2.4](#724-sota-サミットリスト-csv) の基準日で有効でない）の登録に当たる ID は、反映済みの削除とみなし、知らせない |
+| 知らせる行 | 読めない行（アクションの欄の語、追加の位置、変更・削除の山岳 ID、変更後の標高が読めない行）、SOTA サミットリストに無い ID の行、当たらなかった追加の申請（[FR-009](#fr-009-sotaリスト突合match_status-判定)）、Update の日付が読めない年の表。止めずに、作業用ビューアの「登録変更リスト」の欄とバッチのログに示す（[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)） |
+| 省略時の動作 | ファイルが無ければ、起動前提条件の検査で止まる（[FR-023](#fr-023-解析パイプライン制御)） |
+| 出典 | 詳細は [ref/SOURCES.md](../ref/SOURCES.md) 参照 |
 
 ## 8. 内部データ
 

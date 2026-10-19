@@ -90,29 +90,35 @@ text { font-size: 18px; fill: #111827; }
     <!-- 外部データ（左） -->
     <text x="30" y="168" class="b">外部データ（バッチの入力）</text>
 
-    <rect x="30" y="180" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
-    <text x="44" y="206" class="b">国土地理院 標高タイル</text>
-    <text x="44" y="231">DEM5a/5b/5c・DEM10b（PNG）</text>
-    <text x="44" y="256"><tspan class="pre">[事前取得]</tspan> CMP2 が HTTP で取得</text>
-    <line x1="330" y1="224" x2="403" y2="224" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <rect x="30" y="180" width="300" height="72" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="202" class="b">国土地理院 標高タイル</text>
+    <text x="44" y="223">DEM5a/5b/5c・DEM10b（PNG）</text>
+    <text x="44" y="244"><tspan class="pre">[事前取得]</tspan> CMP2 が HTTP で取得</text>
+    <line x1="330" y1="216" x2="403" y2="216" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
-    <rect x="30" y="278" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
-    <text x="44" y="304" class="b">N03 行政区域 ZIP</text>
-    <text x="44" y="329">国土交通省 国土数値情報</text>
-    <text x="44" y="354"><tspan class="man">[手動配置]</tspan> → CMP1</text>
-    <line x1="330" y1="322" x2="403" y2="322" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <rect x="30" y="258" width="300" height="72" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="280" class="b">N03 行政区域 ZIP</text>
+    <text x="44" y="301">国土交通省 国土数値情報</text>
+    <text x="44" y="322"><tspan class="man">[手動配置]</tspan> → CMP1</text>
+    <line x1="330" y1="294" x2="403" y2="294" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
-    <rect x="30" y="376" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
-    <text x="44" y="402" class="b">SOTA サミットリスト CSV</text>
-    <text x="44" y="427">summitslist.csv（SOTA DB）</text>
-    <text x="44" y="452"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
-    <line x1="330" y1="420" x2="403" y2="420" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <rect x="30" y="336" width="300" height="72" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="358" class="b">SOTA サミットリスト CSV</text>
+    <text x="44" y="379">summitslist.csv（SOTA DB）</text>
+    <text x="44" y="400"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
+    <line x1="330" y1="372" x2="403" y2="372" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
-    <rect x="30" y="474" width="300" height="88" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
-    <text x="44" y="500" class="b">SOTA 既存サミット GeoJSON</text>
-    <text x="44" y="525">ジオサミットでひとこえ</text>
-    <text x="44" y="550"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
-    <line x1="330" y1="518" x2="403" y2="518" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+    <rect x="30" y="414" width="300" height="72" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="436" class="b">SOTA 既存サミット GeoJSON</text>
+    <text x="44" y="457">ジオサミットでひとこえ</text>
+    <text x="44" y="478"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
+    <line x1="330" y1="450" x2="403" y2="450" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
+
+    <rect x="30" y="492" width="300" height="72" rx="6" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+    <text x="44" y="514" class="b">山岳データ登録変更リスト</text>
+    <text x="44" y="535">ジオサミットでひとこえ</text>
+    <text x="44" y="556"><tspan class="man">[手動配置]</tspan> → CMP5（FR-009）</text>
+    <line x1="330" y1="528" x2="403" y2="528" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
 
     <!-- 利用者 -->
     <rect x="30" y="600" width="300" height="170" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
