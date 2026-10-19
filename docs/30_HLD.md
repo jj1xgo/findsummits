@@ -1426,6 +1426,7 @@ CMP3（パイプライン制御）は 2 本のプログラムからなる。制�
   - `$DATA_DIR/results/merged_peak.csv`・`$DATA_DIR/results/merged_peak.geojson`（CMP5（統合・突合）が書く。有無だけを見る）
   - `$DATA_DIR/results/key_col_unresolved_peaks-<N>.csv`（CMP5 が書く。有無だけを見て、パスを CMP4（地形解析エンジン。広域）へ渡す）
   - SOTA サミットリスト CSV（`$DATA_DIR/ref/summitslist.csv`。利用者が置く。有無だけを見る）
+  - 山岳データ登録変更リスト（`$DATA_DIR/ref/sota_updatelist_YYYY.xhtml`。利用者が置く。ファイル名のパターンに合うファイルが 1 つ以上あるかだけを見る。中身と年の比べは CMP5 が行う）
   - 起動した内部の起動口の終了状態
 - 処理: [4.23.2](#4232-処理の流れ) の 1〜4（段の進め方は [2.2.3](#223-コンポーネント間のデータの流れとインターフェース) と [2.5.2](#252-パイプライン制御での扱い)、段の始まりの削除は [2.10.3](#2103-フェーズのやり直し)）
 - 出力
@@ -1464,13 +1465,13 @@ CMP3（パイプライン制御）は 2 本のプログラムからなる。制�
 | `list_required_meshes` | 解析に要るメッシュを求める | 起動のしかた、`--mesh` のコードの集合、2 つのリストのコードの集合 | 要るメッシュの集合 | [4.23.2](#4232-処理の流れ) の「取得完了の記録の検査」の表 |
 | `fetch_record_path` | 取得完了の記録のパスを組み立てる | なし | 記録のパス | [4.1.2](#412-処理の流れ) の「取得完了の記録」（ファイル名は LLD。[4.1.1](#411-目的と範囲) の対象外の行） |
 | `check_fetch_record` | 取得完了の記録を読み、要るメッシュがすべて記録にあるかを見る | 記録のパス、要るメッシュの集合 | なし | [4.23.2](#4232-処理の流れ) の「取得完了の記録の検査」 |
-| `check_preconditions` | 起動のしかたごとの起動前提条件を検査する。陸地最高峰リストの書式は `merge_peaks` を `--check-land-peaks` を付けて起動して確かめる | 起動のしかた、要るメッシュの集合 | なし | [4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」、[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」 |
+| `check_preconditions` | 起動のしかたごとの起動前提条件を検査する。SOTA サミットリスト CSV と山岳データ登録変更リストは有無だけを見る。陸地最高峰リストの書式は `merge_peaks` を `--check-land-peaks` を付けて起動して確かめる | 起動のしかた、要るメッシュの集合 | なし | [4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」、[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」 |
 | `clear_outputs` | 段の始まりに前回の出力を消す | 段（フェーズ2、フェーズ3 の N、フェーズ4） | なし | [2.10.3](#2103-フェーズのやり直し) の表、[4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」の未確定リストの削除 |
 | `run_merge` | `merge_peaks` → `merge_zones` → `check_cols` を続けて起動する。`check_cols` の終了コードは、ここで [2.5.2](#252-パイプライン制御での扱い) のとおりに受け取る。[4.23.2](#4232-処理の流れ) の 4「段を進める」の、フェーズ3 の段の統合の直前の削除を受け持つ | N、`--mesh` の値（フェーズ2 だけ） | 充足判定の結果（未確定なし・未確定あり）。関数の終了状態は 0 | [2.2.3](#223-コンポーネント間のデータの流れとインターフェース)、[2.4.3](#243-メッシュ範囲) の `--mesh` の転送、[2.5.2](#252-パイプライン制御での扱い)、[4.23.2](#4232-処理の流れ) の 4「段を進める」 |
 | `run_normal_stage` | フェーズ2 の段を行う（CMP4 の通常解析を起動し、`run_merge` を呼ぶ） | `--mesh` の値 | `run_merge` の返す充足判定の結果。関数の終了状態は 0 | [2.2.3](#223-コンポーネント間のデータの流れとインターフェース)、[2.4.5](#245-内部引数) の `--japan-mesh-list`、[4.23.2](#4232-処理の流れ) の 4「段を進める」 |
 | `run_wide_stage` | フェーズ3 の N の段を行う（CMP4 の広域解析を起動し、`run_merge` を呼ぶ） | N | `run_merge` の返す充足判定の結果。関数の終了状態は 0 | [2.2.3](#223-コンポーネント間のデータの流れとインターフェース)、[2.4.5](#245-内部引数) の `--unresolved`・`--japan-mesh-list`、[4.23.2](#4232-処理の流れ) の 4「段を進める」 |
 | `run_phase4` | フェーズ4 を行う（`match_summits` を起動し、0 なら CMP6 の `generate_viewer` を起動する） | なし | なし（関数の終了状態は 0。`match_summits` か `generate_viewer` が 0 以外を返せば、その値でプログラムが止まる） | [2.5.2](#252-パイプライン制御での扱い) の表 |
-| `log_info`・`log_warning`・`log_error` | 通常のログ、`WARNING:` のメッセージ、`ERROR:` のメッセージを、[2.5.3](#253-利用者向けのメッセージ) の出力先に出す | メッセージの内容 | なし | [2.5.3](#253-利用者向けのメッセージ) |
+| `log_info`・`log_warning`・`log_error` | 通常のログ、`WARNING:` のメッセージ、`ERROR:` のメッセージを、[2.5.3](#253-利用者向けのメッセージ) の出力先に出す | `log_info` はメッセージの内容、`log_warning`・`log_error` は起きたこと（`what`）と利用者の対処（`action`）の 2 つ（[2.5.3](#253-利用者向けのメッセージ) の 2 行の書式） | なし | [2.5.3](#253-利用者向けのメッセージ) |
 
 呼ぶ順: `parse_args`（中で `read_mesh_arg`）→ `resolve_paths` → `acquire_lock` → `open_log` → `read_mesh_list_file`（日本全土と北方領土除外）→ `list_required_meshes` → `check_preconditions`（中で `fetch_record_path` と `check_fetch_record`）→ 段ごとに `clear_outputs` → `run_normal_stage`・`run_wide_stage`・`run_phase4` のどれか。段の並びと N の上げ方、どの段へ進むか、どこで止まるかは、プログラムの本体（関数の外）が [2.5.2](#252-パイプライン制御での扱い) の表のとおりに決める。
 
@@ -1511,7 +1512,7 @@ CMP3（パイプライン制御）は 2 本のプログラムからなる。制�
 | `CMP3-EXT3` | `merge_peaks`・`merge_zones` → `run_pipeline` | `merged_peak.csv`・`merged_peak.geojson`（有無だけ） | CMP5 が書いた名前と置き場のファイルの有無を、起動前提条件の検査で見分けられる（`--phase 3` は `merged_peak.csv`、`--phase 4` は 2 つとも。[4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」） |
 | `CMP3-EXT4` | `check_cols` → `run_pipeline` | `key_col_unresolved_peaks-<N>.csv`（有無とパス） | CMP5 が書いた名前と置き場のリストの有無を、`--phase 3 --n <N>` の起動前提条件の検査（N−1 のリスト）で見分け、通しの実行で [2.5.2](#252-パイプライン制御での扱い) の表に従って次の広域解析へ進むとき（N<6）に、そのパスを CMP4（広域）へ渡せる。リストの中身は `CMP4-EXT4`（[3.4.5](#345-結合のつなぎ目)）で確かめる |
 | `CMP3-EXT5` | 利用者 → `run_pipeline` | 起動（引数）と終了状態 | 利用者の渡す引数で起動でき、[2.5.2](#252-パイプライン制御での扱い) の終了コードを返す。同じ `data_dir` で CMP1・CMP2・CMP3 のどれかが動いている間は、何も消さずに終了コード 1 で止まる。`run_pipeline` が起動した内部の起動口が終わるまでは、CMP1・CMP2・CMP3 の起動が同じく止まり、すべて終わった後は起動できる（[2.9.3](#293-同時起動の排他)） |
-| `CMP3-EXT6` | 利用者 → `run_pipeline` | `--mesh` のファイル、SOTA サミットリスト CSV（有無だけ） | [2.4.3](#243-メッシュ範囲) の書式の `--mesh` のファイルを読め、SOTA サミットリスト CSV が無ければ、通しと `--phase 4` が何も消さずに止まる |
+| `CMP3-EXT6` | 利用者 → `run_pipeline` | `--mesh` のファイル、SOTA サミットリスト CSV と山岳データ登録変更リスト（有無だけ） | [2.4.3](#243-メッシュ範囲) の書式の `--mesh` のファイルを読め、SOTA サミットリスト CSV か山岳データ登録変更リストが無ければ、通しと `--phase 4` が何も消さずに止まる |
 
 **CMP3 が渡す側の外部結合**（ID は、受け取る側の節で付ける）
 
@@ -1718,17 +1719,18 @@ CMP5（統合・突合）は 4 本のプログラムからなる（[DEC4](#225-�
   - `$DATA_DIR/results/merged_peak.csv`（`merge_peaks` が書く。13 列すべてを使う）
   - `$DATA_DIR/results/merged_peak.geojson`（`merge_zones` が書く）
   - SOTA サミットリスト CSV（`$DATA_DIR/ref/summitslist.csv`。利用者が置く）
+  - 山岳データ登録変更リスト（`$DATA_DIR/ref/sota_updatelist_YYYY.xhtml`。利用者が置く。複数あれば年が最大のもの。読み方は [4.9.2](#492-処理の流れ) の「登録変更リストの読み方」）
   - N03 前処理済みの地域 GeoJSON（`$DATA_DIR/boundaries/regions.geojson`）と市区町村 GeoJSON（`$DATA_DIR/boundaries/municipalities.geojson`）。CMP1 が書く
   - SOTA 既存サミット GeoJSON（`$DATA_DIR/ref/geojson_v<N>/` の下。利用者が置く。無くてもよい）
   - 標高タイルのキャッシュ（`$DATA_DIR/tiles/` の下の `.png`。mtime だけを使う。CMP2（タイル取得）が書く）
   - CMP5（統合・突合）のスクリプトがあるリポジトリの版（`software_version` に使う。取り方は [4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」）
   - 設定の `provisional_code_max_prefix`・`unmatched_summit_threshold`・`sota_geojson_version`
-- 処理: [4.9.2](#492-処理の流れ) の 1〜9 と、「出力の組み立て」の 1〜6
+- 処理: [4.9.2](#492-処理の流れ) の 1〜9 と、「出力の組み立て」の 1〜6、「申請済みの判定」の 1〜7
 - 出力
   - `$DATA_DIR/results/merged_summit.geojson`（CMP6（可視化生成）と利用者が読む）
   - `$DATA_DIR/results/merged_summit.xlsx`（利用者が読む）
   - 終了コード（不備ゲートは 4）
-  - 警告と通常のログ（[4.9.2](#492-処理の流れ)）
+  - 警告と通常のログ（[4.9.2](#492-処理の流れ)。山岳データ登録変更リストの知らせる行〈読めない行、SOTA サミットリストに無い ID の行、当たらなかった追加の申請、Update の日付が読めない年の表〉の警告を含む）
 
 #### 3.5.3 関数
 
@@ -1777,7 +1779,9 @@ CMP5（統合・突合）は 4 本のプログラムからなる（[DEC4](#225-�
 | 群 | 関数 | 役割 | 受け取るもの | 返すもの | 処理の正本 |
 |---|---|---|---|---|---|
 | 読み込み | `match_zones_to_peaks` | `merged_peak.geojson` のゾーンをピークに突き合わせる | ピークの表、`read_zone_features` の返したゾーン | ピークごとの AZ と delete判定ゾーン（ジオメトリと `area_complete`） | [4.9.2](#492-処理の流れ) の 2「`merged_peak.geojson` を読む」 |
-| 読み込み | `read_summits_list` | SOTA サミットリスト CSV を読んで確かめ、現役のサミットを選ぶ | SOTA サミットリスト CSV のパス | 基準日、現役のサミットの並び、廃止済みとして除いた数 | [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV を読む」 |
+| 読み込み | `read_summits_list` | SOTA サミットリスト CSV を読んで確かめ、現役のサミットを選ぶ | SOTA サミットリスト CSV のパス | 基準日、現役のサミットの並び、廃止済みとして除いた数、廃止済みの SummitCode の集合、地域コードからアソシエーションへの対応（現役と廃止済みを合わせた JA の全行から作る。複数のアソシエーションに属する地域コードを含む） | [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV と登録変更リストを読む」 |
+| 読み込み | `find_updatelist` | 山岳データ登録変更リストのファイルを選ぶ | `$DATA_DIR/ref/` のパス | 採ったファイルのパス（ファイル名の全体が `sota_updatelist_[0-9]{4}\.xhtml` に合うもののうち、年が最大のもの）。1 件も無ければ止まる | [4.9.2](#492-処理の流れ) の「登録変更リストの読み方」 |
+| 読み込み | `read_updatelist` | 登録変更リストを XML として読んで確かめ、申請の並びを作る | 採ったファイルのパス | 申請の並び（アクション、山岳 ID か追加の座標、変更後の標高、申請者、申請日、載っている年の表）、年の表ごとの Update の日付、読めない行などの知らせる行の並び | [4.9.2](#492-処理の流れ) の「登録変更リストの読み方」 |
 | 読み込み | `read_boundaries` | 地域と市区町村の GeoJSON を読んで確かめる | 2 つの GeoJSON のパス | 地域と市区町村の Feature の並び（無いファイルは「無い」の印）、警告に並べるもの | [4.9.2](#492-処理の流れ) の 4「地域と市区町村の GeoJSON を読み、索引を作る」 |
 | 読み込み | `build_spatial_indexes` | AZ・delete判定ゾーン・地域・市区町村の索引を作る | 4 種類のジオメトリ | 4 つの索引 | [4.9.2](#492-処理の流れ) の 4「地域と市区町村の GeoJSON を読み、索引を作る」 |
 | 突き合わせ | `is_in_zone` | 点がゾーンの中にあるかを判定する | 点の緯度経度、ゾーンのジオメトリ | 真偽 | [4.9.2](#492-処理の流れ) の「ゾーンの内外」 |
@@ -1789,13 +1793,15 @@ CMP5（統合・突合）は 4 本のプログラムからなる（[DEC4](#225-�
 | 組み立て | `read_sota_names` | SOTA 既存サミット GeoJSON から山岳名を読む | `$DATA_DIR/ref/` のパス、`sota_geojson_version` | SummitCode から山岳名への表、警告に並べるもの | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 1「SOTA 既存サミット GeoJSON を読む」 |
 | 組み立て | `derive_attributes` | `points`・`is_band_change_candidate`・`category`・確認用の属性を求める | ここまでの判定の結果、山岳名の表 | ピークとサミットごとの属性の値 | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 2「値を求める」 |
 | 組み立て | `build_rationale` | rationale の文字列を作る | 対象のピークかサミット 1 つの値と属性、関わる相手の値（※4 の主ピーク、※5 の AZ の中のサミット） | 文字列 | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 2「値を求める」 |
-| 組み立て | `build_metadata` | metadata を作る | 基準日、`$DATA_DIR/tiles/` のパス、CMP5 のスクリプトがあるリポジトリのパス | metadata の項目、警告に並べるもの | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」 |
+| 組み立て | `match_pending_applications` | 登録変更リストの申請を、山岳 ID と AZ で候補に当てる | `read_updatelist` の返した申請の並び、`read_summits_list` の返した SOTA サミットリストの情報、ピークの表、AZ とその索引、`derive_attributes` の返した属性の値（`category`・`points`） | 候補ごとの `pending_applications`・`pending_match`、同じ行に集まるフィーチャへ写した値、当たらなかった追加の申請などの知らせる行の並び | [4.9.2](#492-処理の流れ) の「申請済みの判定」の 1「山岳 ID を照合する」・2「追加の申請を当てる」・3「削除と変更の申請を当てる」・4「当たり方をまとめる」・6「同じ行のフィーチャへ写す」・7「知らせる行をまとめる」 |
+| 組み立て | `build_pending_note` | `pending_applications` から表示用の文 `pending_note` を作る | 候補の `pending_applications` | 文字列（無ければ空文字） | [4.9.2](#492-処理の流れ) の「申請済みの判定」の 5「`pending_note` を作る」 |
+| 組み立て | `build_metadata` | metadata を作る | 基準日、`$DATA_DIR/tiles/` のパス、CMP5 のスクリプトがあるリポジトリのパス、採った登録変更リストのファイル名、年の表ごとの Update の日付、知らせる行 | metadata の項目、警告に並べるもの | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」 |
 | 組み立て | `build_summit_features` | `merged_summit.geojson` を組み立てる（最上位の `metadata` とフィーチャの並び） | 判定の結果、属性の値、ゾーンのジオメトリ、metadata の項目 | フィーチャの並び、GeoJSON の中身 | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 4「`merged_summit.geojson` を組み立てる」 |
 | 組み立て | `build_summit_sheets` | `merged_summit.xlsx` のシートを組み立てる | フィーチャの並び | シートの行 | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 5「`merged_summit.xlsx` を組み立てる」（規則の正本は [4.12.2](#4122-処理の流れ) の 1〜5） |
 | 書き出し | `write_summit_outputs` | 2 つの出力をそろえて置く | GeoJSON の中身、XLSX の中身、出力のディレクトリ | なし（書き込みに失敗したときの扱いは処理の正本の欄の節） | [4.9.2](#492-処理の流れ) の 9「書き出し、不備ゲートを検査する」、[4.9.2](#492-処理の流れ) の「出力の組み立て」の 6「書く」 |
 | 書き出し | `check_defect_gate` | 不備ゲートの 3 つの条件を調べる | 判定の結果、`unmatched_summit_threshold` | 当たった条件の並び（空なら不備なし） | [4.9.2](#492-処理の流れ) の 9「書き出し、不備ゲートを検査する」 |
 
-呼ぶ順: `read_merged_peak`（13 列）→ `index_peaks_by_pixel` → `read_zone_features` → `match_zones_to_peaks` → `read_summits_list` → `read_boundaries` → `build_spatial_indexes` → `match_activation_zones` → `match_delete_zones` → `locate_regions` → `assign_provisional_codes` → `read_sota_names` → `derive_attributes`（中で `build_rationale` を呼ぶ）→ `build_metadata` → `build_summit_features` → `build_summit_sheets` → `write_summit_outputs` → `check_defect_gate` → 当たった条件があれば終了コード 4、無ければ 0。`is_in_zone` は `match_activation_zones` と `match_delete_zones` が呼び、`z15_pixel_center_latlon` は `is_in_zone` が呼ぶ。`locate_regions` が返した「どれにも入らなかった点」の警告は、`assign_provisional_codes` の後に出す（[4.9.2](#492-処理の流れ) の 7「地域と市区町村を照合する」）。
+呼ぶ順: `read_merged_peak`（13 列）→ `index_peaks_by_pixel` → `read_zone_features` → `match_zones_to_peaks` → `read_summits_list` → `find_updatelist` → `read_updatelist` → `read_boundaries` → `build_spatial_indexes` → `match_activation_zones` → `match_delete_zones` → `locate_regions` → `assign_provisional_codes` → `read_sota_names` → `derive_attributes`（中で `build_rationale` を呼ぶ）→ `match_pending_applications`（中で `build_pending_note` を呼ぶ）→ `build_metadata` → `build_summit_features` → `build_summit_sheets` → `write_summit_outputs` → `check_defect_gate` → 当たった条件があれば終了コード 4、無ければ 0。`is_in_zone` は `match_activation_zones` と `match_delete_zones` と `match_pending_applications`（追加の申請の座標の判定）が呼び、`z15_pixel_center_latlon` は `is_in_zone` が呼ぶ。`match_pending_applications` は `derive_attributes` の返した `category`・`points` を使うので、その後に呼ぶ。`locate_regions` が返した「どれにも入らなかった点」の警告は、`assign_provisional_codes` の後に出す（[4.9.2](#492-処理の流れ) の 7「地域と市区町村を照合する」）。
 
 #### 3.5.4 コンポーネント内の共通部品
 
@@ -1805,7 +1811,7 @@ CMP5（統合・突合）は 4 本のプログラムからなる（[DEC4](#225-�
 | `index_peaks_by_pixel` | 行を、Z15 の画素を鍵にした表にする。同じ鍵の行が 2 つ以上あれば止まる | `read_merged_peak` の渡す行 | ピークの表 | `merge_zones`、`match_summits` | [4.18.2](#4182-処理の流れ) の 2「`merged_peak.csv` を読む」、[4.9.2](#492-処理の流れ) の 1「`merged_peak.csv` を読む」 |
 | `read_zone_features` | ゾーンを持つ GeoJSON を読み、書式を確かめる。1 つのファイルの中に、同じピーク（Z15 の画素が同じ）の同じ種類のゾーンが 2 つ以上あれば止まる | GeoJSON のパス | ゾーンの Feature の並び（Feature ごとに、種類、Z15 の画素、`area_complete` と、読んだときの書き方のままのジオメトリと `properties` を持つ） | `merge_zones`（per-mesh ピーク候補 GeoJSON）、`match_summits`（`merged_peak.geojson`） | [4.18.3](#4183-異常系)、[4.9.2](#492-処理の流れ) の 2「`merged_peak.geojson` を読む」 |
 | `latlon_to_z15_pixel` | 緯度経度から、全球の Z15 の画素の座標 (gx, gy) を求める | 緯度、経度 | (gx, gy) | `read_peak_rows`、`index_peaks_by_pixel`、`read_zone_features`、`is_in_zone` | [4.7.2](#472-処理の流れ) の 5「対象ピークの照合」（式は用語集の [緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)） |
-| `is_valid_coord` | 文字列が座標として読めるかを判定する | 文字列、緯度か経度かの別 | 真偽 | `read_land_peaks`、`read_peak_rows`、`read_merged_peak`、`read_summits_list` | [4.8.2](#482-処理の流れ) の 1「リストを読む」 |
+| `is_valid_coord` | 文字列が座標として読めるかを判定する | 文字列、緯度か経度かの別 | 真偽 | `read_land_peaks`、`read_peak_rows`、`read_merged_peak`、`read_summits_list`、`read_updatelist`（追加の申請の位置の座標） | [4.8.2](#482-処理の流れ) の 1「リストを読む」 |
 | `great_circle_m` | 2 点の大円距離を求める | 2 点の緯度経度 | 距離（m） | `apply_land_peaks`、`match_delete_zones` | [4.8.2](#482-処理の流れ) の 5「陸地最高峰の海面確定を当てる」、[4.9.2](#492-処理の流れ) の「数の比べ方」 |
 | `parse_analysis_id` | ファイル名から解析識別子を読み、通常か広域かを見分ける | ファイル名 | 解析識別子と、通常・広域・規則に合わない、の別 | `select_peak_csv_files`、`select_zone_geojson_files` | [4.8.2](#482-処理の流れ) の 2「読むファイルを選ぶ」、[4.18.2](#4182-処理の流れ) の 1「読むファイルを選ぶ」 |
 
@@ -1835,7 +1841,7 @@ CMP5（統合・突合）は 4 本のプログラムからなる（[DEC4](#225-�
 | `CMP5-EXT4` | CMP1 → `match_summits` | 地域と市区町村の GeoJSON | CMP1 が書いた GeoJSON を読み、地域と市区町村を照合できる。ファイルが無ければ警告して続ける |
 | `CMP5-EXT5` | CMP2 → `match_summits` | 標高タイルのキャッシュ（mtime だけ） | CMP2 が置いたタイルの mtime から `gsi_tile_latest_date` を作れる |
 | `CMP5-EXT6` | CMP3 → CMP5 の 4 本のプログラム | 起動（引数）と終了状態 | CMP3 が渡す引数で起動でき、終了コード 0・1・2・3・4 のそれぞれで、CMP3 が [2.5.2](#252-パイプライン制御での扱い) のとおりに動く |
-| `CMP5-EXT7` | 利用者 → `match_summits` | SOTA サミットリスト CSV、SOTA 既存サミット GeoJSON | 配布されている実物の書式のファイルを読める |
+| `CMP5-EXT7` | 利用者 → `match_summits` | SOTA サミットリスト CSV、SOTA 既存サミット GeoJSON、山岳データ登録変更リスト | 配布されている実物の書式のファイルを読める（登録変更リストは、2026-10-19 に確かめた LibreOffice 書き出しの XHTML〈1 つの表に年の表が新しい年から続き、見出しは 2 行で結合したセルを含み、「申請者・申請日」は 1 つの欄〉を、標準ライブラリの XML パーサーで読める） |
 
 **CMP5 が渡す側の外部結合**（ID は、受け取る側の節で付ける）
 
@@ -2213,7 +2219,7 @@ CMP4（地形解析エンジン。C++）と、CMP7（申請書生成 UI）・CMP
 | `start_log` | ログの出力先を用意し、使う設定値をログに書く（`log_dir` は [2.3.2](#232-設定ファイル) のとおり無ければ作る。用意できないときの扱いも 2.3.2）。これが終わった後の `log_info`・`log_warning`・`log_error` は、ログファイルにも出す。プログラムが終わるときに終わりの行を書く | `log_dir`、`load_config` の返した設定値、プログラムの名前、起動の引数、開始時刻 | なし | CMP1 の `preprocess_boundaries`、CMP2 の `fetch_tiles`、CMP5 の 4 本のプログラム、CMP6 の `generate_viewer`（CMP3 の `run_pipeline` は使わず、ログの出力先を `open_log` で用意する。[3.3.3](#333-関数)。CMP4 の `analyze_terrain` は C++ で別に実装する。[3.4.3](#343-関数)） | [2.3.2](#232-設定ファイル)、[2.3.3](#233-検証と記録) の設定値をログに書く段落、[2.5.3](#253-利用者向けのメッセージ)、[5.7.2](#572-処理の流れ) の 2「ファイルの名前」・3「行の書式」・4「始まりと終わりの行」 |
 | `read_mesh_arg` | `--mesh` の値を読み、メッシュコードの集合にする。誤りがあれば終了コード 2 で止まる | `--mesh` の値 | メッシュコードの集合 | `fetch_tiles`、`merge_peaks`、`merge_zones`（CMP3 の `run_pipeline` は bash で別に実装する。[DEC149](#4234-設計判断)「`--mesh` は bash と Python で別に読む」。CMP4 の `analyze_terrain` は C++ で別に実装する。[3.4.3](#343-関数)） | [2.4.3](#243-メッシュ範囲) |
 | `read_mesh_list_file` | メッシュコードのリスト（日本全土、北方領土除外）を読む。無いか読めなければ終了コード 1 で止まる | リストのパス、無いか読めないときにメッセージに書く案内（中身は呼ぶ側の異常系の節のとおり。案内の無いリストは「なし」。[2.5.3](#253-利用者向けのメッセージ)。文面は LLD） | メッシュコードの集合 | `preprocess_boundaries`（日本全土）、`fetch_tiles`（日本全土と北方領土除外）、`merge_peaks` の `read_target_meshes`（CMP3 の `run_pipeline` は bash で別に実装する。[DEC149](#4234-設計判断)「`--mesh` は bash と Python で別に読む」。CMP4 の `analyze_terrain` は C++ で別に実装する。[3.4.3](#343-関数)） | [4.1.2](#412-処理の流れ) の 2「入力を読む」（[4.17.2](#4172-処理の流れ) の 4「日本全土リストを読む」・[4.4.2](#442-処理の流れ) の 2「入力を読む」・[4.8.2](#482-処理の流れ) の 1「リストを読む」も同じ読み方） |
-| `log_info`・`log_warning`・`log_error` | 通常のログ、`WARNING:` のメッセージ、`ERROR:` のメッセージを、[2.5.3](#253-利用者向けのメッセージ) の出力先に出す。ログファイルに出すのは `start_log` が終わった後だけで、その前と、`start_log` を呼ばない CMP3 の `resolve_config` では出さない | メッセージの内容 | なし | CMP1 の `preprocess_boundaries`、CMP2 の `fetch_tiles`、CMP5 の 4 本のプログラム、CMP6 の `generate_viewer`、CMP3 の `resolve_config`（`log_warning`・`log_error` だけ。標準出力は [2.3.2](#232-設定ファイル) の 2 行に使う）。どのバッチにも共通の決まり（CMP3 の `run_pipeline` は bash で別に実装し、ログファイルに出すのは `open_log` が終わった後だけ。[3.3.3](#333-関数)。CMP4 の `analyze_terrain` は C++ で別に実装する。[3.4.3](#343-関数)） | [2.5.3](#253-利用者向けのメッセージ) |
+| `log_info`・`log_warning`・`log_error` | 通常のログ、`WARNING:` のメッセージ、`ERROR:` のメッセージを、[2.5.3](#253-利用者向けのメッセージ) の出力先に出す。ログファイルに出すのは `start_log` が終わった後だけで、その前と、`start_log` を呼ばない CMP3 の `resolve_config` では出さない | `log_info` はメッセージの内容、`log_warning`・`log_error` は起きたこと（`what`）と利用者の対処（`action`）の 2 つ（[2.5.3](#253-利用者向けのメッセージ) の 2 行の書式） | なし | CMP1 の `preprocess_boundaries`、CMP2 の `fetch_tiles`、CMP5 の 4 本のプログラム、CMP6 の `generate_viewer`、CMP3 の `resolve_config`（`log_warning`・`log_error` だけ。標準出力は [2.3.2](#232-設定ファイル) の 2 行に使う）。どのバッチにも共通の決まり（CMP3 の `run_pipeline` は bash で別に実装し、ログファイルに出すのは `open_log` が終わった後だけ。[3.3.3](#333-関数)。CMP4 の `analyze_terrain` は C++ で別に実装する。[3.4.3](#343-関数)） | [2.5.3](#253-利用者向けのメッセージ) |
 | `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE`・`EXIT_UNRESOLVED`・`EXIT_DEFECT` | 終了コード 0・1・2・3・4 の定数 | なし | なし | CMP1 の `preprocess_boundaries`、CMP2 の `fetch_tiles`、CMP5 の 4 本のプログラム、CMP6 の `generate_viewer`（0・1・2 だけを使う）、CMP3 の `resolve_config`（どのバッチにも共通の決まり。CMP3 の `run_pipeline` は bash で別に実装する。[3.3.3](#333-関数)。CMP4 の `analyze_terrain` は C++ で 0・1・2 だけを別に実装する。[3.4.3](#343-関数)。CMP8 の `build_public_site` は bash で 0・1・2 だけを別に実装する。[3.8.3](#383-関数)） | [2.5.1](#251-終了コード) |
 | `acquire_lock` | `data_dir` の直下のロックファイルに排他ロックを掛ける。掛けられないか、ロックファイルを開けなければ、終了コード 1 で止まる | `data_dir` | なし（ロックはプログラムが終わるまで持つ） | `preprocess_boundaries`、`fetch_tiles`（CMP3 の `run_pipeline` は bash で別に実装する。[3.3.3](#333-関数)） | [2.9.3](#293-同時起動の排他) |
 | `fetch_record_path` | 取得完了の記録のパスを組み立てる | `data_dir` | 記録のパス | `preprocess_boundaries` の `replace_outputs`、`fetch_tiles`（CMP3 の `run_pipeline` は bash で別に実装する。[3.3.3](#333-関数)） | [4.1.2](#412-処理の流れ) の「取得完了の記録」（ファイル名は LLD。[4.1.1](#411-目的と範囲) の対象外の行） |
@@ -2801,7 +2807,7 @@ CMP4（地形解析エンジン）の通常モード（[4.4.2](#442-処理の流
 
 CMP3（パイプライン制御）から、フェーズ2 の統合と、フェーズ3 の各段の再統合で呼ばれる（[2.2.3](#223-コンポーネント間のデータの流れとインターフェース)）。CMP3 の起動前提条件の検査で `--check-land-peaks` を付けて呼ばれたときは、1 の後半のとおり陸地最高峰リストだけを確かめる（[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」）。入力は、`$DATA_DIR/results/csv/` の下の per-mesh CSV、陸地最高峰リスト（`params/land_highest_peaks.csv`）、日本全土1次メッシュコードリスト（`params/mesh_list_japan.txt`）、北方領土除外メッシュリスト（`$DATA_DIR/boundaries/nt_excluded_meshes.txt`。[4.17.2](#4172-処理の流れ)）、設定の `prominence_final_m` と、相互制約の検査だけに使う `prominence_primary_m`（[2.3.2](#232-設定ファイル)）、`--mesh` の値（フェーズ2 の統合で、CMP3 が受け取ったとき。[2.4.5](#245-内部引数)）である。
 
-1. **リストを読む**。3 つのリストのどれかが無いか読めなければ止まる（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) の異常系）。日本全土1次メッシュコードリストと北方領土除外メッシュリストの読み方は [4.4.2](#442-処理の流れ) の 2「入力を読む」と同じである。陸地最高峰リストは UTF-8 の CSV で、1 行目は見出しの行 `name,peak_lat,peak_lon`、2 行目からが 1 行 1 件である（[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.10）。空行は無視する。見出しが違う、列の数が 3 でない、`name` が空、`peak_lat`・`peak_lon` が座標として読めない行があれば、書式の違いとして止まる。座標として読めるとは、有限の 10 進の数（`NaN`・`Infinity` などは読めないとする）で、緯度が −85.05112878 以上 85.05112878 以下、経度が −180 以上 180 未満（[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile) の式で画素を求められる範囲）であることをいう。3 の数の検査も同じ。見出しの行だけ（0 件）でもよい。CMP3 が起動前提条件の検査で `--check-land-peaks` を付けて呼んだときは（[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」、[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」）、陸地最高峰リストだけをこの 1 のとおり読んで確かめ、無いか読めないか書式が違えば終了コード 1、合っていれば 0 を返し、2 から先は行わない。
+1. **リストを読む**。3 つのリストのどれかが無いか読めなければ止まる（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) の異常系）。日本全土1次メッシュコードリストと北方領土除外メッシュリストの読み方は [4.4.2](#442-処理の流れ) の 2「入力を読む」と同じである。陸地最高峰リストは UTF-8 の CSV で、1 行目は見出しの行 `name,peak_lat,peak_lon`、2 行目からが 1 行 1 件である（[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.10）。空行は無視する。見出しが違う、列の数が 3 でない、`name` が空、`peak_lat`・`peak_lon` が座標として読めない行があれば、書式の違いとして止まる。座標として読めるとは、次の 3 つをすべて満たすことをいう。(1) 有限の 10 進の数である（`NaN`・`Infinity` などは読めないとする）。(2) 緯度が −90 より大きく 90 より小さく、経度が −180 以上 180 未満である（緯度は、三角関数の周期で範囲の外の値が次の (3) の範囲に戻るのを防ぐために先に見る。たとえば緯度 360 は、式の上では画素の範囲に入ってしまう）。(3) [緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile) の式を z=23 で当てて求めた全球の Z15 の画素の行と列が、どちらも 0 以上 8388607 以下に入る（Web メルカトルの緯度の限界は 85.0511287798066 度なので、この限界より外の緯度は (3) で外れる。限界を定数で書くと、8 桁に丸めた 85.05112878 のように範囲の外の画素に出る値が通るため、結果の画素で決める）。たとえば、緯度 ±360 と ±90 は (2) で、±85.05112878 は (3) で（式の結果の行は −1 と 8388608 になる）外れ、緯度 35.0 は通る。3 の数の検査も同じ。見出しの行だけ（0 件）でもよい。CMP3 が起動前提条件の検査で `--check-land-peaks` を付けて呼んだときは（[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」、[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」）、陸地最高峰リストだけをこの 1 のとおり読んで確かめ、無いか読めないか書式が違えば終了コード 1、合っていれば 0 を返し、2 から先は行わない。
 2. **読むファイルを選ぶ**。`$DATA_DIR/results/csv/` の下の `.csv` のうち、名前（`.csv` を除いたもの）が通常の解析識別子 `3-<4 桁の数字>` か、広域の解析識別子 `<4・5・6 のどれか>-<4 桁の数字>-<NW・NE・SW・SE のどれか>` の形のものを対象にする（[FR-007](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用) の命名）。`--mesh` があれば、通常のうち `<4 桁の数字>` が `--mesh` の示すコード（[2.4.3](#243-メッシュ範囲)）のどれかに一致するものだけを対象にし、広域は対象にしない（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合)、[ADR-SRS-023](decisions/ADR-SRS-023-fr008-merge-input-mesh-list-semantics.md)）。`--mesh` のコードに対応する通常のファイルが無ければ、そのコードを警告に並べて続ける（CMP4（地形解析エンジン）が対象外のコードを飛ばしたときなどに起きる）。名前がどちらの形にも合わない `.csv` は読まず、パスを警告に並べて続ける（[DEC84](#484-設計判断)「名前の規則に合わないファイルは読まずに警告する」）。`.csv` でないファイル（`.meshset`、per-mesh ピーク候補 GeoJSON）は見ない。対象が 1 つも無ければ止まる。
 3. **行を読む**。対象のファイルを名前の昇順に 1 つずつ読み、次を確かめる。外れれば止まる。
    - 1 行目が [FR-007](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用) の出力カラムの見出しと同じ並びである。
@@ -2898,9 +2904,9 @@ CMP3（パイプライン制御）は、終了コード 1 を呼んだ FR の異
 
 #### 4.9.1 目的と範囲
 
-[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の SOTA サミットリストとの突合と match_status の判定を CMP5（統合・突合）が行う方式を定める。この要件は、`merged_peak.csv` のピークと SOTA サミットリスト CSV の現役のサミットを、`merged_peak.geojson` のアクティベーションゾーン（以下 AZ）と delete判定ゾーンで突き合わせ、ピークとサミットの match_status、主ピーク、市区町村と地域、仮サミットコードを決め、`merged_summit.geojson` と `merged_summit.xlsx` を書き、不備ゲートを検査するものである。CMP3（パイプライン制御）がフェーズ4 で呼ぶ（[2.2.3](#223-コンポーネント間のデータの流れとインターフェース)）。本節は、入力の読み方と検査、ピークとゾーンの突き合わせ、ゾーンの内外の判定、match_status と主ピーク、市区町村と地域の照合、仮サミットコードの採番での比べ方、止める場面の順序と不備ゲート、メモリと、2 つの出力の組み立て（フィーチャと行の並び、値の求め方と書き方、SOTA 既存サミット GeoJSON の読み方、metadata、書き方）を決める。
+[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の SOTA サミットリストとの突合と match_status の判定を CMP5（統合・突合）が行う方式を定める。この要件は、`merged_peak.csv` のピークと SOTA サミットリスト CSV の現役のサミットを、`merged_peak.geojson` のアクティベーションゾーン（以下 AZ）と delete判定ゾーンで突き合わせ、ピークとサミットの match_status、主ピーク、市区町村と地域、仮サミットコードを決め、山岳データ登録変更リストの申請（SOTA 日本支部に申請済みで現行のリストに未反映の申請）を候補に当てて申請済みの判定を付け、`merged_summit.geojson` と `merged_summit.xlsx` を書き、不備ゲートを検査するものである。CMP3（パイプライン制御）がフェーズ4 で呼ぶ（[2.2.3](#223-コンポーネント間のデータの流れとインターフェース)）。本節は、入力の読み方と検査、ピークとゾーンの突き合わせ、ゾーンの内外の判定、match_status と主ピーク、市区町村と地域の照合、仮サミットコードの採番での比べ方、止める場面の順序と不備ゲート、メモリと、2 つの出力の組み立て（フィーチャと行の並び、値の求め方と書き方、SOTA 既存サミット GeoJSON の読み方、metadata、書き方）を決める。
 
-- 対象: 入力の読み方と検査、ピークとゾーンの突き合わせ、ゾーンの内外の判定、AZ と delete判定ゾーンとの突き合わせ、主ピーク、市区町村と地域の照合、仮サミットコード、止める場面の順序、不備ゲートの検査、メモリ、異常系、2 つの出力の組み立て
+- 対象: 入力の読み方と検査（登録変更リストの選び方と読み方を含む）、ピークとゾーンの突き合わせ、ゾーンの内外の判定、AZ と delete判定ゾーンとの突き合わせ、主ピーク、市区町村と地域の照合、仮サミットコード、申請済みの判定（登録変更リストの申請を山岳 ID と AZ で候補に当てること）、止める場面の順序、不備ゲートの検査、メモリ、異常系、2 つの出力の組み立て
 - 決定済みで参照だけするもの:
   - 現役のサミットの絞り込み（[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)、[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)）、`peak.match_status` と `summit.match_status` の決め方の順（判定の 3 の読みは [DEC95](#494-設計判断)「`dominant` は削除の候補の主ピークとする」）、複数登録の保留単位（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)）、主ピークの候補と選び方（[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md)）、仮サミットコードの形と採番の順と連番上限（[ADR-SRS-031](decisions/ADR-SRS-031-provisional-code-limit-configurable.md)）、不備ゲートの 3 条件と、2 つの出力を書いてから止めること（[ADR-SRS-033](decisions/ADR-SRS-033-defect-confirmation-via-xlsx.md)・[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）（どれも [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）
   - `merged_peak.csv` の 13 列と値（[4.8.2](#482-処理の流れ) の 3「行を読む」・7「書き出す」。[DEC83](#484-設計判断)「`merged_peak.csv` は Z15 の画素の順」）、ゾーンの形（[4.16.2](#4162-処理の流れ)。[DEC71](#4164-設計判断)「輪郭は塗った画素の境界をたどる」、[DEC72](#4164-設計判断)「穴は内側の環として出す」）とピークごとの選び方（[4.18.2](#4182-処理の流れ)。[DEC75](#4184-設計判断)「同じピークのゾーンは代表行の窓のものを優先して採る」、[DEC76](#4184-設計判断)「ピークは Z15 の画素で突き合わせ、ゾーンは写す」、[DEC78](#4184-設計判断)「ゾーンの欠けたピークがあれば止める」）
@@ -2911,15 +2917,27 @@ CMP3（パイプライン制御）は、終了コード 1 を呼んだ FR の異
 
 #### 4.9.2 処理の流れ
 
-CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通しの最後と `--phase 4`。[2.2.3](#223-コンポーネント間のデータの流れとインターフェース)）。入力は、`$DATA_DIR/results/merged_peak.csv`、`$DATA_DIR/results/merged_peak.geojson`、SOTA サミットリスト CSV（`$DATA_DIR/ref/summitslist.csv`）、N03 前処理済み地域 GeoJSON（`$DATA_DIR/boundaries/regions.geojson`）と市区町村 GeoJSON（`$DATA_DIR/boundaries/municipalities.geojson`。[4.17.2](#4172-処理の流れ)）、設定の `provisional_code_max_prefix`・`unmatched_summit_threshold`（[2.3.2](#232-設定ファイル)）である。SOTA 既存サミット GeoJSON（`sota_geojson_version`）と標高タイルの mtime は、出力の組み立てで使う（下の「出力の組み立て」）。
+CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通しの最後と `--phase 4`。[2.2.3](#223-コンポーネント間のデータの流れとインターフェース)）。入力は、`$DATA_DIR/results/merged_peak.csv`、`$DATA_DIR/results/merged_peak.geojson`、SOTA サミットリスト CSV（`$DATA_DIR/ref/summitslist.csv`）、山岳データ登録変更リスト（`$DATA_DIR/ref/sota_updatelist_YYYY.xhtml`。下の「登録変更リストの読み方」）、N03 前処理済み地域 GeoJSON（`$DATA_DIR/boundaries/regions.geojson`）と市区町村 GeoJSON（`$DATA_DIR/boundaries/municipalities.geojson`。[4.17.2](#4172-処理の流れ)）、設定の `provisional_code_max_prefix`・`unmatched_summit_threshold`（[2.3.2](#232-設定ファイル)）である。SOTA 既存サミット GeoJSON（`sota_geojson_version`）と標高タイルの mtime は、出力の組み立てで使う（下の「出力の組み立て」）。
 
 **ゾーンの内外**：点がゾーンの中にあるかは、次のとおり判定する（[DEC86](#494-設計判断)「ゾーンの内外は Z15 の画素の中心で判定する」）。点の緯度経度に [緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile) の式を z=23 で当てて全球の Z15 の画素の座標 (gx, gy) を求め（式は [4.7.2](#472-処理の流れ) の 5「対象ピークの照合」と同じ）、その画素の中心 (gx + 0.5, gy + 0.5) の緯度経度（[4.7.2](#472-処理の流れ) の 3「ピークの緯度経度を求める」と同じ求め方）が、ゾーンの Polygon か MultiPolygon の内側にあれば中とする。ゾーンは塗った画素をちょうど合わせた形なので（[DEC71](#4164-設計判断)「輪郭は塗った画素の境界をたどる」・[DEC72](#4164-設計判断)「穴は内側の環として出す」）、画素の中心は輪郭の線の上に乗らず、中にあることは点の画素が塗られていることと同じになる。AZ と delete判定ゾーンのどちらにも、この規則を使う。
 
 **数の比べ方**：`peak_elev`・`prominence`・`peak_lat`・`peak_lon` は、`merged_peak.csv` の文字列を 10 進の値として読んで比べ、浮動小数にしない（[DEC92](#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」）。距離は [4.8.2](#482-処理の流れ) の 5「陸地最高峰の海面確定を当てる」の大円距離とする。
 
+**登録変更リストの読み方**：山岳データ登録変更リストは、3 で SOTA サミットリスト CSV を読んだ後に、次の順で読む。仕様は [SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト) と [ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md) の Decision 2 で、ここには、HLD で決める手順だけを書く。読み込みの誤りは 1〜4 の入力の誤りで、[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」の (1) に入る。
+
+- ファイルの選び方：`find_updatelist` が `$DATA_DIR/ref/` 直下から、ファイル名の全体が正規表現 `sota_updatelist_[0-9]{4}\.xhtml` に合う（`re.fullmatch`）ものを探し、年が最大のものを採る。1 件も無ければ止まる。数字は ASCII の 0〜9 だけにする（[DEC188](#494-設計判断)「登録変更リストのファイル名は ASCII の年だけ」）。採ったファイル名（パスを含まない）をログと `metadata` に残す。
+- 読み方：標準ライブラリの `xml.etree.ElementTree` で XML として読む（[DEC187](#494-設計判断)「登録変更リストは標準の XML 読み取りで読む」）。ファイルの中に `<!ENTITY` の宣言があるか、内部サブセットを持つ DOCTYPE があれば、実体の展開を使わせないために、XHTML として読めないものとして止まる。XML として整形式でなければ止まる。画像・スタイル・スクリプトは、要素として読み飛ばし、取りに行かず、実行しない。
+- 格子への展開：表の見出しは 2 行で、`rowspan`・`colspan` で結合したセルを含む（2026-10-19 に確かめた実物では、「アクション」「既存山岳ID もしくは 県名」「備考」「申請者・申請日」が `rowspan=2`、「変更前」「変更後」が `colspan=3`、「新規追加詳細」が `colspan=6`）。見出しの行もデータの行も、`rowspan`・`colspan` を格子に展開してから、列の位置を決める。
+- 列の特定：見出し（空白を揃えてから比べる）の文字で、アクション、既存山岳ID もしくは 県名、変更後の「標高m」、新規追加詳細の「位置」、申請者・申請日の列を引く。1 つでも引けなければ止まる。
+- 年の表と Update の日付：表の中は、「YYYY年」のセルを含む題の行で年の表が始まる。続く行に `YYYY-MM-DD` と「Update」のセルが並ぶ行があり、その日付を年の表の Update の日付とする（読めなければ空にして知らせる行に足す）。見出しの 2 行の後、次の年の表の題の行までを、その年の表の申請の行とする。申請の行には、年の表ごとに、見出しの後から 1 で数える通し番号を付ける。
+- 行の分け方と揃え方：[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト) の「行の分け方」のとおり。アクションの欄が空の行と見出しの行は読み飛ばし、「追加」「変更」「削除」の行を申請の行、それ以外の語の行を読めない行とする。表記の揺れは、読むときに揃える（全角・半角、前後の空白、標高の末尾の `m`、座標の区切りの `,`・`，`・`、`・空白）。標高の数と座標の数は 10 進の値として読み、浮動小数にしない（[DEC104](#494-設計判断)「入力から来る数は 10 進の値を変えずに書く」）。
+- 申請者と申請日の分け方：「申請者・申請日」は 1 つの欄に、「コールサイン、全角か半角の空白、`YYYY/M/D`」の形で入る（2026-10-19 の実物は、291 の申請の行のうち 284 行が `YYYY/MM/DD`、3 行が日が 1 桁、2 行が空欄、2 行が申請者を 2 人含む）。欄の中の `[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}` の最初の 1 つを申請日とし、`YYYY-MM-DD` に揃える。暦にない日付や、日付が無い欄は、申請日が読めない行（読めない行）とする。日付を除いた残りの前後の空白を除いたものを申請者とし、文字列を揃えるだけで分割しない（空なら空文字）。
+- 同じ申請の重ね合わせ：アクション、山岳 ID か追加の座標、変更後の標高、申請者、申請日が同じ申請が複数の年の表にあれば、1 つに数え、載っている年をすべて残す。
+- 取り込む申請：追加、削除、バンドをまたぐ変更だけを取り込む（[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト)。バンドの算出は `derive_attributes` の `points` と同じ表を使う）。名称・座標だけの変更とバンドの変わらない変更は、取り込まず、知らせない。
+
 1. **`merged_peak.csv` を読む**。1 行目が [4.8.2](#482-処理の流れ) の 7「書き出す」の 13 列の見出しと同じ並びであることと、各行の値が次のとおり読めることを確かめる。`peak_lat`・`peak_lon` が [4.8.2](#482-処理の流れ) の 1「リストを読む」の意味で座標として読め、`peak_elev`・`col_lat`・`col_lon` が有限の 10 進の数、`key_col_resolved` が `true` か `false`、`key_col_resolved=true` の行の `col_elev`・`prominence` が有限の 10 進の数、`key_col_resolved=false` の行の `col_elev`・`prominence` が空欄で `col_lat`・`col_lon` が数として 0、`col_margin_px` が整数、`analysis_id` が空でない、`analysis_count` が整数、`expected_count` が整数か空欄、`stability` が `confirmed`・`unstable`・`-` のどれかである。各行の `peak_lat`・`peak_lon` に上の式を当てて Z15 の画素の座標を求め、それを鍵にした表を作る（[DEC87](#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」）。同じ鍵の行が 2 つ以上あれば止まる。各行を、以下ピークと呼ぶ。陸地最高峰の海面確定の行（[4.8.2](#482-処理の流れ) の 5「陸地最高峰の海面確定を当てる」）は [FR-006](20_SRS.md#fr-006-コル検出プロミネンス計算) の海面確定の行と同じ値なので、区別せずに扱う。0 行でも続ける（すべての現役のサミットが `unmatched` になる）。
 2. **`merged_peak.geojson` を読む**。FeatureCollection でない、`feature_type` が [4.16.2](#4162-処理の流れ) の 5 種類のどれでもない Feature がある、ゾーン（`feature_type` が `activation_zone`・`delete_zone`）の Feature の `properties` に `peak_lat`・`peak_lon`・`area_complete` が無いか値が読めない、ゾーンのジオメトリが Polygon でも MultiPolygon でもない、のどれかなら書式の違いとして止まる。ゾーンの Feature について、`properties` の `peak_lat`・`peak_lon` から 1 と同じ式で Z15 の画素の座標を求め、1 の表と突き合わせる（[DEC87](#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」）。表に無いピークのゾーンがある、同じピークの同じ種類のゾーンが 2 つ以上ある、AZ と delete判定ゾーンのどちらかが無いピークがある、のどれかなら止まる。ゾーンのジオメトリは形を変える修正をしない（[DEC71](#4164-設計判断)「輪郭は塗った画素の境界をたどる」で OGC の意味で妥当な形である）。`area_complete` は 9 の不備ゲートに使う。点と線の Feature（`peak`・`key_col`・`peak_col_link`）は読まない（出力では `merged_peak.csv` から作る）。
-3. **SOTA サミットリスト CSV を読む**（[DEC88](#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」）。1 行目の `SOTA Summits List (Date=DD/MM/YYYY)` から基準日を読み、読めなければ止まる（[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)）。2 行目の見出しに `SummitCode`・`SummitName`・`AltM`・`Latitude`・`Longitude`・`ValidTo` のどれかが無ければ止まる。`SummitCode` が `JA` で始まる行（廃止済みを含む）について、同じ `SummitCode` の行が 2 つ以上ある、`Latitude`・`Longitude` が [4.8.2](#482-処理の流れ) の 1「リストを読む」の意味で座標として読めない、`AltM` が整数でない、`ValidTo` が `DD/MM/YYYY` の日付として読めない、のどれかなら止まる。`JA` で始まらない行は確かめない。`ValidTo` が基準日以降の行を現役のサミットとし（[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)）、以下サミットと呼ぶ。
+3. **SOTA サミットリスト CSV と登録変更リストを読む**（[DEC88](#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」）。まず SOTA サミットリスト CSV を、次のとおり読む。1 行目の `SOTA Summits List (Date=DD/MM/YYYY)` から基準日を読み、読めなければ止まる（[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)）。2 行目の見出しに `SummitCode`・`SummitName`・`AltM`・`Latitude`・`Longitude`・`ValidTo` のどれかが無ければ止まる。`SummitCode` が `JA` で始まる行（廃止済みを含む）について、同じ `SummitCode` の行が 2 つ以上ある、`Latitude`・`Longitude` が [4.8.2](#482-処理の流れ) の 1「リストを読む」の意味で座標として読めない、`AltM` が整数でない、`ValidTo` が `DD/MM/YYYY` の日付として読めない、のどれかなら止まる。`JA` で始まらない行は確かめない。`ValidTo` が基準日以降の行を現役のサミットとし（[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)）、以下サミットと呼ぶ。廃止済みの行の `SummitCode` の集合と、`JA` で始まる全行（廃止済みを含む）から作る地域コードからアソシエーションへの対応も持つ（登録変更リストの山岳 ID の照合に使う。下の「申請済みの判定」の 1「山岳 ID を照合する」）。続けて、山岳データ登録変更リストを、下の「登録変更リストの読み方」のとおり読む。
 4. **地域と市区町村の GeoJSON を読み、索引を作る**（[DEC94](#494-設計判断)「ゾーンと地域は空間索引で引く」）。どちらかが無ければ、その旨を警告して続ける。地域が無ければ、すべての点を地域に入らないものとして扱い（`region_name` は空文字、仮サミットコードのエリアは `ZZ`）、市区町村が無ければ `municipality` を空文字にする（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。無いファイルについては、7 の点ごとの警告を出さない（この警告 1 つにまとめる）。あって、読めないか書式が違う（FeatureCollection でない、地域の Feature に `assoc`・`area_code`・`region_name`、市区町村の Feature に `municipality`・`code` が無い、ジオメトリが Polygon でも MultiPolygon でもない）なら止まる。AZ、delete判定ゾーン、地域、市区町村のそれぞれについて shapely の `STRtree` を作り（[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md) の空間インデックス）、点ごとに索引で候補を絞ってから内外を見る。
 5. **AZ と突き合わせる**。サミットごとに、上の「ゾーンの内外」で、その座標を中に含む AZ を求める。2 つ以上のピークの AZ に含まれるサミットは、次のとおり扱う（[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」）。含む AZ のピークのうち `key_col_resolved=true` のものが 2 つ以上あれば、AZ が互いに素であるという [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の前提に反するので、すべてのサミットを調べ終えてから、当たったものをすべて挙げて止まる。`key_col_resolved=true` のものが 1 つなら、そのピークの AZ に含まれるとする。0 なら、`key_col_resolved=false` のピークのうち `peak_elev` の降順、`peak_lat` の降順、`peak_lon` の昇順で最初のものの AZ に含まれるとする（AZ の重なる 2 つのピークのうち低い方は、本当のプロミネンスがアクティベーションゾーン標高差以下のピークである。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の互いに素の証明）。どちらの場合も重なりを警告に並べて続ける（未確定のピークがあるので、9 の不備ゲートで止まる）。ピークごとに、AZ に含まれるサミットの `SummitCode` の数を数え、2 以上ならそのピークとそれらのサミットを `ambiguous`、1 なら `matched` とする（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の判定の 1・2、[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)）。
 6. **delete判定ゾーンと突き合わせ、主ピークを選ぶ**。どの AZ にも含まれないサミットごとに、その座標を中に含む delete判定ゾーンを持つピークを候補とする（`matched`・`ambiguous` のピークも候補に入る。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md)）。候補が無ければそのサミットを `unmatched` とし、あれば `delete` とし、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の主ピーク特定のとおり候補から主ピークを 1 つ選ぶ（`prominence` の最小、`key_col_resolved=false` のピークは最大として扱い、同じなら `peak_lat` の降順、`peak_lon` の昇順）。主ピークの `peak_lat`・`peak_lon` から、サミットの `Latitude`・`Longitude` までの距離を `dominant_peak_dist_m` とする。AZ にサミットが無いピークのうち、`delete` のサミットの主ピークに 1 回以上選ばれたものを `dominant`、選ばれなかったものを `new` とする（[DEC95](#494-設計判断)「`dominant` は削除の候補の主ピークとする」）。選ばれた主ピークが `ambiguous` の `delete` のサミットは、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の複数登録の保留単位に入る（出力での扱いは下の「出力の組み立て」）。
@@ -2927,9 +2945,9 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 8. **仮サミットコードを付ける**。`new`・`dominant` のピークに、7 で求めた地域の `assoc` と `area_code` で `<assoc>/<area_code>-<接頭の文字><2 桁の数>` を付ける（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。エリアは (`assoc`, `area_code`) の組とし、地域に入らないピークはまとめて 1 つのエリア `ZZ` にする（コードは `ZZ/ZZ-A00` の形。[DEC92](#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」）。エリアの中を [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の採番の順（`peak_elev` の降順、`prominence` の降順で `key_col_resolved=false` は最後、`peak_lat` の降順、`peak_lon` の昇順）に並べ、`A00` から付ける。`A99` の次は `B00` とする。`provisional_code_max_prefix` の文字の `99` を超えるエリアがあれば、すべてのエリアを数え終えてから、超えたエリアと件数をすべて挙げて止まる（[ADR-SRS-031](decisions/ADR-SRS-031-provisional-code-limit-configurable.md)、[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」）。地域の GeoJSON が無いために全ピークが `ZZ` に入って超えたときは、そのことをメッセージに書く。
 9. **書き出し、不備ゲートを検査する**（[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」）。`merged_summit.geojson` と `merged_summit.xlsx` を、下の「出力の組み立て」のとおり組み立てて書く。書き込みに失敗すれば、置いた方も消して終了コード 1（[2.5.5](#255-書き込みの失敗)、[DEC101](#494-設計判断)「2 つの出力はそろって置くか、どちらも置かない」）。書いた後に [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の不備ゲートの 3 条件を調べる。`unmatched` のサミットの数が `unmatched_summit_threshold` を超える、AZ か delete判定ゾーンが `area_complete=false` のピークがある、`key_col_resolved=false` のピークがある、の 3 つである。1 つでも当たれば、当たった条件をすべて挙げて終了コード 4 を返し（[2.5.1](#251-終了コード)）、どれにも当たらなければ 0 を返す。
 
-通常のログ（[2.5.3](#253-利用者向けのメッセージ)）には、ピークの数、現役のサミットの数（廃止済みとして除いた数も）、`peak.match_status` ごとと `summit.match_status` ごとの数、エリアごとの仮サミットコードの数を書く。`unmatched` のサミットと複数登録の組は警告に並べる（[4.9.3](#493-異常系)）。
+通常のログ（[2.5.3](#253-利用者向けのメッセージ)）には、ピークの数、現役のサミットの数（廃止済みとして除いた数も）、`peak.match_status` ごとと `summit.match_status` ごとの数、エリアごとの仮サミットコードの数を書く。登録変更リストについては、採ったファイル名、申請の行の数、取り込んだ申請の数、`pending_match` が `same` と `different` の候補の数、知らせる行の数を書く（[5.7.2](#572-処理の流れ) の 7「結果の要約」）。`unmatched` のサミットと複数登録の組は警告に並べ、登録変更リストの知らせる行（読めない行、SOTA サミットリストに無い ID の行、当たらなかった追加の申請、Update の日付が読めない年の表）も 1 件ずつ警告に並べる（[4.9.3](#493-異常系)。止めず、不備ゲートに足さない）。
 
-**出力の組み立て**：2 つの出力は、判定の結果（1〜8）から次のとおり組み立てる。属性の名前と意味、`category` と確認用の属性（`review_reason`・`review_group_id`・`review_decision`・`review_note`・`application_exclusion`・`exclusion_note`）の決め方、フィーチャの構成、XLSX の行の規則と列、rationale の書式、metadata の項目は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) と [FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の出力カラムのとおりで、ここでは SRS が HLD に委ねた並びと、値の求め方と書き方を決める。
+**出力の組み立て**：2 つの出力は、判定の結果（1〜8）と、続けて行う下の「申請済みの判定」の結果から、次のとおり組み立てる。属性の名前と意味、`category` と確認用の属性（`review_reason`・`review_group_id`・`review_decision`・`review_note`・`application_exclusion`・`exclusion_note`）の決め方、フィーチャの構成、XLSX の行の規則と列、rationale の書式、metadata の項目は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) と [FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成) の出力カラムのとおりで、ここでは SRS が HLD に委ねた並びと、値の求め方と書き方を決める。
 
 1. **SOTA 既存サミット GeoJSON を読む**（[DEC99](#494-設計判断)「SOTA 既存サミット GeoJSON の不備では止めない」）。
    - 読むファイル：`sota_geojson_version` が未設定か、`$DATA_DIR/ref/geojson_v<N>/` が無ければ、[2.3.2](#232-設定ファイル) のとおり警告し、`summit_name_jp` をすべて空文字にする。あれば `ja0_v<N>.geojson`〜`ja9_v<N>.geojson` を読む（[SRS §7.2.5](20_SRS.md#725-sota-既存サミット-geojsongeojson_vn)）。無いファイルと、読めないか FeatureCollection でないファイルは使わず、警告に挙げる。
@@ -2940,7 +2958,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
    - `points` は、ピークでは `peak_elev` の小数点以下を切り捨てた整数 m を、サミットでは `AltM` を、[標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) に当てて求める（サミットのものが `sota_points`）。コルと AZ の `points` はピークのものとする。`is_band_change_candidate` は、`matched` のピークでは、ピークの `points` と AZ の中のサミットの `sota_points` が違えば true、同じなら false とし、ほかのピークでは null とする。
    - 算出表に無い標高：標高が算出表に無い（150m 未満）ときは、`points`（サミットでは `sota_points`）を null にする（[DEC170](#494-設計判断)「算出表に無い標高のポイントは null にする」）。`matched` のピークで、ピークの `points` か AZ の中のサミットの `sota_points` が null なら、`is_band_change_candidate` を false にする（`category` は `no_change`、rationale は作らない）。null にしたピークとサミットは警告に挙げる。
    - `dominant_peak_dist_m` は、4.9.2 の 6 で求めた距離を小数点以下 1 桁にして書く。
-   - `category` と確認用の属性は、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当ての規則で決める。`review_group_id` の SummitCode の並びと、以下の `SummitCode` の順は、文字列の順（Unicode の符号位置の順）とする。`review_decision`・`review_note`・`application_exclusion`・`exclusion_note` はすべて空文字にする（[SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson)）。
+   - `category` と確認用の属性は、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当ての規則で決める。`review_group_id` の SummitCode の並びと、以下の `SummitCode` の順は、文字列の順（Unicode の符号位置の順）とする。`review_decision`・`review_note`・`application_exclusion`・`exclusion_note` はすべて空文字にし、`pending_return` はすべて false にする。`pending_applications`・`pending_match`・`pending_note` は、続けて下の「申請済みの判定」で決める（[SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson)）。
    - rationale の書式：[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の ※2・※4・※5 の書式で作る。
    - rationale の数：`{peak_lat}`・`{peak_lon}`・`{col_lat}`・`{col_lon}`・`{col_elev}`・`{prominence}` には `merged_peak.csv` の文字列をそのまま入れ（[DEC104](#494-設計判断)「入力から来る数は 10 進の値を変えずに書く」）、`key_col_resolved=false` のピークでは `{col_lat},{col_lon}` を「未確定」に、`{col_elev}m`・`{prominence}m` を単位ごと「未確定」にする（`コル位置：未確定`・`コル標高：未確定`）。
    - rationale の海面：海面で確定したピーク（[DEC100](#494-設計判断)「海面で確定したコルは点にせず、XLSX でも空欄にする」の条件）では `{col_lat},{col_lon}` を「海面」にし（`コル位置：海面`。[ADR-SRS-068](decisions/ADR-SRS-068-col-position-in-add-rationale.md)）、`{col_elev}` は `0.00` になる。
@@ -2951,6 +2969,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
    - タイルの日付：`gsi_tile_latest_date` は、`$DATA_DIR/tiles/` の下のすべての `.png` のファイルの mtime の最大を、同じ UTC の形で書く（[ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)、[DEC33](#414-設計判断)「`Last-Modified` が無い応答では止める」）。PNG が 1 枚も無いか、ディレクトリをたどれなければ、空文字にして警告する。
    - 版：`software_version` は、CMP5（統合・突合）のスクリプトがあるリポジトリで `git describe --tags --dirty --always` を実行した結果とし、失敗したら `unknown` にして警告する（[DEC98](#494-設計判断)「版の文字列は出力を組み立てるときに git から取る」）。
    - 固定の文字列：`attribution`・`source_url`・`license_url` は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の固定の文字列とする。
+   - 登録変更リスト：`updatelist_file` は採ったファイル名（パスを含まない文字列）。`updatelist_updates` は、年の表の並び（新しい年から）を `{"year": 整数, "update": "YYYY-MM-DD" か空文字}` の配列にしたもの。`updatelist_notices` は、知らせる行を `{"kind", "reason", "year", "row", "action", "target", "applicant", "applied_on", "value"}` の配列にしたもの（並びは下の「申請済みの判定」の 7「知らせる行をまとめる」。[DEC189](#494-設計判断)「申請の情報は申請ごとの配列で持つ」）。
 4. **`merged_summit.geojson` を組み立てる**（[DEC96](#494-設計判断)「フィーチャはピークごとに CSV の行の順に並べる」）。最上位は `type`（`FeatureCollection`）、`metadata`、`features` とする。フィーチャは次の順に並べる。
    - 並び（初め）：保留組に入らないピークを `merged_peak.csv` の行の順に並べ、ピークごとに、ピークの点、コルの点、AZ、delete判定ゾーン、ピークとコルを結ぶ線、AZ の中のサミットの点とそれへの線、そのピークを主ピークとする `delete` のサミットの点とそれへの線（`SummitCode` の順）を置く。
    - 並び（次）：`unmatched` のサミットの点を `SummitCode` の順に置く。
@@ -2962,11 +2981,21 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
    - 数：入力から来る数は、10 進の値を変えずに JSON の数として書く（末尾の 0 の有無は問わない。[DEC104](#494-設計判断)「入力から来る数は 10 進の値を変えずに書く」）。
    - 空の値：SRS が空欄とする値は null、空文字とする値は空文字にする。
 5. **`merged_summit.xlsx` を組み立てる**（[DEC97](#494-設計判断)「XLSX の行は行を生む点の順に並べる」、[DEC102](#494-設計判断)「`merged_summit.xlsx` にも出典のシート」）。`openpyxl` が書く作成日時などの文書のプロパティを [NFR-003](20_SRS.md#nfr-003-再現性決定論的出力) の「内容」に入れるかは [#188](https://github.com/jj1xgo/findsummits/issues/188)「XLSX の文書のプロパティを `NFR-003` の内容に入れるか」で決める。
-   - 規則：4 で並べたフィーチャから、行を生む点の選び方、関わるフィーチャの結び方、列の値の取り元、セルの書き方、シートの組み立てを [4.12.2](#4122-処理の流れ) の 1〜5 の規則で行う（[DEC110](#4124-設計判断)「列の値は行を生む点と鍵で結んだフィーチャから取る」、[DEC111](#4124-設計判断)「2 つの一覧は同じ規則を別々に実装し、同値の試験でそろえる」）。規則の正本は [4.12.2](#4122-処理の流れ) で、ここにはバッチだけのことを書く。値は、4 の GeoJSON に書くものと同じ値をとる。
+   - 規則：4 で並べたフィーチャから、行を生む点の選び方、関わるフィーチャの結び方、列の値の取り元、セルの書き方、シートの組み立てを [4.12.2](#4122-処理の流れ) の 1〜5 の規則で行う（[DEC110](#4124-設計判断)「列の値は行を生む点と鍵で結んだフィーチャから取る」、[DEC111](#4124-設計判断)「2 つの一覧は同じ規則を別々に実装し、同値の試験でそろえる」）。規則の正本は [4.12.2](#4122-処理の流れ) で、ここにはバッチだけのことを書く。値は、4 の GeoJSON に書くものと同じ値をとる。`pending_match`・`pending_note`・`pending_return` の 3 列は、行を生む点の同名のプロパティの値を書く（`pending_applications` は列にしない）。
    - 結び付かない行：CMP5 は結ぶ相手を自分で作ったフィーチャから探すので、結び付かない行と、取り元にプロパティが無い行はプログラムの誤りで、出力を書かずに終了コード 1 で止まる（[DEC114](#4124-設計判断)「結び付かない行があればエクスポートを止める」と同じ理由）。
    - 海面のコル：海面で確定したピークの行の `col_lat`・`col_lon`・`col_elev`・`col_margin_px` は、コルの点が無いので空のセルになる（[DEC100](#494-設計判断)「海面で確定したコルは点にせず、XLSX でも空欄にする」）。
    - 書く道具：XLSX は既存の依存の `openpyxl` で、GeoJSON は Python の `json` で書き、新しい依存を足さない（[SRS §6.2.6](20_SRS.md#626-サミット一覧突合後)）。
 6. **書く**（[DEC101](#494-設計判断)「2 つの出力はそろって置くか、どちらも置かない」）。2 つの出力を `$DATA_DIR/results/` の一時ファイルに書き終えてから、`merged_summit.xlsx`、`merged_summit.geojson` の順に本来の名前へ置き換える。途中で失敗したら、置いた方と一時ファイルを消して終了コード 1 にする（[2.5.5](#255-書き込みの失敗)）。
+
+**申請済みの判定**：登録変更リストの申請を、`derive_attributes` が `category` と `points` を決めた後に、候補に当てる（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の「申請済みの判定」。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。候補・`category`・`match_status`・件数・不備ゲートは変えず、`merged_summit.geojson` と `merged_summit.xlsx` に、申請の情報だけを属性として足す。担当者の判断（申請に戻す）は読まない。次の 7 つの手順で行う。
+
+1. **山岳 ID を照合する**。変更と削除の申請の山岳 ID を、`read_summits_list` の返したものと、次の順に照らして、最初に当たったもので決める（[DEC189](#494-設計判断)「申請の情報は申請ごとの配列で持つ」）。(1) 現役の `SummitCode` とそのまま一致、(2) 廃止済みの `SummitCode` とそのまま一致（反映済みなので、何にも当てず、知らせない）、(3) 山岳 ID の `/` の後ろ（`KC-027` のような地域コードと番号）の地域コードが、2 つ以上のアソシエーションに属する（知らせる行 `ambiguous_region`）、(4) `/` の後ろの地域コードと番号が、現役の `SummitCode` の `/` の後ろと一致（アソシエーションの部分だけ違う `JA/KC-027` と `JA5/KC-027` を同じものとして扱う）、(5) 同じく廃止済みの `SummitCode` の `/` の後ろと一致（反映済み）、(6) どれにも無ければ知らせる行 `unknown_id`。当たった `SummitCode` は、SOTA サミットリストの表記に揃えた値として `pending_applications` に書く。
+2. **追加の申請を当てる**。追加の申請の位置の座標を、上の「ゾーンの内外」と同じ手順で Z15 の画素の中心に寄せ、`category=add` のピーク（`match_status` が `new` か `dominant`）の AZ の中に入るか見る。入ればそのピークに「同じ内容」で当てる。2 つ以上のピークの AZ に入るときは、5「AZ と突き合わせる」の未確定のピークの選び方と同じ順（`peak_elev` の降順 → `peak_lat` の降順 → `peak_lon` の昇順）で最初のピークだけに当てる。どの追加の候補の AZ にも、既存サミット（`matched`・`ambiguous` のピーク）の AZ にも入らない追加の申請は、知らせる行 `unmatched_add` にする。座標が読めない申請は、読み込みの時点で知らせる行 `unreadable_row` になっていて、ここには来ない。
+3. **削除と変更の申請を当てる**。1 で決めた `SummitCode` のサミットに当てる。削除の申請は、サミットが削除の候補（`category=delete`）なら「同じ内容」、その `SummitCode` に対応するピークが変更の候補なら、そのピークに「違う内容」で当てる。変更の申請は、対応するピークが変更の候補で、申請の変更後のバンドがピークの `points` と同じなら「同じ内容」、違えば「違う内容」とし、サミットが削除の候補なら「違う内容」とする。候補でないもの（`no_change`・`review`）に当たった申請は、候補の判定を付けない。ただし `unmatched` のサミットへの削除と変更の申請は、サミットの点の `pending_applications` に当たり方「保持」で残す（`pending_match` は空文字。[FR-019](20_SRS.md#fr-019-html-ビューア機能仕様) が担当者指定削除のときに判定し直す）。
+4. **当たり方をまとめる**。候補ごとに、当たった申請を `pending_applications` の並び（申請日の昇順 → アクション → 山岳 ID か座標 → 申請者）にする。1 つの候補に複数の申請が当たれば、「同じ内容」が 1 つでもあれば `pending_match` を `same` に、無ければ `different` にする。当たった申請が無いか、保持だけなら空文字にする。
+5. **`pending_note` を作る**。`build_pending_note` が、`pending_applications` の各申請を「{アクション} {申請日}（{年}年の表）」で書き（複数の年の表に載る申請は、年を新しい順に「・」でつないで「（2026・2025年の表）」と書く）、`／` でつなぐ。並びは `pending_applications` と同じ。申請者を含めない。無ければ空文字にする。
+6. **同じ行のフィーチャへ写す**。`pending_applications`・`pending_match`・`pending_note` は、ピークの点とサミットの点に付ける。コル・AZ・delete判定ゾーン・線には、[4.12.2](#4122-処理の流れ) の行の結び方で同じ行に集まるフィーチャ（除外の属性と同じ範囲）の値をそのまま写す。写した値は、同じ行のどのフィーチャでも同じになる。`pending_return` は全フィーチャ false。
+7. **知らせる行をまとめる**。読み込みの知らせ（読めない行、Update の日付が読めない年の表）と、1・2 の知らせ（`ambiguous_region`・`unknown_id`・`unmatched_add`）を 1 つの並びにする。並びは、年の表がファイルに現れる順 → その表の中では Update の知らせが先 → 申請の行の通し番号の順 → 同じ行では `kind` の順（`unreadable_row`・`unknown_id`・`ambiguous_region`・`unmatched_add`・`unreadable_update`）とする。`updatelist_notices` と警告のログに同じ並びで出す。
 
 **メモリ**：持つのは、`merged_peak.csv` の表、すべてのピークの AZ と delete判定ゾーンのジオメトリと索引、サミット（現役で 7 千件ほど）、地域と市区町村のジオメトリ（市区町村は約 1,900 フィーチャ。[4.17.2](#4172-処理の流れ)）と索引、判定の結果である。ゾーンの大きさは、Key コルかピーク標高からの差で抑えられる（[4.16.2](#4162-処理の流れ)）。実測は [5.2.2](#522-処理の流れ) の「実測の計画」の 4「CMP5 の突合」と [5.5.2](#552-処理の流れ) の「実測の計画」の 3「CMP1・CMP5・CMP6 の処理時間」。
 
@@ -2978,7 +3007,8 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 | `merged_peak.csv` が無いか、読めないか、[4.9.2](#492-処理の流れ) の 1「`merged_peak.csv` を読む」の確かめに外れる | 1 | 止まる |
 | `merged_peak.geojson` が無いか、読めないか、書式が違う（FeatureCollection でない、`feature_type` が [4.16.2](#4162-処理の流れ) の 5 種類のどれでもない、ゾーンの Feature の `properties` に `peak_lat`・`peak_lon`・`area_complete` が無いか値が読めない、ゾーンのジオメトリが Polygon でも MultiPolygon でもない） | 1 | 止まる |
 | `merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違う（表に無いピークのゾーン、同じピークの同じ種類のゾーンが 2 つ以上、ゾーンの欠けたピーク） | 1 | 止まる（[DEC87](#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」） |
-| SOTA サミットリスト CSV が無いか、読めないか、[4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV を読む」の確かめに外れる | 1 | 止まる（[DEC88](#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」、[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)） |
+| SOTA サミットリスト CSV が無いか、読めないか、[4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV と登録変更リストを読む」の確かめに外れる | 1 | 止まる（[DEC88](#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」、[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)） |
+| 山岳データ登録変更リストがパターンに合うファイル名で `$DATA_DIR/ref/` 直下に無い、XML として読めない（整形式でない、`<!ENTITY` の宣言か内部サブセットを持つ DOCTYPE がある）、または使う列を見出しの文字で特定できない（[4.9.2](#492-処理の流れ) の「登録変更リストの読み方」） | 1 | 止まる（突合の前。[DEC187](#494-設計判断)「登録変更リストは標準の XML 読み取りで読む」） |
 | 地域か市区町村の GeoJSON があって、読めないか書式が違う | 1 | 止まる |
 | 2 つ以上の `key_col_resolved=true` のピークの AZ に含まれるサミットがある | 1 | すべてのサミットを調べ終えてから止まる（[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」） |
 | 仮サミットコードの連番上限を超えるエリアがある | 1 | すべてのエリアを数え終えてから止まる（[ADR-SRS-031](decisions/ADR-SRS-031-provisional-code-limit-configurable.md)、[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」） |
@@ -2991,6 +3021,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 | 1 つの AZ に 2 件以上の登録がある | 0 | 警告して続ける（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)。複数登録の組数・登録件数では止めない） |
 | `key_col_resolved=false` のピークの AZ が重なり、2 つ以上の AZ に含まれるサミットがある | 0 | [4.9.2](#492-処理の流れ) の 5「AZ と突き合わせる」のとおり 1 つの AZ に含め、警告して続ける（不備ゲートで止まる。[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」） |
 | 標高が算出表に無い（150m 未満）ピークかサミットがある | 0 | `points` か `sota_points` を null にし、警告して続ける（[DEC170](#494-設計判断)「算出表に無い標高のポイントは null にする」） |
+| 登録変更リストに知らせる行がある（読めない行、SOTA サミットリストに無い ID の行、地域コードが複数のアソシエーションに重なる行、当たらなかった追加の申請、Update の日付が読めない年の表） | 0 | 1 件ずつ警告して続ける（`metadata.updatelist_notices` にも残す。不備ゲートに足さない。[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト)） |
 | SOTA 既存サミット GeoJSON が使えないか不完全（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 1「SOTA 既存サミット GeoJSON を読む」の不備） | 0 | 使える分だけ使い、残りの `summit_name_jp` を空文字にして、警告して続ける（[DEC99](#494-設計判断)「SOTA 既存サミット GeoJSON の不備では止めない」） |
 | `software_version` か `gsi_tile_latest_date` が求められない | 0 | `software_version` は `unknown`、`gsi_tile_latest_date` は空文字を書き、警告して続ける（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」。`software_version` は [DEC98](#494-設計判断)「版の文字列は出力を組み立てるときに git から取る」） |
 
@@ -3001,7 +3032,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 やり直しの案内は、場面ごとに次のとおりにする（メッセージに含める内容は下の表）。
 
 - `merged_peak.csv` と `merged_peak.geojson` の場面：フェーズ2 から通しでやり直すことにする（統合だけをやり直す入口は無い。`--phase 3 --n <N>` も統合をやり直すが、`key_col_unresolved_peaks-<N−1>.csv` を前提とし（[4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」）、どの段まで進んだ組かによって使えるかが変わるので、案内には使わない）。
-- SOTA サミットリスト CSV と連番上限の場面：直してから `--phase 4` を起動し直す。
+- SOTA サミットリスト CSV と登録変更リストと連番上限の場面：直してから `--phase 4` を起動し直す（登録変更リストは、ページをブラウザで保存し直して `$DATA_DIR/ref/` に置く）。
 - 地域の GeoJSON が無いために連番上限を超えたとき：[2.10.3](#2103-フェーズのやり直し) の CMP1（行政区域前処理）の作り直しの手順に従う。
 - 地域と市区町村の GeoJSON の場面：[2.10.3](#2103-フェーズのやり直し) の CMP1 の作り直しの手順に従う。
 
@@ -3011,10 +3042,12 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 |---|---|---|
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`merged_peak.csv` か `merged_peak.geojson` が無いか、読めないか、書式が違う、またはゾーンが `merged_peak.csv` と食い違う | 1 | ファイルのパスと理由（食い違いなら、当たったピークすべての緯度経度とゾーンの種類）、フェーズ2 から通しでやり直す案内（[DEC87](#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」。[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、SOTA サミットリスト CSV が無いか、読めないか、基準日か使う列の見出しが読めないか、`JA` で始まる行に重複したコードか読めない値がある | 1 | ファイルのパスと読めなかった行（重複なら、そのコードと行のすべて）、提供元から落とし直して置いてから `--phase 4` を起動し直す案内（[DEC88](#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」。[4.9.3](#493-異常系)） |
+| CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、山岳データ登録変更リストが無いか、XML として読めないか、使う列を見出しの文字で特定できない | 1 | ファイルのパス（無いときは置き場とファイル名のパターン）と理由、ページを元のまま保存し直して `$DATA_DIR/ref/` に置く案内（ブラウザの保存の種類によっては、HTML に作り直されて XHTML として読めなくなる）、直してから `--phase 4` を起動し直す案内（[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、地域か市区町村の GeoJSON があって、読めないか書式が違う | 1 | ファイルのパスと理由、[2.10.3](#2103-フェーズのやり直し) の CMP1 の作り直しの手順に従う案内（[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、2 つ以上の `key_col_resolved=true` のピークのアクティベーションゾーンに含まれるサミットがある | 1 | 当たったサミットすべてについてコードと緯度経度、当たったピークすべての緯度経度、解析の欠陥として起票して調べる案内（[DEC93](#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」。[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、仮サミットコードの連番上限を超えるエリアがある | 1 | 超えたエリアすべてについてエリアのコードと件数、`provisional_code_max_prefix` を上げてから `--phase 4` を起動し直す案内。地域の GeoJSON が無いために全ピークが `ZZ` に入って超えたときは、そのことと、[2.10.3](#2103-フェーズのやり直し) の CMP1 の作り直しの手順に従う案内（[ADR-SRS-031](decisions/ADR-SRS-031-provisional-code-limit-configurable.md)。[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`merged_summit.xlsx` の行を生む点に結ぶべき相手が無いか 2 つ以上ある、または取り元のフィーチャにプロパティが無い（プログラムの誤り） | 1 | 当たった行を生む点すべてについて、`feature_type` と緯度経度（サミットならコード）、結べなかった相手か欠けたプロパティの名前、プログラムの欠陥として起票して調べる案内（[4.9.2](#492-処理の流れ) の「出力の組み立て」の 5「`merged_summit.xlsx` を組み立てる」。[4.9.3](#493-異常系)） |
+| CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、登録変更リストに知らせる行がある（`WARNING:` で始める） | 0 | 知らせる行ごとに、種類、理由、年の表、その表の中の行の通し番号、アクションの欄の値、山岳 ID か県名、申請者、申請日、問題の値、全体の件数。止まらないこと（直さなくても続けられること）と、ページの元の行を確かめて直すか放置するかを利用者が決める案内 |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、地域か市区町村の GeoJSON が無い（`WARNING:` で始める） | 0 | 無いファイルのパスと、地域なら仮サミットコードのエリアがすべて `ZZ` になり `region_name` が空文字になること（全国の実行では連番上限で止まりうる）、市区町村なら `municipality` が空文字になること、[2.10.3](#2103-フェーズのやり直し) の CMP1 の作り直しの手順の案内（[4.9.3](#493-異常系)） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、地域か市区町村のどれにも入らない点がある（`WARNING:` で始める） | 0 | 点すべてについて、ピーク・コル・サミットの別と緯度経度、サミットならコード、ピークなら `peak.match_status` と仮サミットコードか AZ の中のコード（[DEC91](#494-設計判断)「地域と市区町村は境界の上を内とし、並びの最初のものを採る」。[4.9.2](#492-処理の流れ) の 7「地域と市区町村を照合する」） |
 | CMP5 の [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) で、`unmatched` のサミットがある（`WARNING:` で始める） | 0 | `unmatched` のサミットすべてのコード・名前・緯度経度と件数（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)。件数が `unmatched_summit_threshold` を超えれば不備ゲートの行も出る） |
@@ -3034,7 +3067,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
   - 理由: [FR-018](20_SRS.md#fr-018-per-mesh-ピーク候補-geojson-統合) は同じ規則で突き合わせて、各ピークに AZ と delete判定ゾーンを 1 つずつ書き（[DEC76](#4184-設計判断)「ピークは Z15 の画素で突き合わせ、ゾーンは写す」、[DEC78](#4184-設計判断)「ゾーンの欠けたピークがあれば止める」）、余分なゾーンを捨てるので、正しい組なら食い違わない。食い違うのは、2 つのファイルが別々の実行から来たとき（手で消したか差し替えたとき）に限られる（[DEC79](#2104-設計判断)「フェーズ3 ではピーク候補 GeoJSON を統合直前に消す」で組はそろう）。入力の壊れとして早く止めれば、解析の不備（終了コード 4）と取り違えない。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の突合のキーは `peak_lat`・`peak_lon` で、[FR-018](20_SRS.md#fr-018-per-mesh-ピーク候補-geojson-統合) は CSV の文字列を数として書くので、画素で突き合わせればその字句の中にある。
   - 却下: 余分なゾーンは捨てて続け、欠けだけで止める案。古い組を黙って使い続ける場面を見逃しうる（持ち主の判断、2026-10-04）。
   - 却下: 欠けたピークを不備として全件を評価し、不備ゲートで止める案。入力の壊れと解析の不備が同じ終了コードになり、原因を取り違えやすい（持ち主の判断、2026-10-04）。
-- DEC88（サミットリスト CSV の JA の行の誤りで止める）〔上位文書〕: 確かめることと止める場面は、[4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV を読む」のとおり。
+- DEC88（サミットリスト CSV の JA の行の誤りで止める）〔上位文書〕: 確かめることと止める場面は、[4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV と登録変更リストを読む」のとおり。
   - 理由: [SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv) は、重複したコードの処置を未定義とし、先勝ちなどの採用規則を設けないとしている。止めれば採用規則を作らずに済む。読めない行を飛ばすと、そのサミットが突合から消え、近くのピークが `new` として誤って申請の候補になりうる。手元の版（2026-04-20）では、`JA` で始まる 7,211 行に重複も空欄も無く、`AltM` はすべて整数だった（2026-10-04 に計算）ので、いまの版では止まらない。提供元の書式が変わったときに、黙って誤った突合をせずに済む。
   - 却下: 読めない行と重複したコードを警告に並べて飛ばし、続ける案。飛ばしたサミットが突合から消える（持ち主の判断、2026-10-04）。
   - 却下: 現役の行だけを確かめる案。`ValidTo` が読めない行は、現役かどうかを決められない（持ち主の判断、2026-10-04）。
@@ -3061,7 +3094,7 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 - DEC92（採番と主ピークの比べ方は 10 進の値で行う）〔上位文書・NFR〕: 比べ方は [4.9.2](#492-処理の流れ) の「数の比べ方」、距離の式は [4.8.2](#482-処理の流れ) の 5「陸地最高峰の海面確定を当てる」、採番のエリアは [4.9.2](#492-処理の流れ) の 8「仮サミットコードを付ける」のとおり。
   - 理由: `merged_peak.csv` に書いた 10 進の値をその値どおりに比べ、順と主ピークを処理系の浮動小数の読み方に預けない。同じ入力から同じ順と同じ主ピークが出る（[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）。[DEC83](#484-設計判断)「`merged_peak.csv` は Z15 の画素の順」と同じく、比べ方が処理系の浮動小数に左右されない。エリアを組にするのは、仮サミットコードが `<assoc>/<area_code>-` で始まり、同じ `area_code` でもアソシエーションが違えば別の番号の列になるためである。距離の式を HLD の中で 1 つにする。
   - 却下: 数を浮動小数で読んで比べる案。比べた結果が処理系の浮動小数の読み方に預けられる（持ち主の判断、2026-10-04）。
-- DEC93（入力の誤りは書かずに止め、不備ゲートは書いて止める）〔上位文書・外部参照〕: 止める場面を次の順に見る。(1) 入力の誤り（[4.9.2](#492-処理の流れ) の 1〜4）は、突合の前に終了コード 1。(2) 判定と採番の中の止める場面（2 つ以上の `key_col_resolved=true` のピークの AZ に含まれるサミット、連番上限の超過）は、それぞれ全件を調べ終えてから、当たったものをすべて挙げて終了コード 1。AZ の重なりで止まれば、採番には進まない（連番上限の超過は調べない）。どちらも出力を書かない。(3) 2 つの出力を書く。(4) 不備ゲートの 3 条件をすべて調べ、1 つでも当たれば、当たった条件をすべて挙げて終了コード 4。
+- DEC93（入力の誤りは書かずに止め、不備ゲートは書いて止める）〔上位文書・外部参照〕: 止める場面を次の順に見る。(1) 入力の誤り（[4.9.2](#492-処理の流れ) の 1〜4。山岳データ登録変更リストの読み込みの誤りを含む）は、突合の前に終了コード 1。登録変更リストの知らせる行（読めない行など）は止めず、(4) の不備ゲートにも足さない。(2) 判定と採番の中の止める場面（2 つ以上の `key_col_resolved=true` のピークの AZ に含まれるサミット、連番上限の超過）は、それぞれ全件を調べ終えてから、当たったものをすべて挙げて終了コード 1。AZ の重なりで止まれば、採番には進まない（連番上限の超過は調べない）。どちらも出力を書かない。(3) 2 つの出力を書く。(4) 不備ゲートの 3 条件をすべて調べ、1 つでも当たれば、当たった条件をすべて挙げて終了コード 4。
   - 理由: 入力の壊れや判定の前提の破れと、解析の不備を終了コードで分けられる（[DEC87](#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」と同じ考え方）。不備ゲートは [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) のとおり、全件の判定の後に調べ、調査用の出力を必ず残す。連番上限を超えるとコードを付けられない行が出るので、出力を書けない。フェーズ4 の始まりに CMP3（パイプライン制御）が出力を消している（[2.10.3](#2103-フェーズのやり直し)）ので、(1)(2) で止まっても古い出力は残らない。連番上限の超過と不備が同時に起きると終了コード 1 だけが返るが、上限を直して起動し直せば、不備ゲートの出力が得られる。
 
     AZ の重なりは、確定したピークどうしでだけ止める。未確定のピークを含む重なりは、プロミネンスの小さい未確定のピークが最終フィルタを通らずに残ったときに起き（SRS の AZ が互いに素であることの根拠は最終フィルタ）、どのみち不備ゲートの場面なので、止めずに 1 つの AZ に決めて出力を残す（[DEC35](#4234-設計判断)「手動解決は `--phase 3 --n 6` からやり直す」の手動解決は `merged_summit.xlsx` を見て行う）。含める AZ は、確定したピークがあればそれ、無ければ最も高いピークのものとする。
@@ -3099,10 +3132,10 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
 - DEC102（`merged_summit.xlsx` にも出典のシート）〔上位文書・境界〕: `merged_summit.xlsx` の最後に、[FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成) と同じ文面の「出典」シートを置く。
   - 理由: このファイルはピーク標高などの解析値を含み、[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md) の言う標高タイルの派生データに当たるので、出典の明示が規約上の義務になる。不備の調査で人に渡すこともある。[FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成) と同じ形にすれば、2 つの一覧の構成がそろう。[SRS §6.2.6](20_SRS.md#626-サミット一覧突合後) の「単一シート」とは食い違うので、[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で直した。
   - 却下: [SRS §6.2.6](20_SRS.md#626-サミット一覧突合後) の字句どおり単一のシートにする案。派生データの出典の明示（[ADR-URD-014](decisions/ADR-URD-014-gsi-tile-attribution-policy.md)）を満たさない（持ち主の判断、2026-10-04）。
-- DEC103（`--phase 4` でもサミットリストを起動前に確かめる）〔上位文書・境界〕: [4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」の `--phase 4` の前提に `$DATA_DIR/ref/summitslist.csv` を加え、CMP3 が起動前提条件として確かめる。
-  - 理由: 無ければ CMP5 が [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV を読む」で止まるので結果は誤らないが、そのときにはフェーズ4 の始まりに CMP3 が前回の `merged_summit.geojson`・`merged_summit.xlsx` を消している（[2.10.3](#2103-フェーズのやり直し)）。起動前に確かめれば、何も消さずに止まり（[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」）、通しの実行と前提の書き方もそろう。
+- DEC103（`--phase 4` でもサミットリストを起動前に確かめる）〔上位文書・境界〕: [4.23.2](#4232-処理の流れ) の「フェーズごとの起動前提条件」の `--phase 4` の前提に `$DATA_DIR/ref/summitslist.csv` と、`$DATA_DIR/ref/` 直下の山岳データ登録変更リスト（ファイル名のパターンに合うものが 1 つ以上あること。有無だけ。[FR-023](20_SRS.md#fr-023-解析パイプライン制御) の入力の表）を加え、CMP3 が起動前提条件として確かめる。登録変更リストも同じ理由で、フェーズ4 の始まりの削除の前に確かめる。
+  - 理由: 無ければ CMP5 が [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV と登録変更リストを読む」で止まるので結果は誤らないが、そのときにはフェーズ4 の始まりに CMP3 が前回の `merged_summit.geojson`・`merged_summit.xlsx` を消している（[2.10.3](#2103-フェーズのやり直し)）。起動前に確かめれば、何も消さずに止まり（[4.23.2](#4232-処理の流れ) の 2「起動前提条件を検査する」）、通しの実行と前提の書き方もそろう。
   - 却下: 今のままにする案。前回の出力が消えてから欠けに気づく（持ち主の判断、2026-10-04）。
-- DEC104（入力から来る数は 10 進の値を変えずに書く）〔上位文書・NFR・境界〕: `merged_peak.csv` と SOTA サミットリスト CSV から来る数は、値を変えずに持つ。`merged_summit.geojson` での書き方は [4.9.2](#492-処理の流れ) の「出力の組み立て」の 4「`merged_summit.geojson` を組み立てる」、rationale での書き方は [4.9.2](#492-処理の流れ) の「出力の組み立て」の 2「値を求める」、`merged_summit.xlsx` の表示形式（付ける列と桁）は [4.12.2](#4122-処理の流れ) の 4「セルを書く」のとおり。
+- DEC104（入力から来る数は 10 進の値を変えずに書く）〔上位文書・NFR・境界〕: `merged_peak.csv` と SOTA サミットリスト CSV と山岳データ登録変更リストから来る数（登録変更リストの変更後の標高と追加の座標は、表記を揃えた後の 10 進の値）は、値を変えずに持つ。`merged_summit.geojson` での書き方は [4.9.2](#492-処理の流れ) の「出力の組み立て」の 4「`merged_summit.geojson` を組み立てる」、rationale での書き方は [4.9.2](#492-処理の流れ) の「出力の組み立て」の 2「値を求める」、`merged_summit.xlsx` の表示形式（付ける列と桁）は [4.12.2](#4122-処理の流れ) の 4「セルを書く」のとおり。
   - 理由: [DEC92](#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」と同じく、値を処理系の浮動小数の読み方に預けない。`merged_summit.xlsx` の `peak_lat`・`peak_lon` は [DEC35](#4234-設計判断)「手動解決は `--phase 3 --n 6` からやり直す」で陸地最高峰リストへ写されるので、8 桁で表示しないと、写した座標が `merged_peak.csv` とずれ、[DEC80](#484-設計判断)「陸地最高峰リストは 30m 以内の 1 件に当てる」の理由の「距離は 0 になる」が崩れる。rationale の数を文字列のまま入れれば、申請の根拠の文と一覧の値が同じ字句になる。
   - 却下: 数を丸めて書く案（標高を整数 m にするなど）。手動解決で写す座標がずれ、一覧と根拠の文の値が食い違いうる。
   - 却下: rationale だけ標高とプロミネンスを整数 m に切り捨てる案と、海面で確定したコルだけ `0m` と書く案。SOTA のリストの標高（整数）と見た目はそろうが、一覧の値と根拠の文の字句が変わり、書き方の規則が増える（持ち主の判断、2026-10-04）。
@@ -3111,6 +3144,17 @@ CMP3（パイプライン制御）から、フェーズ4 で呼ばれる（通�
   - 理由: [標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) は 150m 未満を定めない。ここに来るのは、プロミネンスの一次フィルタだけを通った `key_col_resolved=false` のピーク（[4.8.2](#482-処理の流れ) の 6「最終フィルタを当てる」で落ちない）か、SOTA サミットリスト CSV の `AltM` が 150 未満のサミットである。前者は不備ゲートで止まるが、後者は確定したピークの AZ の中にあれば申請の経路に乗る。表に無い値を 1 点などに寄せると、根拠の無い点数が一覧と根拠の文に入る。`is_band_change_candidate` を false にすれば、[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の値の範囲（`matched` のピークでは真偽値）と `category` の割り当ての規則のまま `no_change` になり、変更の根拠（※5）も作らない。警告で担当者が気づける。
   - 却下: 表に無い標高を最も低いバンド（1 点）に寄せる案。根拠の無い点数が申請の根拠に入る（持ち主の判断、2026-10-09）。
   - 却下: `is_band_change_candidate` も null にする案。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の `category` の割り当ての規則に当たらず、`category` が決まらない（持ち主の判断、2026-10-09）。
+
+- DEC187（登録変更リストは標準の XML 読み取りで読む）〔境界〕: CMP5（統合・突合）は、山岳データ登録変更リストを Python の標準ライブラリの `xml.etree.ElementTree` で XML として読み、新しい依存を足さない。DTD は取りに行かない。ファイルの中に `<!ENTITY` の宣言か、内部サブセットを持つ DOCTYPE があれば、実体の展開を使わせないために、XHTML として読めないものとして入力の誤りにする（終了コード 1、突合の前に止まる）。
+  - 理由: 2026-10-19 に実物（`sota_updatelist_2026.xhtml`、約 1.4 MB）を `xml.etree.ElementTree` で読めることを確かめた（0.02 秒、表 1 つ、`tr` が 317。名前付きの文字参照と実体の宣言は無い）。整形式でなければ止まるので、[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト) の「XHTML として読めない場合は止まる」を確かめられる。利用者の手元で作り直された HTML は読めなくなるが、止まって保存し直しを案内する（[4.9.3](#493-異常系)）。
+  - 却下: `html.parser` で読む案。整形式でない入力を黙って読むので、止まる場面を確かめられない。
+  - 却下: `lxml` や `defusedxml` を足す案。依存が増える。実体の宣言を拒む検査は上のとおり自前で足りる。
+- DEC188（登録変更リストのファイル名は ASCII の年だけ）〔上位文書・境界〕: 登録変更リストのファイル名は、正規表現 `sota_updatelist_[0-9]{4}\.xhtml` に全体で合うものとし、数字は ASCII の 0〜9 だけにする。CMP3（パイプライン制御）の起動前提条件の検査のグロブ `sota_updatelist_[0-9][0-9][0-9][0-9].xhtml` と、CMP5 の選び方（`re.fullmatch`）は、同じ名前の集合に合う。
+  - 理由: [SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト) は `\d` と書くが、Python の `\d` は ASCII 以外の数字にも合う。CMP3 のグロブが ASCII だけなので、CMP5 を ASCII に狭めて、CMP3 が通して CMP5 が選べない食い違いを防ぐ。`.` はエスケープして文字としての `.` だけに合わせる。
+  - 却下: CMP5 を SRS の `\d` のままにする案。全角の数字の名前を CMP5 だけが拾い、CMP3 の検査とずれる。
+- DEC189（申請の情報は申請ごとの配列で持つ）〔上位文書・境界〕: 候補の `pending_applications` は、申請ごとの JSON のオブジェクトの配列で、キーは `action`（`add`・`change`・`delete`）、`summit_code`（SOTA サミットリストの表記に揃えたもの。追加は空文字）、`lat`・`lon`（追加の揃えた座標。追加以外は null）、`new_alt_m`（変更後の標高。揃えた 10 進の値を変えずに JSON の数で書く。変更以外は null）、`new_points`（変更後のバンド。変更以外は null）、`applicant`（申請者。空欄は空文字）、`applied_on`（`YYYY-MM-DD`）、`years`（載っている年の表の年。整数の配列、新しい年から）、`match`（`same`・`different`・`held`）とする。並びは [SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson) の `pending_applications` のとおり（申請日の昇順 → アクション〈`add`・`change`・`delete` の順〉→ 山岳 ID の文字列の順か座標〈緯度 → 経度の数値の昇順〉→ 申請者の文字列の順）。
+  - 理由: [SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson) が項目名と入れ子を HLD に委ねた。「申請に戻した記録」の判断時条件（[SRS §8.2.4](20_SRS.md#824-申請に戻した記録)）と、担当者指定削除の判定し直し（[FR-019](20_SRS.md#fr-019-html-ビューア機能仕様)）が、申請の項目（アクション、山岳 ID か座標、変更後のバンド、申請者、申請日、当たり方）を個別に読むので、表示用の文だけでは足りない（[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md) の Alternatives の G）。キーは英小文字の固定の名前にして、利用者の文字列をキーにしない。
+  - 却下: 申請を表示用の文 `pending_note` だけで持つ案。判断時条件と判定し直しに要る項目が無くなる。
 
 ### 4.11 FR-011 申請書 XLSX 生成
 
@@ -4573,12 +4617,12 @@ CMP3（パイプライン制御）は起動されると次の順に動く（順�
 
 | `--phase` | 前提 |
 |---|---|
-| 省略 | `--phase 2` の前提と `$DATA_DIR/ref/summitslist.csv`（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が使う SOTA サミットリスト CSV） |
+| 省略 | `--phase 2` の前提と `$DATA_DIR/ref/summitslist.csv`（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が使う SOTA サミットリスト CSV）と、`$DATA_DIR/ref/` 直下の山岳データ登録変更リスト（同じ [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が使う。ファイル名がパターンに合うものが 1 つ以上あること） |
 | `2` | [FR-001](20_SRS.md#fr-001-標高タイル事前取得) による標高タイルのローカルキャッシュ取得完了（`--mesh` の範囲、無ければ日本全土。取得完了の記録で検査する。下の「取得完了の記録の検査」）と、陸地最高峰リストがあって読め、書式が合うこと（[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」） |
 | `3 --n <4\|5\|6>` | `key_col_unresolved_peaks-<N−1>.csv`・`merged_peak.csv` と標高タイルのローカルキャッシュ取得完了（日本全土。下の「取得完了の記録の検査」）と、陸地最高峰リストがあって読め、書式が合うこと（[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」） |
-| `4` | `merged_peak.csv`・`merged_peak.geojson`・`$DATA_DIR/ref/summitslist.csv` と標高タイルのローカルキャッシュ取得完了（日本全土。下の「取得完了の記録の検査」） |
+| `4` | `merged_peak.csv`・`merged_peak.geojson`・`$DATA_DIR/ref/summitslist.csv`・`$DATA_DIR/ref/` 直下の山岳データ登録変更リスト（ファイル名がパターンに合うものが 1 つ以上あること）と標高タイルのローカルキャッシュ取得完了（日本全土。下の「取得完了の記録の検査」） |
 
-上の表のうち、通しの実行と `--phase 4` の SOTA サミットリスト CSV、`--phase 3` の標高タイルのローカルキャッシュ取得完了、通し・`--phase 2`・`--phase 3` の陸地最高峰リストの書式は、もとは HLD で足した前提で、今は [FR-023](20_SRS.md#fr-023-解析パイプライン制御) が起動前提条件に含めている（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)・[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)）。HLD は、それぞれを確かめる時機と方法を次のとおり決める。通しの実行と `--phase 4` では、フェーズ4 で要る SOTA サミットリスト CSV を開始時に確かめる（通しではフェーズ2・3 を終えてから、`--phase 4` では前回の `merged_summit.geojson`・`merged_summit.xlsx` を消してから、欠落で止まらないように。[DEC103](#494-設計判断)「`--phase 4` でもサミットリストを起動前に確かめる」）。`--phase 3` の標高タイルのローカルキャッシュ取得完了は、下の「取得完了の記録の検査」で確かめる。通し・`--phase 2`・`--phase 3` では、陸地最高峰リストの書式を確かめる（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) がリストを読むのは解析の後の統合なので、書式の誤りで解析を終えてから止まらないように。[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」）。`--phase 4` は [FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) を呼ばないので確かめない。
+上の表のうち、通しの実行と `--phase 4` の SOTA サミットリスト CSV と山岳データ登録変更リスト、`--phase 3` の標高タイルのローカルキャッシュ取得完了、通し・`--phase 2`・`--phase 3` の陸地最高峰リストの書式は、もとは HLD で足した前提で、今は [FR-023](20_SRS.md#fr-023-解析パイプライン制御) が起動前提条件に含めている（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)・[ADR-SRS-077](decisions/ADR-SRS-077-srs-section-4-1-4-4-ledger-and-precondition-review.md)）。HLD は、それぞれを確かめる時機と方法を次のとおり決める。通しの実行と `--phase 4` では、フェーズ4 で要る SOTA サミットリスト CSV と山岳データ登録変更リストを開始時に確かめる（通しではフェーズ2・3 を終えてから、`--phase 4` では前回の `merged_summit.geojson`・`merged_summit.xlsx` を消してから、欠落で止まらないように。[DEC103](#494-設計判断)「`--phase 4` でもサミットリストを起動前に確かめる」）。登録変更リストは、bash のグロブ `sota_updatelist_[0-9][0-9][0-9][0-9].xhtml` に合うファイルが `$DATA_DIR/ref/` 直下に 1 つ以上あるかだけを見る（複数あっても有無だけを見る。中身の読み方と、複数あるときに年が最大のものを選ぶことは CMP5 の [4.9.2](#492-処理の流れ) の「登録変更リストの読み方」。CMP3 は CSV や XHTML の中身を読まない）。CMP3 のグロブと CMP5 の正規表現 `sota_updatelist_[0-9]{4}\.xhtml`（全体一致）が同じ名前の集合に合うように、数字は ASCII の 0〜9 だけにし、`.` は文字としての `.` だけに合わせる。たとえば `sota_updatelist_2026.xhtml` は両方に合い、年の数字が全角の名前（`2026` を全角で書いたもの）、`sota_updatelist_2026.xhtml.html`（余分な拡張子）、`sota_updatelist_2026Xxhtml`（`.` の代わりに別の文字）、`sota_updatelist_202.xhtml`（桁が足りない）はどちらにも合わない。`--phase 3` の標高タイルのローカルキャッシュ取得完了は、下の「取得完了の記録の検査」で確かめる。通し・`--phase 2`・`--phase 3` では、陸地最高峰リストの書式を確かめる（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) がリストを読むのは解析の後の統合なので、書式の誤りで解析を終えてから止まらないように。[DEC85](#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」）。`--phase 4` は [FR-008](20_SRS.md#fr-008-per-mesh-csv-統合) を呼ばないので確かめない。
 
 CMP3 は N の段（フェーズ2 は N=3）を始める前に、`key_col_unresolved_peaks-<N>.csv` から `key_col_unresolved_peaks-6.csv` までの未確定リストを削除する。未確定がゼロのとき [FR-022](20_SRS.md#fr-022-コル充足判定) はファイルを作らないため、前回の実行で残ったファイルを、単独起動の前提検査や次段の入力と取り違えないため（[DEC5](#225-設計判断決めたこと理由却下した案)「充足判定の結果は終了状態で返す」と同じ理由）。段の始まりに消すほかの出力は [2.10.3](#2103-フェーズのやり直し) のとおり（[DEC30](#2104-設計判断)「段の始まりで前回の出力を消す」）。
 
@@ -4618,7 +4662,7 @@ CMP3 は N の段（フェーズ2 は N=3）を始める前に、`key_col_unreso
 | 設定解決が 0 を返したのに、標準出力が 2 行の形でない | 1 | ロックを掛けず、何も消さずに止まる（[2.3.2](#232-設定ファイル)）。メッセージは下の表の同じ場面の行 |
 | ログの出力先を用意できない（`log_dir` を作れないか、ログファイルを開けない） | 1 | 何も消さずに止まる（`open_log` は `clear_outputs` より前に呼ぶ。[3.3.3](#333-関数)。止まり方は [2.3.2](#232-設定ファイル)）。メッセージは [2.5.3](#253-利用者向けのメッセージ) の同じ場面の行（標準エラー出力だけ）。ロックを掛けた後に起きる（[DEC174](#574-設計判断)「ログはロックを掛けた後で開く」） |
 | 同じデータ置き場での同時起動、ロックファイルを開けない | 1 | [2.9.3](#293-同時起動の排他) のとおり |
-| 起動前提条件の不足（取得完了の記録の検査と、陸地最高峰リストの書式の検査を含む） | 1 | 何も消さずに止まる（[2.10.3](#2103-フェーズのやり直し)）。メッセージは [2.5.3](#253-利用者向けのメッセージ) の「起動前提条件の不足」の行と、[4.23.2](#4232-処理の流れ) の「取得完了の記録の検査」の案内 |
+| 起動前提条件の不足（取得完了の記録の検査と、陸地最高峰リストの書式の検査と、山岳データ登録変更リストの有無の検査を含む） | 1 | 何も消さずに止まる（[2.10.3](#2103-フェーズのやり直し)）。メッセージは [2.5.3](#253-利用者向けのメッセージ) の「起動前提条件の不足」の行と、[4.23.2](#4232-処理の流れ) の「取得完了の記録の検査」の案内。山岳データ登録変更リストが無いときは、下の表の同じ場面の行 |
 | 起動口が 0・3・4 以外を返す | その値 | すぐに止まる（[2.5.2](#252-パイプライン制御での扱い)） |
 | N=6 でも未確定が残る | 4 | フェーズ4 で [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) が返す値を伝える。利用者の手順は [4.23.2](#4232-処理の流れ) の「N=6 でも未確定が残ったとき」 |
 | シグナル | 128＋シグナル番号 | [2.5.1](#251-終了コード) のとおり |
@@ -4630,6 +4674,7 @@ CMP3 は N の段（フェーズ2 は N=3）を始める前に、`key_col_unreso
 | 場面 | 終了コード | 必ず含める内容 |
 |---|---|---|
 | CMP3 で、設定解決が 0 を返したのに、標準出力が 2 行の形でない（[2.3.2](#232-設定ファイル)） | 1 | 受け取った標準出力の行と、プログラムの欠陥として起票して調べる案内（メッセージは標準エラー出力だけに出す） |
+| 山岳データ登録変更リストが無い（通しの実行と `--phase 4` の起動前提条件の検査） | 1 | 置き場（`$DATA_DIR/ref/` の直下）とファイル名のパターン（`sota_updatelist_YYYY.xhtml`。`YYYY` は半角の数字 4 桁）、入手の入口のページから年のページをブラウザで保存して置く操作（保存したページは「ウェブページ、完全」などで別のファイル名にならないよう、パターンに合う名前にする）、置いた後にもう一度起動する操作 |
 | 単独起動で未確定あり（`WARNING:` で始める） | 3 | `key_col_unresolved_peaks-<N>.csv` のパス、次の操作（N<6 なら `--phase 3 --n <N+1>`、N=6 なら `--phase 4`）。`--phase 2` に `--mesh` を付けたときは、`--phase 3` に日本全土の取得完了が要ること（範囲を絞った確認は通しの実行で行う。[4.23.2](#4232-処理の流れ)）。CMP3 が出す。未確定ピークの件数は、直前に CMP5 の [FR-022](20_SRS.md#fr-022-コル充足判定) が通常のログに出す（[DEC105](#4224-設計判断)「未確定の件数は CMP5 が、警告と案内は CMP3 が出す」。[4.22.2](#4222-処理の流れ)） |
 | 単独起動で未確定なし（通常のログに出す。`WARNING:` で始めない） | 0 | 次の操作（`--phase 4`）。`--phase 2` に `--mesh` を付けたときは、`--phase 4` に日本全土の取得完了が要ること（範囲を絞った確認は通しの実行で行う。[4.23.2](#4232-処理の流れ)）。CMP3 が出す（[DEC105](#4224-設計判断)「未確定の件数は CMP5 が、警告と案内は CMP3 が出す」。[4.22.2](#4222-処理の流れ)） |
 | N=6 でも未確定が残った場合の不備ゲート | 4 | [2.5.3](#253-利用者向けのメッセージ) の「不備ゲート」の行の内容に加え、未確定ピークの件数と `is_key_col_unresolved` の列、手動解決の手順（陸地最高峰リストに足して `--phase 3 --n 6`・`--phase 4`）の案内 |
@@ -4790,8 +4835,9 @@ SRS の各 NFR の実現方式を、NFR ごとに 1 つの節で定める。節�
 | 同じキャッシュと同じパラメータから、同じ CSV になる | [4.7.2](#472-処理の流れ) の 3「ピークの緯度経度を求める」、[4.8.2](#482-処理の流れ) の 7「書き出す」、[DEC83](#484-設計判断)「`merged_peak.csv` は Z15 の画素の順」、[DEC107](#4224-設計判断)「未確定のリストは `merged_peak.csv` のまま書く」 |
 | 同じく、同じ GeoJSON になる | [4.16.2](#4162-処理の流れ) の「Feature」、[4.18.2](#4182-処理の流れ) の 3「ゾーンを選ぶ」・5「書き出す」、[DEC75](#4184-設計判断)「同じピークのゾーンは代表行の窓のものを優先して採る」、[DEC76](#4184-設計判断)「ピークは Z15 の画素で突き合わせ、ゾーンは写す」、CMP1（行政区域前処理）の GeoJSON とテキストの出力の並び（[4.17.2](#4172-処理の流れ) の「出力の置き場」の後の箇条） |
 | 同じく、同じ `merged_summit.geojson`・`merged_summit.xlsx` になる | [DEC96](#494-設計判断)「フィーチャはピークごとに CSV の行の順に並べる」、[DEC97](#494-設計判断)「XLSX の行は行を生む点の順に並べる」、[DEC104](#494-設計判断)「入力から来る数は 10 進の値を変えずに書く」、[4.9.2](#492-処理の流れ) の「出力の組み立て」の 5「`merged_summit.xlsx` を組み立てる」。XLSX の文書プロパティは [#188](https://github.com/jj1xgo/findsummits/issues/188)「XLSX の文書のプロパティを `NFR-003` の内容に入れるか」で決める |
+| 同じ山岳データ登録変更リストのファイルから、同じ申請済みの判定になる | [4.9.2](#492-処理の流れ) の「登録変更リストの読み方」（ファイルの選び方は年が最大のもの）、「申請済みの判定」の 4「当たり方をまとめる」・7「知らせる行をまとめる」（`pending_applications` と知らせる行の並び）、[DEC188](#494-設計判断)「登録変更リストのファイル名は ASCII の年だけ」、[DEC189](#494-設計判断)「申請の情報は申請ごとの配列で持つ」 |
 | `metadata.generated_at` などの時刻と `metadata.software_version` は除く | [4.9.2](#492-処理の流れ) の「出力の組み立て」の 3「metadata を作る」、[DEC98](#494-設計判断)「版の文字列は出力を組み立てるときに git から取る」 |
-| SOTA サミットリストの有効判定は CSV の基準日で行う | [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV を読む」 |
+| SOTA サミットリストの有効判定は CSV の基準日で行う | [4.9.2](#492-処理の流れ) の 3「SOTA サミットリスト CSV と登録変更リストを読む」 |
 | タイルの取り直しとキャッシュの削除は対象外 | [DEC29](#294-設計判断)「同じデータ置き場への同時起動は排他にする」（解析の途中でタイルを取り直さない） |
 | 計算の環境で結果が変わらない | [DEC22](#266-設計判断)「再現性を崩すオプションを使わない」、[DEC28](#294-設計判断)「OpenCV は 1 スレッドで動かす」、[DEC27](#294-設計判断)「CMP4 は逐次で動かす」、使った設定値をログに書くこと（[2.3.3](#233-検証と記録)） |
 | ピーク候補の走査の順は、標高の降順と画素の番号の昇順 | [4.5.2](#452-処理の流れ) の「走査の準備」の 3「走査の順を作る」、[DEC58](#454-設計判断)「走査の順は標高を 0.01m 単位の整数にして数え上げで作る」 |
@@ -4954,7 +5000,7 @@ SRS の各 NFR の実現方式を、NFR ごとに 1 つの節で定める。節�
 | `merge_peaks` | [4.8.2](#482-処理の流れ) の 7「書き出す」の通常のログ。`--check-land-peaks` のときは陸地最高峰リストの件数 |
 | `merge_zones` | 読んだゾーンのファイルの数、ピークの数、書いたフィーチャの数（`feature_type` ごと） |
 | `check_cols` | [4.22.2](#4222-処理の流れ) の 4「未確定のリストを書く」の後の段落の通常のログ |
-| `match_summits` | [4.9.2](#492-処理の流れ) の 9「書き出し、不備ゲートを検査する」の後の段落の通常のログ |
+| `match_summits` | [4.9.2](#492-処理の流れ) の 9「書き出し、不備ゲートを検査する」の後の段落の通常のログ（採った登録変更リストのファイル名、申請の行の数、取り込んだ申請の数、`pending_match` が `same` と `different` の候補の数、知らせる行の数を含む） |
 | `generate_viewer` | 読んだフィーチャの数と、書いたファイルのパス |
 
 **[NFR-007](20_SRS.md#nfr-007-ログ出力) の項目との対応**
