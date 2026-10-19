@@ -547,10 +547,11 @@ SEAM_ROW_RE = re.compile(r'^\|\s*`(CMP[1-8]-(?:INT|EXT)[1-9]\d*)`\s*\|')
 IT_MOVED_HEAD_RE = re.compile(r'^## \d+\. ST から移したケースの対応表')
 MOVED_MARK = 'UT/IT で実施'
 MOVED_TO_UT = 'UT（`50_UT.md` で作る）'
-MARK_PAREN_RE = re.compile(r'^\s*（([^（）]*)）')
 MOVED_SOURCE_RE = re.compile(r'`(ST-[A-Za-z0-9_-]+)`')
 MOVED_DEST_RE = re.compile(r'`(?:UT|IT)-[A-Za-z0-9_-]+`(?:・`(?:UT|IT)-[A-Za-z0-9_-]+`)*')
 MOVED_DEST_ID_RE = re.compile(r'`((?:UT|IT)-[A-Za-z0-9_-]+)`')
+# ST と IT の本文に書いた IT のケース ID（範囲の略記の番号だけのものは数えない）
+IT_REF_RE = re.compile(r'`(IT-CMP[1-8]-(?:INT|EXT)[1-9]\d*-\d{2})`')
 
 
 def hld_seams(text):
@@ -608,9 +609,28 @@ def check_hld_seam_tables(text, has_it):
 
 
 def moved_marked(note):
-    """ST の行の ID の直後の全角の括弧の中に、「。」で区切った項目として「UT/IT で実施」があるか"""
-    m = MARK_PAREN_RE.match(note)
-    return bool(m) and MOVED_MARK in m.group(1).split('。')
+    """ST の行の ID の直後の全角の括弧の中に、「。」で区切った項目として「UT/IT で実施」があるか
+
+    括弧の中の入れ子の括弧（`（境界値（N=4）。UT/IT で実施）`）は項目の一部として読み、その中の「。」では区切らない
+    """
+    body = note.lstrip()
+    if not body.startswith('（'):
+        return False
+    items, cur, depth = [], '', 0
+    for ch in body[1:]:
+        if ch == '（':
+            depth += 1
+        elif ch == '）':
+            if depth == 0:
+                items.append(cur)
+                return MOVED_MARK in items
+            depth -= 1
+        elif ch == '。' and depth == 0:
+            items.append(cur)
+            cur = ''
+            continue
+        cur += ch
+    return False
 
 
 def load_cases(repo):
@@ -722,15 +742,16 @@ def check_it_moved(repo, cases):
     if not repo.has(path):
         return []
     marked = {cid for cid, c in cases.items() if c['level'] == 'ST' and moved_marked(c['note'])}
-    out, seen = [], set()
+    out, seen, dests = [], set(), {}
     for no, cells in table_rows(repo.read(path), IT_MOVED_HEAD_RE):
         where = f'{path}:{no}'
-        if not cells or cells[0] == 'ST のケース' or not cells[0].strip('-: '):
+        if not cells or cells[0] == 'ST のケース' or all(c and not c.strip('-: ') for c in cells):
             continue
         src = MOVED_SOURCE_RE.fullmatch(cells[0])
         if not src:
             out.append(finding('T1', f'IT-moved:{cells[0]}', where,
-                               f'対応表の 1 列目 {cells[0]} が、コード表記の ST のケース ID 1 つではありません'))
+                               f'対応表の 1 列目 {cells[0] or "（空）"} が、'
+                               'コード表記の ST のケース ID 1 つではありません'))
             continue
         sid = src.group(1)
         if sid in seen:
@@ -741,6 +762,7 @@ def check_it_moved(repo, cases):
             out.append(finding('T2', f'IT-moved:{sid}', where, f'対応表の {sid} は ST にありません'))
             continue
         dest = cells[1] if len(cells) > 1 else ''
+        dests[sid] = set(MOVED_DEST_ID_RE.findall(dest))
         if dest == MOVED_TO_UT:
             continue
         if not MOVED_DEST_RE.fullmatch(dest):
@@ -757,6 +779,37 @@ def check_it_moved(repo, cases):
     for sid in sorted({s for s in seen if s in cases and cases[s]['level'] == 'ST'} - marked):
         out.append(finding('T4', f'IT-moved:{sid}', f'{cases[sid]["path"]}:{cases[sid]["line"]}',
                            f'{sid} は対応表にあるのに、ST の ID の直後の括弧に「{MOVED_MARK}」がありません'))
+    return out + check_it_refs(repo, cases, dests)
+
+
+def check_it_refs(repo, cases, dests):
+    """ST と IT の本文に書いた IT のケース ID が IT にあるか、移した ST の行が指す IT が対応表の移した先にあるか
+
+    対応表の行は check_it_moved が見るので数えない。dests は対応表の ST のケース ID から移した先の ID の集合
+    """
+    out = []
+    for level in ('ST', 'IT'):
+        path = CASE_DOCS[level]
+        if not repo.has(path):
+            continue
+        in_moved = False
+        for no, line in iter_lines(repo.read(path)):
+            if HEADING_RE.match(line):
+                in_moved = level == 'IT' and bool(IT_MOVED_HEAD_RE.match(line))
+                continue
+            if in_moved:
+                continue
+            row = CASE_ROW_RE.match(line)
+            sid = row.group(1) if row and level == 'ST' else None
+            for t in IT_REF_RE.findall(line):
+                if row and t == row.group(1):
+                    continue
+                where = f'{path}:{no}'
+                if t not in cases or cases[t]['level'] != 'IT':
+                    out.append(finding('T2', f'IT-ref:{t}', where, f'IT のケース {t} は IT にありません'))
+                elif sid in dests and t not in dests[sid]:
+                    out.append(finding('T4', f'IT-ref:{sid}->{t}', where,
+                                       f'{sid} が参照する {t} は、IT の対応表の {sid} の移した先にありません'))
     return out
 
 

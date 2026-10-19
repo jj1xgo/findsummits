@@ -1229,6 +1229,39 @@ class ItTest(TraceTestCase):
         self.assertIn('T1:HLD-seam:none', self.keys(self.files(**{'docs/30_HLD.md': HLD_PROGRAM})))
         self.assertNotIn('T1:HLD-seam:none', self.keys(dict(BASE, **{'docs/30_HLD.md': HLD_PROGRAM})))
 
+    def test_moved_row_with_empty_source_is_flagged(self):
+        it = IT + '|  | ' + TO_UT + ' | r |\n'
+        self.assertIn('T1:IT-moved:', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_moved_separator_row_with_colons_is_skipped(self):
+        head = '| ST のケース | 移した先 | 理由 |\n'
+        it = IT.replace(head + '|---|---|---|', head + '|:--|:-:|--:|')
+        self.assertEqual(self.check(self.files(**{'docs/60_IT.md': it})), [])
+
+    def test_mark_in_nested_parentheses(self):
+        st = ST.replace('`ST-FR-002-01`（異常系）', '`ST-FR-002-01`（境界値（N=4）。UT/IT で実施）')
+        self.assertEqual(self.check(self.files(**{'docs/70_ST.md': st})), [])
+
+    def test_nested_parentheses_do_not_hide_the_item_boundary(self):
+        st = ST_MOVED.replace('`ST-FR-001-01` | a', '`ST-FR-001-01`（境界値（UT/IT で実施）） | a')
+        self.assertNotIn('T4:IT-moved:ST-FR-001-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+
+    def st_ref(self, ref):
+        row = '`ST-FR-002-01`（異常系。UT/IT で実施） | '
+        return ST_MOVED.replace(row + 'b', row + f'IT の `{ref}` を参照')
+
+    def test_it_case_ref_must_exist(self):
+        st = self.st_ref('IT-CMP1-EXT1-02')
+        self.assertIn('T2:IT-ref:IT-CMP1-EXT1-02', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+        it = IT.replace('| `IT-CMP1-EXT1-01` | a |', '| `IT-CMP1-EXT1-01` | `IT-CMP1-INT1-09` を実行した後 |')
+        self.assertIn('T2:IT-ref:IT-CMP1-INT1-09', self.it_keys(self.files(**{'docs/60_IT.md': it})))
+
+    def test_st_ref_to_it_must_be_a_moved_destination(self):
+        st = self.st_ref('IT-CMP1-INT1-01')
+        self.assertIn('T4:IT-ref:ST-FR-002-01->IT-CMP1-INT1-01', self.it_keys(self.files(**{'docs/70_ST.md': st})))
+        st = self.st_ref('IT-CMP1-EXT1-01')
+        self.assertEqual(self.check(self.files(**{'docs/70_ST.md': st})), [])
+
     def test_no_moved_check_without_it_doc(self):
         files = dict(BASE, **{'docs/30_HLD.md': HLD_SEAM, 'docs/70_ST.md': ST_MOVED})
         self.assertEqual([k for k in self.keys(files) if 'IT-moved' in k], [])
