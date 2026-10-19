@@ -192,6 +192,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | サミット候補 | — | SOTA サミットの要件（プロミネンス ≥ 150m）を満たすとして検出・抽出の対象となるピークの総称。既存サミットに対応するピークも含む。新規追加の申請対象は[申請カテゴリ](#申請カテゴリ) `add`（`peak.match_status` ∈ {new, dominant}）で表す。 |
 | 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete の削除候補となる。今回の申請可否は application_exclusion と組み合わせて判定する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
 | 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
+| 申請済み（候補） | — | 山岳データ登録変更リストに、同じ対象・同じ内容の未反映の申請がある候補（pending_match=same）。既定で申請書から外れ、担当者が申請に戻せる。除外（[UR-015](10_URD.md#ur-015)）とは別の状態。同じ対象で内容の違う申請だけがある候補は外さず、その申請があることを示す（[UR-003](10_URD.md#ur-003)、[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。 |
 | 担当者指定削除 | — | 孤立 unmatched を担当者が作業用ビューアで明示的に削除申請へ含めた状態。category=delete、review_decision=delete とし、match_status と review_reason は unmatched のまま保持する。親ピーク・接続線を持たない（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。 |
 | 主ピーク | dominant peak | 削除候補となる SOTA サミットが従属するピーク。サミット座標がそのピークの delete判定ゾーン内に含まれることで判定される（詳細は SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)・[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照）。 |
 | delete判定ゾーン | delete-determination zone | 既存 SOTA サミットの削除判定に使用するピーク域ポリゴン。ピーク標高から `min(プロミネンス, delete_zone_max_drop)` 以内の連続エリア（Flood Fill 閾値は `max(col_elev, peak_elev - delete_zone_max_drop)`。`col_elev` で決まるとき（2 つが等しいときを含む）はコルの標高を含めず、`peak_elev - delete_zone_max_drop` で決まるときは以上）。`delete_zone_max_drop`（デフォルト 250m）はデータ辞書「delete判定ゾーン比高上限」として定義（[SRS 2.2.1](20_SRS.md#221-設定可能項目) 参照）。詳細は SRS [FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[ADR-SRS-011](decisions/ADR-SRS-011-delete-zone-polygon.md) 参照。 |
@@ -211,7 +212,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | `delete` | 削除 | 既存サミット（主ピークが ambiguous ではない幾何学的削除候補、または担当者指定削除） | 削除 |
 | `review` | 要確認 | 未選択・取消後の孤立 unmatched および複数登録の保留組全体 | 担当者確認まで申請保留 |
 
-category は提案されているアクションの分類であり、今回申請へ出力するかは application_exclusion と組み合わせて判定する。
+category は提案されているアクションの分類であり、今回申請へ出力するかは application_exclusion と申請済みの判定（pending_match・pending_return）と組み合わせて判定する。
 除外しても分類は変えず、5カテゴリのエビデンスへ残す（[ADR-SRS-050](decisions/ADR-SRS-050-persistent-exclusion-decisions.md)）。
 
 ### データ構造（列名・フラグ・識別子）
@@ -225,6 +226,11 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | review_note | 担当者指定削除の根拠本文。テンプレート全文の rationale と区別する。未選択・取消後の下書きは現在状態・成果物の本属性に含めない（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | application_exclusion | 今回の申請除外状態。空文字は除外なし、manual は有効な担当者判断、parent_add は親の追加除外に伴う従属削除の保留。バッチは全件空文字（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | exclusion_note | 申請除外の理由。manual は任意入力の本文、parent_add は関連追加候補を示す固定文。通常 rationale・review_note と区別する（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| pending_applications | 当たった申請と保持した申請の一覧（アクション、山岳 ID か座標、変更後の標高とバンド、申請者、申請日、載っている年の表、当たり方）。申請済みの判定の正本（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| pending_match | 申請済みの判定。空文字は当たる申請なし、same は同じ内容の申請あり（既定で申請書から外れる）、different は内容の違う申請だけある（外さず示す）。バッチが書く（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| pending_note | pending_applications から作る表示用の文。申請者を含まない（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| pending_return | 担当者が申請に戻した状態（真偽値）。バッチは全件 false。ブラウザが現在状態だけを更新する（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| 申請に戻した記録 | 申請済みで外れた候補を担当者が申請に戻した判断を保持する内部データ。除外台帳とは別に持ち、判断ファイルの別の配列で保存・引き継ぐ（[8.2.4](20_SRS.md#824-申請に戻した記録)）。 |
 | 除外台帳 | 適用中と未適用の manual 判断を保持する内部データ。判断ファイルは台帳を持ち運ぶ JSON であり、公開エビデンスとは別の成果物（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |

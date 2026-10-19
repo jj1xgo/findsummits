@@ -1019,7 +1019,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - 各 delete 候補サミット座標に対して、delete判定ゾーンポリゴン（`feature_type="delete_zone"`）内に
       その座標が含まれるピークを候補とする（point-in-polygon 判定）。`match_status=matched` および `ambiguous` のピークも候補に含む
       （matched ピークの AZ 外・delete判定ゾーン内に存在する delete 候補サミットは、当該 matched ピークを
-      主ピークとして削除申請候補を自動生成する。今回の申請行の出力は application_exclusion にも従う。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md) 参照）
+      主ピークとして削除申請候補を自動生成する。今回の申請行の出力は application_exclusion と申請済みの判定（pending_match・pending_return）にも従う。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md) 参照）
     - 候補が複数の場合は**プロミネンスが最小のピーク**を主ピークとする（プロミネンスが最小のピークは親ピークへ最も早く合流する局所的な隆起であり、delete 候補サミットと同一山塊と見なせる）。プロミネンスが同値の場合は `peak_lat` 降順（北→南）→ `peak_lon` 昇順（西→東）でタイブレークする（採番順序と同方向。[NFR-003](#nfr-003-再現性決定論的出力) が保証する決定論性と整合）。なお `key_col_resolved=false`（`prominence=null`）のピークは Key コルが解析範囲外に存在する独立峰級（物理的には最大級のプロミネンスを持つ）であるため、最大扱い（`key_col_resolved=true` のピークより後回し）とする。採番順序（仮サミットコード採番）の null=最小扱いとは逆方向になるが、主ピーク特定は「同一山塊を代表する局所隆起」という物理的意味に基づく選択であり、採番の便宜上の順序付けとは異なる。`key_col_resolved=false` のピーク同士のタイブレークは `peak_lat` 降順 → `peak_lon` 昇順で一意に決定する
     - いずれの delete判定ゾーンにも含まれないサミットは `summit.match_status="unmatched"`（要確認）として記録する。主ピークは紐付かず `dominant_peak_code` 等は付与しない。停止はせず、件数しきい値超過時のみ不備ゲートで停止する（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)。自動フォールバック・申請書削除行への自動掲載は行わない）
     - 付与するカラム: `dominant_peak_code`（主ピークのサミットコード。主ピークが `matched` の場合は当該ピークの既存 SOTA コード）、`dominant_peak_dist_m`（主ピークから delete 候補サミット座標までの距離 m。Haversine 公式で計算。人手確認用）。主ピークが `ambiguous` の場合、コードは空文字とし距離は保持する。親の参照には後述の `review_group_id` を使う
@@ -1090,7 +1090,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
     - `peak_points = band(floor(peak_elev))`: `peak_elev` を切り捨て（floor）した整数 m でバンド判定
     - `sota_points = band(sota_alt_m)`: `sota_alt_m` は整数 m なので丸め不要
     - 標高が算出表に無い（150m 未満）ときは、`peak_points`・`sota_points` を null とする。`matched` のピークで、`peak_points` か AZ の中のサミットの `sota_points` のどちらかが null なら `is_band_change_candidate=false` とし（`category` は `no_change`、rationale は作らない）、該当するピークとサミットを警告ログに出力する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）
-    - `is_band_change_candidate = (peak_points ≠ sota_points)`（`peak_points` か `sota_points` が null のときは false）: true の場合、変更申請の候補とする（今回の出力可否は category と application_exclusion で判定）
+    - `is_band_change_candidate = (peak_points ≠ sota_points)`（`peak_points` か `sota_points` が null のときは false）: true の場合、変更申請の候補とする（今回の出力可否は category・application_exclusion・申請済みの判定で判定）
     - バンド定義は [`00_GLOSSARY.md` 標高バンド（Points 算出表）](00_GLOSSARY.md#標高バンドpoints-算出表) を参照
   - **申請済みの判定**（山岳データ登録変更リストとの照合。[UR-003](10_URD.md#ur-003)。[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）: 変更申請判定の後に行う。候補・`category`・`match_status`・件数・不備ゲートは変えず、申請の情報を候補の属性（`pending_applications`・`pending_match`・`pending_note`。[各フィーチャのプロパティ](#各フィーチャのプロパティ)）として付けるだけにする。担当者の判断（申請に戻す）は読まない（読むのはブラウザの [FR-019](#fr-019-html-ビューア機能仕様)）。未反映かどうかは別に判定しない。反映済みの申請は、追加は既存サミットの AZ に入り、削除は廃止済みの ID になり、変更は今の標高とバンドが同じになるので、どの候補にも当たらない
     - 読み方と取り込む申請は [7.2.9](#729-山岳データ登録変更リスト) による（年の表をすべて読む。アクション・山岳 ID・変更後の標高・追加の位置で照合し、名称・座標だけの変更とバンドの変わらない変更は取り込まない）。山岳 ID は SOTA サミットリストの SummitCode とそのまま照合し、無ければ地域コードと番号で照合する。登録変更リスト由来の文字列（申請者、県名、山岳 ID など）は文字として扱い、HTML やコードとして実行しない
@@ -1189,7 +1189,7 @@ per-mesh 出力（通常モード・広域モード）を全国スケールで�
 | `stability` | confirmed / unstable / -（`-` = 広域モード確定ピーク・通常モード安定性評価なし。定義は [FR-008](#fr-008-per-mesh-csv-統合) 参照） |
 | `key_col_resolved` | コル確定フラグ（true=確定 / false=未確定） |
 | `points` | 標高バンドに基づくポイント数（1/2/4/6/8/10）。`peak_elev` から算出（150m 未満は算出表に無いので JSON null）。出力プロパティ名は `points`（[FR-009](#fr-009-sotaリスト突合match_status-判定) 内部変数 `peak_points` とは別） |
-| `is_band_change_candidate` | Points バンド遷移フラグ（bool）。matched のみ。`points ≠ sota_points` の場合 true（変更申請候補。今回の出力可否は application_exclusion も参照）。`points` か `sota_points` が null の場合は false。new / dominant・ambiguous は JSON null |
+| `is_band_change_candidate` | Points バンド遷移フラグ（bool）。matched のみ。`points ≠ sota_points` の場合 true（変更申請候補。今回の出力可否は application_exclusion・申請済みの判定も参照）。`points` か `sota_points` が null の場合は false。new / dominant・ambiguous は JSON null |
 | `rationale` | 申請書根拠テキスト（new / dominant は ※2 フォーマット、`is_band_change_candidate=true` の matched は ※5 フォーマット。[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成。matched（バンド変更なし）・ambiguous は空文字）。通常の申請候補は除外中も HTML ビューアで編集可能 |
 | `analysis_count` | このピークが含まれた通常解析の回数（重複排除前の通常モード行の出現回数。広域モード行は数えない）。[FR-008](#fr-008-per-mesh-csv-統合) 算出値 |
 | `expected_count` | このピークが含まれるべき期待解析回数。日本全土1次メッシュコードリスト（北方領土除外メッシュを除く）基準で [FR-008](#fr-008-per-mesh-csv-統合) が算出。通常モード行のみ（広域モード行は空欄） |
@@ -1315,7 +1315,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 #### FR-019: HTML ビューア機能仕様
 
-- **対応 UR**: [UR-017](10_URD.md#ur-017), [UR-011](10_URD.md#ur-011)（地図帰属表示）, [UR-014](10_URD.md#ur-014)（描画応答性）, [UR-015](10_URD.md#ur-015)
+- **対応 UR**: [UR-017](10_URD.md#ur-017), [UR-011](10_URD.md#ur-011)（地図帰属表示）, [UR-014](10_URD.md#ur-014)（描画応答性）, [UR-015](10_URD.md#ur-015), [UR-003](10_URD.md#ur-003)
 - **概要**: [FR-013](#fr-013-html-ビューア生成) で生成された `merged_viewer.html` がブラウザ上で提供する機能（マップ表示・編集 UI・localStorage・エクスポート機能）の仕様を定義する。
 
 **入力**:
@@ -1421,7 +1421,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
   - **山岳名入力 UI**:
     - `category=add` のピーク（`match_status` が `new` または `dominant`）: クリックで開くポップアップまたはサイドパネルに「山岳名JP」（必須）「山岳名EN」（任意）入力フィールドを表示する。今回の申請対象に山岳名JP が未入力のピークが存在する状態で申請書（[FR-011](#fr-011-申請書-xlsx-生成)）をエクスポートする場合は、該当ピーク一覧を警告表示する。ただし公式申請の最終判断は SOTA 日本支部担当者が行うため、エクスポートはブロックせず空欄のままの続行も許容する（ソフト必須。[ADR-SRS-036](decisions/ADR-SRS-036-new-peak-name-input-requirement.md)）
-    - `category=band_change` / `no_change` のピーク（`match_status="matched"`）: 入力フィールド不要（名称変更は申請対象外。`band_change` かつ application_exclusion が空文字の場合は申請書エクスポート時に「変更」行を出力する）
+    - `category=band_change` / `no_change` のピーク（`match_status="matched"`）: 入力フィールド不要（名称変更は申請対象外。`band_change` で、除外されておらず申請済みとして外れてもいない場合は申請書エクスポート時に「変更」行を出力する）
   - **rationale 編集 UI**:
     - 申請書の行のもとになる点（`category=add` と `category=band_change` のピーク、`category=delete` の通常削除のサミット。申請から除外している間も含む。担当者指定削除は上記専用 UI。[ADR-SRS-082](decisions/ADR-SRS-082-srs-fr-019-viewer-colors-key-col-jump-and-wording-review.md)）: ポップアップまたはサイドパネルに `rationale` プロパティを表示する textarea を設ける
     - 初期値: `merged_summit.geojson` の `rationale` プロパティ（[FR-009](#fr-009-sotaリスト突合match_status-判定) が自動生成したテンプレート文字列）
@@ -1459,12 +1459,12 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
     - 山岳名・通常 rationale の編集値は、対象ごとに次の識別値で保存・照合する（仮サミットコードは実行ごとに再採番されるため識別に使わない。[8.2.2](#822-localstorage-編集内容詳細仕様)）: new / dominant のピークはピーク座標、既存サミット（band_change の matched 登録・通常 delete）は正式 SummitCode とアクション（band_change か delete。[ADR-SRS-066](decisions/ADR-SRS-066-existing-rationale-matched-by-code-and-action.md)）。引き継ぎ時に今回の対象と一致しない保存値は適用せず、件数と識別値を利用者に知らせる
     - 新しいパイプライン実行で `generated_at` が変わった場合、前回の入力が残っていれば「前回の入力内容が残っています（解析日時: XXX）。引き継ぎますか？」と警告・選択を促す。「引き継ぐ」を選んだ場合は前回 `generated_at` キーの入力内容を今回の `generated_at` キーに引き継いで使用する（担当者指定削除は根拠下書きのみ継承し、判断は個別再選択する。除外台帳と申請に戻した記録も確認対象と明示し、継承時は同じ対象・条件に一致する判断を再選択なしで適用、非継承時は空台帳・空の記録とする。[8.2.2](#822-localstorage-編集内容詳細仕様)。詳細実装は HLD に委ねる）。「引き継がない」を選んだ場合は前回 localStorage を破棄せず保持したまま、今回の `generated_at` キーで初期値（[FR-009](#fr-009-sotaリスト突合match_status-判定) 自動生成テンプレート）から開始する（確認なしにユーザーの入力成果を削除しない。前回データの破棄・容量上限超過時の扱いは HLD に委ねる）
   - **申請成果物のエクスポート機能**（申請書/申請エビデンスの2ボタン。除外判断の保存・読込操作は別途設け、配置は HLD）:
-    - 申請書エクスポート時、今回の申請対象（`category=add` かつ application_exclusion が空文字）のピークのうち `region_name` が空文字のもの（申請書の B 列〔県名〕が空欄になる。[FR-011](#fr-011-申請書-xlsx-生成) の ※6）の件数と仮サミットコード・座標を警告表示し、出力は続行する（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。
+    - 申請書エクスポート時、今回の申請対象（`category=add` で、除外されておらず、申請済みとして外れてもいない）のピークのうち `region_name` が空文字のもの（申請書の B 列〔県名〕が空欄になる。[FR-011](#fr-011-申請書-xlsx-生成) の ※6）の件数と仮サミットコード・座標を警告表示し、出力は続行する（[ADR-SRS-084](decisions/ADR-SRS-084-srs-fr-011-021-020-review-blank-region-warning-and-public-viewer-fetch-failure.md)）。
     - 申請書エクスポート時、複数登録の組数と保留登録件数（AZ 内＋主ピーク依存の AZ 外）を示し、それらは申請対象外であると警告表示する。保留組を除いたドラフトとして、無関係な候補の出力は続行する。
     - 両ボタンとも、担当者指定削除で根拠本文が未記入の件数・正式コードを警告し、出力を許す。未記入の行を落とさず、review_note は空文字、rationale は「未記入（担当者補記）」を含む専用テンプレートとする。
     - 両ボタンで、除外行数（manual/parent_add 別）、未適用判断、理由未記入の manual の件数と識別子を知らせて出力を許す。新設は現在の仮コードと座標、未適用新設記録は保存座標で示す。関連削除だけを除外した場合の警告と、今回適用した除外理由が公開エビデンスに含まれる旨も示す。申請済みとして申請書から外した行の数と、親の追加が申請済みで外れた削除の候補の件数と識別子、未適用の申請に戻した記録の件数も知らせる。既存の不備・保留組等の警告は維持する。
     - **「申請書」ボタン**（[FR-011](#fr-011-申請書-xlsx-生成) 準拠）: SheetJS を使い申請書 XLSX を**単独**ブラウザダウンロードする
-      - 出力行は application_exclusion が空文字のものだけとする: `追加`（`category=add` のピーク + 入力山岳名。A列=追加・B列=県名）・`削除`（`category=delete` の summit フィーチャ）・`変更`（`category=band_change` のピーク。列構成は [FR-011 参照](#fr-011-申請書-xlsx-生成)）。`category=no_change`・`review` は出力しない。名称の変更と座標の変更（申請時のアクションは [UR-004](10_URD.md#ur-004) のとおり）は自動識別対象外（[UR-003](10_URD.md#ur-003)、[3.6](#36-スコープ外)）のため本エクスポートの出力対象外。「その他」の行は出力しない
+      - 出力行は、application_exclusion が空文字で、かつ `pending_match=same` と `pending_return=false` の組でないものだけとする: `追加`（`category=add` のピーク + 入力山岳名。A列=追加・B列=県名）・`削除`（`category=delete` の summit フィーチャ）・`変更`（`category=band_change` のピーク。列構成は [FR-011 参照](#fr-011-申請書-xlsx-生成)）。`category=no_change`・`review` は出力しない。名称の変更と座標の変更（申請時のアクションは [UR-004](10_URD.md#ur-004) のとおり）は自動識別対象外（[UR-003](10_URD.md#ur-003)、[3.6](#36-スコープ外)）のため本エクスポートの出力対象外。「その他」の行は出力しない
       - XLSX 列 I（根拠）: 各フィーチャの `rationale` プロパティ値（編集済みの場合は編集後の値、未編集の場合は自動生成値）を転記する（詳細は [FR-011 参照](#fr-011-申請書-xlsx-生成)）
     - **「申請エビデンス」ボタン**（[FR-021](#fr-021-申請エビデンス-zip-生成) 準拠）: JSZip を使い申請エビデンス ZIP をブラウザダウンロードする。ZIP には [FR-012](#fr-012-サミット一覧申請内容反映版生成) のサミット一覧（申請内容反映版）`merged_summit_revised.xlsx` を同梱する。詳細は [FR-021 参照](#fr-021-申請エビデンス-zip-生成)
   - **異常系**: 背景タイル・地理院標高タイル・基準点タイル・ライブラリ（CDN 経由: [§3.4](#34-外部システム依存関係環境)）の実行時取得は失敗しうる外部境界である。取得失敗時もビューア全体は停止せず、該当機能が利用できないことを利用者が判別できること（機能別の詳細挙動は HLD に委ねる）。データファイル（`merged_viewer_data.js`）が読み込めない場合はその旨を利用者に提示すること（詳細は HLD に委ねる）。担当者指定削除・除外台帳・申請に戻した記録の不正保存値と保存失敗は [8.2.2](#822-localstorage-編集内容詳細仕様)、判断ファイルの検証・読込失敗は [7.2.8](#728-除外判断ファイル) に従う。その他の入力値検証（不正な座標入力等）・容量超過時の詳細は HLD に委ねる
@@ -1473,7 +1473,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 #### FR-011: 申請書 XLSX 生成
 
-- **対応 UR**: [UR-004](10_URD.md#ur-004), [UR-015](10_URD.md#ur-015)
+- **対応 UR**: [UR-004](10_URD.md#ur-004), [UR-015](10_URD.md#ur-015), [UR-003](10_URD.md#ur-003)
 - **概要**: 申請書 XLSX は **HTML ビューア（[FR-019](#fr-019-html-ビューア機能仕様)）の「申請書」ボタンでブラウザ内で生成・ダウンロード**する。Python バッチは XLSX を生成しない。
 
 **入力**:
@@ -1492,7 +1492,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 **説明**:
 
-  - 申請出力は現在状態の `category` が add / delete / band_change かつ `application_exclusion` が空文字の行だけを対象とする。除外行は申請書へ出力せず、残る行の A〜J と基準行順（除外がない場合の行の並び。通常行同士の並びは、行を生む点が `merged_summit.geojson` に並ぶ順のまま、申請する行だけを残す（HLD で定めた。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。[FR-009](#fr-009-sotaリスト突合match_status-判定) の複数登録の出力順序参照）を維持する。除外件数・未適用判断・理由未記入・関連候補の警告は [FR-019](#fr-019-html-ビューア機能仕様) に従う。`match_status=delete` でも `category=review` の行は出力しない。複数登録の保留組から追加・変更・削除行を生成せず、組数・保留登録件数を警告して無関係な候補の出力を続行する（[FR-019](#fr-019-html-ビューア機能仕様)）。
+  - 申請出力は現在状態の `category` が add / delete / band_change かつ `application_exclusion` が空文字で、`pending_match=same` かつ `pending_return=false` でない行だけを対象とする。除外行と申請済みで外れた行は申請書へ出力せず、残る行の A〜J と基準行順（除外がない場合の行の並び。通常行同士の並びは、行を生む点が `merged_summit.geojson` に並ぶ順のまま、申請する行だけを残す（HLD で定めた。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。[FR-009](#fr-009-sotaリスト突合match_status-判定) の複数登録の出力順序参照）を維持する。除外件数・未適用判断・理由未記入・関連候補の警告は [FR-019](#fr-019-html-ビューア機能仕様) に従う。`match_status=delete` でも `category=review` の行は出力しない。複数登録の保留組から追加・変更・削除行を生成せず、組数・保留登録件数を警告して無関係な候補の出力を続行する（[FR-019](#fr-019-html-ビューア機能仕様)）。
 
   - テンプレート列構成（`ref/SOTA-Summit-list-revision-request.xlsx` 準拠）:
     - 1シート構成
@@ -1517,7 +1517,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 #### FR-012: サミット一覧（申請内容反映版）生成
 
-- **対応 UR**: [UR-005](10_URD.md#ur-005), [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015)
+- **対応 UR**: [UR-005](10_URD.md#ur-005), [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015), [UR-003](10_URD.md#ur-003)
 - **概要**: `merged_summit.geojson`（[FR-009](#fr-009-sotaリスト突合match_status-判定) 出力の中心データ）から、[FR-019](#fr-019-html-ビューア機能仕様) でユーザーが編集した山岳名（`summit_name_jp`・`summit_name`）を反映したサミット一覧（申請内容反映版）を **HTML ビューア（[FR-019](#fr-019-html-ビューア機能仕様)）内でブラウザ生成**する。生成した XLSX は申請エビデンス ZIP（[FR-021](#fr-021-申請エビデンス-zip-生成)）に同梱してダウンロードする（[UR-005](10_URD.md#ur-005) 対応）。担当者指定削除の category・review_decision・review_note と、申請除外の application_exclusion・exclusion_note も反映する。rationale 列は一覧に持たず、根拠全文は申請書列 I と ZIP 内 GeoJSON に反映する。
 
 **入力**:
@@ -1544,7 +1544,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - `no_change`・`review` 行も XLSX に含む（申請対象外だが SOTA 日本支部担当者が全件状態をエビデンスとして確認できるよう同梱する。詳細は [FR-021](#fr-021-申請エビデンス-zip-生成) 参照）
   - **担当者指定削除の行**: 元の孤立 unmatched summit Point に対応する 1 行の category を delete に更新し、review 行を重複生成しない。コード・名称 JP/EN・地域・市区町村・sota_* は自身の登録値を保持する。`peak_lat/lon/elev`・`col_lat/lon/elev`・`prominence`・`points`・`stability`・`key_col_resolved`・`col_margin_px`・`analysis_count`・`expected_count`・`area_complete`・`is_band_change_candidate`・`dominant_peak_code`・`dominant_peak_dist_m` は全て空欄。取消後は同じ行を review/unmatched に戻す。
   - 担当者指定削除の選択・取消で一覧全体の行数とバッチ基準の行位置を変えない。操作順に従って末尾へ追加しない。
-  - 申請除外の有無にかかわらず全行を保持し、application_exclusion/exclusion_note を転記する。除外・解除で行数・行位置・category・登録/解析値を変えない。行を生む peak または summit Point の現在状態から転記し、台帳や親子関係から再導出しない。
+  - 申請除外・申請済みの有無にかかわらず全行を保持し、application_exclusion/exclusion_note と pending_match/pending_note/pending_return を転記する。除外・解除で行数・行位置・category・登録/解析値を変えない。行を生む peak または summit Point の現在状態から転記し、台帳や親子関係から再導出しない。
   - **出力カラム**:
 
 | カラム | 説明 |
@@ -1557,6 +1557,9 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | review_note | [共通属性](#各フィーチャのプロパティ) と同じ値。改訂一覧は選択中の根拠本文（未記入なら空文字）、バッチ一覧・未選択・取消後は空文字 |
 | application_exclusion | [共通属性](#各フィーチャのプロパティ) の現在状態。バッチ一覧は全件空文字。申請除外しても一覧の行は保持 |
 | exclusion_note | [共通属性](#各フィーチャのプロパティ) の現在の除外理由。バッチ一覧・除外なしは空文字。理由下書きは含めない |
+| pending_match | [共通属性](#各フィーチャのプロパティ) の現在状態。申請済みの判定（空文字・`same`・`different`）。申請済みでも一覧の行は保持 |
+| pending_note | [共通属性](#各フィーチャのプロパティ) の現在状態。当たった申請の表示用の文（申請者を含まない）。`pending_applications` は列にしない（一覧は人が読むもので、申請の中身は本列で足りる） |
+| pending_return | [共通属性](#各フィーチャのプロパティ) の現在状態。担当者が申請に戻したか（真偽値）。バッチ一覧は全件 false |
 | stability | 解析品質（confirmed/unstable/-。`-` = 広域モード確定ピーク・通常モード安定性評価なし。定義は [FR-008](#fr-008-per-mesh-csv-統合) 参照） |
 | summit_code | サミットコード（例: JA/TK-001）。既存登録行（delete・全 review を含む）は自身の正式コード、new / dominant の場合は仮サミットコード（例: JAx/XX-A00）または ZZ/ZZ-A00（海上・未判定） |
 | summit_name | サミット名（英語/ローマ字）。既存登録行は SOTA リストの値。add（new / dominant）行は [FR-019](#fr-019-html-ビューア機能仕様) で入力された山岳名EN（未入力なら空文字）。review 行と担当者指定削除行は自身の summit Point の値を保持する |
@@ -1577,7 +1580,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 | sota_lon | SOTA リスト登録経度。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
 | sota_alt_m | SOTA リスト登録標高（m）。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
 | sota_points | 標高バンドに基づくポイント数（1/2/4/6/8/10）。`sota_alt_m`（整数 m）でバンド判定（[GLOSSARY 参照](00_GLOSSARY.md#標高バンドpoints-算出表)。150m 未満は算出表に無いので空欄）。matched（band_change/no_change）: SOTA 登録値。delete/review: 行の既存サミット自身の値。new/dominant: 空欄 |
-| is_band_change_candidate | Points バンド遷移フラグ（bool）。`points ≠ sota_points` の場合 true（`points` か `sota_points` が空欄の場合は false。変更申請候補。今回の出力可否は application_exclusion も参照）。band_change/no_change のみ（matched peak 行）。それ以外は空欄 |
+| is_band_change_candidate | Points バンド遷移フラグ（bool）。`points ≠ sota_points` の場合 true（`points` か `sota_points` が空欄の場合は false。変更申請候補。今回の出力可否は application_exclusion・申請済みの判定も参照）。band_change/no_change のみ（matched peak 行）。それ以外は空欄 |
 | municipality | 市区町村名（例: "根室市"・"標津町"）。N03 前処理済み市区町村 GeoJSON 未存在時は空文字。band_change・no_change の行はピークの点の値（AZ の中のサミットの点ではない。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | region_name | 都道府県名（北海道は振興局名）。N03 前処理済み地域 GeoJSON の `region_name` から取得。未取得時は空文字。band_change・no_change の行はピークの点の値（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | area_complete | アクティベーションゾーンが解析範囲内で完結しているか（true=完結 / false=途切れ）。add/band_change/no_change および AZ 内 ambiguous 行に対応 AZ の値を転記。通常 delete・AZ 外保留・孤立 review 行は空欄 |
@@ -1590,7 +1593,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 #### FR-021: 申請エビデンス ZIP 生成
 
-- **対応 UR**: [UR-005](10_URD.md#ur-005), [UR-018](10_URD.md#ur-018)（公開用データの供給）, [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015)
+- **対応 UR**: [UR-005](10_URD.md#ur-005), [UR-018](10_URD.md#ur-018)（公開用データの供給）, [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015), [UR-003](10_URD.md#ur-003)
 - **概要**: HTML ビューア（[FR-019](#fr-019-html-ビューア機能仕様)）の「申請エビデンス」ボタンで、サミット一覧（申請内容反映版）XLSX と 5 カテゴリ GeoJSON を 1 つの ZIP にまとめてブラウザダウンロードする。
 
 **入力**:
@@ -1627,7 +1630,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
   - GeoJSON の生成は [FR-019](#fr-019-html-ビューア機能仕様) が入力の適格性を検証して構成した現在の表示・編集状態（許可された山岳名JP/EN・rationale 編集値、担当者指定削除の判断・根拠、申請除外状態・理由）を使う。localStorage を直接読まず、出力側で category や判断を再導出しない。
   - 保留組の review フィーチャには過去の編集値をマージしない。孤立 unmatched も通常の名称・rationale 編集では変更せず、[FR-019](#fr-019-html-ビューア機能仕様) の適格性検証と明示判断を経た担当者指定削除だけを例外とする。保留組全体は review.geojson のみに含める。担当者指定削除は delete.geojson のみに入り、取消後は review.geojson のみに戻る。
   - 全フィーチャの review_decision・review_note を保持し、担当者指定削除では rationale に専用テンプレートを保持する。未選択・取消後の下書きは出力しない。孤立 Point に親ピーク・接続線・コル・ゾーンを補わない。分割後も元のフィーチャ列の相対順を保持し、同じ現在状態なら操作順によらず同じ出力とする。
-  - application_exclusion/exclusion_note を全フィーチャで保持し、除外された候補と関連フィーチャも元の category のファイルへ残す。第6ファイルや架空フィーチャを作らず、申請書の除外フィルターを ZIP へ適用しない。理由下書き・不在対象の記録・除外判断 JSON は同梱しない。除外関連の通知と公開理由の告知は [FR-019](#fr-019-html-ビューア機能仕様) の両ボタン共通規則に従う。
+  - application_exclusion/exclusion_note と pending_applications/pending_match/pending_note/pending_return を全フィーチャで保持し、除外・申請済みの候補と関連フィーチャも元の category のファイルへ残す。第6ファイルや架空フィーチャを作らず、申請書の除外・申請済みのフィルターを ZIP へ適用しない。理由下書き・不在対象の記録・除外判断 JSON は同梱しない。除外関連の通知と公開理由の告知は [FR-019](#fr-019-html-ビューア機能仕様) の両ボタン共通規則に従う。
   - 根拠未記入の担当者指定削除は件数・コードを警告して ZIP 出力を許す（[FR-019](#fr-019-html-ビューア機能仕様)）。
   - JSZip ライブラリを使用して ZIP をブラウザ内で生成する
   - `no_change.geojson`・`review.geojson` は申請対象外だが、SOTA 日本支部担当者が現行サミット全件の状態をエビデンスとして確認できるよう同梱する
@@ -1641,7 +1644,7 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
 #### FR-020: 公開用ビューア配信
 
-- **対応 UR**: [UR-018](10_URD.md#ur-018), [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015)
+- **対応 UR**: [UR-018](10_URD.md#ur-018), [UR-011](10_URD.md#ur-011), [UR-015](10_URD.md#ur-015), [UR-003](10_URD.md#ur-003)
 - **概要**: リポジトリの公開用データ置き場に配置された申請エビデンス GeoJSON 5 本（[FR-021](#fr-021-申請エビデンス-zip-生成) の同梱物と同一）を、閲覧専用テンプレートとともに静的ホスティングが配信する。配信される GeoJSON は配置したファイルと同一内容（無改変）。
 
 **入力**:
@@ -1664,9 +1667,10 @@ dominant で削除候補サミットが複数の場合、各 `coord_diff` LineSt
 
   - テンプレートファイルをソースコードに同梱する（詳細は HLD）
   - 公開用は閲覧専用（編集 UI なし・エクスポートなし・localStorage 不使用）。ZIP 同梱の申請内容反映版 XLSX は公開しない
-  - **提供機能**: 公開用は [FR-019](#fr-019-html-ビューア機能仕様) が定義する閲覧系機能のうち、**編集 UI・エクスポート機能・localStorage・除外台帳の管理/読込を除く全て**を含む（地図表示・マーカー・背景タイル切替・検索・カテゴリ別表示フィルター・等高線/基準点/1次メッシュ各レイヤー・popup・ピーク↔Keyコル相互ジャンプ等）。各フィーチャの「全データ」折りたたみ popup も作業用と同様に含む（申請証跡としての透明性を優先するため、作業用と同一の popup 内容を維持する）
+  - **提供機能**: 公開用は [FR-019](#fr-019-html-ビューア機能仕様) が定義する閲覧系機能のうち、**編集 UI・エクスポート機能・localStorage・除外台帳と申請に戻した記録の管理/読込を除く全て**を含む（地図表示・マーカー・背景タイル切替・検索・カテゴリ別表示フィルター・等高線/基準点/1次メッシュ各レイヤー・popup・ピーク↔Keyコル相互ジャンプ等）。各フィーチャの「全データ」折りたたみ popup も作業用と同様に含む（申請証跡としての透明性を優先するため、作業用と同一の popup 内容を維持する）
   - 担当者指定削除の孤立 Point は親ピーク・コル・線なしで正常表示する。削除カテゴリの popup に「担当者判断による削除申請」、根拠（未記入ならその旨）と元の unmatched を示す。配信データの category・判断を再導出せず、採用・取消・入力 UI は設けない。
   - 除外状態・理由（空欄なら未記入）と元の category を表示する。除外を含む表示切替（初期 ON）・検索時の必要フィルター ON・parent_add から親への移動は作業用と同様。除外/解除/理由編集・台帳一覧/入出力は提供せず、配信された除外属性を再計算しない。
+  - 申請済みの候補は、元の category のまま、申請済みの印と `pending_note`（申請者を含まない）と出典（「山岳データ登録変更リスト（ジオサミットでひとこえ）」と入手の入口の URL）を示す。申請者は示さない（「全データ」でも `pending_applications` の申請者を示さない）。「申請済みを含む」表示切替（初期 ON）・検索時の必要フィルター ON は作業用と同様。`pending_return=true`（申請に戻した）候補は、申請済みの印を付けず、申請に戻したことを示す。申請に戻す/申請済みに戻す操作・知らせる行・「登録変更リスト」の欄は提供せず、配信された申請済みの属性を再計算しない。登録変更リスト由来の文字列は文字として表示し、HTML やコードとして実行しない（[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。
   - **メタデータ表示**: 各 GeoJSON に複製された `metadata`（`summitslist_date`・`gsi_tile_latest_date`・`generated_at`・`software_version`）から、[FR-019](#fr-019-html-ビューア機能仕様) と同様に基準日等を画面表示する（UTC 付記）
   - **帰属表示**: [UR-011](10_URD.md#ur-011) に従い、公開用テンプレートにも [FR-019](#fr-019-html-ビューア機能仕様) と同等の地図帰属表示（`© 国土地理院` 常時表示＋OSM/OpenTopoMap 各選択時の attribution 併記＋「加工して作成」の旨の明示）を備える。詳細は [6.2.7](#627-公開用ビューア閲覧専用静的ホスティング配信) 参照
   - リリース版と開発版を同時に配信でき、閲覧者がどちらかを判別できること（判別手段は URL と画面表示。詳細は HLD。`software_version` は解析ソフトウェアの版として併記する）。リリース版も開発版も、ログインを求めずに誰でも閲覧できること。版ごとに、配信のたびに変わらない URL を 1 つずつ持ち、閲覧者が同じ URL で最新の配信を開けること（[ADR-SRS-074](decisions/ADR-SRS-074-public-viewer-access-url-and-build-failure.md)）。ブランチとの対応・配信サービス・組み立て手順・URL の形・公開用データ置き場のパスは HLD
@@ -1928,7 +1932,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 生成方式 | HTML ビューア（[FR-012](#fr-012-サミット一覧申請内容反映版生成) が `merged_summit.geojson` の Point フィーチャからブラウザ内で生成し、`area_complete` は行を生む点と鍵で結んだ AZ から取る（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)）。[FR-019](#fr-019-html-ビューア機能仕様) でのユーザー編集内容を反映） |
 | フォーマット | XLSX（データ表のシートと、最後に出典のシート。出典のシートの文面は [FR-012](#fr-012-サミット一覧申請内容反映版生成) と同じ。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 含む情報 | 1 行 = 1 サミット（行集約規則は [FR-009 行生成モデル参照](#fr-009-sotaリスト突合match_status-判定)。Polygon / MultiPolygon / LineString は行を生まない。`rationale` 列は含めない） |
-| カラム | [FR-012 参照](#fr-012-サミット一覧申請内容反映版生成)。担当者指定削除は category と review_decision・review_note、除外は application_exclusion・exclusion_note に反映し全行保持。rationale 列は持たない |
+| カラム | [FR-012 参照](#fr-012-サミット一覧申請内容反映版生成)。担当者指定削除は category と review_decision・review_note、除外は application_exclusion・exclusion_note に、申請済みは pending_match・pending_note・pending_return に反映し全行保持。rationale 列は持たない |
 
 #### 6.2.3 標高地形図
 
@@ -1980,7 +1984,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 |---|---|
 | 生成タイミング | [FR-013](#fr-013-html-ビューア生成) の実行時 |
 | ファイル | `$DATA_DIR/results/merged_viewer.html`・`$DATA_DIR/results/merged_viewer_data.js`（同一ディレクトリの 2 ファイル） |
-| 用途 | 山岳名・根拠入力、孤立サミットの担当者指定削除・取消、通常候補の個別除外・判断ファイル保存/読込、目視確認・申請書 / 申請エビデンスのエクスポートを行うローカル作業用ビューア |
+| 用途 | 山岳名・根拠入力、孤立サミットの担当者指定削除・取消、通常候補の個別除外・申請済みの確認と申請に戻す操作・判断ファイル保存/読込、目視確認・申請書 / 申請エビデンスのエクスポートを行うローカル作業用ビューア |
 | HTML テンプレート | テンプレートファイル（ソースコードに同梱。作業用と公開用の共通化は HLD） |
 | 使用ライブラリ | Leaflet（地図・CDN 経由）・SheetJS/xlsx.js（XLSX エクスポート・CDN 経由）・JSZip（ZIP 生成・CDN 経由） |
 | 背景タイル | 国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap（切り替え可能。既定: 国土地理院標準地図） |
@@ -1997,7 +2001,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 用途 | バッチ生成時点（ユーザー編集前）のサミット一覧を確認するための XLSX。不備ゲート発動時の不備調査にも使用（`match_status=ambiguous` 行・主ピーク依存保留行・`match_status=unmatched` 行・`area_complete=false` 行・`key_col_resolved=false` 行を per-row で確認）。[サミット一覧（申請内容反映版）](#622-サミット一覧申請内容反映版) はユーザー編集内容を反映した版 |
 | フォーマット | XLSX（データ表のシートと、最後に出典のシート。出典のシートの文面は [FR-012](#fr-012-サミット一覧申請内容反映版生成) と同じ。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 含む情報 | 1 行 = 1 サミット（行集約規則は [FR-009 行生成モデル参照](#fr-009-sotaリスト突合match_status-判定)。Polygon / MultiPolygon / LineString は行を生まない。`rationale` 列は含めない） |
-| カラム | [FR-012 参照](#fr-012-サミット一覧申請内容反映版生成)（カラム構成は同一）。review_decision・review_note・application_exclusion・exclusion_note は全件空文字、孤立サミットは review/unmatched のまま |
+| カラム | [FR-012 参照](#fr-012-サミット一覧申請内容反映版生成)（カラム構成は同一）。review_decision・review_note・application_exclusion・exclusion_note は全件空文字、pending_return は全件 false、pending_match・pending_note はバッチが書く（申請済みの判定）、孤立サミットは review/unmatched のまま |
 
 #### 6.2.7 公開用ビューア（閲覧専用・静的ホスティング配信）
 
@@ -2013,7 +2017,7 @@ ZIP 内のサミット一覧（申請内容反映版）XLSX・5分類 GeoJSON �
 | 背景タイル | 国土地理院標準地図・国土地理院淡色地図・OSM・OpenTopoMap（切り替え可能。既定: 国土地理院標準地図） |
 | GeoJSON 参照方式 | 公開用データの GeoJSON 5 本をそのまま配信し表示する（配置したファイルとバイト単位で同一。読み込み機構は HLD）。公開用データが 0 本でも配信する（[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
 | 版の区分 | 組み立てが版の区分（リリース版か開発版か）、ブランチの名前、commit の ID を持つ `site.json` を書いて配信し、画面はそれで版の区分を示す（キーの名前と読み方は HLD。[ADR-SRS-073](decisions/ADR-SRS-073-align-srs-wording-with-hld-decisions.md)） |
-| 提供機能 | [FR-019](#fr-019-html-ビューア機能仕様) の閲覧系機能のうち編集 UI・エクスポート・localStorage・除外台帳の管理/読込を除く全て（「全データ」popup を含む）。詳細は [FR-020](#fr-020-公開用ビューア配信) 参照 |
+| 提供機能 | [FR-019](#fr-019-html-ビューア機能仕様) の閲覧系機能のうち編集 UI・エクスポート・localStorage・除外台帳と申請に戻した記録の管理/読込を除く全て（「全データ」popup を含む。申請済みの印・`pending_note`・出典の表示を含み、申請者は示さない）。詳細は [FR-020](#fr-020-公開用ビューア配信) 参照 |
 | メタデータ表示 | 各 GeoJSON に複製された `metadata` から SOTA サミットリスト基準日・地理院タイル更新日（いずれも UTC）・解析実行日時・解析ソフトウェアバージョンを画面表示 |
 | 帰属表示 | `© 国土地理院`（リンク先: `https://maps.gsi.go.jp/`）を基図選択によらず常時表示。OSM 選択時は `© OpenStreetMap contributors`、OpenTopoMap 選択時は `© OpenTopoMap contributors` を併記。「加工して作成」の旨を明示する（[UR-011](10_URD.md#ur-011)） |
 | 特徴 | 閲覧専用（編集 UI なし・エクスポートなし・localStorage 不使用）。Leaflet（CDN）・各タイルサーバー・同一サイトの GeoJSON への疎通を要する |
@@ -2435,17 +2439,17 @@ no_change・review・保留組・担当者指定 delete は対象外。元のバ
 | [FR-007](#fr-007-per-mesh-csv-出力プロミネンス閾値適用) | per-mesh CSV 出力（プロミネンス閾値適用） | ✅ | ✅ | | | ✅ | | | | | | | | | | | |
 | [FR-008](#fr-008-per-mesh-csv-統合) | per-mesh CSV 統合 | | ✅ | ✅ | | | | | | | | | | | | | |
 | [FR-009](#fr-009-sotaリスト突合match_status-判定) | SOTAリスト突合・match_status 判定 | | | ✅ | | ✅ | | | | ✅ | | | | | ✅ | | |
-| [FR-011](#fr-011-申請書-xlsx-生成) | 申請書 XLSX 生成 | | | | ✅ | | | | | | | | | ✅ | | | |
-| [FR-012](#fr-012-サミット一覧申請内容反映版生成) | サミット一覧（申請内容反映版）生成 | | | | | ✅ | | | | ✅ | | | | ✅ | | | |
+| [FR-011](#fr-011-申請書-xlsx-生成) | 申請書 XLSX 生成 | | | ✅ | ✅ | | | | | | | | | ✅ | | | |
+| [FR-012](#fr-012-サミット一覧申請内容反映版生成) | サミット一覧（申請内容反映版）生成 | | | ✅ | | ✅ | | | | ✅ | | | | ✅ | | | |
 | [FR-013](#fr-013-html-ビューア生成) | HTML ビューア生成 | | | | | | | | | | | | | | | ✅ | |
 | [FR-014](#fr-014-広域結合解析オーケストレーション) | 広域結合解析オーケストレーション | | | | | | ✅ | | | | | | | | | | |
 | [FR-015](#fr-015-標高地形図出力) | 標高地形図出力 | | | | | | | | | | ✅ | | | | | | |
 | [FR-016](#fr-016-ピーク域ポリゴン生成) | ピーク域ポリゴン生成 | | | ✅ | | | | | | | | ✅ | | | ✅ | | |
 | [FR-017](#fr-017-n03-行政区域前処理データ準備) | N03 行政区域前処理（データ準備） | ✅ | | ✅ | ✅ | | | | | | | | | | | | |
 | [FR-018](#fr-018-per-mesh-ピーク候補-geojson-統合) | per-mesh ピーク候補 GeoJSON 統合 | | | ✅ | | | | | | | | ✅ | | | ✅ | | |
-| [FR-019](#fr-019-html-ビューア機能仕様) | HTML ビューア機能仕様 | | | | | | | | | ✅ | | | ✅ | ✅ | | ✅ | |
-| [FR-020](#fr-020-公開用ビューア配信) | 公開用ビューア配信 | | | | | | | | | ✅ | | | | ✅ | | | ✅ |
-| [FR-021](#fr-021-申請エビデンス-zip-生成) | 申請エビデンス ZIP 生成 | | | | | ✅ | | | | ✅ | | | | ✅ | | | ✅ |
+| [FR-019](#fr-019-html-ビューア機能仕様) | HTML ビューア機能仕様 | | | ✅ | | | | | | ✅ | | | ✅ | ✅ | | ✅ | |
+| [FR-020](#fr-020-公開用ビューア配信) | 公開用ビューア配信 | | | ✅ | | | | | | ✅ | | | | ✅ | | | ✅ |
+| [FR-021](#fr-021-申請エビデンス-zip-生成) | 申請エビデンス ZIP 生成 | | | ✅ | | ✅ | | | | ✅ | | | | ✅ | | | ✅ |
 | [FR-022](#fr-022-コル充足判定) | コル充足判定 | | | | | | ✅ | | | | | | | | | | |
 | [FR-023](#fr-023-解析パイプライン制御) | 解析パイプライン制御 | | | | | | ✅ | | | | | | | | | | |
 | [NFR-001](#nfr-001-精度プロミネンス判定) | 精度・検出網羅性 | ✅ | ✅ | | | | ✅ | | | | | | | | | | |

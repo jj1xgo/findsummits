@@ -42,6 +42,22 @@
 
 ---
 
+## 山岳データ登録変更リスト
+
+配置場所: `$DATA_DIR/ref/` 直下（git 管理外・ユーザー手動配置）。利用者が年のページをブラウザで保存して置く。
+
+| 項目 | 内容 |
+|---|---|
+| タイトル | 山岳データ登録変更リスト（年ごと） |
+| 提供元 | [ジオサミットでひとこえ](https://little-ctc.com/) |
+| 参照URL | <https://little-ctc.com/wp_html/sota_updatelist_2024.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2025.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2026.xhtml> |
+| 入手の入口 | <https://little-ctc.com/sota_hp/>（年ごとのページの URL は変わることがあるが、このページから必ずリンクされる。2026-10-19 に持ち主が確認し、リンクの実在も確かめた） |
+| 配置場所 | `$DATA_DIR/ref/sota_updatelist_YYYY.xhtml`（git 管理外。ファイル名の全体が `sota_updatelist_(\d{4})\.xhtml` に合うもの。複数あれば年が最大のものを採る） |
+| 確認日 | 2026-10-19 |
+| 本プロジェクトでの利用形態 | [UR-003](../docs/10_URD.md#ur-003) の突合の入力（申請済みで現行 SOTA リストに未反映の申請の識別。[ADR-URD-029](../docs/decisions/ADR-URD-029-pending-applications-in-matching.md)）。公開のページで、入力に使ってよいことを持ち主が 2026-10-19 に確かめた。入力の形と読み方はソフトウェア要件仕様書（SRS）の [7.2.9](../docs/20_SRS.md#729-山岳データ登録変更リスト) で定める（[ADR-SRS-086](../docs/decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。あわせて、申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）と、[URD §6](../docs/10_URD.md#6-スコープ外対象外) の既存サミットの座標変更の申請実績を確かめる資料（[ADR-URD-025](../docs/decisions/ADR-URD-025-coordinate-change-stays-out-of-scope.md)）。 |
+
+---
+
 ## 国土地理院標高タイル（データソース）
 
 | 項目 | 内容 |
@@ -166,19 +182,6 @@
 | 参照URL | <https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>、<https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>、<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>、<https://developers.cloudflare.com/workers/configuration/routing/workers-dev/>、<https://developers.cloudflare.com/workers/previews/get-started/>、<https://github.com/cloudflare/wrangler-action>（Cloudflare の公式の Action。wrangler の版の下限の出どころ）、<https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/>、<https://developers.cloudflare.com/workers/static-assets/>、<https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/>、<https://developers.cloudflare.com/workers/wrangler/configuration/#assets>、<https://developers.cloudflare.com/workers/previews/> |
 | 確認日 | 2026-10-11（開発コンテナから届かないため、host の Codex が web 検索で読み、要の 4 点は持ち主が原文で確かめた） |
 | 本プロジェクトでの利用形態 | [FR-020](../docs/20_SRS.md#fr-020-公開用ビューア配信) の公開用ビューアの配信サービス。組み立てと配信の仕組み、URL の形、設定は [HLD 4.20](../docs/30_HLD.md#420-fr-020-公開用ビューア配信)（[DEC164](../docs/30_HLD.md#4204-設計判断)・[DEC184](../docs/30_HLD.md#4204-設計判断)〜[DEC186](../docs/30_HLD.md#4204-設計判断)）。データの取得元ではないので、帰属表示の対象ではない。 |
-
----
-
-### 山岳データ登録変更リスト
-
-| 項目 | 内容 |
-|---|---|
-| タイトル | 山岳データ登録変更リスト（年ごと） |
-| 提供元 | [ジオサミットでひとこえ](https://little-ctc.com/) |
-| 参照URL | <https://little-ctc.com/wp_html/sota_updatelist_2024.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2025.xhtml>、<https://little-ctc.com/wp_html/sota_updatelist_2026.xhtml> |
-| 入手の入口 | <https://little-ctc.com/sota_hp/>（年ごとのページの URL は変わることがあるが、このページから必ずリンクされる。2026-10-19 に持ち主が確認し、リンクの実在も確かめた） |
-| 確認日 | 2026-10-19 |
-| 本プロジェクトでの利用形態 | 申請の記録（アクションの使い方）を確かめる参照資料。[UR-004](../docs/10_URD.md#ur-004) の「その他」の説明の根拠（[ADR-URD-024](../docs/decisions/ADR-URD-024-ur-004-other-action-wording.md)）と、[URD §6](../docs/10_URD.md#6-スコープ外対象外) の既存サミットの座標変更の申請実績を確かめる資料（[ADR-URD-025](../docs/decisions/ADR-URD-025-coordinate-change-stays-out-of-scope.md)）。あわせて、[UR-003](../docs/10_URD.md#ur-003) の突合の入力（申請済みで現行 SOTA リストに未反映の申請の識別。[ADR-URD-029](../docs/decisions/ADR-URD-029-pending-applications-in-matching.md)）。公開のページで、入力に使ってよいことを持ち主が 2026-10-19 に確かめた。入力の形と読み方はソフトウェア要件仕様書（SRS）で定める。 |
 
 ---
 
