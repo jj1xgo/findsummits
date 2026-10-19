@@ -190,7 +190,7 @@ SOTA 日本支部参照マニュアル（2025年7月改定版）に基づく全�
 | 用語（本書での表記） | 正式名称 | 説明 |
 |---|---|---|
 | サミット候補 | — | SOTA サミットの要件（プロミネンス ≥ 150m）を満たすとして検出・抽出の対象となるピークの総称。既存サミットに対応するピークも含む。新規追加の申請対象は[申請カテゴリ](#申請カテゴリ) `add`（`peak.match_status` ∈ {new, dominant}）で表す。 |
-| 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete の削除候補となる。今回の申請可否は application_exclusion と組み合わせて判定する（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。 |
+| 削除候補サミット | — | `summit.match_status=delete` の既存登録。いずれの AZ にも属さず、選ばれた主ピークの delete 判定ゾーン内にある。主ピークが ambiguous の場合は category=review として保留し、それ以外は category=delete の削除候補となる。今回の申請可否は application_exclusion と申請済みの判定と組み合わせて判定する（[FR-011](20_SRS.md#fr-011-申請書-xlsx-生成)）。 |
 | 要確認サミット | — | `category=review` の既存登録。全ゾーン外の孤立 unmatched、同一 AZ 内複数登録 ambiguous、その主ピークに従属する AZ 外削除候補の3種。自動申請せず担当者の確認に委ねる。件数しきい値による停止は孤立 unmatched のみを数える（[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。孤立サミットは地形変化と解析不備を座標だけで区別できないため要確認とする（[ADR-SRS-037](decisions/ADR-SRS-037-unmatched-summit-needs-review.md)）。 |
 | 申請済み（候補） | — | 山岳データ登録変更リストに、同じ対象・同じ内容の未反映の申請がある候補（pending_match=same）。既定で申請書から外れ、担当者が申請に戻せる。除外（[UR-015](10_URD.md#ur-015)）とは別の状態。同じ対象で内容の違う申請だけがある候補は外さず、その申請があることを示す（[UR-003](10_URD.md#ur-003)、[ADR-SRS-086](decisions/ADR-SRS-086-pending-applications-input-and-state.md)）。 |
 | 担当者指定削除 | — | 孤立 unmatched を担当者が作業用ビューアで明示的に削除申請へ含めた状態。category=delete、review_decision=delete とし、match_status と review_reason は unmatched のまま保持する。親ピーク・接続線を持たない（[ADR-SRS-049](decisions/ADR-SRS-049-unmatched-manual-delete.md)）。 |
@@ -227,12 +227,12 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | application_exclusion | 今回の申請除外状態。空文字は除外なし、manual は有効な担当者判断、parent_add は親の追加除外に伴う従属削除の保留。バッチは全件空文字（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | exclusion_note | 申請除外の理由。manual は任意入力の本文、parent_add は関連追加候補を示す固定文。通常 rationale・review_note と区別する（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | pending_applications | 当たった申請と保持した申請の一覧（アクション、山岳 ID か座標、変更後の標高とバンド、申請者、申請日、載っている年の表、当たり方）。申請済みの判定の正本（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
-| pending_match | 申請済みの判定。空文字は当たる申請なし、same は同じ内容の申請あり（既定で申請書から外れる）、different は内容の違う申請だけある（外さず示す）。バッチが書く（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
+| pending_match | 申請済みの判定。空文字は当たる申請なし、same は同じ内容の申請あり（既定で申請書から外れる）、different は内容の違う申請だけある（外さず示す）。バッチが書き、担当者指定削除に含めたときだけブラウザが申請ごとに評価し直す（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | pending_note | pending_applications から作る表示用の文。申請者を含まない（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | pending_return | 担当者が申請に戻した状態（真偽値）。バッチは全件 false。ブラウザが現在状態だけを更新する（[共通属性](20_SRS.md#各フィーチャのプロパティ)）。 |
 | 申請に戻した記録 | 申請済みで外れた候補を担当者が申請に戻した判断を保持する内部データ。除外台帳とは別に持ち、判断ファイルの別の配列で保存・引き継ぐ（[8.2.4](20_SRS.md#824-申請に戻した記録)）。 |
 | 除外台帳 | 適用中と未適用の manual 判断を保持する内部データ。判断ファイルは台帳を持ち運ぶ JSON であり、公開エビデンスとは別の成果物（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
-| 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。 |
+| 判断時条件 | 除外を判断した時点の登録・解析値と従属関係。識別キーが一致しても条件が変われば今回へ適用せず、再確認を要する。名称や仮コードは条件に含めない（[SRS §8.2.3](20_SRS.md#823-除外台帳)）。申請に戻した記録の判断時条件は、同じ内容の申請の集合と候補の出どころ（[SRS §8.2.4](20_SRS.md#824-申請に戻した記録)）。 |
 | review_group_id | 同じ成果物内の保留組を結ぶ識別子。入力変更後の判断を引き継ぐ永続キーではない。生成規則・空値は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照。 |
 | key_col_resolved | per-mesh CSV のフラグ列。コルが解析範囲内で確定済みの場合 `true`、解析範囲（通常は 3×3 メッシュ、広域は N×N メッシュ）の外でコルが未発見の場合 `false`（定義は [FR-007 出力](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用)）。統合した後（`merged_peak.csv` 以降）は、陸地最高峰リストで `true`（Key コル = 海面）にしたピークも含む（[FR-008](20_SRS.md#fr-008-per-mesh-csv-統合)）。命名遍歴: 当初 `is_tile_top`（タイル最頂点と誤読されやすかった）→ `key_col_unresolved`（並列フラグ `area_truncated` と同方向の否定形だった）→ 真偽値方向を「`true=正常`」に統一するため現名称に再リネーム。 |
 | area_complete | GeoJSON の、アクティベーションゾーンと delete判定ゾーンのプロパティ（[FR-016](20_SRS.md#fr-016-ピーク域ポリゴン生成)・[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) を参照）。ポリゴンが解析範囲内で完結している場合 `true`、解析範囲外で途切れた場合 `false`。旧称 `area_truncated`。`key_col_resolved` と並列し、両者とも「`true=正常`」で揃えている。 |
