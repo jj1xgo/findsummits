@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-19 |
+| 最終更新日 | 2026-10-21 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -110,15 +110,20 @@ def main() -> None:
     ...                         # 設定と引数を読み、ロックを取る（ここで止まるときは要約を出さない）
     common.start_log(...)
     completed = False
+    code = common.EXIT_OK
     try:
-        ...                     # 処理（部品が sys.exit で止まることもある）
+        ...                     # 処理（途中で止まるときは、部品かここで sys.exit を呼ぶ）
+        code = ...              # 処理を終えたときの終了コード（0 のほか、check_cols の 3 など）
         completed = True
     finally:
         if completed:
             common.log_info('<要約>')
         else:
             common.log_info('<途中で止まったことが分かる要約>')
+    sys.exit(code)
 ```
+
+`try` の中の `sys.exit` は、途中で止まるときだけに使う。処理を終えて 0 以外の終了コードで終わるとき（[HLD 3.5.3](30_HLD.md#353-関数) の `check_cols` の呼ぶ順の「`write_unresolved_list` と結果の要約の後に終了コード 3」など）は、`try` の中で `code` に入れて `completed = True` にし、`try`/`finally` の後の `sys.exit(code)` で終える（`try` の中で `sys.exit` を呼ぶと `completed` が偽のままになり、終えた実行に途中で止まった要約が出るため）。
 
 ##### load_config
 
@@ -285,7 +290,7 @@ def main() -> None:
 表の準備の列の共通の準備は次の 2 つ。ケースに固有の準備は、その後に書く。
 
 - **同じプロセス**: テストを動かしているプロセスの中で、対象の関数を直接呼ぶ。設定ファイルを使うケースは、ケースごとに一時のディレクトリを作り、その下に設定ファイルを書いて絶対パスを渡す（`data_dir`・`log_dir` を書くときは、一時のディレクトリの下の絶対パスにする）。止まるケースは `SystemExit` を捕まえて終了コードを読み、標準出力と標準エラー出力は差し替えて捕まえる（`contextlib.redirect_stdout`・`redirect_stderr`）。
-- **子のプロセス**: 上に書いた子のプロセスの形で動かす。子に渡す設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。子の試験用のプログラムは、`StartTime.now()` と `load_config` を呼んでから、入力の列のケースの処理をする。`start_log` は、入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, '<試験用の名前>', sys.argv[1:], start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、ケースの処理の最初に呼ぶ。`UT-common-24` は準備の列のとおり）。
+- **子のプロセス**: 上に書いた子のプロセスの形で動かす。子に渡す設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。子の試験用のプログラムは、`StartTime.now()` と `load_config` を呼んでから（ケースが書かなければ、`keys` は `data_dir` と `log_dir`、`required` は `data_dir`）、入力の列のケースの処理をする。`start_log` は、入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, '<試験用の名前>', sys.argv[1:], start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、ケースの処理の最初に呼ぶ。`UT-common-24` は準備の列のとおり）。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -304,7 +309,7 @@ def main() -> None:
 | `UT-common-13` | `--mesh` の誤り | 同じプロセス。ファイルとディレクトリは一時のディレクトリに作る | 空の値、無いファイル、ディレクトリ、2 行目と 4 行目が誤りのファイル、全角の数字の `5339`（コードポイント U+FF15、U+FF13、U+FF13、U+FF19）の行、有効な行が無いファイル、`533` | どれも 2。誤りの行は最初の 2 行目を示す（A1〜A5）。`533` はパスとして読む |
 | `UT-common-14` | リストを読む | 同じプロセス。ファイルとディレクトリは一時のディレクトリに作る。案内ありは `guidance` に文字列、案内なしは `None` | 正しいリスト、空のファイル、無いファイル（案内あり・なし）、誤りの行、ディレクトリ | 集合、空の集合、1 と R1 の対処（案内か既定）、1 と R3、1 と R2 |
 | `UT-common-15` | `start_log` の前の出し先 | 同じプロセス（`start_log` を呼ばない） | `log_info`・`log_warning`・`log_error` | 標準出力か標準エラー出力にだけ出て、`WARNING:`・`ERROR:` と `対処:` の 2 行、時刻なし |
-| `UT-common-16` | ログファイルの始まり | 子のプロセス | 子のプロセスで `start_log` を呼び、その後に `log_info('<文面>')` と `log_warning('<対象>', '<操作>')` を呼ぶ | `log_dir` を作る、名前が `<program>_<YYYYMMDDTHHMMSS>_<pid>.log`、L1・L2 の行、後の行の先頭に時刻と空白 1 つ（正規表現 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}` と空白）、標準出力に L1・L2 の行が時刻なしで先に出る、画面の行には時刻なし、2 行のメッセージは各行に時刻 |
+| `UT-common-16` | ログファイルの始まり | 子のプロセス。`load_config` の `keys` は `data_dir`・`log_dir`・`max_parallel`・`user_agent_email`（設定ファイルには `data_dir` と `log_dir` だけを書く） | 子のプロセスで `start_log` を呼び、その後に `log_info('<文面>')` と `log_warning('<対象>', '<操作>')` を呼ぶ | `log_dir` を作る、名前が `<program>_<YYYYMMDDTHHMMSS>_<pid>.log`、L1・L2 の行（L2 は `設定ファイル: <設定ファイルの絶対パス>`、`設定: [paths] data_dir = <値>（ファイル）`、`設定: [paths] log_dir = <値>（ファイル）`、`設定: [fetch] max_parallel = 8（デフォルト）`、`設定: [fetch] user_agent_email = 未設定（デフォルト）` の 5 行がこの順）、後の行の先頭に時刻と空白 1 つ（正規表現 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}` と空白）、標準出力に L1・L2 の行が時刻なしで先に出る、画面の行には時刻なし、2 行のメッセージは各行に時刻 |
 | `UT-common-17` | 終わりの行 | 子のプロセス（4 つの子を別々に） | 子のプロセスで `start_log` の後に `sys.exit(0)`・`sys.exit(3)`・`sys.exit('msg')`・`sys.exit` を呼ばずに終わる | 終了コード 0・3・1・0、ログファイルの最後の行が L3 で同じ終了コード、標準出力の最後の行も同じ文面の L3（行頭の時刻なし）、所要時間が 0 以上で小数 3 桁 |
 | `UT-common-18` | 捕まらなかった例外 | 子のプロセス | 子のプロセスで `start_log` の後に `raise RuntimeError('x')` | 終了コード 1、G7 と Traceback が標準エラー出力とログに出る、終わりの行は 1 |
 | `UT-common-19` | シグナル | 子のプロセス（`SIGTERM` の子と `SIGINT` の子を別々に。シグナルは `os.kill(os.getpid(), <シグナル>)` で送る） | 子のプロセスで `start_log` の後に自分へ `SIGTERM` を送る子と、`SIGINT` を送る子を別々に動かす（1 つの子に 2 つ送るケースは書かない。最初の 1 つで止まるため。2 回目のシグナルは `UT-common-31` で確かめる）。どちらも `try`/`finally` の中で送り、`finally` で標準出力に `CLEANUP` と書く | 終了コード 143・130、標準出力に `CLEANUP` が出る、終わりの行に `SIGTERM`・`SIGINT` |
