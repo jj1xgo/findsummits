@@ -465,7 +465,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 
 `resolve_config` は `start_log` を呼ばない（ログファイルを作らない。[HLD 3.9](30_HLD.md#39-共通部品)の前置き）ので、[2.1.3](#213-関数の細部)の前置きの呼ぶ側の書き方の型（`start_log` の後の `try`/`finally` と結果の要約）は当てない。`StartTime.now()` も呼ばない（`start_log` に渡す先が無い）。`log_info` は標準出力に出すので呼ばない（標準出力は 2 行だけに使う。HLD 2.3.2）。`log_warning` を呼ぶ場面は無い（警告して続ける場面が HLD に無い）。メッセージは `common.log_error` で標準エラー出力に出す（`start_log` の前なので、ログファイルには出ない。出すのは下の `_stop` の中）。[1.2](#12-lld-の規約)の終わり方の規約（`sys.exit` を `sys` の属性として呼ぶ。`except BaseException` などを書かない）はそのまま当てる。捕まらなかった例外は Python の既定のまま（Traceback を標準エラー出力に出して終了コード 1）、`SIGINT`・`SIGTERM` も Python の既定のまま（130・143）で、どちらも `_excepthook`・`_on_signal` は付かない（`start_log` が付けるため）。
 
-画面への出力の失敗: 標準エラー出力が読む相手のいないパイプのときなど、`common.log_error` の書き込みの失敗（`OSError`、閉じたストリームなら `ValueError`）は呼び出し側へ伝わり、Python が終わるときの flush も失敗して、終了コードが決まりの 1・2 でなく 120 になる（失敗を捕まえてから `sys.exit` を呼んでも同じ。2026-10-21 に CPython 3.14.7 で、標準エラー出力を読む相手のいないパイプにして確かめた。壊れたストリームを `open(os.devnull, 'w')` に差し替えてから `sys.exit` を呼ぶと、決まりの終了コードのままになる）。`resolve_config` には `start_log` が取り付ける後始末（[2.1.3](#213-関数の細部)の `_finish_log`）が無いので、自分で止まるときは、下の内部の関数 `_stop` で止まる。`load_config` の中で止まるとき（CF1〜CF7）のメッセージの出力の失敗は、`main` の 2 が受ける。起動の時点で標準エラー出力の記述子が閉じていて `sys.stderr` が `None` のときは、2.1 と同じく扱わない。
+画面への出力の失敗: 標準エラー出力が読む相手のいないパイプのときなど、`common.log_error` の書き込みの失敗（`OSError`、閉じたストリームなら `ValueError`）は呼び出し側へ伝わり、Python が終わるときの flush も失敗して、終了コードが決まりの 1・2 でなく 120 になる（失敗を捕まえてから `sys.exit` を呼んでも同じ。2026-10-21 に CPython 3.14.7 で、標準エラー出力を読む相手のいないパイプにして確かめた。壊れたストリームを `open(os.devnull, 'w')` に差し替えてから `sys.exit` を呼ぶと、決まりの終了コードのままになる）。`resolve_config` には `start_log` が取り付ける後始末（[2.1.3](#213-関数の細部)の `_finish_log`）が無いので、自分で止まるときは、下の内部の関数 `_stop` で止まる。`load_config` の中で止まるとき（CF1〜CF7）のメッセージの出力の失敗は、`main` の 2 が受ける。起動の時点で標準出力の記述子が閉じていると、Python は `sys.stdout` を `None` にし、`os.write(1, …)` は `OSError`（`EBADF`）になる（`write_resolved_paths` の 3 の RW1）。このとき `_stop` の 2 は `sys.stdout` を飛ばす（`None` の `flush` は `AttributeError` で、`sys.exit` に届かずに終了コードが 2 でなく 1 になる。2026-10-21 に CPython 3.14.7 で、記述子 1 を閉じて起動して確かめた）。起動の時点で標準エラー出力の記述子が閉じていて `sys.stderr` が `None` のときは、2.1 と同じく扱わない。
 
 ##### main
 
@@ -509,7 +509,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 `_stop(code: int, messages: Sequence[tuple[str, str]]) -> NoReturn`（内部。`resolve_config` が自分で止まる場所はすべてこれで止まる）
 
 1. `messages` の各 `(what, action)` を、順に `common.log_error(what, action)` で出す。`OSError` か `ValueError` が上がったら、捕まえて、残りのメッセージは出さない。
-2. `sys.stdout`・`sys.stderr` をこの順に flush する。`OSError` か `ValueError` が上がったものは、その属性を `open(os.devnull, 'w')` に差し替える（出力は捨てる。Python が終わるときにもう一度行う flush が失敗して、終了コードが 120 になるのを防ぐ。2.1.3 の `_finish_log` の 4 と同じ理由）。
+2. `sys.stdout`・`sys.stderr` をこの順に flush する。`None` のもの（起動の時点で記述子が閉じていた。上の前置きの段落）は、flush も差し替えもせずに飛ばす。`OSError` か `ValueError` が上がったものは、その属性を `open(os.devnull, 'w')` に差し替える（出力は捨てる。Python が終わるときにもう一度行う flush が失敗して、終了コードが 120 になるのを防ぐ。2.1.3 の `_finish_log` の 4 と同じ理由）。
 3. `sys.exit(code)`。
 
 #### 5.2.4 メッセージ文面
@@ -530,7 +530,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 - **子のプロセス**: `subprocess.run([sys.executable, <ソースツリー>/scripts/resolve_config.py, *<引数>], capture_output=True)` で起動する（`<ソースツリー>` はテストのファイルの親の親の親。ケースが書かなければ環境は親のまま）。終了コード、標準出力のバイト列、標準エラー出力の文字列（UTF-8 で読む）を確かめる。
 - **一時の設定**: ケースごとに一時のディレクトリ `<tmp>` を作り、`<tmp>/config.ini` に設定を UTF-8 で書く。`data_dir` は、ケースが書かなければ `<tmp>/data`（作らない）。引数は、ケースが書かなければ `--config <tmp>/config.ini`。
 
-共通の準備と違う起動をするケース（`UT-resolve_config-09`〜`-12`）は、その行の準備に書く。止まるケースの期待の「標準出力は空」は、標準出力のバイト列が `b''` であること。メッセージの期待は、標準エラー出力の行の文面（2.2・2.1.4・5.2.4 の文面に値を入れたもの）。
+共通の準備と違う起動をするケース（`UT-resolve_config-09`〜`-13`）は、その行の準備に書く。止まるケースの期待の「標準出力は空」は、標準出力のバイト列が `b''` であること。メッセージの期待は、標準エラー出力の行の文面（2.2・2.1.4・5.2.4 の文面に値を入れたもの）。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -546,3 +546,4 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | `UT-resolve_config-10` | 少しずつしか書けないとき・途中で書けなくなったとき | 一時の設定は `data_dir` だけ。子のプロセスを `[sys.executable, '-c', <試験用の短いプログラム>, '--config', <tmp>/config.ini]` で起動し、`capture_output=True` で受ける。試験用のプログラムは、`<ソースツリー>/scripts` を `sys.path` の先頭に入れて `import resolve_config` し、`os.write` を差し替えてから `sys.argv = ['resolve_config.py', '--config', <tmp>/config.ini]` にして `resolve_config.main()` を呼ぶ | (i) 差し替えた `os.write` は、毎回もとの `os.write` で先頭の 5 バイトまでだけを書いてその数を返す。(ii) 1 回目はもとの `os.write` で先頭の 5 バイトだけを書いて 5 を返し、2 回目は `OSError(errno.EPIPE, os.strerror(errno.EPIPE))` を上げる | (i) 0、標準出力は `UT-resolve_config-02` と同じ 2 行の全部。(ii) 1、標準出力は 2 行の UTF-8 の先頭の 5 バイト、標準エラー出力は RW1 の 2 行で、1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EPIPE)>` |
 | `UT-resolve_config-11` | 標準エラー出力が使えないときの終了コード | 子のプロセス。共通の準備の `capture_output=True` を使わず、`os.pipe()` で作ったパイプの読む側を親が閉じ（読む相手のいない標準エラー出力にする）、書く側を `stderr=` に、`subprocess.PIPE` を `stdout=` に渡して起動する（起動した後、親は書く側も閉じる）。一時の設定は入力ごとに別 | (i) 引数なし（RA1）、(ii) `[paths]` の `data_dir = data` だけの設定（CF6。`load_config` の中の誤り）、(iii) `data_dir` と `prominence_primary_m = 150` の設定（CX1） | どれも終了コード 2（120 でない）。標準出力は `b''` |
 | `UT-resolve_config-12` | 標準出力も標準エラー出力も書けない | 一時の設定は `data_dir` だけ。`UT-resolve_config-09` の標準出力（`<tmp>/config.ini` を読むだけで開いたもの）と、`UT-resolve_config-11` の標準エラー出力（読む相手のいないパイプ）を組み合わせて起動する（`capture_output=True` は使わない） | 引数は既定 | 終了コード 1（120 でない） |
+| `UT-resolve_config-13` | 起動の時点で標準出力が閉じているとき | 子のプロセス。共通の準備の `capture_output=True` を使わず、`stderr=subprocess.PIPE` と `preexec_fn=lambda: os.close(1)` を渡して起動する（子の記述子 1 を閉じたまま Python を起動する）。一時の設定は入力ごとに別 | (i) 引数なし（RA1）、(ii) `data_dir` と `prominence_primary_m = 150` の設定（CX1）、(iii) `data_dir` だけの設定（正しい設定） | (i)(ii) は終了コード 2、(iii) は 1。標準エラー出力は、(i) が RA1 の 2 行だけ、(ii) が CX1 の 2 行だけ、(iii) が RW1 の 2 行だけ（1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EBADF)>`）で、どれも `Traceback` を含まない |
