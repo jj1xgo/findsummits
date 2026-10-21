@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と、2.1 が使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -26,6 +26,13 @@
   - [2.2 ログとメッセージの文面](#22-ログとメッセージの文面)
   - [2.3 ファイルの名前と書き方](#23-ファイルの名前と書き方)
   - [2.4 言語ごとに別に実装する式のテストベクトル](#24-言語ごとに別に実装する式のテストベクトル)
+- [5. CMP3 パイプライン制御](#5-cmp3-パイプライン制御)
+  - [5.2 `resolve_config`](#52-resolve_config)
+    - [5.2.1 ファイル割付](#521-ファイル割付)
+    - [5.2.2 型とデータ](#522-型とデータ)
+    - [5.2.3 関数の細部](#523-関数の細部)
+    - [5.2.4 メッセージ文面](#524-メッセージ文面)
+    - [5.2.5 UT 候補](#525-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -47,14 +54,14 @@
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られている）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1 である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1 と 5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -97,6 +104,8 @@
   | `match` | `unmatched_summit_threshold` | 整数: 0 以上 | `10` | `0 以上の整数（18 桁まで）` |
 
   整数の種類は、値が `re.fullmatch(r'[0-9]+', v)` に合い、先頭の `0` を除いた文字列 `d = v.lstrip('0') or '0'` の桁数（`len(d)`）が 18 以下のときだけ `int(d)` にする（`int(v)` にしない。先頭の `0` が 4300 個を超える値で `ValueError` になるため）。符号・小数点・全角の数字・空の値は型に合わず、19 桁以上は範囲の外とする。18 桁までにするのは、Python の `int` への変換の桁数の上限（既定 4300 桁）に掛からないようにし、CMP4（地形解析エンジン）の C++ の実装が 64 ビットの符号付き整数で持てるようにするため。上の表で上限の無い整数のキーの許容範囲の文に `（18 桁まで）` を付けるのはこのため。この上限は [SRS 2.2.1](20_SRS.md#221-設定可能項目) の「許容範囲に上限を書いていない整数の項目は、18 桁までとする」と [HLD 2.3.3](30_HLD.md#233-検証と記録) の検査に書いてある。値は `configparser` が前後の空白を除いた文字列。空の値（`key =`）はどのキーでも型に合わない誤りで、「書いていない」とは扱わない（未設定にしたいときはキーの行を書かない）。
+
+- 全キーの名前 `CONFIG_KEY_NAMES: tuple[str, ...]`（モジュールの最上位。公開）: `_CONFIG_KEYS` のキーの名前を表の順に並べたタプル。`_CONFIG_KEYS` から作り、名前を別に書かない。設定解決（[5.2](#52-resolve_config)）が全キーを `load_config` に渡すのに使う（[HLD 2.3.3](30_HLD.md#233-検証と記録)の「設定解決は、ファイルに書かれた全キーを検査する」。キーの一覧を 1 か所にし、HLD の表にキーが足されたときに設定解決の検査から漏れないようにするため）。
 
 - モジュールの状態（内部。`_state` という 1 つの `@dataclass` のインスタンス）: `file`（ログファイルの `TextIO` か `None`）、`path`（ログファイルの絶対パスか `None`）、`program: str`、`start: StartTime | None`、`broken: bool`（ログファイルに書けなくなった）、`exit_code: int | None`（記録した終了コード）、`signum: int | None`（受けたシグナル。`_on_signal` の 1 回目で入れる）、`lock_fd: int | None`（ロックファイルの記述子。閉じないために持つ）。
 
@@ -335,10 +344,11 @@ def main() -> None:
 | `UT-common-39` | UTF-8 でないメッシュのファイル | 同じプロセス。UTF-8 として読めないバイト列（例 `FF FE`）だけのファイルを 1 つ置く | そのファイルを `read_mesh_arg` と、`guidance` を `None` にした `read_mesh_list_file` に渡す | `read_mesh_arg` は 2 で A3（`{reason}` は `UTF-8 として読めない`）、`read_mesh_list_file` は 1 で R2（同じ `{reason}`） |
 | `UT-common-40` | 標準出力が切れたパイプ | 子のプロセス（2 つの子を別々に）。子の試験用のプログラムの中で、`start_log` の後に `os.pipe()` を作り、書く側を `os.dup2` で記述子 1 に付けてから、読む側と書く側の元の記述子を閉じる（標準出力が読む相手の無いパイプになる） | (a) `sys.exit(3)`、(b) `log_info('x')`（`BrokenPipeError` が捕まらずに止まる） | 終了コード 3・1（120 にならない）。ログファイルの最後の行が L3 で、同じ終了コード。(b) はログファイルに G7（`BrokenPipeError`）がある |
 | `UT-common-41` | 標準エラー出力が切れたパイプ | 子のプロセス。`UT-common-40` と同じ形で、記述子 2 を読む相手の無いパイプにする | `start_log` の後に `raise RuntimeError('x')` | 終了コード 1。ログファイルに G7 の 2 行と Traceback（最後の行が `RuntimeError: x`）がこの順にあり、その後が L3 で終了コード 1 |
+| `UT-common-42` | 全キーの名前の一覧 | 同じプロセス | `common.CONFIG_KEY_NAMES` | `('data_dir', 'log_dir', 'max_parallel', 'interval_ms', 'user_agent_email', 'prominence_primary_m', 'activation_zone_drop_m', 'delete_zone_max_drop_m', 'prominence_final_m', 'sota_geojson_version', 'provisional_code_max_prefix', 'unmatched_summit_threshold')` と等しい |
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1 と 5.2 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -368,7 +378,15 @@ def main() -> None:
 | G6 | 終わりの行だけを書けなかった | `ログファイルに終わりの行を書けなかった: {path}: {reason}` | `ディスクの空きとログファイルの権限を確かめる。終了コード 1 はログが欠けたことを示し、書き終えた成果物は消していない` | 1 |
 | G7 | 捕まらなかった例外 | `予期しない例外で止まった: {type}: {message}`（`{type}` は例外のクラス名 `exc_type.__name__`、`{message}` は `str(exc)`。`{message}` に改行があれば、`log_error` の決まりで行が分かれる） | `このメッセージと続く Traceback をログファイルから写して開発者に知らせる` | 1 |
 
-設定・引数の誤り（終了コード 2）の文面は、その誤りを確かめる部品か関数の節に置く（2.1 では CF1〜CF7・A1〜A5）。
+設定・引数の誤り（終了コード 2）の文面は、その誤りを確かめる部品か関数の節に置く（2.1 では CF1〜CF7・A1〜A5、5.2 では RA1・RA2・RP1）。2 つ以上のモジュールが確かめる誤りは、下の表に置く。
+
+設定の相互制約（[HLD 2.3.3](30_HLD.md#233-検証と記録)）。確かめるのは、5.2 の `resolve_config`、CMP4（地形解析エンジン）の `analyze_terrain`、CMP5（統合・突合）の `merge_peaks` で、同じ文面を出す。
+
+| 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
+|---|---|---|---|---|
+| CX1 | 一次フィルタ閾値が最終フィルタ閾値以上 | `プロミネンス一次フィルタ閾値が最終フィルタ閾値以上: [analysis] prominence_primary_m = {primary}（{primary_source}）、[merge] prominence_final_m = {final}（{final_source}）（{config_path}）` | `[analysis] prominence_primary_m を [merge] prominence_final_m より小さくする（100 以上 {final} 未満の整数）` | 2 |
+
+`{primary}`・`{final}` は使う値（デフォルトのときはデフォルト値）、`{primary_source}`・`{final_source}` は L2 の `{source}` と同じく `ファイル` か `デフォルト`、`{config_path}` は設定ファイルの絶対パス（`Config` の `path`）。
 
 ### 2.3 ファイルの名前と書き方
 
@@ -421,3 +439,98 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | 0.0 | 0.0 | 1 | 1 | 1 |
 
 `24.666666666666668`・`123.0`・ズーム 14 の y = 7033 は、差が 0.016 の最も近い点で、言語の違いで結果が割れないかを見る行。経度 135 の行は x がちょうど整数になる点。
+
+## 5. CMP3 パイプライン制御
+
+この章は、CMP3（パイプライン制御）の 2 本のプログラム（[HLD 3.3.1](30_HLD.md#331-プログラム)）のモジュールを置く。今は 5.2 `resolve_config` だけを書いてある。5.1 `run_pipeline`（bash）は、書くときに足す。`resolve_config` と `run_pipeline` は、起動（`--config <絶対パス>`）、標準出力の 2 行、終了状態だけでつながる（結合のつなぎ目 `CMP3-INT1`。[HLD 3.3.5](30_HLD.md#335-結合のつなぎ目)）。
+
+### 5.2 `resolve_config`
+
+- **ID**: LLD-resolve_config
+- **対応 HLD**: [3.3](30_HLD.md#33-cmp3-パイプライン制御)
+- **ファイル**: `scripts/resolve_config.py`
+
+処理の正本は[HLD 2.3.2](30_HLD.md#232-設定ファイル)の設定解決の段落と[HLD 2.3.3](30_HLD.md#233-検証と記録)で、この節はそれを Python で書くための細部だけを足す。`run_pipeline` とのつなぎ目は `CMP3-INT1`（[HLD 3.3.5](30_HLD.md#335-結合のつなぎ目)）で、その結合テスト（IT）のケースは `60_IT.md` の `IT-CMP3-INT1-01`〜`04` である。
+
+#### 5.2.1 ファイル割付
+
+- 関数はすべて `scripts/resolve_config.py` 1 本に置く。`venv/bin/python3 scripts/resolve_config.py` で起動され（[HLD 3.3.1](30_HLD.md#331-プログラム)）、共通部品は `import common` で読む（[2.1.1](#211-ファイル割付)と同じ）。ファイルの先頭のコメントに `# trace: LLD-resolve_config` を書く。
+- UT のコードは `tests/scripts/test_resolve_config.py` に置く。各テストに `# trace: UT-resolve_config-NN`（確かめる UT 候補の ID）のコメントを付ける。
+
+#### 5.2.2 型とデータ
+
+なし。新しい型・定数は無い。設定値は `common.load_config` の返す `common.Config`（[2.1.2](#212-型とデータ)）で受け、全キーの名前は `common.CONFIG_KEY_NAMES`（2.1.2）を使う。必須のキーは `('data_dir',)` で、関数の中に直接書く（[HLD 2.3.3](30_HLD.md#233-検証と記録)の「設定解決が要求する必須キーは `data_dir` だけ」）。
+
+#### 5.2.3 関数の細部
+
+`resolve_config` は `start_log` を呼ばない（ログファイルを作らない。[HLD 3.9](30_HLD.md#39-共通部品)の前置き）ので、[2.1.3](#213-関数の細部)の前置きの呼ぶ側の書き方の型（`start_log` の後の `try`/`finally` と結果の要約）は当てない。`StartTime.now()` も呼ばない（`start_log` に渡す先が無い）。`log_info` は標準出力に出すので呼ばない（標準出力は 2 行だけに使う。HLD 2.3.2）。`log_warning` を呼ぶ場面は無い（警告して続ける場面が HLD に無い）。メッセージは `common.log_error` で標準エラー出力に出す（`start_log` の前なので、ログファイルには出ない）。[1.2](#12-lld-の規約)の終わり方の規約（`sys.exit` を `sys` の属性として呼ぶ。`except BaseException` などを書かない）はそのまま当てる。捕まらなかった例外は Python の既定のまま（Traceback を標準エラー出力に出して終了コード 1）、`SIGINT`・`SIGTERM` も Python の既定のまま（130・143）で、どちらも `_excepthook`・`_on_signal` は付かない（`start_log` が付けるため）。
+
+##### main
+
+`main() -> None`（起動の部分。`if __name__ == '__main__': main()`）。`main` は[1.1](#11-用語定義)の「起動の部分」の関数で、名前は 2.1.3 の前置きの呼ぶ側の書き方の型（`def main()`）に従う（ほかのモジュールから呼ばない。1.2 の名前の規約の「内部の関数」と同じ扱い）。次の順に行う。
+
+1. `config_path = _parse_args(sys.argv[1:])`。
+2. `config = common.load_config(config_path, common.CONFIG_KEY_NAMES, ('data_dir',))`（誤りがあれば `load_config` が CF1〜CF7 を出して終了コード 2 で止まり、戻らない）。
+3. `errors = _check_resolved(config)`。空でなければ、一覧の順に `common.log_error(what, action)` で出してから `sys.exit(common.EXIT_USAGE)`（全部を出して 1 回だけ止まる。`load_config` の 8 と同じ）。
+4. `write_resolved_paths(config.values['data_dir'].value, config.values['log_dir'].value)`。
+5. `sys.exit(common.EXIT_OK)`。
+
+`load_config` の誤りがあると 3 の検査は行われない（`load_config` が先に止まるため。設定を直して起動し直すと 3 の誤りが出る）。
+
+##### _parse_args
+
+`_parse_args(argv: Sequence[str]) -> str`（内部）
+
+1. `len(argv) == 2` かつ `argv[0] == '--config'` でなければ、RA1 を出して `sys.exit(common.EXIT_USAGE)`。`--config=<パス>` の形、`--help`、知らないオプション、位置引数、`--config` の重複も RA1 になる（受け取るのは `run_pipeline` が渡す `--config <絶対パス>` の形だけ。[HLD 2.4.5](30_HLD.md#245-内部引数)。`--help` は利用者向けの 3 コマンドだけのもの。[HLD 2.4.2](30_HLD.md#242-共通の書式)）。
+2. `os.path.isabs(argv[1])` が偽なら（空の文字列を含む）、RA2 を出して `sys.exit(common.EXIT_USAGE)`（内部の起動口は絶対パスを必須にする。[HLD 2.3.2](30_HLD.md#232-設定ファイル)）。
+3. `argv[1]` を返す。ファイルがあるか、読めるかは `load_config` が確かめる（無ければ CF1 の `--config に渡したパスを確かめる`）。
+
+##### _check_resolved
+
+`_check_resolved(config: common.Config) -> list[tuple[str, str]]`（内部）
+
+`load_config` が確かめない 2 つ（[HLD 3.9](30_HLD.md#39-共通部品)の表の後の段落）を確かめ、誤りごとに `(what, action)` を返す（無ければ空のリスト）。順は次のとおり。
+
+1. パスの改行: `data_dir` の値に `'\n'` か `'\r'` があれば RP1（`{key}` は `data_dir`）。`log_dir` は `from_file` が真で、値に `'\n'` か `'\r'` があるときだけ RP1（`{key}` は `log_dir`。デフォルトの `log_dir` は `data_dir` から作るので、`data_dir` の RP1 で足りる）。`configparser` は字下げした次の行を前の行の値の続きとして `'\n'` でつなぐので、値に改行が入りうる。`load_config` は改行を変換して読むので値に `'\r'` は残らないが、読み方に頼らず両方を見る（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「パスに改行を含む設定は、設定解決が終了コード 2 で拒否する」）。
+2. 相互制約: `prominence_primary_m` の値が `prominence_final_m` の値以上なら CX1（[2.2](#22-ログとメッセージの文面)）。どちらもデフォルトのときも比べる（今の許容範囲では最終フィルタ閾値は 150 だけなので、一次フィルタ閾値に 150 以上を書いたときに当たる）。
+
+##### write_resolved_paths
+
+`write_resolved_paths(data_dir: str, log_dir: str) -> None`（[HLD 3.3.3](30_HLD.md#333-関数)の表の関数）
+
+1. `data = f'data_dir={data_dir}\nlog_dir={log_dir}\n'.encode('utf-8')`。値は `load_config` が返したまま書き、正規化しない（末尾の `/`、空白、`$`・`=` などもそのまま。ほかのバッチが同じ設定ファイルから読む値と同じにするため）。UTF-8 にするのは、設定ファイルが UTF-8 で、ロケールが UTF-8 でないときも `run_pipeline` がほかのバッチと同じバイト列のパスを得るため（`sys.stdout` の文字コードに頼らない）。
+2. ファイル記述子 1 に `os.write(1, …)` で書く。`os.write` が書いた数が残りより少なければ、残りを書き続ける。`sys.stdout` は使わない（`sys.stdout` のバッファに書けなかった字が残ると、Python が終わるときにもう一度 flush して終了コードを 120 にするため。2.1.3 の `_finish_log` の 4 と同じ理由）。
+3. `OSError`（切れたパイプ、閉じた記述子など）なら、RW1 を `common.log_error` で出して `sys.exit(common.EXIT_ERROR)`（[HLD 2.5.1](30_HLD.md#251-終了コード)の読み書きの失敗）。途中まで書けていても止まる（`run_pipeline` は 0 以外を受けてその値で止まる。[HLD 2.5.2](30_HLD.md#252-パイプライン制御での扱い)）。
+
+#### 5.2.4 メッセージ文面
+
+書き方は[2.2](#22-ログとメッセージの文面)。`{args}` は起動の引数を L1 の引用の決まり（2.2）で 1 つずつ書いて空白 1 つでつないだもの（`shlex.join(argv)`）で、引数が無ければ `（引数なし）`。`{value}` は `--config` の値を同じ引用の決まりで書いたもの（`shlex.quote(value)`。空なら `''`）。`{path}` は `Config` の `path`。`{reason}` は `OSError` の `strerror`（無ければ `str(e)`）。CF1〜CF7 は[2.1.4](#214-メッセージ文面)、CX1 は 2.2 にあり、ここに写さない。
+
+| 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
+|---|---|---|---|---|
+| RA1 | 引数の形が違う | `resolve_config の引数が違う: {args}` | `--config と設定ファイルの絶対パスの 2 つだけを渡す（resolve_config は run_pipeline が起動する内部の起動口）` | 2 |
+| RA2 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
+| RP1 | パスに改行がある | `設定のパスに改行がある: [paths] {key}（{path}）` | `[paths] の {key} を 1 行の絶対パスにする（字下げした次の行は、前の行の値の続きとして読まれる）` | 2 |
+| RW1 | 標準出力に書けない | `設定解決の結果を標準出力に書けない: {reason}` | `run_pipeline から起動し直す。続くときは、このメッセージを写して開発者に知らせる` | 1 |
+
+#### 5.2.5 UT 候補
+
+すべて自動。どのケースも子のプロセスで動かす（引数の読み方と標準出力のバイト列は `CMP3-INT1` が頼る起動の約束なので、起動のしかたのまま確かめる）。表の準備の列の共通の準備は次の 2 つ。ケースに固有の準備は、その後に書く。
+
+- **子のプロセス**: `subprocess.run([sys.executable, <ソースツリー>/scripts/resolve_config.py, *<引数>], capture_output=True)` で起動する（`<ソースツリー>` はテストのファイルの親の親の親。ケースが書かなければ環境は親のまま）。終了コード、標準出力のバイト列、標準エラー出力の文字列（UTF-8 で読む）を確かめる。
+- **一時の設定**: ケースごとに一時のディレクトリ `<tmp>` を作り、`<tmp>/config.ini` に設定を UTF-8 で書く。`data_dir` は、ケースが書かなければ `<tmp>/data`（作らない）。引数は、ケースが書かなければ `--config <tmp>/config.ini`。
+
+共通の準備と違う起動をするケース（`UT-resolve_config-09`・`-10`）は、その行の準備に書く。止まるケースの期待の「標準出力は空」は、標準出力のバイト列が `b''` であること。メッセージの期待は、標準エラー出力の行の文面（2.2・2.1.4・5.2.4 の文面に値を入れたもの）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-resolve_config-01` | 正しい設定の 2 行 | 子のプロセス。一時の設定に全キーを書く: `[paths]` に `data_dir = <tmp>/data`・`log_dir = <tmp>/logs`、`[fetch]` に `max_parallel = 4`・`interval_ms = 100`・`user_agent_email = jj@example.com`、`[analysis]` に `prominence_primary_m = 130`・`activation_zone_drop_m = 25`・`delete_zone_max_drop_m = 250`、`[merge]` に `prominence_final_m = 150`、`[match]` に `sota_geojson_version = 3`・`provisional_code_max_prefix = B`・`unmatched_summit_threshold = 5` | 引数は既定 | 0。標準出力は `data_dir=<tmp>/data\nlog_dir=<tmp>/logs\n` の UTF-8 と等しい。標準エラー出力は空。`<tmp>/data` と `<tmp>/logs` は作られていない |
+| `UT-resolve_config-02` | `log_dir` のデフォルトと、必須でないキー | 子のプロセス。一時の設定は `[paths]` の `data_dir` だけ | 引数は既定 | 0。標準出力は `data_dir=<tmp>/data\nlog_dir=<tmp>/data/logs\n`（`log_dir` は `os.path.join(<tmp>/data, 'logs')`）。`user_agent_email` が無くても止まらない。`<tmp>/data` は作られていない |
+| `UT-resolve_config-03` | 値をそのまま UTF-8 で出す | 子のプロセス。環境に `PYTHONIOENCODING=ascii` を足す。一時の設定の `data_dir` を `<tmp>/a b/$(touch <tmp>/evil)/x=y/日本/`（末尾の `/` まで） | 引数は既定 | 0。標準出力は `data_dir=<その値>\nlog_dir=<os.path.join(その値, 'logs')>\n` の UTF-8 と等しい。`<tmp>/evil` は作られていない |
+| `UT-resolve_config-04` | 自分が使わないキーも確かめる | 子のプロセス。キーごとに別の一時の設定（どれも `data_dir` を書く） | 次の 12 の設定をそれぞれ: `data_dir = data`、`log_dir = logs`、`max_parallel = 0`、`interval_ms = 5001`、`user_agent_email = a b@example.com`、`prominence_primary_m = 99`、`activation_zone_drop_m = 26`、`delete_zone_max_drop_m = 301`、`prominence_final_m = 151`、`sota_geojson_version = 0`、`provisional_code_max_prefix = a`、`unmatched_summit_threshold = -1`（`data_dir = data` のケースは、`data_dir` をこの値だけにする） | どれも 2、CF6 のメッセージがそのキーの 1 つ、標準出力は空 |
+| `UT-resolve_config-05` | 設定ファイルが無い・必須の `data_dir` が無い | 子のプロセス。(ii) は一時の設定に `[fetch]` の `max_parallel = 4` だけを書く | (i) 一時の設定を書かずに `--config <tmp>/none.ini`、(ii) 引数は既定 | どれも 2、標準出力は空。(i) は CF1 で `対処:` は `--config に渡したパスを確かめる`。(ii) は CF7（`[paths] data_dir`）が 1 つだけ |
+| `UT-resolve_config-06` | 相互制約 | 子のプロセス。値ごとに別の一時の設定（`prominence_final_m` は書かない） | `prominence_primary_m = 149`、`prominence_primary_m = 150` | 149 は 0 で 2 行が出る。150 は 2、標準エラー出力は CX1 の 2 行だけで、1 行目は `ERROR: プロミネンス一次フィルタ閾値が最終フィルタ閾値以上: [analysis] prominence_primary_m = 150（ファイル）、[merge] prominence_final_m = 150（デフォルト）（<tmp>/config.ini）`、標準出力は空 |
+| `UT-resolve_config-07` | パスの改行 | 子のプロセス。ケースごとに別の一時の設定。改行は字下げした次の行で入れる（`data_dir = <tmp>/x` の次の行に、空白 2 つで字下げした `y`） | (i) `data_dir` だけを 2 行にする（`log_dir` は書かない）、(ii) `log_dir` だけを 2 行にする、(iii) `data_dir` と `log_dir` を 2 行にし、`prominence_primary_m = 150` も書く | (i) 2、RP1（`data_dir`）が 1 つだけ。(ii) 2、RP1（`log_dir`）。(iii) 2、RP1（`data_dir`）・RP1（`log_dir`）・CX1 がこの順に出る。どれも標準出力は空 |
+| `UT-resolve_config-08` | 引数の誤り | 子のプロセス。一時の設定は `data_dir` だけ | 引数をそれぞれ: (i) なし、(ii) `--config`、(iii) `--config <tmp>/config.ini --extra`、(iv) `--config=<tmp>/config.ini`、(v) `--help`、(vi) `<tmp>/config.ini`、(vii) `--config config.ini`、(viii) `--config ''` | どれも 2、標準出力は空。(i)〜(vi) は RA1 で、(i) の 1 行目は `ERROR: resolve_config の引数が違う: （引数なし）`、(v) は `ERROR: resolve_config の引数が違う: --help`。(vii)(viii) は RA2 で、1 行目は `ERROR: --config のパスが絶対パスでない: config.ini` と `ERROR: --config のパスが絶対パスでない: ''` |
+| `UT-resolve_config-09` | 標準出力に書けない | 一時の設定は `data_dir` だけ。共通の準備の `capture_output=True` を使わず（`stdout=` と併せると `ValueError` になる）、`<tmp>/config.ini` を読むだけで開いたもの（`open(<tmp>/config.ini, 'rb')`）を `stdout=` に、`subprocess.PIPE` を `stderr=` に渡して起動する（読むだけの記述子への書き込みは `OSError`〈`EBADF`〉になる） | 引数は既定 | 1（120 でない）、標準エラー出力は RW1 の 2 行だけで、1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EBADF)>` |
+| `UT-resolve_config-10` | 少しずつしか書けないとき・途中で書けなくなったとき | 一時の設定は `data_dir` だけ。子のプロセスを `[sys.executable, '-c', <試験用の短いプログラム>, '--config', <tmp>/config.ini]` で起動し、`capture_output=True` で受ける。試験用のプログラムは、`<ソースツリー>/scripts` を `sys.path` の先頭に入れて `import resolve_config` し、`os.write` を差し替えてから `sys.argv = ['resolve_config.py', '--config', <tmp>/config.ini]` にして `resolve_config.main()` を呼ぶ | (i) 差し替えた `os.write` は、毎回もとの `os.write` で先頭の 5 バイトまでだけを書いてその数を返す。(ii) 1 回目はもとの `os.write` で先頭の 5 バイトだけを書いて 5 を返し、2 回目は `OSError(errno.EPIPE, os.strerror(errno.EPIPE))` を上げる | (i) 0、標準出力は `UT-resolve_config-02` と同じ 2 行の全部。(ii) 1、標準出力は 2 行の UTF-8 の先頭の 5 バイト、標準エラー出力は RW1 の 2 行で、1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EPIPE)>` |
