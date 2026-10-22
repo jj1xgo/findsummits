@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -26,6 +26,13 @@
   - [2.2 ログとメッセージの文面](#22-ログとメッセージの文面)
   - [2.3 ファイルの名前と書き方](#23-ファイルの名前と書き方)
   - [2.4 言語ごとに別に実装する式のテストベクトル](#24-言語ごとに別に実装する式のテストベクトル)
+- [3. CMP1 行政区域前処理](#3-cmp1-行政区域前処理)
+  - [3.1 `preprocess_boundaries`](#31-preprocess_boundaries)
+    - [3.1.1 ファイル割付](#311-ファイル割付)
+    - [3.1.2 型とデータ](#312-型とデータ)
+    - [3.1.3 関数の細部](#313-関数の細部)
+    - [3.1.4 メッセージ文面](#314-メッセージ文面)
+    - [3.1.5 UT 候補](#315-ut-候補)
 - [5. CMP3 パイプライン制御](#5-cmp3-パイプライン制御)
   - [5.1 `run_pipeline`](#51-run_pipeline)
     - [5.1.1 ファイル割付](#511-ファイル割付)
@@ -60,15 +67,16 @@
 - 関数の名前は HLD 第 3 章の名前を使う。LLD が足してよい名前は、内部の関数（`_` で始め、ほかのモジュールから呼ばない）と、型・定数・例外の名前だけ。ほかのモジュールから呼ぶ関数を足すときは、HLD 第 3 章を先に直す（文書管理ルールの[HLD と LLD の書き分け](CLAUDE.md#hld-と-lld-の書き分け)）。
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
+- 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・4.1 の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られている）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1 である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1・FC2、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1 である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1・FC2、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1・5.1・5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1・3.1・5.1・5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -384,7 +392,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1・5.1・5.2 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1・3.1・5.1・5.2 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -426,21 +434,25 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1 と 5.1 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・5.1 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
-- 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方（一時ファイルに書いてから置き換える）は CMP2 の節で決める。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
+- 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（CMP2 の節で指す）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
+- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1。CMP2・CMP5 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が開くときに中身を捨てて上書きする。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
-HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、テスト方針書で決める（[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile` の分だけを書いてある。
+HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（CMP4 の「変換」の群）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、テスト方針書で決める（[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` の分だけを書いてある。
 
 計算の決まり（どの言語も IEEE 754 の倍精度で、書いた順に左から計算する。式の正本は用語集の[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)と[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)）:
 
 - `mesh_to_latlon`: 南端の緯度 = `(2 × aa) / 3`（`2 × aa` を整数で求め、3 で 1 回だけ割る）。北端の緯度 = `(2 × (aa + 1)) / 3`。西端の経度 = `100 + bb`、東端の経度 = `101 + bb`。
 - `latlon_to_tile`: `n = 2^z`。`x = floor(((lon + 180) / 360) × n)`。`r = (lat × π) / 180`（`math.radians` のような 1 つの関数にまとめない。掛ける順で値が変わるため）。`y = floor(((1 − ln(tan(r) + 1 / cos(r)) / π) / 2) × n)`。`π` は言語の標準の定数（Python の `math.pi`、C++ の `std::numbers::pi`、JavaScript の `Math.PI`。どれも同じ倍精度の値）。`tan`・`cos`・`ln` は言語の標準のもの。
+- `tile_to_latlon`: `n = 2^z`。北西端の経度 = `((x / n) × 360) − 180`。北西端の緯度 = `(atan(sinh(π × (1 − (2 × y) / n))) × 180) / π`（`2 × y` を先に求めて `n` で割り、`1` から引き、`π` を掛け、`sinh`、`atan`、`180` を掛け、`π` で割る。この順に計算する）。`x`・`y` は小数でもよい（[HLD 3.1.3](30_HLD.md#313-関数) の表の「タイル番号（小数を含む）」）。南東端は `x + 1`・`y + 1` を同じ式に入れる。`sinh`・`atan` は言語の標準のもの（Python の `math.sinh`・`math.atan`）。式の正本は用語集の[XYZ タイル番号 → 緯度経度](00_GLOSSARY.md#tile-to-latlon)。
 
 期待値の導き方: 用語集の式を上の順に倍精度で計算した値で、2026-10-18 に CPython で求めた。`tan`・`cos`・`ln` は言語で最後の桁が違いうるので、表 2 の行は、`floor` の前の値と最も近い整数の差が 0.016 以上ある点か、`floor` の前の値がちょうど整数になる点（経度 −180・0・135）だけにした（日本全土1次メッシュコードリストの 175 メッシュの四隅を、ズーム 14・15 で調べ、経度 135 度のほかは差がどれも 0.016 以上だった）。
+
+表 3 は、`tile_to_latlon` の式を上の順に倍精度で計算した値で、2026-10-22 に CPython 3.14.8 で求めた。経度は四則演算だけで決まるので、どの言語も `==` で等しくなる。緯度は `sinh`・`atan` を通り、言語の標準の関数で最後の桁が違いうるので、期待の値との差の絶対値が `1e-12`（度）以下なら一致とする（`floor` で丸める `latlon_to_tile` の表 2 と違い、値をそのまま比べるため。この許容差は変換の関数の値を比べるためのもので、タイルの矩形と北方領土のポリゴンが辺で接するだけか重なるかの判定〈[3.1.3](#313-関数の細部)〉が言語で同じになることまでは言わない。北方領土除外タイルリストを作るのは Python の 3.1 だけである）。
 
 表 1（`mesh_to_latlon`。値は倍精度の値の最短の 10 進表記）:
 
@@ -475,6 +487,311 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | 0.0 | 0.0 | 1 | 1 | 1 |
 
 `24.666666666666668`・`123.0`・ズーム 14 の y = 7033 は、差が 0.016 の最も近い点で、言語の違いで結果が割れないかを見る行。経度 135 の行は x がちょうど整数になる点。
+
+表 3（`tile_to_latlon`。戻り値は（北西端の緯度, 北西端の経度）。値は倍精度の値の最短の 10 進表記）:
+
+| x | y | z | 緯度 | 経度 |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 85.05112877980659 | -180.0 |
+| 1 | 1 | 0 | -85.05112877980659 | 180.0 |
+| 1 | 1 | 1 | 0.0 | 0.0 |
+| 14381 | 7262 | 14 | 20.014645445341362 | 135.98876953125 |
+| 29127 | 12867 | 15 | 36.00467348670187 | 139.998779296875 |
+| 29128 | 12868 | 15 | 35.99578538642033 | 140.009765625 |
+| 28672 | 13162 | 15 | 33.33970700424027 | 135.0 |
+| 29946 | 11657 | 15 | 46.004593255744815 | 148.99658203125 |
+| 29127.5 | 12867.5 | 15 | 36.000229561780024 | 140.0042724609375 |
+
+## 3. CMP1 行政区域前処理
+
+この章は、CMP1（行政区域前処理）の 1 本のプログラム（[HLD 3.1.1](30_HLD.md#311-プログラム)）のモジュールを置く。CMP1 にコンポーネント内の共通部品は無い（[HLD 3.1.4](30_HLD.md#314-コンポーネント内の共通部品)）。
+
+### 3.1 `preprocess_boundaries`
+
+- **ID**: LLD-preprocess_boundaries
+- **対応 HLD**: [3.1](30_HLD.md#31-cmp1-行政区域前処理)・[4.17](30_HLD.md#417-fr-017-n03-行政区域前処理データ準備)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
+- **ファイル**: `scripts/preprocess_boundaries.py`
+
+処理の正本は [HLD 4.17.2](30_HLD.md#4172-処理の流れ)（作り直しの条件と置き換えの順序の正本は [HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し) の「フェーズ1」）で、関数の名前と役割と呼ぶ順は [HLD 3.1.3](30_HLD.md#313-関数) の表のとおり。この節は Python で書くための細部（型、データの持ち方、メッセージの文面、ログの行）だけを足す。[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）は、N03 の GeoJSON を読み込むときにフィーチャごとの元の辞書を捨てながら shapely のポリゴンに変えること（3.1.3 の `load_n03_features`）で受け、メモリのピークは実装の後に HLD 5.2.2 の「実測の計画」の 5 で測る。[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、出力のフィーチャとポリゴンの並びと JSON の書き方を入力の並びによらず決めること（3.1.3 の `build_regions`・`build_municipalities`・`write_temp_outputs`）と、`tile_to_latlon` を [2.4](#24-言語ごとに別に実装する式のテストベクトル) の表 3 で CMP4 とそろえることで受ける。結合のつなぎ目は `CMP1-INT1`・`CMP1-EXT1`・`CMP1-EXT2`（[HLD 3.1.5](30_HLD.md#315-結合のつなぎ目)）で、IT のケースは `60_IT.md` の `IT-CMP1-INT1-01`〜`04`・`IT-CMP1-EXT1-01`〜`05`・`IT-CMP1-EXT2-01`。
+
+#### 3.1.1 ファイル割付
+
+- 関数はすべて `scripts/preprocess_boundaries.py` 1 本に置く。`venv/bin/python3 scripts/preprocess_boundaries.py` で起動され（[HLD 3.1.1](30_HLD.md#311-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。shapely は `import shapely` と `from shapely.geometry import box, mapping, shape, MultiPolygon, Polygon` と `from shapely.geometry.polygon import orient` で読む（[環境定義](01_environment.md) の既存の依存。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 5「市区町村の GeoJSON を展開する」）。ファイルの先頭のコメントに `# trace: LLD-preprocess_boundaries` を書く。起動の部分は `if __name__ == '__main__': main()`。
+- UT のコードは `tests/scripts/test_preprocess_boundaries.py` に置く。各テストに `# trace: UT-preprocess_boundaries-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選ぶ。
+
+#### 3.1.2 型とデータ
+
+- 定数（モジュールの最上位。どれも内部）:
+  - `_SOURCE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`、`_JAPAN_MESH_LIST_PATH = os.path.join(_SOURCE_ROOT, 'params', 'mesh_list_japan.txt')`（[HLD 3.1.1](30_HLD.md#311-プログラム) の「自分の置き場から求め、起動した作業ディレクトリによらない」）。既定の設定ファイルは `common.DEFAULT_CONFIG_PATH`（[2.1.2](#212-型とデータ)）。
+  - `_ZIP_NAME = re.compile(r'N03-([0-9]{8})_GML\.zip')`（`fullmatch` で使う。`\d` は全角の数字にも合うので使わない）。
+  - `_NT_CODES = frozenset({'01695', '01696', '01697', '01698', '01699', '01700'})`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「北方領土除外タイルリストと北方領土除外メッシュリスト」）。
+  - `_REGIONS: tuple[tuple[str, str, str], ...]`: HLD 4.17.2 の「地域と SOTA のコード」の表の 60 行を、表の順に（N03 の名前, `assoc`, `area_code`）で持つ（表の値は写さず、HLD の表から作る。表の順は `UT-preprocess_boundaries-15` の期待に使う）。`assoc` が `JA8` の 14 行が北海道の振興局で、`N03_002` で引く。ほかの 46 行は `N03_001` で引く。
+  - 出力の名前: `_OUTPUT_NAMES = ('regions.geojson', 'municipalities.geojson', 'nt_excluded_tiles.txt', 'nt_excluded_meshes.txt')`（この順を、一時ファイルの並び、置き換えの順、要約の順に使う）、`_VERSION_NAME = 'n03_version.txt'`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「出力の置き場」の表）。置き場はどれも `os.path.join(<data_dir>, 'boundaries')`。
+  - `_TILE_ZOOM = 15`、`_LIST_LIMIT = 10`（BV5・BV6 のメッセージに並べる件数の上限。[3.1.4](#314-メッセージ文面)）。
+- `@dataclass(frozen=True) class N03Feature`: `index: int`（`features` の配列の中の位置。1 から数える。メッセージに出す）、`n03_001: object`・`n03_002: object`・`n03_004: object`・`n03_005: object`・`n03_007: object`（`properties` の同じ名前の値。JSON の値のまま〈`str`・`None`・数など〉。キーが無いか `properties` がオブジェクトでなければ `None`）、`geom_type: object`（`geometry` がオブジェクトならその `type` の値、`geometry` が無いか `null` かオブジェクトでなければ `None`）、`polygons: tuple[Polygon, ...]`（`geom_type` が `'Polygon'` ならその 1 つ、`'MultiPolygon'` なら含まれるポリゴンを配列の順に。どちらも `is_empty` が真のポリゴン〈`{"type":"Polygon","coordinates":[]}` など〉は含めない。ほかの種類と `None` のときは空のタプル。空のポリゴンを除くのは、`validate_n03` の BV7・BV8 がポリゴンの数で判定し、空のポリゴンは外接矩形が NaN になって後の計算を壊すため）。`N03_003`・`N03_006` は持たない（使わない）。
+- 出力のフィーチャ: `dict`（GeoJSON の Feature のオブジェクト）。キーの順は `type`（`'Feature'`）、`properties`、`geometry`。`geometry` は `shapely.geometry.mapping(<幾何>)` の値（キーの順は `type`、`coordinates`）。地域の `properties` のキーの順は `assoc`・`area_code`・`region_name`、市区町村は `prefecture`・`municipality`・`code`（[SRS §8.2.1](20_SRS.md#821-n03-前処理済みファイル詳細仕様) の並び）。
+- 除外タイル: `tuple[int, int]`（`(x, y)`、ズーム 15）。除外メッシュ: `str`（[2.1.2](#212-型とデータ) のメッシュコード）。
+- モジュールの状態（内部。モジュールの最上位の変数で、初めは空の文字列）: `_n03_source: str`（`load_n03_features` の 1 が入れる、メッセージの対象のファイルを示す文 `<ZIP のパス> の N03-<YYYYMMDD>.geojson`。BV3〜BV8・BF2 の `{source}`）、`_config_opt: str`（`main` が `start_log` の後に入れる、[3.1.4](#314-メッセージ文面) の `{config_opt}` の値。BW1 と `{rerun}` を使うメッセージが使う）。
+- モジュールの状態の理由: HLD [3.1.3](#313-関数の細部) の表の `needs_rebuild`・`validate_n03`・`build_regions` などが受け取るものに、メッセージに要る対象のファイルと設定ファイルのパス（[HLD 4.17.3](30_HLD.md#4173-異常系) の「CMP1 の失敗」の行と「新しい版の N03 ZIP がある」の行）が無い。引数で渡すと HLD の表と食い違い、フィーチャごとに持たせるのは同じ値の重複になる。モジュールの状態は 2.1 の `_state` と同じ扱い。
+
+#### 3.1.3 関数の細部
+
+- 止まるときは、メッセージを出してから `sys.exit(<定数>)` を呼ぶ（[1.2](#12-lld-の規約) の終わり方の規約と [2.1.3](#213-関数の細部) の呼ぶ側の書き方の型をそのまま当てる）。`start_log` の後に止まるときは、`main` の `finally` が結果の要約を出す。
+- 交差の判定: 「交差する」（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「共通部分が面積を持つ」）は、`shapely.relate_pattern(<ポリゴン>, <矩形>, 'T********')`（内部どうしが交わる）が真であることとする。面積の値と比べない（浮動小数の閾値を置かない）。2 つの面の内部どうしが交われば共通部分は面積を持ち、境界で接するだけなら交わらない。
+- 例外の受け方: 各関数が名前を挙げた例外だけを捕まえる（[1.2](#12-lld-の規約) の規約）。`SignalStop`・`LogWriteError` は捕まえない。
+- 画面への出力の失敗（標準出力や標準エラー出力が読む相手の無いパイプなど）は、このモジュールでは特別に扱わず、[2.1.3](#213-関数の細部) の `log_info`・`log_warning`・`log_error` と `_finish_log` の決まりのままにする（`start_log` の前に止まる BA1〜BA4 などで標準エラー出力に書けないときの終了コードは、Python の既定のまま）。利用者が端末から起動するコマンドで、[5.2](#52-resolve_config) の `resolve_config` のように標準出力を別のプログラムが読む約束が無いため。
+- `{reason}` は [2.1.4](#214-メッセージ文面) と同じ（`OSError` の `strerror`〈無ければ `str(e)`〉、`UnicodeDecodeError` なら `UTF-8 として読めない`）に加えて、`zipfile.BadZipFile`・`zlib.error`・`EOFError`・`NotImplementedError`・`json.JSONDecodeError`・`ValueError`・`TypeError`・`shapely.errors.GEOSException` は `str(e)` の 1 行目（空なら例外のクラス名）。
+
+##### main（preprocess_boundaries）
+
+`main() -> None`。[2.1.3](#213-関数の細部) の呼ぶ側の書き方の型に従い、次の順に行う。
+
+1. `start = common.StartTime.now()`。
+2. `args = _parse_args(sys.argv[1:])`（`--help` と引数の誤りは、ここで止まる）。`config_path` は `args.config` が `None` なら `common.DEFAULT_CONFIG_PATH`、それ以外は `args.config`（`load_config` が `os.path.abspath` する）。
+3. `config = common.load_config(config_path, ('data_dir', 'log_dir'), ('data_dir',))`（[HLD 2.3.2](30_HLD.md#232-設定ファイル) の表で CMP1 が使うキー）。`data_dir`・`log_dir` はその値。`boundaries_dir = os.path.join(data_dir, 'boundaries')`。
+4. `common.acquire_lock(data_dir)`。
+5. `common.start_log(log_dir, config, 'preprocess_boundaries', sys.argv[1:], start)`。`_config_opt` に [3.1.4](#314-メッセージ文面) の `{config_opt}` の値を入れる（`args.config is not None` なら `' --config ' + shlex.quote(config.path)`、それ以外は空の文字列）。
+6. `try` の前に、`completed = False`、`code = common.EXIT_OK`、要約のための状態（`counts: dict[str, int]`〈空。`地域`・`市区町村`・`除外タイル`・`除外メッシュ` の名前で件数を入れる〉、`replacing = False`、`outcome: str | None = None`、`zip_date: str | None = None`、`recorded: str | None = None`）を置く（[2.1.3](#213-関数の細部) の呼ぶ側の書き方の型）。`try` の中で次を呼ぶ（[HLD 3.1.3](30_HLD.md#313-関数) の呼ぶ順）:
+   1. `zip_path, zip_date = find_n03_zip(os.path.join(data_dir, 'ref'))`。
+   2. `needs_rebuild(boundaries_dir, args.rebuild, zip_date)` が偽なら、`recorded = _read_version(os.path.join(boundaries_dir, _VERSION_NAME))`、`outcome = 'skipped'`、`completed = True` にし、3〜8 を行わない（`if` で分ける。`return` で抜けると `finally` の後の `sys.exit(code)` に届かないので使わない）。
+   3. `japan = common.read_mesh_list_file(_JAPAN_MESH_LIST_PATH, None)`（無い・読めない・誤りの行は R1〜R3 で 1。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 4「日本全土リストを読む」）。
+   4. `features = load_n03_features(zip_path, zip_date)`。`validate_n03(features)`。
+   5. `regions = build_regions(features)`、`counts['地域'] = len(regions)`。`municipalities = build_municipalities(features)`、`counts['市区町村'] = len(municipalities)`。
+   6. `nt, other = split_nt_polygons(features)`。`tiles = list_excluded_tiles(nt)`、`counts['除外タイル'] = len(tiles)`。`meshes = list_excluded_meshes(japan, nt, other)`、`counts['除外メッシュ'] = len(meshes)`。
+   7. `temp_paths = write_temp_outputs(regions, municipalities, tiles, meshes, boundaries_dir)`。
+   8. `replacing = True`。`replace_outputs(temp_paths, data_dir, zip_date)`。`outcome = 'rebuilt'`、`completed = True`。
+7. `finally` で結果の要約を `common.log_info` で出す（[3.1.4](#314-メッセージ文面) の BL3〜BL5。`completed` が真なら `outcome` で BL3 か BL4、偽なら BL5）。
+8. `sys.exit(code)`。
+
+##### _parse_args（preprocess_boundaries）
+
+`_parse_args(argv: Sequence[str]) -> _Args`（内部）。`@dataclass(frozen=True) class _Args`: `config: str | None`（`--config` の値。渡されなければ `None`）、`rebuild: bool`。
+
+1. [1.2](#12-lld-の規約) の利用者向けの Python のコマンドの引数の受け方で読む。受け付ける名前は、`--config`（値を 1 つとる）、`--rebuild`・`--help`（値をとらない）だけ（[HLD 2.4.2](30_HLD.md#242-共通の書式)）。
+2. 誤りは BA1（受け付けない引数）、BA2（値が無い）、BA4（同じ名前を 2 回）で、`common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。
+3. `--help` は、[3.1.4](#314-メッセージ文面) の使い方の文を `sys.stdout.write` で出し、`sys.stdout.flush()` の後に `sys.exit(common.EXIT_OK)`。
+4. 読み終えたら、`--config` の値が空の文字列なら BA3 で `sys.exit(common.EXIT_USAGE)`。
+5. `_Args(config=<値か None>, rebuild=<--rebuild を読んだか>)` を返す。
+
+##### find_n03_zip
+
+`find_n03_zip(ref_dir: str) -> tuple[str, str]`（返すのは（採用した ZIP の絶対パス, YYYYMMDD））。
+
+1. `names = os.listdir(ref_dir)`。`FileNotFoundError`・`NotADirectoryError` なら候補が 0 件として 3 へ（`ref/` が無いときも ZIP を置く場所を案内するため）。ほかの `OSError` なら BZ2 で `sys.exit(common.EXIT_ERROR)`。
+2. 候補は、`_ZIP_NAME.fullmatch(name)` に合い、`os.path.isfile(os.path.join(ref_dir, name))` が真の名前（同じ名前のディレクトリは候補にしない）。
+3. 候補が 0 件なら BZ1 で `sys.exit(common.EXIT_ERROR)`（[HLD 4.17.3](30_HLD.md#4173-異常系) の「起動前提条件の不足」の行）。
+4. YYYYMMDD（8 桁の文字列。字の順と数の順が同じ）が最大の候補を採る。`path = os.path.abspath(os.path.join(ref_dir, name))`、`size = os.path.getsize(path)`（`OSError` なら BZ2）。BL1 を `common.log_info` で出し、`(path, YYYYMMDD)` を返す。
+
+##### needs_rebuild
+
+`needs_rebuild(boundaries_dir: str, rebuild: bool, zip_date: str) -> bool`
+
+1. `rebuild` が真なら BL2（`--rebuild`）を出して真を返す。
+2. `_OUTPUT_NAMES` の順に、`os.path.isfile(os.path.join(boundaries_dir, <名前>))` が偽の最初の名前があれば、BL2（無いファイル）を出して真を返す（ディレクトリが同じ名前で置いてあるときも無いものとする）。
+3. `recorded = _read_version(os.path.join(boundaries_dir, _VERSION_NAME))`。`None` なら BL2（版の記録が欠けている）を出して真を返す（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し) の「版の記録が読めないか、8 桁の数字の 1 行でなければ、版の記録が欠けているものとして扱う」）。
+4. BL2（作り直さない）を出す。`zip_date > recorded` なら BW1 を `common.log_warning` で出す。偽を返す（`zip_date` が `recorded` 以下なら警告しない）。
+
+##### _read_version
+
+`_read_version(path: str) -> str | None`（内部。`needs_rebuild` と `main` が使う）
+
+`open(path, 'rb')` で全部を読み、`re.fullmatch(rb'([0-9]{8})\n?', data)` に合えば、その 8 字を `str`（ASCII）で返す。合わないか、`OSError`（無い、ディレクトリ、読めない）なら `None`。BOM・CR・空白・2 行目は許さない（版の記録は CMP1 だけが書くファイルで、書く側〈`replace_outputs` の 4〉は `YYYYMMDD` と LF 1 つを書く）。
+
+##### load_n03_features
+
+`load_n03_features(zip_path: str, zip_date: str) -> list[N03Feature]`
+
+1. `member = f'N03-{zip_date}.geojson'`。`_n03_source = f'{zip_path} の {member}'`（モジュールの状態に入れる）。
+2. `with zipfile.ZipFile(zip_path) as zf:` で開き（3 の展開もこの `with` の中で行う）、`namelist()` に `member` があるかを見る（ZIP の最上位だけ。`/` を含む名前の項目は見ない。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 5「市区町村の GeoJSON を展開する」）。開けないか読めない（`OSError`・`zipfile.BadZipFile`・`zlib.error`・`EOFError`・`NotImplementedError`）なら BV1、`member` が無ければ BV2 で `sys.exit(common.EXIT_ERROR)`。
+3. `with tempfile.TemporaryDirectory(prefix='findsummits-n03-') as work:` の中で、`zf.extract(member, work)` で `member` だけを展開する（`extractall` を使わない）。作業用のディレクトリを作れないか、展開の書き込みが失敗した（`OSError`）なら BF1、ZIP の中身が壊れている（`zipfile.BadZipFile`・`zlib.error`・`EOFError`・`NotImplementedError`）なら BV1 で止まる。
+4. 同じ `with` の中で、展開したファイルを `open(<パス>, encoding='utf-8')` で開き、`json.load(f, parse_constant=_reject_constant)` で読む（`_reject_constant` は内部の関数で、`NaN`・`Infinity`・`-Infinity` を受けたら `ValueError(f'{name} は JSON の数でない')` を上げる）。`OSError`・`UnicodeDecodeError`・`ValueError`（`json.JSONDecodeError` を含む）・`RecursionError` なら BV3 で止まる。読み終えたら `with` を抜け、作業用のディレクトリを消す（`TemporaryDirectory` が消す。止まるときも、`SignalStop` で抜けるときも消える。[HLD 4.17.3](30_HLD.md#4173-異常系) の「シグナル」の行。消せないときの例外は `TemporaryDirectory` の既定のまま）。
+5. 形を確かめる: 読んだ値がオブジェクトで、`type` が `'FeatureCollection'` で、`features` が配列であること。違えば BV3（`{reason}` は `FeatureCollection でない` か `features が配列でない`）。
+6. `features` の各要素を、先頭から 1 つずつ `N03Feature` に変える。変えた要素は配列の中で `None` に置き換え（`features[i] = None`）、読んだ値の全体を持つ変数も先に捨てる（元の辞書を持ち続けないため。[HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)）。要素がオブジェクトでなければ BV3（`{reason}` は `{index} 番目のフィーチャがオブジェクトでない`）。`geom_type` が `'Polygon'` か `'MultiPolygon'` のときは `shapely.geometry.shape(<geometry>)` でポリゴンを作り、`ValueError`・`TypeError`・`IndexError`・`KeyError`・`AttributeError`・`shapely.errors.GEOSException` なら BV3（`{reason}` は `{index} 番目のフィーチャの幾何の座標を読めない: <例外の 1 行目>`）。
+7. `N03Feature` の並び（`features` の順）を返す。属性の値は検査しない（`validate_n03` が見る）。
+
+##### validate_n03
+
+`validate_n03(features: Sequence[N03Feature]) -> None`。次の順に確かめ、最初に当たった検証のメッセージを `common.log_error` で出して `sys.exit(common.EXIT_ERROR)`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「入力の検証」の 2 つ目〜6 つ目の項目。1 つ目の ZIP は `load_n03_features`）。止まるときは何も書かない。
+
+1. 属性と幾何の欠け（BV4）: フィーチャの順に、次をこの順に見て、最初に当たったフィーチャと項目で止まる。`n03_001`・`n03_004`・`n03_007` が空でない `str` でない。`n03_002`・`n03_005` が `str` でも `None` でもない。`geom_type` が `None`（幾何が無い）。`geom_type` が `'Polygon'`・`'MultiPolygon'` でない。
+2. 表に無い名前（BV5）: `n03_001 == '北海道'` のフィーチャは `n03_002` が `_REGIONS` の `JA8` の行の名前にあるか、ほかのフィーチャは `n03_001` が `JA8` でない行の名前にあるかを見る（北海道の振興局を都府県の名前で引かず、都府県を振興局の名前で引かない）。無い名前を、北海道なら `北海道/<n03_002>`（`None` なら `北海道/null`）、ほかなら `<n03_001>` の形の文字列にし、重なりを除いて昇順に並べる。
+3. 同じコードでの食い違い（BV6）: `n03_007` が同じフィーチャで、`(n03_001, n03_004, n03_005)` の組が 1 つでないコードを昇順に並べる（`None` と空の文字列は違う値とする）。
+4. ポリゴンの無い地域（BV7）: 2 の引き方でフィーチャを `_REGIONS` の行に割り当て、ポリゴンの数（`len(polygons)` の和）が 0 の行の名前を表の順に並べる。
+5. 北方領土 6 村の欠け（BV8）: `_NT_CODES` のコードのうち、そのコードのフィーチャのポリゴンの数の和が 0 のコードを昇順に並べる（[HLD 4.17.4](30_HLD.md#4174-設計判断) の DEC38）。
+
+##### build_regions
+
+`build_regions(features: Sequence[N03Feature]) -> list[dict]`
+
+1. フィーチャを `validate_n03` の 2 の引き方で `_REGIONS` の行に割り当て、行ごとにポリゴンを集める（北方領土 6 村も根室振興局に入る）。
+2. 行ごとに、集めたポリゴンを `shapely.to_wkb(p, byte_order=1)` のバイト列の昇順に並べ替えてから `shapely.union_all` で合わせる（並べ替えるのは、合わせた結果が入力のフィーチャの並びによらないようにするため。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「出力の置き場」の後の箇条の「出力の並びは入力のフィーチャの並びによらない」、[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)）。`shapely.errors.GEOSException` なら BF2（`{step}` は `地域 <表の名前> を合わせる（dissolve）`）で止まる。結果が空か、`Polygon`・`MultiPolygon` でなければ、同じ BF2（`{reason}` は `合わせた結果が面でない: <geom_type>`）で止まる。
+3. 結果の各ポリゴンを `orient(p, sign=1.0)`（外側の環を反時計回り、内側の環を時計回り。RFC 7946 の右手則）でそろえる。結果が `Polygon` なら 1 つの `Polygon`、`MultiPolygon` ならそろえたポリゴンを結果の順に並べた `MultiPolygon` にする。
+4. フィーチャ（`properties` は `assoc`・`area_code`・`region_name`〈表の名前〉）を作り、`(assoc, area_code)` の昇順（字の順）に並べて返す。
+
+##### build_municipalities
+
+`build_municipalities(features: Sequence[N03Feature]) -> list[dict]`
+
+1. フィーチャを `n03_007` ごとに集める。
+2. コードごとに、ポリゴンを `shapely.to_wkb(p, byte_order=1)` のバイト列の昇順に並べ、`MultiPolygon(<並べたポリゴン>)` にする（座標と環の向きは N03 のまま変えない。union しない。ポリゴンが 1 つでも `MultiPolygon`。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「市区町村 GeoJSON」）。
+3. `properties` は、`prefecture` が `n03_001`、`municipality` が `n03_004` に `n03_005` をつなげたもの（`n03_005` が `None` か空の文字列ならつなげない）、`code` が `n03_007`（同じコードのフィーチャは `validate_n03` の 3 で同じ値とわかっている）。
+4. `code` の昇順（字の順。5 桁の数字の文字列なので数の順と同じ）に並べて返す。
+
+##### split_nt_polygons
+
+`split_nt_polygons(features: Sequence[N03Feature]) -> tuple[list[Polygon], list[Polygon]]`
+
+フィーチャの順に、`n03_007` が `_NT_CODES` にあるフィーチャのポリゴンを 1 つ目に、ほかのフィーチャのポリゴンを 2 つ目に、フィーチャの中のポリゴンの順で足して返す。
+
+##### list_excluded_tiles
+
+`list_excluded_tiles(nt_polygons: Sequence[Polygon]) -> list[tuple[int, int]]`
+
+1. ポリゴンごとに、`shapely.prepare(p)` してから、外接矩形 `(w, s, e, n) = p.bounds` の北西の隅 `(x0, y0) = common.latlon_to_tile(n, w, 15)` と南東の隅 `(x1, y1) = common.latlon_to_tile(s, e, 15)` を求め、`x` は `x0 − 1` から `x1 + 1`、`y` は `y0 − 1` から `y1 + 1` まで（両端を含む）を調べる範囲にする。両側に 1 つずつ広げるのは、`latlon_to_tile` と `tile_to_latlon` の丸めの違いで端の列や行を取り逃がさないため。余分なタイルは、下の 2 の判定で外れる。
+2. 範囲の各タイル `(x, y)` について、`(n_t, w_t) = tile_to_latlon(x, y, 15)`、`(s_t, e_t) = tile_to_latlon(x + 1, y + 1, 15)` の矩形 `box(w_t, s_t, e_t, n_t)` が、ポリゴンと前置きの「交差する」の決まりで交わるなら、集合に足す（重なりは 1 つ）。
+3. `(x, y)` の昇順（`x`、次に `y`）に並べて返す。
+
+- 1・2 で `shapely.errors.GEOSException` になったら、BF2（`{step}` は `除外タイルを求める`）で `sys.exit(common.EXIT_ERROR)`。
+- 空間索引は使わない（ポリゴンごとに外接矩形の中のタイルだけを調べるので、調べる数は北方領土の広さで決まる。実物の N03 で 726 ポリゴン、5 秒ほど）。
+
+##### list_excluded_meshes
+
+`list_excluded_meshes(japan_codes: Collection[str], nt_polygons: Sequence[Polygon], other_polygons: Sequence[Polygon]) -> list[str]`
+
+1. `tree = shapely.STRtree(other_polygons)`。
+2. `japan_codes` を昇順に、`((s, w), (n, e)) = common.mesh_to_latlon(code)`、`rect = box(w, s, e, n)` とし、次の両方を満たすコードを集める: `nt_polygons` のどれかと「交差する」。`tree.query(rect, predicate='intersects')` が返す番号の `other_polygons` のどれとも「交差する」でない（`STRtree` は外接矩形と境界での接触でも候補を返すので、候補ごとに「交差する」の決まりで確かめる）。
+3. 昇順のまま返す。
+
+- 1・2 で `shapely.errors.GEOSException` になったら、BF2（`{step}` は `除外メッシュを求める`）で `sys.exit(common.EXIT_ERROR)`。
+
+##### tile_to_latlon
+
+`tile_to_latlon(x: float, y: float, z: int) -> tuple[float, float]`（返すのは（緯度, 経度））。式と計算の順は [2.4](#24-言語ごとに別に実装する式のテストベクトル) の決まりのとおり（`math.sinh`・`math.atan`・`math.pi`）。引数を検査しない。
+
+##### write_temp_outputs
+
+`write_temp_outputs(regions: Sequence[dict], municipalities: Sequence[dict], tiles: Sequence[tuple[int, int]], meshes: Sequence[str], boundaries_dir: str) -> list[str]`（返すのは `_OUTPUT_NAMES` の順の一時ファイルの絶対パス）
+
+1. `os.makedirs(boundaries_dir, exist_ok=True)`。`OSError` なら BF3（`{path}` は `boundaries_dir`）で止まる。
+2. 4 つを `_OUTPUT_NAMES` の順に、[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりの「書く」の段で書く。置き換えはしない（`replace_outputs` が、版の記録と取得完了の記録を消した後に行う。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 8「置き換える」）。どれかを書けなかったら、この呼び出しで先に書き終えた一時ファイルもすべて `os.remove` で消してから（消せないときの `OSError` は無視する）止まる（`boundaries/` に一時ファイルを残さない。前の出力と版の記録と取得完了の記録には触れない）。GeoJSON は `json.dump({'type': 'FeatureCollection', 'features': <フィーチャの並び>}, f, ensure_ascii=False, separators=(',', ':'), allow_nan=False)` の後に `'\n'` を 1 つ書く（テキストのモードで開く）。座標は `mapping` が返す `float` のまま（Python の `float` の最短の 10 進表記で書くので、N03 の字面と違っても値は同じ。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「座標は N03 の値を丸めない」）。除外タイルは各行 `f'{x} {y}\n'`、除外メッシュは各行 `f'{code}\n'`（0 件なら空のファイル。UTF-8・LF・1 行 1 件。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「出力の置き場」の後の箇条）。`OSError` なら、上のとおり一時ファイルを消してから、BF3（`{path}` は書けなかった一時ファイル）で止まる。
+3. 一時ファイルのパスを返す。
+
+- JSON の書き方の理由: 区切りの空白を入れない（市区町村の GeoJSON は座標が多く、空白の分だけ大きくなる）。`ensure_ascii=False` は、地域と市区町村の名前を UTF-8 のまま読めるようにするため。キーの順は上の「出力のフィーチャ」のとおりで、`sort_keys` を使わない。
+
+##### replace_outputs
+
+`replace_outputs(temp_paths: Sequence[str], data_dir: str, zip_date: str) -> None`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 8「置き換える」の順のとおり）
+
+1. `os.remove(<boundaries/ の版の記録>)`。`FileNotFoundError` は無視する。
+2. `os.remove(common.fetch_record_path(data_dir))`。`FileNotFoundError` は無視する（記録が無ければ何もしない。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+3. `temp_paths` の順に、`os.replace(<一時ファイル>, os.path.join(<boundaries/>, <_OUTPUT_NAMES の同じ位置の名前>))`。
+4. 版の記録を、[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりで `n03_version.txt.tmp` に `f'{zip_date}\n'` の 1 行（ASCII）を書いてから、`os.replace` で置き換える（書けないときも置き換えられないときも、下の BF4）。
+
+- 1〜4 のどれかで `OSError`（1・2 の `FileNotFoundError` を除く）なら、BF4（`{path}` は消すか置き換えるか書くところだったパス）で `sys.exit(common.EXIT_ERROR)`。残った一時ファイルは消さない（次の起動が上書きする。版の記録が無ければ次の起動で作り直す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+
+#### 3.1.4 メッセージ文面
+
+前置き: 書き方は [2.2](#22-ログとメッセージの文面)。ロックとログの場面（G1〜G7。`{config_path}` は `Config` の `path`）は [2.2](#22-ログとメッセージの文面)、設定の誤り（CF1〜CF7）と日本全土リストの誤り（R1〜R3。案内は `None` で既定の対処）は [2.1.4](#214-メッセージ文面) の文面のまま。L1〜L3 は [2.2](#22-ログとメッセージの文面)（`{program}` は `preprocess_boundaries`）。`{path}`・`{zip_path}`・`{ref_dir}` は `os.path.abspath` したパス、`{reason}` は [3.1.3](#313-関数の細部) の前置きのとおり、`{source}` は `_n03_source`。`{arg}`・`{value}` は [2.2](#22-ログとメッセージの文面) の引用の決まりで書いたもの（`shlex.quote`）。`{config_opt}` は `_config_opt`（`--config` を渡されたときは空白 1 つと `--config` と空白 1 つと `Config` の `path` を `shlex.quote` したもの、渡されなかったときは空）。`{rerun}` は `直してから、タイル取得とパイプライン制御を起動する前に venv/bin/python3 scripts/preprocess_boundaries.py{config_opt} --rebuild を起動し、正常に終える`（[HLD 4.17.3](30_HLD.md#4173-異常系) の「CMP1 の失敗」の行の「CMP2・CMP3 を起動する前に CMP1 を再実行する案内」。`--rebuild` を付けるのは、前の出力がそろっていても作り直させるため）。
+
+`ERROR:`・`WARNING:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| BA1 | 受け付けない引数 | `preprocess_boundaries の知らない引数: {arg}` | `使える引数は --config・--rebuild・--help（venv/bin/python3 scripts/preprocess_boundaries.py --help で使い方を出す）` | 2 |
+| BA2 | 値が無い | `{option} の値が無い` | `{option} の後に値を書く（venv/bin/python3 scripts/preprocess_boundaries.py --help で使い方を出す）` | 2 |
+| BA3 | 値が違う | `--config の値が違う: {value}` | `--config には空でないパスを渡す` | 2 |
+| BA4 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` | 2 |
+| BZ1 | N03 行政区域 ZIP が無い | `N03 行政区域 ZIP が無い: {ref_dir}/N03-YYYYMMDD_GML.zip（YYYYMMDD は半角の数字 8 桁）` | `国土数値情報の行政区域データ（全国）の ZIP を入手し、名前を変えずに {ref_dir} の直下に置いてから、もう一度起動する` | 1 |
+| BZ2 | ZIP を探す場所を読めない | `N03 行政区域 ZIP を探す場所を読めない: {path}: {reason}` | `{path} の読み取りの権限を確かめてから、もう一度起動する` | 1 |
+| BV1 | ZIP を読めない | `N03 行政区域 ZIP を読めない: {zip_path}: {reason}` | `ZIP を国土数値情報から入手し直して置き換える。{rerun}` | 1 |
+| BV2 | ZIP に市区町村の GeoJSON が無い | `N03 行政区域 ZIP の最上位に {member} が無い: {zip_path}` | BV1 と同じ | 1 |
+| BV3 | GeoJSON を読めない | `N03 の GeoJSON を読めない: {source}: {reason}` | BV1 と同じ | 1 |
+| BV4 | 属性か幾何の欠け | `N03 の GeoJSON に属性か幾何の欠けたフィーチャがある: {source} の {index} 番目のフィーチャ（{detail}）`（`{detail}` は `{key} が空でない文字列でない`、`{key} が文字列でも null でもない`、`幾何が無い`、`幾何の種類が {type}` のどれか。`{key}` は N03 のプロパティの名前〈`N03_001` など。大文字〉。`{type}` は値を `json.dumps(<値>, ensure_ascii=False)` したもの） | `N03 行政区域 ZIP が正しいかを確かめる（入手し直して置き換える）。{rerun}` | 1 |
+| BV5 | 地域の対応表に無い名前 | `N03 の都道府県名か振興局名が地域の対応表に無い: {names}（{source}）` | `N03 行政区域 ZIP が正しいかを確かめる。正しければ、都道府県か振興局の再編か改称なので、preprocess_boundaries の地域の対応表を直す（開発者に知らせる）。{rerun}` | 1 |
+| BV6 | 同じコードで食い違う | `同じ行政区域コードで都道府県名か市区町村名が食い違う: {codes}（{source}）` | BV4 と同じ | 1 |
+| BV7 | ポリゴンの無い地域 | `ポリゴンが 1 つも無い地域がある: {names}（{source}）` | BV5 と同じ | 1 |
+| BV8 | 北方領土 6 村の欠け | `北方領土 6 村のポリゴンが N03 に無い: {codes}（{source}）` | `N03 行政区域 ZIP が正しいかを確かめる。正しければ、行政区域コードの変更なので、preprocess_boundaries の北方領土 6 村のコードを直す（開発者に知らせる）。{rerun}` | 1 |
+| BF1 | 展開できない | `N03 の GeoJSON を作業用のディレクトリに展開できない: {path}: {reason}`（`{path}` は作業用のディレクトリ。作れなかったときは `tempfile.gettempdir()`） | `ディスクの空きと一時ディレクトリ（環境変数 TMPDIR）の権限を確かめる。{rerun}` | 1 |
+| BF2 | ポリゴンの計算ができない | `ポリゴンの計算ができない: {step}: {reason}（{source}）`（`{step}` は `build_regions`・`list_excluded_tiles`・`list_excluded_meshes` が渡す処理の名前） | `このメッセージを写して開発者に知らせる（N03 のポリゴンが不正な形かもしれない）。{rerun}` | 1 |
+| BF3 | 一時ファイルに書けない | `出力を一時ファイルに書けない: {path}: {reason}` | `ディスクの空きと {dir} の権限を確かめる（前の出力は残っている）。{rerun}`（`{dir}` は `boundaries/` の絶対パス） | 1 |
+| BF4 | 置き換えられない | `出力を置き換えられない: {path}: {reason}` | `{path} とそのディレクトリの権限を確かめる（版の記録を消した後なら、次の起動で作り直す）。{rerun}` | 1 |
+| BW1 | 新しい版の ZIP がある（`WARNING:`） | `記録した版より新しい N03 行政区域 ZIP がある: 記録した版 {recorded}、置いてある最新の版 {zip_date}`（ZIP のパスは直前の BL1 に出ている。`needs_rebuild` は ZIP のパスを受け取らない） | `新しい版を使うなら venv/bin/python3 scripts/preprocess_boundaries.py{config_opt} --rebuild を起動する（作り直すと取得完了の記録が消えるので、タイル取得からやり直す）` | 0 |
+
+`{names}`・`{codes}` は、[3.1.3](#313-関数の細部) の `validate_n03` の並びで `・` でつないだもの。BV5・BV6 は先頭から `_LIST_LIMIT`（10）件までで、超えるときは続けて空白 1 つと `ほか {k} 件` を付ける（`{k}` は残りの数）。BV7・BV8 は全部（最大 60 件と 6 件）。
+
+通常のログに出す行（`common.log_info` で標準出力とログファイルに出す）:
+
+| 記号 | 行 | 文面 |
+|---|---|---|
+| BL1 | 採用した ZIP | `N03 行政区域 ZIP: {zip_path}（版 {zip_date}、{size} バイト）` |
+| BL2 | 作り直すかの判定 | `作り直す: --rebuild を付けた`、`作り直す: {path} が無い`、`作り直す: 版の記録が読めないか、8 桁の数字の 1 行でない: {path}`、`作り直さない: 出力と版の記録がそろっている（版 {recorded}）` のどれか |
+| BL3 | 結果の要約（作り直した） | `結果の要約: 作り直した（版 {zip_date}）。地域 {n}、市区町村 {n}、除外タイル {n}、除外メッシュ {n}` |
+| BL4 | 結果の要約（作り直さなかった） | `結果の要約: 作り直さなかった。採用した ZIP の版 {zip_date}、版の記録 {recorded}`（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の「結果の要約の中身」の `preprocess_boundaries` の行） |
+| BL5 | 結果の要約（途中で止まった） | `結果の要約: 途中で止まった。終えた分: {done}`（`{done}` は `counts` にある名前を `地域`・`市区町村`・`除外タイル`・`除外メッシュ` の順に `{名前} {件数}` にして `、` でつないだもの。無ければ `なし`）。`replacing` が真なら続けて `。出力の置き換えに入った後に止まった（版の記録が消えていれば、次の起動で作り直す）` |
+
+使い方の文（`--help`。標準出力に、次の行をこのまま出す。最後の行の後にも LF を付ける）:
+
+```text
+使い方: venv/bin/python3 scripts/preprocess_boundaries.py [--config <パス>] [--rebuild]
+       venv/bin/python3 scripts/preprocess_boundaries.py --help
+
+N03 行政区域 ZIP から、地域と市区町村の GeoJSON、北方領土除外タイルリスト、北方領土除外メッシュリストを作る。出力と版の記録がそろっていれば作り直さない。
+
+  --config <パス>  設定ファイル（省くとソースツリーの params/config.ini）
+  --rebuild        出力と版の記録がそろっていても作り直す
+  --help           この使い方を出して終わる
+```
+
+- 並べる件数の理由: BV5・BV6 は、N03 の書式が変わると全部の名前やコードに当たりうるので 10 件までにする（利用者がすることは ZIP を確かめるか表を直すかで、全部の名前は要らない）。BV7・BV8 は上限が小さいので全部並べる。
+
+#### 3.1.5 UT 候補
+
+前置き: すべて自動。共通の準備は次の 4 つ。止まるケースの期待の「メッセージ」は、標準エラー出力の行の文面（[2.2](#22-ログとメッセージの文面)・[2.1.4](#214-メッセージ文面)・[3.1.4](#314-メッセージ文面) の文面に値を入れたもの）。ログファイルの行の期待は、先頭の時刻と空白を除いた文面。
+
+- **同じプロセス**: テストのプロセスの中で `scripts/` を import の探索先に入れて `import preprocess_boundaries` し、関数を直接呼ぶ（`start_log` を呼ばない。`log_info` などは画面にだけ出る）。止まるケースは `SystemExit` を捕まえて終了コードを読み、標準出力と標準エラー出力は `contextlib.redirect_stdout`・`redirect_stderr` で捕まえる。一時のディレクトリ `<tmp>` をケースごとに作り、`tempfile.tempdir` を `<tmp>/t`（作っておく）に差し替える（作業用のディレクトリの残りを見るため。ケースの後に元に戻す）。
+- **小さな N03**: 次の 67 フィーチャの FeatureCollection（UTF-8 の JSON。`properties` には `N03_001`〜`N03_005`・`N03_007` の 6 つのキーを置き、書かないものは `null`）。各フィーチャの幾何は、ポリゴンを 1 つ持つ `MultiPolygon` で、ポリゴンは外側の環だけの矩形 `[[w, s], [e, s], [e, n], [w, n], [w, s]]`（反時計回り）。
+  - 地域のフィーチャ 60: HLD 4.17.2 の対応表の `i` 行目（0 から）ごとに 1 つ。`JA8` の行は `N03_001` が `北海道`・`N03_002` が表の名前、ほかは `N03_001` が表の名前。`N03_004` は `市` と `i` の 2 桁（`市00`）、`N03_007` は `9` と `i` の 4 桁（`90000`）。矩形は `w = 120 + 0.2 × (i mod 10)`、`s = 25 + 0.2 × floor(i / 10)`、`e = w + 0.1`、`n = s + 0.1`。ただし根室振興局の行は `w = 147.5`、`s = 44.8`、`e = 147.6`、`n = 44.9`（メッシュ `6747` の中）。
+  - 北方領土のフィーチャ 7: `k` = 0〜5 について、`N03_001` が `北海道`・`N03_002` が `根室振興局`・`N03_004` が `村` と `k`（`村0`）・`N03_007` が `1695 + k` を 0 で埋めた 5 桁（`f'{1695 + k:05d}'`。`01695`〜`01700`）で、矩形は `w = 148.1 + 0.1 × k`、`s = 45.5`、`e = w + 0.05`、`n = 45.55`（メッシュ `6848` の中）。7 つ目は `01695` の 2 つ目のフィーチャ（`N03_004` は `村0`）で、矩形は `w = 147.1`、`s = 44.8`、`e = 147.15`、`n = 44.85`（メッシュ `6747` の中。`6747` は根室振興局の矩形も持つので、除外メッシュにならない）。
+  - この N03 からの出力: 地域 60、市区町村 66（`01695` は 2 つのポリゴンの `MultiPolygon`）、日本全土のリストを `3720`・`6747`・`6848` にしたときの除外メッシュは `6848` だけ。根室振興局の地域は、根室振興局の矩形と北方領土の 7 つの矩形の 8 つのポリゴンの `MultiPolygon`。
+- **一時の ZIP**: 小さな N03（ケースが書き換えたものを含む）を `json.dumps(…, ensure_ascii=False)` の UTF-8 にして、`<data_dir>/ref/N03-20250101_GML.zip` の最上位の `N03-20250101.geojson` に書く（`zipfile.ZIP_DEFLATED`）。同じ ZIP の最上位に `N03-20250101_prefecture.geojson`（中身は `{}`）も置く。
+- **子のプロセス**: 一時のソースツリー `<tmp>/src` を作り、`<tmp>/src/scripts/` にテストする `scripts/preprocess_boundaries.py` と `scripts/common.py` を写し、`<tmp>/src/params/mesh_list_japan.txt` に `3720\n6747\n6848\n` を書く。一時の設定 `<tmp>/c.ini` に `[paths]` の `data_dir = <tmp>/data`・`log_dir = <tmp>/logs` を書き、`<tmp>/data/ref/` に一時の ZIP を置く。`<tmp>/work` と `<tmp>/t` を作る。起動は `subprocess.run([sys.executable, '<tmp>/src/scripts/preprocess_boundaries.py', *<引数>], cwd='<tmp>/work', env={**os.environ, 'TMPDIR': '<tmp>/t'}, capture_output=True)`（ケースが書かなければ引数は `--config ../c.ini`）。終了コード、標準出力と標準エラー出力（UTF-8 で読む）、`<tmp>/logs` の下のログファイル、`<tmp>/data/boundaries/` を確かめる。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-preprocess_boundaries-01` | 引数の正しい形 | 同じプロセス | `_parse_args` に (a) `[]`、(b) `['--config', 'a.ini']`、(c) `['--config=a=b.ini', '--rebuild']`、(d) `['--rebuild', '--config', '--help']` | (a) `_Args(None, False)`、(b) `_Args('a.ini', False)`、(c) `_Args('a=b.ini', True)`、(d) `_Args('--help', True)` |
+| `UT-preprocess_boundaries-02` | 引数の誤り | 同じプロセス | `_parse_args` に (a) `['foo']`、(b) `['--foo']`、(c) `['--rebuild=x']`、(d) `['--help=x']`、(e) `['--']`、(f) `['--conf', 'a.ini']`、(g) `['--config']`、(h) `['--config', '']`、(i) `['--config=']`、(j) `['--rebuild', '--rebuild']`、(k) `['--config', 'a', '--config', 'b']`、(l) `['--config', 'a', '--config']` | どれも 2、標準出力は空。(a)〜(f) は BA1（(a) の 1 行目は `ERROR: preprocess_boundaries の知らない引数: foo`、(f) の引数は `--conf`）、(g) は BA2（`--config の値が無い`）、(h)(i) は BA3（`ERROR: --config の値が違う: ''`）、(j) は BA4（`--rebuild を 2 回渡した`）、(k)(l) は BA4（`--config を 2 回渡した`。(l) は BA2 でない） |
+| `UT-preprocess_boundaries-03` | `--help` | 子のプロセス | 引数を (a) `--rebuild --help --foo`、(b) `--foo --help` | (a) 0、標準出力は [3.1.4](#314-メッセージ文面) の使い方の文と等しい、`<tmp>/data/findsummits.lock` と `<tmp>/logs` が無い。(b) 2、BA1（`--foo`）、標準出力は空 |
+| `UT-preprocess_boundaries-04` | ZIP の選び方 | 同じプロセス。`<tmp>/ref/` に空のファイル `N03-20250101_GML.zip`（3 バイト）・`N03-20260101_GML.zip`（5 バイト）・`N03-2026010_GML.zip`・`N03-20270101_GML.ZIP`・`N03-20270101_GML.zip.bak`・数字を全角にした `N03-`・8 桁・`_GML.zip`（数字はコードポイント U+FF10〜U+FF19）（数字はコードポイント U+FF10〜U+FF19）を置き、ディレクトリ `N03-20280101_GML.zip` を作る | `find_n03_zip('<tmp>/ref')` | `('<tmp>/ref/N03-20260101_GML.zip', '20260101')`、標準出力は BL1 の 1 行 `N03 行政区域 ZIP: <tmp>/ref/N03-20260101_GML.zip（版 20260101、5 バイト）` |
+| `UT-preprocess_boundaries-05` | ZIP が無い・探せない | 同じプロセス | `find_n03_zip` に (a) 空のディレクトリ、(b) 無いパス、(c) 通常のファイルのパス、(d) 権限 `000` のディレクトリ（実効ユーザーが root なら飛ばす） | (a)(b)(c) は 1、BZ1（1 行目は `ERROR: N03 行政区域 ZIP が無い: <渡したパスの絶対パス>/N03-YYYYMMDD_GML.zip（YYYYMMDD は半角の数字 8 桁）`）。(d) は 1、BZ2（`{reason}` は `Permission denied`） |
+| `UT-preprocess_boundaries-06` | 作り直さないときと警告 | 同じプロセス。`<tmp>/b/` に 4 つの出力の名前の空のファイルと、`n03_version.txt`（中身 `20250101\n`）を置く | `needs_rebuild('<tmp>/b', False, …)` に (a) `'20250101'`、(b) `'20260101'`、(c) `'20240101'`、(d) `rebuild` を `True` にして `'20250101'` | (a)(b)(c) は偽、(d) は真。標準出力は (a)(b)(c) が BL2 の `作り直さない: 出力と版の記録がそろっている（版 20250101）`、(d) が `作り直す: --rebuild を付けた`。(b) だけ標準エラー出力に BW1 の 2 行（`WARNING: 記録した版より新しい N03 行政区域 ZIP がある: 記録した版 20250101、置いてある最新の版 20260101` と、`対処: 新しい版を使うなら venv/bin/python3 scripts/preprocess_boundaries.py --rebuild を起動する（作り直すと取得完了の記録が消えるので、タイル取得からやり直す）`）。ほかは標準エラー出力が空 |
+| `UT-preprocess_boundaries-07` | 出力が欠けたとき | 同じプロセス。06 と同じ置き方から、ケースごとに 1 つを変える | (a)〜(d) 4 つの出力のどれか 1 つを消す（別々に）、(e) `nt_excluded_tiles.txt` をディレクトリにする、(f) `<tmp>/b` を消す | どれも真で、BL2 が `作り直す: <無いファイルの絶対パス> が無い`（(f) は `regions.geojson` のパス）。ファイルは変わらない |
+| `UT-preprocess_boundaries-08` | 版の記録の形 | 同じプロセス。06 と同じ置き方で、`n03_version.txt` の中身をケースごとにバイト列で書く | (a) `20250101`（改行なし）、(b) `20250101\n`、(c) `2025010\n`、(d) `20250101\n20250101\n`、(e) `20250101\r\n`、(f) `20250101\n\n`、(g) `EF BB BF` の後に `20250101\n`、(h) 空、(i) 全角の数字 8 桁（コードポイント U+FF12・U+FF10・U+FF12・U+FF15・U+FF10・U+FF11・U+FF10・U+FF11）と `\n`、(j) `n03_version.txt` を消す、(k) `n03_version.txt` をディレクトリにする。どれも `needs_rebuild('<tmp>/b', False, '20250101')` | (a)(b) は偽（BL2 の版は `20250101`）。(c)〜(i)(k) は真で、BL2 は `作り直す: 版の記録が読めないか、8 桁の数字の 1 行でない: <tmp>/b/n03_version.txt`。(j) は真で、BL2 は同じ文（版の記録は 4 つの出力の後に見るので、`が無い` の文でない） |
+| `UT-preprocess_boundaries-09` | ZIP を読む | 同じプロセス。`<tmp>/data/ref/` に一時の ZIP。`zipfile.ZipFile.extract`・`zipfile.ZipFile.extractall` を、呼ばれた項目の名前を記録してから元を呼ぶ物に差し替える | `load_n03_features('<tmp>/data/ref/N03-20250101_GML.zip', '20250101')` | 67 個の `N03Feature`（`index` は 1〜67、`n03_007` などが小さな N03 のとおり、`geom_type` は `MultiPolygon`、`polygons` は 1 つ）。`extract` が `N03-20250101.geojson` の 1 回だけ呼ばれ、`extractall` は呼ばれない。`<tmp>/t` は空 |
+| `UT-preprocess_boundaries-10` | ZIP と GeoJSON を読めない | 同じプロセス。ケースごとに `<tmp>/data/ref/N03-20250101_GML.zip` を作る | (a) 中身が `not a zip` のテキストのファイル、(b) 最上位に `N03-20250101.geojson` が無い ZIP（`N03-20250101_prefecture.geojson` だけ）、(c) `x/N03-20250101.geojson` だけの ZIP、(d) `N03-20250101.geojson` の中身が `FF FE`、(e) 中身が `{`、(f) 1 つ目のフィーチャの座標の 1 つを `NaN` にした JSON（字の `NaN`）、(g) 中身が `[]`、(h) `{"type":"FeatureCollection","features":{}}`、(i) `features` の 1 つ目が `1`、(j) 1 つ目のフィーチャの `coordinates` を `[[[1]]]` にした JSON | どれも 1、`<tmp>/t` は空。(a) は BV1、(b)(c) は BV2（1 行目は `ERROR: N03 行政区域 ZIP の最上位に N03-20250101.geojson が無い: <ZIP のパス>`）、(d) は BV3（`{reason}` は `UTF-8 として読めない`）、(e)(f) は BV3、(g) は BV3（`{reason}` は `FeatureCollection でない`）、(h) は BV3（`features が配列でない`）、(i) は BV3（`1 番目のフィーチャがオブジェクトでない`）、(j) は BV3（`{reason}` が `1 番目のフィーチャの幾何の座標を読めない:` と空白 1 つで始まる） |
+| `UT-preprocess_boundaries-11` | シグナルでも作業用のディレクトリを消す | 子のプロセスの代わりに、`[sys.executable, '-c', <試験用の短いプログラム>]` を `cwd='<tmp>/work'`・`TMPDIR` を `<tmp>/t` にして起動する。試験用のプログラムは、`<tmp>/src/scripts` を `sys.path` の先頭に入れて `import preprocess_boundaries` し、`json.load` を「自分へ `SIGTERM` を送ってから元の `json.load` を呼ぶ物」に差し替えてから、`sys.argv = ['preprocess_boundaries.py', '--config', '<tmp>/c.ini']` にして `preprocess_boundaries.main()` を呼ぶ | 起動する | 143、`<tmp>/t` は空、`<tmp>/data/boundaries/` は作られていない、ログファイルの最後の行が `SIGTERM` を受けて止まった形の L3 で、その前の行が BL5 の `結果の要約: 途中で止まった。終えた分: なし` |
+| `UT-preprocess_boundaries-12` | 属性と幾何の欠け | 同じプロセス。小さな N03 を、ケースごとに 1 か所だけ書き換えて一時の ZIP にし、`load_n03_features` で読む | 3 つ目のフィーチャの (a) `N03_001` を `null`、(b) `N03_004` を `""`、(c) `N03_007` のキーを消す、(d) `N03_002` を `1`、(e) `N03_005` を `[]`、(f) `geometry` を `null`、(g) `geometry` を `{"type":"Point","coordinates":[0,0]}`、(h) 2 つ目のフィーチャの `N03_007` を `null` にし、3 つ目の `geometry` を `null` にする | `validate_n03` がどれも 1、BV4。`{detail}` は (a) `N03_001 が空でない文字列でない`、(b) `N03_004 が空でない文字列でない`、(c) `N03_007 が空でない文字列でない`、(d) `N03_002 が文字列でも null でもない`、(e) `N03_005 が文字列でも null でもない`、(f) `幾何が無い`、(g) `幾何の種類が "Point"`。(a)〜(g) の `{index}` は 3、(h) は 2 で `N03_007` の項目 |
+| `UT-preprocess_boundaries-13` | 表に無い名前 | 同じプロセス。12 と同じ作り方 | (a) 愛知県の行のフィーチャの `N03_001` を `テスト県`、(b) 石狩振興局の行の `N03_002` を `石狩支庁`、(c) 石狩振興局の行の `N03_002` を `東京都`、(d) 愛知県の行の `N03_001` を `石狩振興局`、(e) 北海道でない 11 行の `N03_001` を `県A`〜`県K`（`A`〜`K` は英大文字） | どれも 1、BV5。`{names}` は (a) `テスト県`、(b) `北海道/石狩支庁`、(c) `北海道/東京都`、(d) `石狩振興局`、(e) `県A・県B・県C・県D・県E・県F・県G・県H・県I・県J ほか 1 件`（(a)(d)(e) は、名前を変えた地域のポリゴンが無くなるが、BV5 が先に止まる） |
+| `UT-preprocess_boundaries-14` | 同じコードでの食い違い | 同じプロセス | (a) `01696` のフィーチャをもう 1 つ足し（矩形は `01696` の矩形と同じ）、`N03_004` を `村9` にする、(b) 同じく足して `N03_005` を `""` にする（元は `null`） | どちらも 1、BV6、`{codes}` は `01696` |
+| `UT-preprocess_boundaries-15` | ポリゴンの無い地域と北方領土の欠け | 同じプロセス | (a) 愛知県の行のフィーチャを除く、(b) 愛知県と十勝総合振興局の行のフィーチャを除く、(c) 愛知県の行の幾何を `{"type":"MultiPolygon","coordinates":[]}` にする、(d) `01698` のフィーチャを除く、(e) `01698` のフィーチャと愛知県の行のフィーチャを除く、(f) 愛知県の行の幾何を `{"type":"Polygon","coordinates":[]}` にする、(g) `01698` の幾何を `{"type":"Polygon","coordinates":[]}` にする | どれも 1。(a)(c)(f) は BV7 で `{names}` は `愛知県`、(b) は BV7 で `愛知県・十勝総合振興局`（表の順）、(d)(g) は BV8 で `{codes}` は `01698`、(e) は BV7（BV8 より先） |
+| `UT-preprocess_boundaries-16` | 地域を合わせる | 同じプロセス。小さな N03 に、愛知県の行の矩形と東の辺を共有する矩形（`w = 120.1`、`s = 25.0`、`e = 120.15`、`n = 25.1`）のフィーチャ（`N03_001` は `愛知県`、`N03_004` は `市60`、`N03_007` は `90060`）を足し、宮城県の行のフィーチャの幾何を、穴を持つポリゴン 1 つの `MultiPolygon`（外側の環は宮城県の行の矩形を時計回りに書いたもの、穴は矩形の中央の 1 辺 0.02 度の正方形を反時計回りに書いたもの）に替えて一時の ZIP にし、`load_n03_features` で読む | `build_regions` | 60 フィーチャ。1 つ目は `assoc` `JA`・`area_code` `AC`、最後は `JA8`・`TC`。根室振興局の地域は 8 つのポリゴンの `MultiPolygon`。愛知県は 1 つの `Polygon`（2 つの矩形が合わさる）で、外側の環が反時計回り（`shapely.LinearRing(<環>).is_ccw` が真）。宮城県は穴を 1 つ持つ `Polygon` で、外側が反時計回り、穴が時計回り。`properties` のキーの順は `assoc`・`area_code`・`region_name` |
+| `UT-preprocess_boundaries-17` | 市区町村をまとめる | 同じプロセス。小さな N03 の 1 つ目のフィーチャ（愛知県）の `N03_004` を `札幌市`・`N03_005` を `中央区` にし、2 つ目の `N03_005` を `""` にし、3 つ目の矩形の環を時計回りの順（`[[w, s], [w, n], [e, n], [e, s], [w, s]]`）にして読む | `build_municipalities` | 66 フィーチャで `code` の昇順（最初は `01695`、最後は `90059`）。`01695` は 2 つのポリゴンの `MultiPolygon`。どのフィーチャも幾何の種類が `MultiPolygon`。`90000` の `municipality` は `札幌市中央区`、`90001` は `市01`。`90002` の座標は時計回りのまま、入力と同じ値の並び。`properties` のキーの順は `prefecture`・`municipality`・`code` |
+| `UT-preprocess_boundaries-18` | 出力が入力の並びによらない | 同じプロセス。小さな N03 から (a) そのまま、(b) フィーチャの並びを逆にし、`01695` の 2 つのフィーチャの順も入れ替えたもの、の 2 つの一時の ZIP を別の `<data_dir>` に作り、それぞれ読んで `build_regions`・`build_municipalities`・`split_nt_polygons`・`list_excluded_tiles`・`list_excluded_meshes`（日本全土は `{'3720', '6747', '6848'}`）・`write_temp_outputs`（`<data_dir>/boundaries`）を呼ぶ | 2 つの一時ファイルの組 | 4 つの一時ファイルのバイト列が、(a) と (b) でそれぞれ等しい |
+| `UT-preprocess_boundaries-19` | 北方領土のポリゴンを分ける | 同じプロセス。小さな N03 を読む | `split_nt_polygons` | 1 つ目は 7 つのポリゴン、2 つ目は 60 のポリゴン |
+| `UT-preprocess_boundaries-20` | タイル番号 → 緯度経度 | 同じプロセス | [2.4](#24-言語ごとに別に実装する式のテストベクトル) の表 3 の各行 | 経度は `==` で等しく、緯度は差の絶対値が `1e-12` 以下 |
+| `UT-preprocess_boundaries-21` | 除外タイル | 同じプロセス。`(n0, w0) = tile_to_latlon(29127, 12867, 15)`、`(s0, e0) = tile_to_latlon(29128, 12868, 15)` | `list_excluded_tiles` に (a) `[box(w0, s0, e0, n0)]`（タイル 1 枚ちょうど）、(b) そのタイルの中の小さな矩形（`w0` と `e0` の間の 1/4〜3/4、`s0` と `n0` の間の 1/4〜3/4）、(c) 西の端が `w0 + (e0 − w0) × 0.5`、東の端が `e0 + (e0 − w0) × 0.5` で、南北は (b) と同じ矩形、(d) (a) と (b) の 2 つ | (a) `[(29127, 12867)]`（接するだけの隣のタイルを含まない）、(b) `[(29127, 12867)]`、(c) `[(29127, 12867), (29128, 12867)]`、(d) `[(29127, 12867)]`（重なりは 1 つ） |
+| `UT-preprocess_boundaries-22` | 除外メッシュ | 同じプロセス。北方領土の矩形 `P = box(148.1, 45.5, 148.15, 45.55)`（`6848` の中） | `list_excluded_meshes` に (a) 日本全土 `{'6848', '6747', '3720'}`、`[P]`、`[box(147.5, 44.8, 147.6, 44.9)]`、(b) 日本全土 `{'6848'}`、`[P]`、`[box(148.5, 45.5, 148.6, 45.6)]`（`6848` の中のほかの陸地）、(c) 日本全土 `{'6848', '6849'}`、`[box(148.9, 45.5, 149.0, 45.6)]`（東の辺が `6849` との境目に乗る）、`[]`、(d) 日本全土 `{'6848'}`、`[P]`、`[box(147.9, 45.5, 148.0, 45.6)]`（西で `6848` の境目に接するだけ） | (a) `['6848']`、(b) `[]`、(c) `['6848']`（`6849` は接するだけ）、(d) `['6848']` |
+| `UT-preprocess_boundaries-23` | 一時ファイルの書き方 | 同じプロセス。(a)(b) は `<tmp>/b/` を作らない。(b) は `<tmp>/b/nt_excluded_meshes.txt.tmp` を前の起動の残りとして置く。(c) は `<tmp>/b/` に 4 つの出力（中身 `old`）と `n03_version.txt`（`20240101\n`）を置き、`<tmp>/data/tiles/fetch_complete.txt` も置く | (a) `write_temp_outputs([], [], [(1, 2), (3, 4)], ['6848'], '<tmp>/b')`、(b) `<tmp>/b/nt_excluded_meshes.txt.tmp` に `old` を書いてから `write_temp_outputs([<地域のフィーチャ 1 つ〈properties は assoc JA・area_code TK・region_name 東京都、幾何は box(0, 0, 1, 1) の mapping〉>], [], [], [], '<tmp>/b')`、(c) `write_temp_outputs([], [], [], [], '<tmp>/b')` | (a) 返り値は `<tmp>/b/regions.geojson.tmp` など 4 つのパス（`_OUTPUT_NAMES` の順）、`<tmp>/b` が作られる、`regions.geojson.tmp` と `municipalities.geojson.tmp` は `{"type":"FeatureCollection","features":[]}\n`、タイルは `1 2\n3 4\n`、メッシュは `6848\n`。(b) `regions.geojson.tmp` は `{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"assoc":"JA","area_code":"TK","region_name":"東京都"},"geometry":{"type":"Polygon","coordinates":[[[1.0,0.0],[1.0,1.0],[0.0,1.0],[0.0,0.0],[1.0,0.0]]]}}]}\n` の UTF-8（`東京都` はエスケープしない）、メッシュの一時ファイルは空（`old` が残らない）。(c) 4 つの一時ファイルができ、4 つの出力（`old`）と版の記録（`20240101\n`）と取得完了の記録のバイト列は呼ぶ前と同じ（置き換えない） |
+| `UT-preprocess_boundaries-24` | 一時ファイルに書けない | 同じプロセス | (a) `<tmp>/b` を通常のファイルにして `write_temp_outputs([], [], [], [], '<tmp>/b')`、(b) `<tmp>/b/nt_excluded_tiles.txt.tmp` をディレクトリにしてから同じく呼ぶ | どちらも 1、BF3。(a) の `{path}` は `<tmp>/b`。(b) の `{path}` は `<tmp>/b/nt_excluded_tiles.txt.tmp` で、`regions.geojson.tmp`・`municipalities.geojson.tmp` は残っていない |
+| `UT-preprocess_boundaries-25` | 置き換えの順と中身 | 同じプロセス。`<tmp>/data/boundaries/` に 4 つの出力（中身 `old`）と `n03_version.txt`（`20240101\n`）、`<tmp>/data/tiles/fetch_complete.txt` を置き、4 つの一時ファイルを `write_temp_outputs([], [], [], [], '<tmp>/data/boundaries')` で作る。`preprocess_boundaries` の中の `os.remove`・`os.replace` を、引数を記録してから元を呼ぶ物に差し替える | `replace_outputs(<一時ファイルのパス>, '<tmp>/data', '20250101')` | 呼ばれた順が、`os.remove(<版の記録>)`、`os.remove(<tmp>/data/tiles/fetch_complete.txt)`、`os.replace` が 4 つの一時ファイルから `_OUTPUT_NAMES` の順の出力へ、`os.replace(<版の記録の一時ファイル>, <版の記録>)`。終わった後、版の記録は `20250101\n`、取得完了の記録は無い、4 つの出力は一時ファイルの中身、`.tmp` で終わるファイルは無い |
+| `UT-preprocess_boundaries-26` | 記録が無いとき・置き換えの途中の失敗 | 同じプロセス。25 と同じ置き方 | (a) 版の記録と取得完了の記録を置かずに `replace_outputs`、(b) 差し替えた `os.replace` が 3 回目の呼び出しで `OSError(errno.EACCES, …)` を上げる | (a) 止まらず、版の記録は `20250101\n`。(b) 1、BF4（`{path}` は 3 つ目の出力 `nt_excluded_tiles.txt` の一時ファイル）、版の記録が無い、取得完了の記録が無い |
+| `UT-preprocess_boundaries-27` | 初めて作る | 子のプロセス。`<tmp>/data/tiles/fetch_complete.txt` を置く | 引数は既定（作業ディレクトリ `<tmp>/work` から相対パスの `--config ../c.ini`） | 0。`<tmp>/data/boundaries/` に 4 つの出力と `n03_version.txt`（`20250101\n`）。地域 60・市区町村 66 フィーチャ、除外メッシュは `6848\n`、除外タイルは 1 枚以上で各行が `^[0-9]+ [0-9]+$`、`(x, y)` の昇順で重なりが無い。取得完了の記録が無い。`<tmp>/t` は空。`<tmp>/data/findsummits.lock` がある。ログファイルの行は L1、L2（`設定ファイル: <tmp>/c.ini`、`[paths]` の `data_dir` と `log_dir` の 2 行）、BL1、BL2（`作り直す: <tmp>/data/boundaries/regions.geojson が無い`）、BL3（`結果の要約: 作り直した（版 20250101）。地域 60、市区町村 66、除外タイル <タイルの行の数>、除外メッシュ 1`）、L3（終了コード 0）の順。標準出力は同じ文面が時刻なしで同じ順 |
+| `UT-preprocess_boundaries-28` | 作り直さない・新しい版の警告 | 子のプロセス。27 の後の `<tmp>/data` に、取得完了の記録を置き直す | (a) 引数は既定、(b) `<tmp>/data/ref/` に一時の ZIP を写した `N03-20260101_GML.zip`（中の名前も `N03-20260101.geojson` に変えたもの）を足して、引数は既定 | どちらも 0、4 つの出力と版の記録のバイト列と更新時刻は 27 の後と同じ、取得完了の記録が残る。(a) のログに BL2 `作り直さない: 出力と版の記録がそろっている（版 20250101）` と BL4 `結果の要約: 作り直さなかった。採用した ZIP の版 20250101、版の記録 20250101`。(b) は標準エラー出力とログに BW1（1 行目の後半は `記録した版 20250101、置いてある最新の版 20260101`、2 行目の `{config_opt}` は空白 1 つと `--config <tmp>/c.ini`）、BL1 の ZIP は `<tmp>/data/ref/N03-20260101_GML.zip`、BL4 の ZIP の版は `20260101` |
+| `UT-preprocess_boundaries-29` | `--rebuild` | 子のプロセス。27 の後の `<tmp>/data` に、取得完了の記録を置き直す | `--config ../c.ini --rebuild` | 0、BL2 `作り直す: --rebuild を付けた`、取得完了の記録が無い、版の記録は `20250101\n` |
+| `UT-preprocess_boundaries-30` | 検証で止まったときは何も変えない | 子のプロセス。27 の後の `<tmp>/data` に、取得完了の記録を置き直し、一時の ZIP を、13 の (a) の書き換えをした小さな N03 のものに置き換える | `--config ../c.ini --rebuild` | 1、標準エラー出力とログに BV5（2 行目に `{rerun}` が入り、`--config <tmp>/c.ini --rebuild` を含む）、ログの L3 の前の行が BL5 `結果の要約: 途中で止まった。終えた分: なし`。4 つの出力と版の記録と取得完了の記録のバイト列は起動の前と同じ。`<tmp>/t` は空 |
+| `UT-preprocess_boundaries-31` | 起動の前の止まり方 | 子のプロセス | (a) `--config ../none.ini`、(b) 別のプロセスが `<tmp>/data/findsummits.lock` に `fcntl.flock` で排他ロックを掛けている間に引数は既定、(c) `<tmp>/src/params/mesh_list_japan.txt` を消して引数は既定、(d) `<tmp>/data/ref/` の ZIP を消して引数は既定 | (a) 2、CF1（`対処:` は `--config に渡したパスを確かめる`）、`<tmp>/data/findsummits.lock` と `<tmp>/logs` が無い。(b) 1、G1、`<tmp>/logs` が無い。(c) 1、R1（`{path}` は `<tmp>/src/params/mesh_list_japan.txt`）、ログに BL5（`終えた分: なし`）、`<tmp>/data/boundaries/` は作られていない。(d) 1、BZ1（`{ref_dir}` は `<tmp>/data/ref`）、ログに BL5 |
+| `UT-preprocess_boundaries-32` | 置き換えに入った後の要約 | 27 の後の `<tmp>/data` で、11 と同じ形の試験用のプログラムを、`json.load` の代わりに `os.replace` を「3 回目の呼び出しでは元の `os.replace` を呼ばずに自分へ `SIGTERM` を送り、ほかの呼び出しでは元を呼ぶ物」に差し替え、`sys.argv` に `--rebuild` を足して起動する | 起動する | 143。ログの BL5 が `結果の要約: 途中で止まった。終えた分: 地域 60、市区町村 66、除外タイル <n>、除外メッシュ 1。出力の置き換えに入った後に止まった（版の記録が消えていれば、次の起動で作り直す）`。版の記録が無い。もう一度、子のプロセスで引数は既定で起動すると 0 で、BL2 が `作り直す: 版の記録が読めないか、8 桁の数字の 1 行でない: <tmp>/data/boundaries/n03_version.txt`（4 つの出力はある） |
+
+- UT の形の理由: 純粋な関数と、`start_log` を呼ばない関数は同じプロセスで呼ぶ。`main` を通すもの（引数・ロック・ログ・要約・シグナル）は子のプロセスで起動する（[2.1.5](#215-ut-候補)・5.2.5 と同じ分け方）。小さな N03 は、DEC37 の「地域が 60 にならなければ止まる」に当たらずに通る最小の入力として、地域ごとに 1 つの矩形と北方領土 6 村の矩形で作る（全国の N03 は大きく、UT の入力にしない。実物は IT の `IT-CMP1-EXT2-01` で読む）。
 
 ## 5. CMP3 パイプライン制御
 
