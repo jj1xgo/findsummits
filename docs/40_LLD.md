@@ -568,7 +568,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 `_parse_args(argv: Sequence[str]) -> _Args`（内部）。`@dataclass(frozen=True) class _Args`: `config: str | None`（`--config` の値。渡されなければ `None`）、`rebuild: bool`。
 
 1. [1.2](#12-lld-の規約) の利用者向けの Python のコマンドの引数の受け方で読む。受け付ける名前は、`--config`（値を 1 つとる）、`--rebuild`・`--help`（値をとらない）だけ（[HLD 2.4.2](30_HLD.md#242-共通の書式)）。
-2. 誤りは BA1（受け付けない引数）、BA2（値が無い）、BA4（同じ名前を 2 回）で、`common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。
+2. 誤りは BA1（受け付けない引数）、BA2（値が無い）、BA4（同じ名前を 2 回）で、`common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。1 つの引数が値をとらない名前に `=` を付けたもの（`--rebuild=x`・`--help=x`）なら、同じ名前を読んだことがあっても BA1 とする（BA1 の判定を BA4 の判定より先にする）。
 3. `--help` は、[3.1.4](#314-メッセージ文面) の使い方の文を `sys.stdout.write` で出し、`sys.stdout.flush()` の後に `sys.exit(common.EXIT_OK)`。
 4. 読み終えたら、`--config` の値が空の文字列なら BA3 で `sys.exit(common.EXIT_USAGE)`。
 5. `_Args(config=<値か None>, rebuild=<--rebuild を読んだか>)` を返す。
@@ -702,7 +702,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | BA3 | 値が違う | `--config の値が違う: {value}` | `--config には空でないパスを渡す` | 2 |
 | BA4 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` | 2 |
 | BZ1 | N03 行政区域 ZIP が無い | `N03 行政区域 ZIP が無い: {ref_dir}/N03-YYYYMMDD_GML.zip（YYYYMMDD は半角の数字 8 桁）` | `国土数値情報の行政区域データ（全国）の ZIP を入手し、名前を変えずに {ref_dir} の直下に置いてから、もう一度起動する` | 1 |
-| BZ2 | ZIP を探す場所を読めない | `N03 行政区域 ZIP を探す場所を読めない: {path}: {reason}` | `{path} の読み取りの権限を確かめてから、もう一度起動する` | 1 |
+| BZ2 | ZIP か ZIP を探す場所を読めない | `N03 行政区域 ZIP か、ZIP を探す場所を読めない: {path}: {reason}` | `{path} の読み取りの権限を確かめてから、もう一度起動する` | 1 |
 | BV1 | ZIP を読めない | `N03 行政区域 ZIP を読めない: {zip_path}: {reason}` | `ZIP を国土数値情報から入手し直して置き換える。{rerun}` | 1 |
 | BV2 | ZIP に市区町村の GeoJSON が無い | `N03 行政区域 ZIP の最上位に {member} が無い: {zip_path}` | BV1 と同じ | 1 |
 | BV3 | GeoJSON を読めない | `N03 の GeoJSON を読めない: {source}: {reason}` | BV1 と同じ | 1 |
