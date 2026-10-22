@@ -525,10 +525,10 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
   - `_SOURCE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`、`_JAPAN_MESH_LIST_PATH = os.path.join(_SOURCE_ROOT, 'params', 'mesh_list_japan.txt')`（[HLD 3.1.1](30_HLD.md#311-プログラム) の「自分の置き場から求め、起動した作業ディレクトリによらない」）。既定の設定ファイルは `common.DEFAULT_CONFIG_PATH`（[2.1.2](#212-型とデータ)）。
   - `_ZIP_NAME = re.compile(r'N03-([0-9]{8})_GML\.zip')`（`fullmatch` で使う。`\d` は全角の数字にも合うので使わない）。
   - `_NT_CODES = frozenset({'01695', '01696', '01697', '01698', '01699', '01700'})`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「北方領土除外タイルリストと北方領土除外メッシュリスト」）。
-  - `_REGIONS: tuple[tuple[str, str, str], ...]`: HLD 4.17.2 の「地域と SOTA のコード」の表の 60 行を、表の順に（N03 の名前, `assoc`, `area_code`）で持つ（表の値は写さず、HLD の表から作る。表の順は `UT-preprocess_boundaries-15` の期待に使う）。`assoc` が `JA8` の 14 行が北海道の振興局で、`N03_002` で引く。ほかの 46 行は `N03_001` で引く。
+  - `_REGIONS: tuple[tuple[str, str, str], ...]`: HLD 4.17.2 の「地域と SOTA のコード」の表の 60 行を、表の順に（N03 の名前, `assoc`, `area_code`）で持つ（モジュールの定数として書き、実行時に HLD を読まない。値は HLD の表のとおりで、正本は HLD の表なので、変えるときは HLD を先に直す。表の順は `UT-preprocess_boundaries-15` の期待に使う）。`assoc` が `JA8` の 14 行が北海道の振興局で、`N03_002` で引く。ほかの 46 行は `N03_001` で引く。
   - 出力の名前: `_OUTPUT_NAMES = ('regions.geojson', 'municipalities.geojson', 'nt_excluded_tiles.txt', 'nt_excluded_meshes.txt')`（この順を、一時ファイルの並び、置き換えの順、要約の順に使う）、`_VERSION_NAME = 'n03_version.txt'`（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「出力の置き場」の表）。置き場はどれも `os.path.join(<data_dir>, 'boundaries')`。
   - `_TILE_ZOOM = 15`、`_LIST_LIMIT = 10`（BV5・BV6 のメッセージに並べる件数の上限。[3.1.4](#314-メッセージ文面)）。
-- `@dataclass(frozen=True) class N03Feature`: `index: int`（`features` の配列の中の位置。1 から数える。メッセージに出す）、`n03_001: object`・`n03_002: object`・`n03_004: object`・`n03_005: object`・`n03_007: object`（`properties` の同じ名前の値。JSON の値のまま〈`str`・`None`・数など〉。キーが無いか `properties` がオブジェクトでなければ `None`）、`geom_type: object`（`geometry` がオブジェクトならその `type` の値、`geometry` が無いか `null` かオブジェクトでなければ `None`）、`polygons: tuple[Polygon, ...]`（`geom_type` が `'Polygon'` ならその 1 つ、`'MultiPolygon'` なら含まれるポリゴンを配列の順に。どちらも `is_empty` が真のポリゴン〈`{"type":"Polygon","coordinates":[]}` など〉は含めない。ほかの種類と `None` のときは空のタプル。空のポリゴンを除くのは、`validate_n03` の BV7・BV8 がポリゴンの数で判定し、空のポリゴンは外接矩形が NaN になって後の計算を壊すため）。`N03_003`・`N03_006` は持たない（使わない）。
+- `@dataclass(frozen=True) class N03Feature`: `index: int`（`features` の配列の中の位置。1 から数える。メッセージに出す）、`n03_001: object`・`n03_002: object`・`n03_004: object`・`n03_005: object`・`n03_007: object`（`properties` の同じ名前の値。JSON の値のまま〈`str`・`None`・数など〉。キーが無いか `properties` がオブジェクトでなければ `None`）、`geom_type: object`（`geometry` がオブジェクトならその `type` の値〈`type` のキーが無ければ `None`〉、`geometry` が無いか `null` かオブジェクトでなければ `None`）、`polygons: tuple[Polygon, ...]`（`geom_type` が `'Polygon'` ならその 1 つ、`'MultiPolygon'` なら含まれるポリゴンを配列の順に。どちらも `is_empty` が真のポリゴン〈`{"type":"Polygon","coordinates":[]}` など〉は含めない。ほかの種類と `None` のときは空のタプル。空のポリゴンを除くのは、`validate_n03` の BV7・BV8 がポリゴンの数で判定し、空のポリゴンは外接矩形が NaN になって後の計算を壊すため）。`N03_003`・`N03_006` は持たない（使わない）。
 - 出力のフィーチャ: `dict`（GeoJSON の Feature のオブジェクト）。キーの順は `type`（`'Feature'`）、`properties`、`geometry`。`geometry` は `shapely.geometry.mapping(<幾何>)` の値（キーの順は `type`、`coordinates`）。地域の `properties` のキーの順は `assoc`・`area_code`・`region_name`、市区町村は `prefecture`・`municipality`・`code`（[SRS §8.2.1](20_SRS.md#821-n03-前処理済みファイル詳細仕様) の並び）。
 - 除外タイル: `tuple[int, int]`（`(x, y)`、ズーム 15）。除外メッシュ: `str`（[2.1.2](#212-型とデータ) のメッシュコード）。
 - モジュールの状態（内部。モジュールの最上位の変数で、初めは空の文字列）: `_n03_source: str`（`load_n03_features` の 1 が入れる、メッセージの対象のファイルを示す文 `<ZIP のパス> の N03-<YYYYMMDD>.geojson`。BV3〜BV8・BF2 の `{source}`）、`_config_opt: str`（`main` が `start_log` の後に入れる、[3.1.4](#314-メッセージ文面) の `{config_opt}` の値。BW1 と `{rerun}` を使うメッセージが使う）。
@@ -569,7 +569,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 
 1. [1.2](#12-lld-の規約) の利用者向けの Python のコマンドの引数の受け方で読む。受け付ける名前は、`--config`（値を 1 つとる）、`--rebuild`・`--help`（値をとらない）だけ（[HLD 2.4.2](30_HLD.md#242-共通の書式)）。
 2. 誤りは BA1（受け付けない引数）、BA2（値が無い）、BA4（同じ名前を 2 回）で、`common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。1 つの引数が値をとらない名前に `=` を付けたもの（`--rebuild=x`・`--help=x`）なら、同じ名前を読んだことがあっても BA1 とする（BA1 の判定を BA4 の判定より先にする）。
-3. `--help` は、[3.1.4](#314-メッセージ文面) の使い方の文を `sys.stdout.write` で出し、`sys.stdout.flush()` の後に `sys.exit(common.EXIT_OK)`。
+3. `--help` は、[3.1.4](#314-メッセージ文面) の使い方の文を `sys.stdout.write` で出し、`sys.stdout.flush()` の後に `sys.exit(common.EXIT_OK)`。引数は左から 1 つずつ処理して、その場で 2 か 3 を行うので、`--help` より前の引数の誤り（BA1・BA2・BA4）は先に止まり、`--help` より後の引数は誤りも見ずに終わる（`--rebuild --help --foo` は 0、`--foo --help` は BA1）。BA3 は読み終えた後に判定するので、`--config '' --help` は 0 になる。
 4. 読み終えたら、`--config` の値が空の文字列なら BA3 で `sys.exit(common.EXIT_USAGE)`。
 5. `_Args(config=<値か None>, rebuild=<--rebuild を読んだか>)` を返す。
 
@@ -687,7 +687,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 3. `temp_paths` の順に、`os.replace(<一時ファイル>, os.path.join(<boundaries/>, <_OUTPUT_NAMES の同じ位置の名前>))`。
 4. 版の記録を、[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりで `n03_version.txt.tmp` に `f'{zip_date}\n'` の 1 行（ASCII）を書いてから、`os.replace` で置き換える（書けないときも置き換えられないときも、下の BF4）。
 
-- 1〜4 のどれかで `OSError`（1・2 の `FileNotFoundError` を除く）なら、BF4（`{path}` は、`os.remove` が失敗したときは消すパス、`os.replace` が失敗したときは置き換え先のパス〈一時ファイルでなく、`boundaries/` の出力か版の記録〉、版の記録の一時ファイルの書き込みが失敗したときはその一時ファイルのパス）で `sys.exit(common.EXIT_ERROR)`。残った一時ファイルは消さない（次の起動が上書きする。版の記録が無ければ次の起動で作り直す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+- 1〜4 のどれかで `OSError`（1・2 の `FileNotFoundError` を除く）なら、BF4（`{path}` は、`os.remove` が失敗したときは消すパス、`os.replace` が失敗したときは置き換え先のパス〈一時ファイルでなく、`boundaries/` の出力か版の記録〉、版の記録の一時ファイルの書き込みが失敗したときはその一時ファイルのパス）で `sys.exit(common.EXIT_ERROR)`。版の記録の一時ファイルの書き込みが失敗したときは、[2.3](#23-ファイルの名前と書き方) のとおりその一時ファイルを `os.remove` で消してから止まる（消せないときの `OSError` は無視する）。ほかの失敗では、3 で置き換えていない一時ファイルは消さない（次の起動が上書きする。版の記録が無ければ次の起動で作り直す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
 
 #### 3.1.4 メッセージ文面
 
