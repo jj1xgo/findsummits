@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -26,6 +26,7 @@
   - [2.2 ログとメッセージの文面](#22-ログとメッセージの文面)
   - [2.3 ファイルの名前と書き方](#23-ファイルの名前と書き方)
   - [2.4 言語ごとに別に実装する式のテストベクトル](#24-言語ごとに別に実装する式のテストベクトル)
+  - [2.5 ビルドとテストの名前](#25-ビルドとテストの名前)
 - [3. CMP1 行政区域前処理](#3-cmp1-行政区域前処理)
   - [3.1 `preprocess_boundaries`](#31-preprocess_boundaries)
     - [3.1.1 ファイル割付](#311-ファイル割付)
@@ -53,6 +54,13 @@
     - [5.2.3 関数の細部](#523-関数の細部)
     - [5.2.4 メッセージ文面](#524-メッセージ文面)
     - [5.2.5 UT 候補](#525-ut-候補)
+- [6. CMP4 地形解析エンジン](#6-cmp4-地形解析エンジン)
+  - [6.12 `analyze_terrain_common`](#612-analyze_terrain_common)
+    - [6.12.1 ファイル割付](#6121-ファイル割付)
+    - [6.12.2 型とデータ](#6122-型とデータ)
+    - [6.12.3 関数の細部](#6123-関数の細部)
+    - [6.12.4 メッセージ文面](#6124-メッセージ文面)
+    - [6.12.5 UT 候補](#6125-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -72,18 +80,39 @@
 - 追跡の宣言は、文書管理ルールの[追跡の宣言](CLAUDE.md#追跡の宣言)のとおり、モジュールの見出しの直下に置く。小節は「ファイル割付」「型とデータ」「関数の細部」「メッセージ文面」「UT 候補」の 5 つをこの順に置き、書くことが無い小節も「なし」と理由を書いて残す（ADR-LLD-001 の Decision 2）。
 - 横断の節の決まりに従うところは、その節へのリンクで指し、写さない。
 - 関数の名前は HLD 第 3 章の名前を使う。LLD が足してよい名前は、内部の関数（`_` で始め、ほかのモジュールから呼ばない）と、型・定数・例外の名前だけ。ほかのモジュールから呼ぶ関数を足すときは、HLD 第 3 章を先に直す（文書管理ルールの[HLD と LLD の書き分け](CLAUDE.md#hld-と-lld-の書き分け)）。
-- 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`）。
+- 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`。C++ は宣言の形。例 `std::set<std::string>`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
+- CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
+  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`）。`main` を置くファイルは 6.1 の節で決める。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは `#pragma once` で始める。
+  - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数と状態は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、定数は HLD の名前（`EXIT_OK` など）。
+  - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
+  - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
+  - 結果の要約（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 7「結果の要約」）: 要約を出す関数は、次の形で書く（中身は各モジュールの節で決める）。
+
+    ```cpp
+    try {
+        // 処理（途中で止まるときは throw ExitRequest(...)）
+    } catch (...) {
+        log_info("<途中で止まったことが分かる要約>");
+        throw;
+    }
+    log_info("<要約>");
+    ```
+
+  - シグナル: シグナルのハンドラを付けるのは 6.12 の `start_log` だけで、ほかのモジュールは `signal`・`sigaction` を呼ばない。時間のかかる処理は、区切りで `check_signal()` を呼ぶ（区切りの置き場と遅れの上限は各モジュールの節で決める）。
+  - 出力: 標準出力・標準エラー出力・ログファイルへの出力は、6.12 の `log_info`・`log_warning`・`log_error` だけで行う（`std::cout`・`std::cerr`・`printf`・`puts` を使わない。6.12 は出力を `write` で直接書くので、標準入出力のバッファと混ぜると順が崩れる）。
+  - `{reason}`: ファイルの読み書きの失敗の理由は、失敗した POSIX の呼び出しの `errno` を `std::strerror` に渡した文（Python の `OSError` の `strerror` と同じ文）。
+  - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1・3.1・4.1・5.1・5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -126,7 +155,7 @@
   | `match` | `provisional_code_max_prefix` | 英字: `re.fullmatch(r'[A-Z]', v)` | `'A'` | `A〜Z の英大文字 1 字` |
   | `match` | `unmatched_summit_threshold` | 整数: 0 以上 | `10` | `0 以上の整数（18 桁まで）` |
 
-  整数の種類は、値が `re.fullmatch(r'[0-9]+', v)` に合い、先頭の `0` を除いた文字列 `d = v.lstrip('0') or '0'` の桁数（`len(d)`）が 18 以下のときだけ `int(d)` にする（`int(v)` にしない。先頭の `0` が 4300 個を超える値で `ValueError` になるため）。符号・小数点・全角の数字・空の値は型に合わず、19 桁以上は範囲の外とする。18 桁までにするのは、Python の `int` への変換の桁数の上限（既定 4300 桁）に掛からないようにし、CMP4（地形解析エンジン）の C++ の実装が 64 ビットの符号付き整数で持てるようにするため。上の表で上限の無い整数のキーの許容範囲の文に `（18 桁まで）` を付けるのはこのため。この上限は [SRS 2.2.1](20_SRS.md#221-設定可能項目) の「許容範囲に上限を書いていない整数の項目は、18 桁までとする」と [HLD 2.3.3](30_HLD.md#233-検証と記録) の検査に書いてある。値は `configparser` が前後の空白を除いた文字列。空の値（`key =`）はどのキーでも型に合わない誤りで、「書いていない」とは扱わない（未設定にしたいときはキーの行を書かない）。
+  整数の種類は、値が `re.fullmatch(r'[0-9]+', v)` に合い、先頭の `0` を除いた文字列 `d = v.lstrip('0') or '0'` の桁数（`len(d)`）が 18 以下のときだけ `int(d)` にする（`int(v)` にしない。先頭の `0` が 4300 個を超える値で `ValueError` になるため）。符号・小数点・全角の数字・空の値は型に合わず、19 桁以上は範囲の外とする。18 桁までにするのは、Python の `int` への変換の桁数の上限（既定 4300 桁）に掛からないようにし、CMP4（地形解析エンジン）の C++ の実装が 64 ビットの符号付き整数で持てるようにするため。上の表で上限の無い整数のキーの許容範囲の文に `（18 桁まで）` を付けるのはこのため。この上限は [SRS 2.2.1](20_SRS.md#221-設定可能項目) の「許容範囲に上限を書いていない整数の項目は、18 桁までとする」と [HLD 2.3.3](30_HLD.md#233-検証と記録) の検査に書いてある。値は 2.1.3 の設定ファイルの書式の 6 で前後の空白とタブを除いた文字列。空の値（`key =`）はどのキーでも型に合わない誤りで、「書いていない」とは扱わない（未設定にしたいときはキーの行を書かない）。
 
 - 全キーの名前 `CONFIG_KEY_NAMES: tuple[str, ...]`（モジュールの最上位。公開）: `_CONFIG_KEYS` のキーの名前を表の順に並べたタプル。`_CONFIG_KEYS` から作り、名前を別に書かない。設定解決（[5.2](#52-resolve_config)）が全キーを `load_config` に渡すのに使う（[HLD 2.3.3](30_HLD.md#233-検証と記録)の「設定解決は、ファイルに書かれた全キーを検査する」。キーの一覧を 1 か所にし、HLD の表にキーが足されたときに設定解決の検査から漏れないようにするため）。
 
@@ -163,8 +192,8 @@ def main() -> None:
 
 1. 次のどれかに当たれば `ValueError`（(i) `keys` に `data_dir` が無い、(ii) `keys` に `log_dir` が無い、(iii) `required` に `data_dir` が無い。呼ぶ側の誤り。利用者の誤りではない。[HLD 3.9](30_HLD.md#39-共通部品)の「`data_dir`・`log_dir` はどのバッチも使うので、どのバッチでも当たる」）。このほか、`keys` に `_CONFIG_KEYS` に無い名前があるとき、`required` に `keys` に無い名前があるときも `ValueError`。
 2. `path = os.path.abspath(config_path)`（相対パスは起動した作業ディレクトリが基準。[HLD 2.3.2](30_HLD.md#232-設定ファイル)）。`os.path.exists(path)` が偽なら CF1 を出して `EXIT_USAGE`。`path` が `DEFAULT_CONFIG_PATH` と等しいときだけ CF1 の既定の対処にする（呼び出しのたびにモジュールの属性を引く。テストが差し替えて確かめるため）。ディレクトリは CF1 にせず、3 の `open` の `OSError` で CF2 にする（`read_mesh_arg` の 2 と同じ分け方）。
-3. `open(path, encoding='utf-8-sig')` で全部を読む。`OSError` か `UnicodeDecodeError` なら CF2 で `EXIT_USAGE`。読んだ文字列に NUL（`'\x00'`）があれば、CF3（`{reason}` は `NUL の文字がある`）で `EXIT_USAGE`（4 で `default_section` に NUL を使うので、`[\x00]` の節を既定の節として読ませないため）。
-4. `configparser.ConfigParser(interpolation=None, strict=True, default_section='\x00', inline_comment_prefixes=None)` を作り、`optionxform = str`（キーの大文字と小文字を区別する）にして `read_string(text, source=path)` する。`configparser.Error` なら CF3 で `EXIT_USAGE`。`default_section` をファイルに書けない名前にするので、`[DEFAULT]` もふつうの節として読まれ、下の 5 で知らない節になる。`#` と `;` で始まる行は注釈（`configparser` の既定）。行の途中の `#`・`;` は注釈にならず、値の一部になる（`data_dir = /x # 注` の値は `/x # 注` になる）。
+3. `open(path, 'rb')` で全部をバイト列で読む。`OSError`（ディレクトリのときの `IsADirectoryError` を含む）なら CF2 で `EXIT_USAGE`。
+4. 下の `_parse_ini(data)` で読む。返された誤りが `None` でなければ、その記号（CF2 か CF3）を `{reason}` つきで出して `EXIT_USAGE`。`[DEFAULT]` もふつうの節として読まれ、下の 5 で知らない節になる。行の途中の `#`・`;` は注釈にならず、値の一部になる（`data_dir = /x # 注` の値は `/x # 注` になる）。
 5. ファイル全体の検査: ファイルの順に、`_CONFIG_KEYS` に無い節は CF4、ある節の中で `_CONFIG_KEYS` のその節に無いキーは CF5 を、誤りの一覧に足す（知らない節の中のキーには CF5 を出さず、その節の CF4 だけにする。別の節にあるキー、大文字の違うキーも CF5）。
 6. キーごとの検査: `_CONFIG_KEYS` の順に、`keys` にあって、ファイルのその節に書いてあるキー（別の節に書いてあるものは書いていないものとして扱う）の値を [2.1.2](#212-型とデータ)の判定に掛け、合わなければ CF6 を足す。
 7. 必須の検査: `_CONFIG_KEYS` の順に、`required` にあってファイルのその節に書いていないキーは CF7 を足す（`[fetch]` の節に `data_dir` のキーを書き、`[paths]` の節に書かなかったときは、5 の CF5 と、この CF7 の両方が出る）。
@@ -172,6 +201,58 @@ def main() -> None:
 9. `keys` の各キーについて `ConfigValue` を作る。書いてあれば `from_file=True` と判定後の値（整数は `int`）、書いていなければデフォルト（`log_dir` は `data_dir` の値から作る）と `from_file=False`、デフォルトの無いキーは `None` と `from_file=False`。`Config(path, values)` を返す。
 
 確かめないこと: 相互制約、パスに改行を含む設定の拒否（どちらも起動口が自分で確かめる。HLD 3.9 の表の後の段落）。`keys` に無いキーの値。ログには書かない（`start_log` の前なので画面だけ）。
+
+##### _parse_ini
+
+`_parse_ini(data: bytes) -> tuple[list[tuple[str, list[tuple[str, str]]]], tuple[str, str] | None]`（内部。`load_config` の 4 が使う）
+
+返すのは、節の名前と、その節の（キー, 値）の並びを、ファイルの順に並べたリストと、誤り。誤りが無ければ 2 つ目は `None`、あれば（記号 `'CF2'` か `'CF3'`, `{reason}`）で、1 つ目は空のリスト。`_parse_ini` は止まらず、メッセージも出さない（メッセージは `load_config` が出す）。
+
+**設定ファイルの書式**: 受け入れる形を小さく決める。Python の `_parse_ini` と、C++ の CMP4（地形解析エンジン）の `load_config`（[6.12](#612-analyze_terrain_common)）が、この書式を同じ決まりで別に実装する（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「CMP4 は小さな INI 読み取りを持つ」、[DEC7](30_HLD.md#234-設計判断)「設定は INI 1 本」）。
+
+1. 先頭の UTF-8 の BOM（バイト列 `EF BB BF`）を 1 つだけ除き、残りを UTF-8 として読む。UTF-8 として読めない列（サロゲートの符号化、U+10FFFF を超える符号位置、長すぎる符号化、途中で切れた列）があれば CF2（`{reason}` は `UTF-8 として読めない`）。
+2. NUL（U+0000）があれば CF3（`{reason}` は `NUL の文字がある`）。
+3. `\n` で行に分け、1 から番号を振る。各行の末尾の `\r` を 1 つだけ除く（CRLF の行）。行の途中の `\r` は行を分けない。
+4. 各行の前後から空白（U+0020）とタブ（U+0009）だけを除く（ほかの空白の字は除かない）。空になった行と、`#` か `;` で始まる行は読まない（字下げした注釈も読まない）。行の途中の `#`・`;` は注釈にならず、値の一部になる。
+5. `[` で始まる行は節の見出し。`]` で終わり、間の名前が 1 字以上で `[`・`]` を含まないときだけ正しい（名前の前後の空白は除かず、そのまま名前にする）。そうでなければ CF3（`{reason}` は `{line_no} 行目が節の見出しの形でない: {line}`）。同じ名前の節が 2 回目なら CF3（`{line_no} 行目で節 [{section}] が 2 回目`）。
+6. ほかの行はキーの行。節の見出しより前なら CF3（`{line_no} 行目のキーが節の見出しより前にある: {line}`）。`=` が無ければ CF3（`{line_no} 行目に = が無い: {line}`）。最初の `=` で分け、前を 4 と同じく空白とタブを除いてキー、後ろを同じく除いて値にする。キーが空なら CF3（`{line_no} 行目のキーの名前が空: {line}`）。同じ節に同じキーが 2 回目なら CF3（`{line_no} 行目でキー {key} が [{section}] に 2 回目`）。値は空でもよい（型の検査で CF6）。キーと節の名前の大文字と小文字は区別する。
+7. 最初に見つけた誤りで止まる（CF3 は 1 つだけ出す）。`{line}` は 4 で前後を除いた後の行。
+
+`configparser` の寛大な形（`key: value` の区切り、字下げした行を前の値の続きとして読むこと、節の見出しの後ろの字を捨てること、Unicode の空白を値から除くこと）は、C++ で同じに書くと食い違いやすく、綴りの誤りも見逃すので、受け入れない（誤りとして知らせる）。`params/config.ini.example` の書き方（`[節]`、`キー = 値`、`#` の注釈の行）は通る。
+
+**設定ファイルの書式のテストベクトル**: どの実装も、ファイルの中身（バイト列）ごとに、次の表のとおりになることを UT で確かめる（Python は `UT-common-44`、C++ は `UT-analyze_terrain_common-11`。どちらも `load_config` の結果の列を確かめる。書式の結果の列は `_parse_ini` を書く人のための説明で、UT は内部の関数を直接呼ばない）。`MV-01`〜`MV-21` と同じ書き方で、中身の `\n` などは C の書き方、`EF BB BF` などは 16 進のバイト（バイトの間の空白は区切りでバイトではない）。書式の結果は、読めたときは `[節] キー = 値` を書いた順に `、` で並べたもの（値の中の字は C の書き方）、誤りは記号と `{reason}`。`load_config` の結果の列は、`keys` を `data_dir` と `log_dir`、`required` を `data_dir` にして読んだときの結果で、読めたら `data_dir` の値、止まったら出る記号をこの順に並べたもの（どれも終了コード 2。CF4 は知らない節、CF6 は値が型に合わない、CF7 は必須のキーが無い）。
+
+| ID | 中身 | 書式の結果 | `load_config` の結果 |
+|---|---|---|---|
+| `CV-01` | `[paths]\ndata_dir = /d\n` | `[paths] data_dir = /d` | `/d` |
+| `CV-02` | `[paths]\r\ndata_dir=/d\r\n` | `[paths] data_dir = /d` | `/d` |
+| `CV-03` | `EF BB BF` の後に `[paths]\ndata_dir = /d\n` | `[paths] data_dir = /d` | `/d` |
+| `CV-04` | 空白・タブ・`[paths]`・空白・`\n`・タブ・`data_dir`・タブ・`=`・タブ・`/d`・空白・`\n` | `[paths] data_dir = /d` | `/d` |
+| `CV-05` | `# a\n; b\n  # c\n\n[paths]\ndata_dir = /d # x ; y\n` | `[paths] data_dir = /d # x ; y` | `/d # x ; y` |
+| `CV-06` | `[paths]\ndata_dir = /d=e\n` | `[paths] data_dir = /d=e` | `/d=e` |
+| `CV-07` | `[paths]\ndata_dir =\n` | `[paths] data_dir =` と空の値 | CF6（`data_dir`） |
+| `CV-08` | `[paths]\ndata_dir=/d`（最後の改行なし） | `[paths] data_dir = /d` | `/d` |
+| `CV-09` | 空のファイル | 節もキーも無い | CF7（`data_dir`） |
+| `CV-10` | `[ paths ]\ndata dir = /d\n` | `[ paths ] data dir = /d`（節の名前は ` paths `、キーは `data dir`） | CF4（`[ paths ]`）、CF7（`data_dir`） |
+| `CV-11` | `[DEFAULT]\nx = 1\n` | `[DEFAULT] x = 1` | CF4（`[DEFAULT]`）、CF7（`data_dir`） |
+| `CV-12` | `[paths]\ndata_dir = /d` と `C2 A0`（U+00A0）と `\n` | `[paths] data_dir = /d` と U+00A0（U+00A0 を除かない） | `/d` と U+00A0 |
+| `CV-13` | `[paths]\ndata_dir = /d` と `0C`（フォームフィード）と `\n` | `[paths] data_dir = /d` と `\f` | `/d` と `\f` |
+| `CV-14` | `[paths]\ndata_dir: /d\n` | CF3 `2 行目に = が無い: data_dir: /d` | CF3 |
+| `CV-15` | `[paths]\ndata_dir = /d\n  more\n` | CF3 `3 行目に = が無い: more` | CF3 |
+| `CV-16` | `[paths]\ndata_dir\n` | CF3 `2 行目に = が無い: data_dir` | CF3 |
+| `CV-17` | `data_dir = /d\n` | CF3 `1 行目のキーが節の見出しより前にある: data_dir = /d` | CF3 |
+| `CV-18` | `[paths]\n[paths]\n` | CF3 `2 行目で節 [paths] が 2 回目` | CF3 |
+| `CV-19` | `[paths]\ndata_dir = /d\ndata_dir = /e\n` | CF3 `3 行目でキー data_dir が [paths] に 2 回目` | CF3 |
+| `CV-20` | `[paths] x\n` | CF3 `1 行目が節の見出しの形でない: [paths] x` | CF3 |
+| `CV-21` | `[]\n` | CF3 `1 行目が節の見出しの形でない: []` | CF3 |
+| `CV-22` | `[pa]ths]\n` | CF3 `1 行目が節の見出しの形でない: [pa]ths]` | CF3 |
+| `CV-23` | `[paths]\n= /d\n` | CF3 `2 行目のキーの名前が空: = /d` | CF3 |
+| `CV-24` | `[paths]\rdata_dir = /d\n` | CF3 `1 行目が節の見出しの形でない:` と空白 1 つの後に `[paths]`・CR・`data_dir = /d`（CR は行を分けない） | CF3 |
+| `CV-25` | `[paths]\nda` と NUL と `ta = /d\n` | CF3 `NUL の文字がある` | CF3 |
+| `CV-26` | `FF FE` | CF2 `UTF-8 として読めない` | CF2 |
+| `CV-27` | `EF BB BF EF BB BF` の後に `[paths]\ndata_dir = /d\n` | CF3 `1 行目のキーが節の見出しより前にある:` と空白 1 つの後に U+FEFF と `[paths]`（BOM は 1 つだけ除くので、2 つ目の U+FEFF が行の頭に残り、`[` で始まらない） | CF3 |
+
+`CV-24`・`CV-25`・`CV-27` の `{line}` の中の CR・NUL・U+FEFF は、メッセージにそのまま出る（比べるのは終了コードと `{reason}` の文字列）。CF3 の行の `load_config` の結果の列は、書式の結果の列の CF3 が 1 つだけ出る。
 
 ##### start_log
 
@@ -321,7 +402,7 @@ def main() -> None:
 
 #### 2.1.4 メッセージ文面
 
-表（記号・場面・1 行目・`対処:` の行・終了コード）で書く。`{path}` は `os.path.abspath` したパス、`{reason}` は `OSError` の `strerror`（無ければ `str(e)`）か、`UnicodeDecodeError` なら `UTF-8 として読めない`、`configparser.Error` なら `str(e)` の 1 行目。`{example_path}` は `_EXAMPLE_CONFIG_PATH`。全体に共通する場面（ロックとログ）は [2.2](#22-ログとメッセージの文面)の G1〜G7 を指し、ここに写さない。
+表（記号・場面・1 行目・`対処:` の行・終了コード）で書く。`{path}` は `os.path.abspath` したパス、`{reason}` は `OSError` の `strerror`（無ければ `str(e)`）か、`UnicodeDecodeError` なら `UTF-8 として読めない`。CF2・CF3 の `{reason}` で書式の誤りに当たるものは、2.1.3 の設定ファイルの書式の文。`{example_path}` は `_EXAMPLE_CONFIG_PATH`。全体に共通する場面（ロックとログ）は [2.2](#22-ログとメッセージの文面)の G1〜G7 を指し、ここに写さない。
 
 | 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
 |---|---|---|---|---|
@@ -397,10 +478,11 @@ def main() -> None:
 | `UT-common-41` | 標準エラー出力が切れたパイプ | 子のプロセス。`UT-common-40` と同じ形で、記述子 2 を読む相手の無いパイプにする | `start_log` の後に `raise RuntimeError('x')` | 終了コード 1。ログファイルに G7 の 2 行と Traceback（最後の行が `RuntimeError: x`）がこの順にあり、その後が L3 で終了コード 1 |
 | `UT-common-42` | 全キーの名前の一覧 | 同じプロセス | `common.CONFIG_KEY_NAMES` | `('data_dir', 'log_dir', 'max_parallel', 'interval_ms', 'user_agent_email', 'prominence_primary_m', 'activation_zone_drop_m', 'delete_zone_max_drop_m', 'prominence_final_m', 'sota_geojson_version', 'provisional_code_max_prefix', 'unmatched_summit_threshold')` と等しい |
 | `UT-common-43` | bash と共通のテストベクトル | 同じプロセス。[2.1.3](#213-関数の細部)のメッシュの読み方のテストベクトルの中身ごとに一時のファイルをバイト列で書く | 各ファイルを `read_mesh_arg` と、`guidance` を `None` にした `read_mesh_list_file` に渡す | テストベクトルの表の結果のとおり。誤りの行は `read_mesh_arg` が A4、`read_mesh_list_file` が R3 で、`{line_no}` と `{line}` が表のとおり。空の集合は `read_mesh_arg` が A5、`read_mesh_list_file` が空の集合。UTF-8 として読めないものは A3・R2（`{reason}` は `UTF-8 として読めない`） |
+| `UT-common-44` | 設定ファイルの書式のテストベクトル | 同じプロセス。[2.1.3](#213-関数の細部)の設定ファイルの書式のテストベクトル（CV-01〜CV-27）の中身ごとに一時のファイルをバイト列で書く | 各ファイルを `load_config` に渡す（`keys` は `data_dir` と `log_dir`、`required` は `data_dir`） | 表の `load_config` の結果の列のとおり（読めたら `data_dir` の値、止まったら終了コード 2 と、出た記号の並び。CF2・CF3 は `{reason}` も表の書式の結果の列のとおり） |
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.12 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -415,7 +497,7 @@ def main() -> None:
 |---|---|---|
 | L1 | 始まりと引数（ログファイルの最初の行） | `開始: {program} {args}`。`{args}` は起動の引数（プログラムの名前を含まない）を、受け取った順に、下の引用の決まりで 1 つずつ書いて空白 1 つでつないだもの。引数が無ければ `開始: {program}` |
 | L2 | 設定 | `設定ファイル: {config_path}` の 1 行の後、`load_config` に渡したキーごとに `_CONFIG_KEYS` の順で `設定: [{section}] {key} = {value}（{source}）`。`{source}` は、`from_file` が真なら `ファイル`、偽なら `デフォルト`（値が `None` のときも `デフォルト`）。値が `None` なら `{value}` を `未設定` |
-| L3 | 終わり | `終了: 終了コード {code}、終了時刻 {end}、所要時間 {sec} 秒`。`{end}` は先頭の時刻と同じ書式、`{sec}` は `f'{秒:.3f}'`。シグナルで止まったときは `終了: 終了コード {code}（{signame} を受けて止まった）、終了時刻 {end}、所要時間 {sec} 秒`（`{signame}` は `signal.Signals(signum).name`） |
+| L3 | 終わり | `終了: 終了コード {code}、終了時刻 {end}、所要時間 {sec} 秒`。`{end}` は先頭の時刻と同じ書式、`{sec}` は `f'{秒:.3f}'`。シグナルで止まったときは `終了: 終了コード {code}（{signame} を受けて止まった）、終了時刻 {end}、所要時間 {sec} 秒`（`{signame}` は `signal.Signals(signum).name`。C++ は `SIGINT` か `SIGTERM` の名前） |
 
 引用の決まり（L1 の `{args}`。[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 4「始まりと終わりの行」の「最初の行にプログラムの名前と、起動の引数を受け取ったとおりに書く」を、引数の切れ目と中身が読み取れる形で 1 行に書くため）: 引数が空でなく、どの字も ASCII の英数字か `_@%+=:,./-` のどれかなら、そのまま書く。それ以外は、`'` で囲み、中の `'` を `'"'"'` に置き換える（空の引数は `''`）。Python の `shlex.join` と同じ結果になる（Python は `shlex.join(argv)` を使ってよい）。引数に改行があれば、その改行でファイルの行が分かれ、分かれた各行に時刻を付ける（[2.1.3](#213-関数の細部)の `_emit`）。bash の `run_pipeline` は L2 を書かない（[HLD 3.3.3](30_HLD.md#333-関数)の `open_log`）。
 
@@ -431,7 +513,7 @@ def main() -> None:
 | G4 | 同じ名前のログファイルが既にある | `同じ名前のログファイルが既にある: {path}` | `1 秒以上おいて起動し直す` | 1 |
 | G5 | ログファイルに書けなくなった | `ログファイルに書けなくなった: {path}: {reason}` | `ディスクの空きとログファイルの権限を確かめてから起動し直す` | 1 |
 | G6 | 終わりの行だけを書けなかった | `ログファイルに終わりの行を書けなかった: {path}: {reason}` | `ディスクの空きとログファイルの権限を確かめる。終了コード 1 はログが欠けたことを示し、書き終えた成果物は消していない` | 1 |
-| G7 | 捕まらなかった例外 | `予期しない例外で止まった: {type}: {message}`（`{type}` は例外のクラス名 `exc_type.__name__`、`{message}` は `str(exc)`。`{message}` に改行があれば、`log_error` の決まりで行が分かれる） | `このメッセージと続く Traceback をログファイルから（ログに書けなかったときは画面から）写して開発者に知らせる` | 1（シグナルを受けた後の後始末で上がった例外なら 128＋シグナルの番号。[2.1.3](#213-関数の細部)の `_finish_log` の 2） |
+| G7 | 捕まらなかった例外 | `予期しない例外で止まった: {type}: {message}`（`{type}` は例外のクラス名 `exc_type.__name__`、`{message}` は `str(exc)`。`{message}` に改行があれば、`log_error` の決まりで行が分かれる。C++ は `{type}` を例外の型の名前〈`abi::__cxa_demangle` で読める形にしたもの〉、`{message}` を `what()` にする） | `このメッセージと続く Traceback をログファイルから（ログに書けなかったときは画面から）写して開発者に知らせる`（C++ は Traceback を出さないので、`このメッセージをログファイルから（ログに書けなかったときは画面から）写して開発者に知らせる`） | 1（シグナルを受けた後の後始末で上がった例外なら 128＋シグナルの番号。[2.1.3](#213-関数の細部)の `_finish_log` の 2） |
 
 誤りの文面は、その誤りを確かめる部品か関数の節に置く（2.1 では CF1〜CF7・A1〜A5・R1〜R3、5.2 では RA1・RA2・RP1）。同じ入力（同じ設定のキー、同じファイル）を 2 つ以上のモジュールが同じ確かめで見る誤りは、終了コードによらず、下の表に置き、各モジュールの節から指す。各プログラムの起動の引数の誤り（3.1 の BA1〜BA4、4.1 の TA1〜TA4、5.1 の PA1〜PA5 など）は、文面が同じになっても、それぞれのモジュールの節に置く（[1.2](#12-lld-の規約)。確かめるのはそれぞれの引数で、使える引数の案内も違う）。
 
@@ -466,7 +548,7 @@ def main() -> None:
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
-HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（CMP4 の「変換」の群）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、テスト方針書で決める（[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` と、メッシュの取得範囲の決まりの分だけを書いてある。
+HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（CMP4 の「変換」の群）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)で決めた（各言語の UT にこの表の行を写して期待値にする。[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` と、メッシュの取得範囲の決まりの分だけを書いてある。
 
 計算の決まり（どの言語も IEEE 754 の倍精度で、書いた順に左から計算する。式の正本は用語集の[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)と[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)）。`n = 2^z` は倍精度の値にする。整数の値（`2 × aa`・`x`・`y`、下の取得範囲の決まりの 3 の `x_e`）は、割る前に倍精度にし、整数どうしの割り算をしない（C++ で整数の型のまま `x / n` と書くと整数の割り算になり、表 3 の (1, 1, 1) の経度が −180 になる）:
 
@@ -547,6 +629,15 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | `6848` | 15 | 29855 | 29946 | 11657 | 11744 |
 
 `4934` の 2 行は東端が経度 135 度でタイルの境目に重なり、3 の決まりで `latlon_to_tile` の値（ズーム 15 は 28672、ズーム 14 は 14336）より 1 小さい。`5235` は西端が経度 135 度で、境目の東のタイル（28672）から始まる。`5235` の `y_min` と `5339` の `y_max` が同じ 12942 であるように、緯度 35.333… の境目のタイルの行は、南北に隣り合うメッシュ（`5235` と `5335`、`5239` と `5339` など）の両方の範囲に入る。
+
+### 2.5 ビルドとテストの名前
+
+[HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
+
+- CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
+- `make test` は、テスト用の実行ファイルをすべてビルドして順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 ## 3. CMP1 行政区域前処理
 
@@ -1685,7 +1776,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 `load_config` が確かめない 2 つ（[HLD 3.9](30_HLD.md#39-共通部品)の表の後の段落）を確かめ、誤りごとに `(what, action)` を返す（無ければ空のリスト）。順は次のとおり。
 
-1. パスの改行: `data_dir` の値に `'\n'` か `'\r'` があれば RP1（`{key}` は `data_dir`）。`log_dir` は `from_file` が真で、値に `'\n'` か `'\r'` があるときだけ RP1（`{key}` は `log_dir`。デフォルトの `log_dir` は `data_dir` から作るので、`data_dir` の RP1 で足りる）。`configparser` は字下げした次の行を前の行の値の続きとして `'\n'` でつなぐので、値に改行が入りうる。`load_config` は改行を変換して読むので値に `'\r'` は残らないが、読み方に頼らず両方を見る（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「パスに改行を含む設定は、設定解決が終了コード 2 で拒否する」）。
+1. パスの改行: `data_dir` の値に `'\n'` か `'\r'` があれば RP1（`{key}` は `data_dir`）。`log_dir` は `from_file` が真で、値に `'\n'` か `'\r'` があるときだけ RP1（`{key}` は `log_dir`。デフォルトの `log_dir` は `data_dir` から作るので、`data_dir` の RP1 で足りる）。2.1.3 の設定ファイルの書式では、行は `'\n'` で分かれるので値に `'\n'` は入らないが、行の途中の `'\r'` は値に残りうる。読み方に頼らず両方を見る（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「パスに改行を含む設定は、設定解決が終了コード 2 で拒否する」）。
 2. 相互制約: `prominence_primary_m` の値が `prominence_final_m` の値以上なら CX1（[2.2](#22-ログとメッセージの文面)）。どちらもデフォルトのときも比べる（今の許容範囲では最終フィルタ閾値は 150 だけなので、一次フィルタ閾値に 150 以上を書いたときに当たる）。
 
 ##### write_resolved_paths
@@ -1712,7 +1803,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 |---|---|---|---|---|
 | RA1 | 引数の形が違う | `resolve_config の引数が違う: {args}` | `--config と設定ファイルの絶対パスの 2 つだけを渡す（resolve_config は run_pipeline が起動する内部の起動口）` | 2 |
 | RA2 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
-| RP1 | パスに改行がある | `設定のパスに改行がある: [paths] {key}（{path}）` | `[paths] の {key} を 1 行の絶対パスにする（字下げした次の行は、前の行の値の続きとして読まれる）` | 2 |
+| RP1 | パスに改行がある | `設定のパスに改行がある: [paths] {key}（{path}）` | `[paths] の {key} を 1 行の絶対パスにする（行の途中の CR は値の一部として読まれる）` | 2 |
 | RW1 | 標準出力に書けない | `設定解決の結果を標準出力に書けない: {reason}` | `run_pipeline から起動し直す。続くときは、このメッセージを写して開発者に知らせる` | 1 |
 
 #### 5.2.5 UT 候補
@@ -1732,10 +1823,270 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 | `UT-resolve_config-04` | 自分が使わないキーも確かめる | 子のプロセス。キーごとに別の一時の設定（どれも `data_dir` を書く。`log_dir` のケースは `data_dir` と同じ `[paths]` の見出しの下に書く。見出しを 2 回書くと INI として読めず、CF3 になる） | 次の 12 の設定をそれぞれ: `data_dir = data`、`log_dir = logs`、`max_parallel = 0`、`interval_ms = 5001`、`user_agent_email = a b@example.com`、`prominence_primary_m = 99`、`activation_zone_drop_m = 26`、`delete_zone_max_drop_m = 301`、`prominence_final_m = 151`、`sota_geojson_version = 0`、`provisional_code_max_prefix = a`、`unmatched_summit_threshold = -1`（`data_dir = data` のケースは、`data_dir` をこの値だけにする） | どれも 2、CF6 のメッセージがそのキーの 1 つ、標準出力は空 |
 | `UT-resolve_config-05` | 設定ファイルが無い・必須の `data_dir` が無い | 子のプロセス。(ii) は一時の設定に `[fetch]` の `max_parallel = 4` だけを書く | (i) 一時の設定を書かずに `--config <tmp>/none.ini`、(ii) 引数は既定 | どれも 2、標準出力は空。(i) は CF1 で `対処:` は `--config に渡したパスを確かめる`。(ii) は CF7（`[paths] data_dir`）が 1 つだけ |
 | `UT-resolve_config-06` | 相互制約 | 子のプロセス。値ごとに別の一時の設定（`prominence_final_m` は書かない） | `prominence_primary_m = 149`、`prominence_primary_m = 150` | 149 は 0 で 2 行が出る。150 は 2、標準エラー出力は CX1 の 2 行だけで、1 行目は `ERROR: プロミネンス一次フィルタ閾値が最終フィルタ閾値以上: [analysis] prominence_primary_m = 150（ファイル）、[merge] prominence_final_m = 150（デフォルト）（<tmp>/config.ini）`、標準出力は空 |
-| `UT-resolve_config-07` | パスの改行 | 子のプロセス。ケースごとに別の一時の設定。改行は字下げした次の行で入れる（`data_dir = <tmp>/x` の次の行に、空白 2 つで字下げした `y`） | (i) `data_dir` だけを 2 行にする（`log_dir` は書かない）、(ii) `log_dir` だけを 2 行にする、(iii) `data_dir` と `log_dir` を 2 行にし、`prominence_primary_m = 150` も書く | (i) 2、RP1（`data_dir`）が 1 つだけ。(ii) 2、RP1（`log_dir`）。(iii) 2、RP1（`data_dir`）・RP1（`log_dir`）・CX1 がこの順に出る。どれも標準出力は空 |
+| `UT-resolve_config-07` | パスの改行 | 子のプロセス。ケースごとに別の一時の設定。改行は行の途中の CR で入れる（`data_dir = <tmp>/x` の後に CR と `y` を同じ行に書く。バイト列で書く。2.1.3 の設定ファイルの書式では値に LF が入らず、行の途中の CR だけが値に残る） | (i) `data_dir` だけを CR 入りにする（`log_dir` は書かない）、(ii) `log_dir` だけを CR 入りにする、(iii) `data_dir` と `log_dir` を CR 入りにし、`prominence_primary_m = 150` も書く | (i) 2、RP1（`data_dir`）が 1 つだけ。(ii) 2、RP1（`log_dir`）。(iii) 2、RP1（`data_dir`）・RP1（`log_dir`）・CX1 がこの順に出る。どれも標準出力は空 |
 | `UT-resolve_config-08` | 引数の誤り | 子のプロセス。一時の設定は `data_dir` だけ | 引数をそれぞれ: (i) なし、(ii) `--config`、(iii) `--config <tmp>/config.ini --extra`、(iv) `--config=<tmp>/config.ini`、(v) `--help`、(vi) `<tmp>/config.ini`、(vii) `--config config.ini`、(viii) `--config ''`、(ix) `--config --config` | どれも 2、標準出力は空。(i)〜(vi) は RA1 で、(i) の 1 行目は `ERROR: resolve_config の引数が違う: （引数なし）`、(v) は `ERROR: resolve_config の引数が違う: --help`。(vii)(viii)(ix) は RA2 で、1 行目は `ERROR: --config のパスが絶対パスでない: config.ini`、`ERROR: --config のパスが絶対パスでない: ''`、`ERROR: --config のパスが絶対パスでない: --config` |
 | `UT-resolve_config-09` | 標準出力に書けない | 一時の設定は `data_dir` だけ。共通の準備の `capture_output=True` を使わず（`stdout=` と併せると `ValueError` になる）、`<tmp>/config.ini` を読むだけで開いたもの（`open(<tmp>/config.ini, 'rb')`）を `stdout=` に、`subprocess.PIPE` を `stderr=` に渡して起動する（読むだけの記述子への書き込みは `OSError`〈`EBADF`〉になる） | 引数は既定 | 1（120 でない）、標準エラー出力は RW1 の 2 行だけで、1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EBADF)>` |
 | `UT-resolve_config-10` | 少しずつしか書けないとき・途中で書けなくなったとき | 一時の設定は `data_dir` だけ。子のプロセスを `[sys.executable, '-c', <試験用の短いプログラム>, '--config', <tmp>/config.ini]` で起動し、`capture_output=True` で受ける。試験用のプログラムは、`<ソースツリー>/scripts` を `sys.path` の先頭に入れて `import resolve_config` し、`os.write` を差し替えてから `sys.argv = ['resolve_config.py', '--config', <tmp>/config.ini]` にして `resolve_config.main()` を呼ぶ | (i) 差し替えた `os.write` は、毎回もとの `os.write` で先頭の 5 バイトまでだけを書いてその数を返す。(ii) 1 回目はもとの `os.write` で先頭の 5 バイトだけを書いて 5 を返し、2 回目は `OSError(errno.EPIPE, os.strerror(errno.EPIPE))` を上げる | (i) 0、標準出力は `UT-resolve_config-02` と同じ 2 行の全部。(ii) 1、標準出力は 2 行の UTF-8 の先頭の 5 バイト、標準エラー出力は RW1 の 2 行で、1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EPIPE)>` |
 | `UT-resolve_config-11` | 標準エラー出力が使えないときの終了コード | 子のプロセス。共通の準備の `capture_output=True` を使わず、`os.pipe()` で作ったパイプの読む側を親が閉じ（読む相手のいない標準エラー出力にする）、書く側を `stderr=` に、`subprocess.PIPE` を `stdout=` に渡して起動する（起動した後、親は書く側も閉じる）。一時の設定は入力ごとに別 | (i) 引数なし（RA1）、(ii) `[paths]` の `data_dir = data` だけの設定（CF6。`load_config` の中の誤り）、(iii) `data_dir` と `prominence_primary_m = 150` の設定（CX1） | どれも終了コード 2（120 でない）。標準出力は `b''` |
 | `UT-resolve_config-12` | 標準出力も標準エラー出力も書けない | 一時の設定は `data_dir` だけ。`UT-resolve_config-09` の標準出力（`<tmp>/config.ini` を読むだけで開いたもの）と、`UT-resolve_config-11` の標準エラー出力（読む相手のいないパイプ）を組み合わせて起動する（`capture_output=True` は使わない） | 引数は既定 | 終了コード 1（120 でない） |
 | `UT-resolve_config-13` | 起動の時点で標準出力が閉じているとき | 子のプロセス。共通の準備の `capture_output=True` を使わず、`stderr=subprocess.PIPE` と `preexec_fn=lambda: os.close(1)` を渡して起動する（子の記述子 1 を閉じたまま Python を起動する）。一時の設定は入力ごとに別 | (i) 引数なし（RA1）、(ii) `data_dir` と `prominence_primary_m = 150` の設定（CX1）、(iii) `data_dir` だけの設定（正しい設定） | (i)(ii) は終了コード 2、(iii) は 1。標準エラー出力は、(i) が RA1 の 2 行だけ、(ii) が CX1 の 2 行だけ、(iii) が RW1 の 2 行だけ（1 行目は `ERROR: 設定解決の結果を標準出力に書けない: <os.strerror(errno.EBADF)>`）で、どれも `Traceback` を含まない |
+
+## 6. CMP4 地形解析エンジン
+
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.12 だけを書き、ほかの群の節は書くときに 6.1〜6.11 の番号で足す（6.12 を先に書いたのは、ほかの群がその型と関数を使うため）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+
+### 6.12 `analyze_terrain_common`
+
+- **ID**: LLD-analyze_terrain_common
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[3.9](30_HLD.md#39-共通部品)・[5.7](30_HLD.md#57-nfr-007-ログ出力)
+- **ファイル**: `src/common.hpp`・`src/common.cpp`
+
+各関数の決まりの正本は [2.1](#21-共通部品)（Python の同じ名前の部品）と [HLD 3.9](30_HLD.md#39-共通部品)で、この節は C++ で書くための細部と、Python と違うところだけを足す（[HLD 3.4.3](30_HLD.md#343-関数)の DEC150「CMP4 は共通部品の決まりを C++ で別に実装する」）。HLD 3.9 の部品のうち CMP4 が使うのは `load_config`・`read_mesh_arg`・`read_mesh_list_file`・`start_log`・`log_info`・`log_warning`・`log_error` と `EXIT_OK`〜`EXIT_USAGE` で、`acquire_lock`（CMP4 はロックを掛けない。CMP3 のロックの下で動く。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）・`fetch_record_path`・`mesh_to_latlon`・`latlon_to_tile`（6.10 の「変換」の群）は持たない。C++ だけの関数に `check_signal` がある（[HLD 3.4.3](30_HLD.md#343-関数)）。[5.7](30_HLD.md#57-nfr-007-ログ出力)（ログ出力）は、6.12.3 の `start_log`・`log_*`・`_finish_log`・`check_signal` で受ける。
+
+#### 6.12.1 ファイル割付
+
+- 公開の宣言は `src/common.hpp`、定義と内部の関数は `src/common.cpp` に置く。ファイルの先頭のコメントに `// trace: LLD-analyze_terrain_common` を書く。
+- UT のコードは `tests/src/test_common.cpp` に置き、`build/test_common` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_common-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+
+#### 6.12.2 型とデータ
+
+`src/common.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <chrono>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+constexpr int EXIT_OK = 0;
+constexpr int EXIT_ERROR = 1;
+constexpr int EXIT_USAGE = 2;
+
+struct ExitRequest {
+    int code;
+    explicit ExitRequest(int exit_code);
+};
+
+struct ConfigValue {
+    bool is_set;       // 偽は未設定（デフォルトの無いキーで書かれていないとき。CMP4 の 6 キーでは常に真）
+    bool is_integer;   // 整数の種類のキーなら真
+    long long integer; // 整数の値。is_integer が偽なら 0
+    std::string text;  // パスの種類のキーの値。整数の種類なら空
+    bool from_file;    // ファイルに書いてあれば真
+};
+
+struct Config {
+    std::string path;                             // 設定ファイルの絶対パス（_abspath したもの）
+    std::map<std::string, ConfigValue> values;    // load_config に渡したキーだけ
+};
+
+struct StartTime {
+    std::chrono::system_clock::time_point wall;
+    std::chrono::steady_clock::time_point mono;
+    static StartTime now();   // 2 つの時計を続けて読む
+};
+
+Config load_config(const std::string& config_path,
+                   const std::vector<std::string>& keys,
+                   const std::vector<std::string>& required);
+void start_log(const std::string& log_dir, const Config& config,
+               const std::string& program, const std::vector<std::string>& args,
+               const StartTime& start);
+void log_info(const std::string& message);
+void log_warning(const std::string& what, const std::string& action);
+void log_error(const std::string& what, const std::string& action);
+std::set<std::string> read_mesh_arg(const std::string& value);
+std::set<std::string> read_mesh_list_file(const std::string& path, const std::string& guidance);
+void check_signal();
+```
+
+- 終了コードの定数は 0・1・2 だけを持つ（HLD 3.4.3 の表。3・4 は CMP4 が返さない）。
+- `ExitRequest`: 止まることを `main` の最上位へ伝える例外（1.2 の C++ の規約）。コンストラクタは `code` を入れ、`_state.started` が真のときだけ内部の状態に終了コードを記録する（`_state.has_exit_code = true`、`_state.exit_code = code`。後から作ったものが前のものを上書きする。Python の `_exit` が `start_log` の後の `sys.exit` のたびに記録するのと同じ）。`start_log` の前に作ったものは記録しない（終わりの行が無いので要らない。テストの同じプロセスで作ったものが、`fork` した子に残らないようにするため）。`std::exception` の子にしない。
+- `StartTime`: `main` は最初（引数と設定の検査の前）に `StartTime::now()` を呼び、`start_log` に渡す（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 2「ファイルの名前」）。所要時間は `mono` の差で測る（時刻の補正に左右されない時計。HLD 5.7.1 の対象外の行）。
+- 設定のキーの表 `_config_keys`（内部。`.cpp` の無名の名前空間の定数の配列）。行と順は 2.1.2 の `_CONFIG_KEYS` の表と同じ 12 行で、CF4・CF5 の判定と CF5 の `{keys}`（その節のキーを `・` でつないだもの）に全キーが要る。値を判定するのは次の 6 行だけで、ほかの 6 行（`fetch` の 3 つと `match` の 3 つ）は節とキーの名前だけを持つ。
+
+  | 節 | キー | 種類 | デフォルト | 最小 | 最大 | 許容範囲の文（CF6・CF7 の `{range}`） |
+  |---|---|---|---|---|---|---|
+  | `paths` | `data_dir` | パス | なし（必須） | — | — | `絶対パス` |
+  | `paths` | `log_dir` | パス | `<data_dir の値>/logs` | — | — | `絶対パス` |
+  | `analysis` | `prominence_primary_m` | 整数 | `130` | `100` | なし（18 桁まで） | `100 以上の整数（18 桁まで）` |
+  | `analysis` | `activation_zone_drop_m` | 整数 | `25` | `25` | `25` | `25` |
+  | `analysis` | `delete_zone_max_drop_m` | 整数 | `250` | `200` | `300` | `200 以上 300 以下の整数` |
+  | `merge` | `prominence_final_m` | 整数 | `150` | `150` | `150` | `150` |
+
+  `load_config` の `keys` に、この 6 キーのほかの名前（`user_agent_email`・`max_parallel` など）を渡したら、呼ぶ側の誤り（`std::invalid_argument`）。パスの種類は「空でなく、先頭が `/`」。整数の種類は 2.1.2 の表の後の段落のとおり（ASCII の数字だけ、先頭の `0` を除いて 18 桁まで、`long long` に入れる。符号・小数点・全角の数字・空は型に合わない）。
+- 内部の状態 `_state`（`.cpp` の無名の名前空間の 1 つの `struct` の変数）: `bool started`、`int log_fd`（`-1` は無し）、`std::string log_path`、`std::string program`、`StartTime start`、`bool broken`（ログファイルに書けなくなった）、`bool has_exit_code`、`int exit_code`、`bool signal_thrown`（`check_signal` が一度投げた）。受けたシグナルは別の変数 `volatile std::sig_atomic_t _signum`（`0` は無し。ハンドラが書く）。
+- 起動のときの準備（内部。`.cpp` の無名の名前空間の、コンストラクタを持つ静的な変数 1 つ。`main` より前に動く）: `SIGPIPE` を無視にし（`signal(SIGPIPE, SIG_IGN)`。切れたパイプへの書き込みを `EPIPE` の失敗にする。Python が起動時に `SIGPIPE` を無視にするのと同じ）、`std::set_terminate(_on_terminate)` にする。
+
+#### 6.12.3 関数の細部
+
+関数ごとに `#####` の見出しを立てる。2.1 と同じ名前の見出しは、重複（MD024）を避けるために `（analyze_terrain_common）` を付ける。各関数の決まりの正本は 2.1.3 の同じ名前の部品で、ここには「2.1.3 の <部品> のとおり」と、C++ の細部と違いだけを書く。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<定数>)` する（1.2 の C++ の規約）。`errno` は、失敗した呼び出しの直後に変数へ写してから使う（`{reason}` は `std::strerror` に渡した文）。
+
+##### load_config（analyze_terrain_common）
+
+`Config load_config(const std::string& config_path, const std::vector<std::string>& keys, const std::vector<std::string>& required)`
+
+- 2.1.3 の `load_config` の 1〜9 のとおり。C++ の違いは次のとおり。
+  - 1 の呼ぶ側の誤りと、6.12.2 の「`keys` に 6 キーのほかの名前を渡した」は、`throw std::invalid_argument("<説明>")`。
+  - 2 の `path` は `_abspath(config_path)`。`os.path.exists` に当たるのは `stat(path.c_str(), &st)` が 0 を返すか（0 以外なら、`errno` によらず CF1。Python の `os.path.exists` が OS の誤りでも偽を返すのと同じ）。CF1 の対処は、いつも `--config に渡したパスを確かめる`（C++ は既定のパスを持たない。[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「内部の起動口は既定パスを持たない」）。
+  - 3 は `_read_file(path, data, err)`（下）で読み、失敗は CF2。
+  - 4 は `_parse_ini(data, sections, error)`（下）で読む。
+  - 9 の `log_dir` のデフォルトは `_join(<data_dir の値>, "logs")`。
+- 返す `ConfigValue`: 整数の種類は `is_integer` が真で `integer` に値、パスの種類は `text` に値。デフォルトの値は `from_file` が偽。
+
+##### _parse_ini（analyze_terrain_common）
+
+`bool _parse_ini(const std::string& data, IniSections& sections, IniError& error)`（内部）
+
+型は `.cpp` の無名の名前空間に置く。`using IniEntries = std::vector<std::pair<std::string, std::string>>;`（キー, 値の並び）、`using IniSections = std::vector<std::pair<std::string, IniEntries>>;`（節の名前と、その節のキー, 値の並びを、ファイルの順に並べたもの）、`struct IniError { std::string code; std::string reason; };`。誤りが無ければ `true` を返し、`sections` に結果を入れる。誤りがあれば `false` を返し、`error.code` に `"CF2"` か `"CF3"`、`error.reason` に `{reason}` を入れ、`sections` は空にする。止まらず、メッセージも出さない（メッセージは `load_config` が出す）。
+
+読み方は 2.1.3 の `_parse_ini` の設定ファイルの書式の 1〜7 のとおり（テストベクトルは同じ節の CV-01〜CV-27）。バイトで扱う場合の細部: BOM は先頭の 3 バイト `EF BB BF` を 1 つだけ除く。UTF-8 として読めるかは `_decode_utf8_sig` の表（下）。NUL は 1 バイトの `00`。行は `\n` のバイトで分け、行の末尾の `\r` を 1 バイトだけ除く。前後から除くのはバイト `20` と `09` だけ。`#`・`;`・`[` は行の先頭のバイトで見る。節とキーの名前は、バイト列のまま比べる。名前が 1 字以上は、1 バイト以上。`{line_no}` は 10 進（先頭の `0` なし）、`{line}` は 4 で前後を除いた後の行のバイト列。
+
+##### start_log（analyze_terrain_common）
+
+`void start_log(const std::string& log_dir, const Config& config, const std::string& program, const std::vector<std::string>& args, const StartTime& start)`（`args` は `argv[1]` から後。プログラムの名前を含まない）
+
+1. 2 回目の呼び出しは `throw std::logic_error("start_log の 2 回目")`。
+2. `_make_dirs(log_dir, err)`（下）が失敗なら、2.2 の G3（`{path}` は `log_dir`、`{reason}` は `err` の文）を出して `throw ExitRequest(EXIT_ERROR)`。
+3. `path = _join(log_dir, program + "_" + _local_time(start.wall, true) + "_" + std::to_string(getpid()) + ".log")`。`open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666)`。失敗が `EEXIST` なら G4（`{path}` は `path`）、ほかの失敗は G3（`{path}` は `path`）を出して `throw ExitRequest(EXIT_ERROR)`（既にあるファイルには触れない）。
+4. `_state` の `has_exit_code` を偽、`exit_code` を 0、`broken` と `signal_thrown` を偽にしてから、`log_fd`・`log_path`・`program`・`start` を入れ、最後に `started` を真にする（`start_log` の前に作った `ExitRequest` は記録しないが、念のためここで初期化する。6.12.2 の `ExitRequest`）。続けて、次をこの順に取り付ける: `std::atexit(_finish_log)`、最後に `SIGINT` と `SIGTERM` のハンドラを `_on_signal` にする（`sigaction`、`sa_flags = SA_RESTART`、`sa_mask` は空。シグナルのハンドラを最後にする理由は 2.1.3 の `start_log` の 4 と同じ）。
+5. 2.2 の L1・L2 の行を `_emit`（標準出力）で出す。L1 の `{args}` は 2.2 の引用の決まりで 1 つずつ書いて空白 1 つでつなぐ（`_quote_arg`。引数が無ければ `開始: {program}`）。L2 は `設定ファイル: {config.path}` の後、`config.values` のキーを `_config_keys` の順に `設定: [{section}] {key} = {value}（{source}）`。`{value}` は整数なら 10 進（先頭の `0` なし）、パスならその文字列、未設定なら `未設定`。`{source}` は `from_file` が真なら `ファイル`、偽なら `デフォルト`（未設定のときもデフォルト）。
+
+##### _emit（analyze_terrain_common）
+
+`void _emit(const std::vector<std::string>& lines, int fd, bool ignore_screen_errors)`（内部。`fd` は 1〔標準出力〕か 2〔標準エラー出力〕）
+
+2.1.3 の `_emit` のとおり（渡された各行の中の `\n` でさらに行を分け、全行を先に画面へ時刻なしで出し、その後で全行をログファイルへ時刻付きで書く）。C++ の細部:
+
+1. 画面: 1 行ごとに `<行>` と `\n` を `_write_all(fd, ...)`（下）で書く。失敗したとき、`ignore_screen_errors` が偽なら `throw std::system_error(errno, std::generic_category(), fd == 1 ? "標準出力" : "標準エラー出力")`（`what()` は `標準出力: Broken pipe` の形）、真なら無視して次の行へ進む。
+2. ログファイル: `_state.log_fd` が `-1` でなく `broken` が偽のときだけ、1 行ごとに `<時刻> <行>` と `\n` を 1 回の `_write_all` で書く。時刻は書く時点の `_local_time(std::chrono::system_clock::now(), false)`（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 3「行の書式」）。失敗したら `_state.broken = true` にし、G5（`{path}` は `_state.log_path`、`{reason}` は失敗の `errno` の文）の 2 行を標準エラー出力にだけ出し（この出力の失敗は無視）、`throw ExitRequest(EXIT_ERROR)`。
+
+##### log_info・log_warning・log_error（analyze_terrain_common）
+
+`void log_info(const std::string& message)`・`void log_warning(const std::string& what, const std::string& action)`・`void log_error(const std::string& what, const std::string& action)`
+
+2.1.3 の `log_info`・`log_warning`・`log_error` のとおり（出す行、出し先、`broken` の後の扱い）。`_emit` を `ignore_screen_errors` を偽にして呼ぶ（`log_info` は `fd` が 1、ほかの 2 つは 2）。`start_log` の前は画面にだけ出す（`log_fd` が `-1`）。`broken` の後は、`log_info` は何も出さず、`log_warning`・`log_error` は標準エラー出力にだけ出す。
+
+##### _finish_log（analyze_terrain_common）
+
+`void _finish_log()`（内部。`std::atexit` から呼ばれる）
+
+1. `SIGINT`・`SIGTERM` を無視にする（`signal(sig, SIG_IGN)`）。`_state.broken` が真なら、終わりの行を書かず `_exit(EXIT_ERROR)`（HLD 5.7.2 の 4「始まりと終わりの行」の「ログファイルに書けなくなって止まるときは、終わりの行を書こうとせず」。[HLD 5.7.3](30_HLD.md#573-異常系)）。
+2. 終了コード `code`: `_signum` が 0 でなければ `128 + _signum`、そうでなく `has_exit_code` が真なら `exit_code`、どちらでもなければ `EXIT_OK`。2.2 の L3 の行（シグナルを受けていれば `（{signame} を受けて止まった）` つき。`{signame}` は `SIGINT` か `SIGTERM`。`{sec}` は `start.mono` からの秒を `%.3f`。`{end}` は今の `_local_time(..., false)`）を、ログファイルへ `<時刻> <L3>` と `\n` を 1 回の `_write_all` で書き、`close(log_fd)`。書くか閉じるのに失敗したら、G6（`{path}` は `log_path`、`{reason}` は失敗の `errno` の文）の 2 行を標準エラー出力にだけ出し（失敗は無視）、`_exit(EXIT_ERROR)`（終了コード 0 などで終わるはずだったときも 1。HLD 5.7.3）。
+3. 書けたら、同じ L3 の文面を標準出力へ時刻なしで出す（失敗は無視）。`_signum` が 0 でなければ `_exit(128 + _signum)`。そうでなければ戻る（プロセスは `main` が返した値で終わる。1.2 の規約で、それは記録した値と同じ）。
+
+最後の `check_signal` の後、`_finish_log` の 1 より前にシグナルを受けたときは、完了の要約の後に、シグナルを受けて止まった形の L3 と 128＋シグナルの番号になる（Python も `finally` の後に受ければ同じ）。
+
+画面への出力の失敗: 1〜3 の画面への出力は、失敗を無視して必ず次へ進む（`_exit` か、戻るところまで届かせる。終わる途中で、止める先も知らせる先も無い）。ログファイルへの書き込みの失敗は 2 のとおりで、これに当たらない。
+
+##### _on_signal（analyze_terrain_common）
+
+`void _on_signal(int signum)`（内部。シグナルのハンドラ）
+
+`_signum` が 0 なら `_signum = signum`（2 回目からは何もしない。止まるための後始末を途中で切らないため）。ほかのことはしない（非同期シグナル安全な代入だけ）。
+
+##### check_signal
+
+`void check_signal()`
+
+`_signum` が 0 でなく `_state.signal_thrown` が偽なら、`signal_thrown = true` にして `throw ExitRequest(128 + _signum)`。メッセージは出さない（終わりの行にシグナルの名前を書く）。2 回目からは何もしない（止まるための後始末の中で呼ばれても、後始末を途中で切らない）。`start_log` の前に受けたシグナルは既定の扱い（ハンドラが無いので OS がプロセスを止め、終了状態は 128＋シグナルの番号）。
+
+##### _on_terminate
+
+`void _on_terminate()`（内部。`std::set_terminate` で付ける処理。捕まらなかった例外と、`catch (...)` の中の `std::terminate()` が呼ぶ）
+
+1. 今の例外を `std::current_exception()` で取り、`std::rethrow_exception` して捕まえ分ける。`ExitRequest` なら（`main` の最上位で捕まえ忘れた）、`code` を終了コードにし、メッセージを出さない。`std::exception` の子なら `{type}` は `abi::__cxa_demangle(typeid(e).name(), ...)` の結果（失敗したら `typeid(e).name()`）、`{message}` は `e.what()`。そのほかは `{type}` を `不明な型`、`{message}` を空にする。例外が無いときは `{type}` を `std::terminate`、`{message}` を `例外なしで呼ばれた` にする。
+2. `ExitRequest` 以外なら、2.2 の G7 の 2 行を `_emit`（標準エラー出力、`ignore_screen_errors` は真）で出す。`start_log` の後なら、ログファイルにも出る（書けなければ `broken` になる）。`_emit` が投げる `ExitRequest` は `try` で囲んで捕まえ、次へ進む。
+3. 終了コードは、`_signum` が 0 でなければ `128 + _signum`、そうでなければ、1 で取った例外が `ExitRequest` ならその `code`、ほかは `EXIT_ERROR`。`started` が真なら `has_exit_code = true`、`exit_code` にその値を入れて `_finish_log()` を呼ぶ。最後に `_exit(<終了コード>)`。
+
+##### read_mesh_arg（analyze_terrain_common）・read_mesh_list_file（analyze_terrain_common）
+
+`std::set<std::string> read_mesh_arg(const std::string& value)`・`std::set<std::string> read_mesh_list_file(const std::string& path, const std::string& guidance)`
+
+2.1.3 の `read_mesh_arg`・`read_mesh_list_file`・`_parse_mesh_lines` のとおり（行の読み方とファイルの読み方の正本は 2.1.3 の段落とメッシュの読み方のテストベクトル）。C++ の違い:
+
+- 4 桁の判定は ASCII の `0`〜`9` の 4 バイト。`os.path.abspath` は `_abspath`、`os.path.exists` は `stat`（`load_config` と同じ）、ファイルは `_read_file`（`read` が失敗する場合は、ディレクトリの `EISDIR` を含め、`{reason}` が `errno` の文）。UTF-8 として読めるかと BOM の除き方は `_decode_utf8_sig`（下）。読めなければ `{reason}` は `UTF-8 として読めない`（`read_mesh_arg` は A3、`read_mesh_list_file` は R2）。
+- `guidance` が空の文字列なら既定の対処（Python の `None`）。
+- 誤りの `{line}` は、前後を除いた後の行のバイト列（NUL もそのまま）。
+- 内部の関数 `bool _parse_mesh_lines(const std::string& text, std::set<std::string>& meshes, long long& error_line_no, std::string& error_line)`: 誤りが無ければ `true`。行を `\n` で分けて 1 から番号を振り、各行の前後から `' '`・`'\t'`・`'\r'` を除き、空と `#` で始まる行を飛ばし、残りが ASCII の数字 4 バイトでなければ最初の行の番号と中身を返して `false`。
+
+##### 内部の小さな関数
+
+- `std::string _abspath(const std::string& p)`: Python の `os.path.abspath` と同じ値にする。`p` が `/` で始まらなければ、`getcwd()` と `/` を前に付ける（`getcwd()` が `/` で終われば `/` は足さない）。先頭の `/` がちょうど 2 つ（`//` で始まり `///` では始まらない）なら先頭は `//`、そうでなければ `/` とする。残りを `/` で分け、空と `.` を除き、`..` は 1 つ前の要素を除く（要素が無ければ無視）。先頭と、残りの要素を `/` でつないだものをつなぐ。例（Python の値）: `//` → `//`、`//a` → `//a`、`///a` → `/a`、`/a/../../b` → `/b`、`//..` → `//`、`/a//b` → `/a/b`。
+- `std::string _join(const std::string& a, const std::string& b)`: `a` が `/` で終われば `a + b`、そうでなければ `a + "/" + b`（`b` は `/` で始まらない名前だけを渡す）。
+- `bool _read_file(const std::string& path, std::string& data, int& err)`: `open(path, O_RDONLY | O_CLOEXEC)` と `read` を、`EINTR` のほかの失敗か 0 まで繰り返して全部を読み、`close`。失敗したら `err` に `errno` を入れて `false`（ディレクトリは `read` の `EISDIR`）。
+- `bool _write_all(int fd, const std::string& s)`: `write` を、全部書くか `EINTR` のほかの失敗まで繰り返す。失敗したら `false`（`errno` は残す）。
+- `bool _make_dirs(const std::string& path, int& err)`: `path` を `/` で区切った先頭からの各段のパス（空の要素は飛ばす）に `mkdir(<段>, 0777)` を呼ぶ。`EEXIST` なら `stat` でディレクトリかを見て、ディレクトリなら次の段へ進む。ディレクトリでなければ、最後の段なら `err = EEXIST`、途中の段なら `err = ENOTDIR` で失敗。ほかの失敗はその `errno` で失敗。Python の `os.makedirs(..., exist_ok=True)` と同じ `{reason}` にする（`log_dir` がファイルなら `File exists`、途中の段がファイルなら `Not a directory`）。
+- `std::string _quote_arg(const std::string& a)`: 2.2 の引用の決まり（バイトで判定する。`a` が空でなく、どのバイトも ASCII の英数字か `_@%+=:,./-` のどれかならそのまま。そうでなければ `'` で囲み、中の `'` を `'"'"'` に置き換える。空は `''`）。
+- `std::string _local_time(std::chrono::system_clock::time_point t, bool for_name)`: `localtime_r` で求めたローカル時刻を、`for_name` が真ならファイルの名前の `YYYYMMDDTHHMMSS`、偽なら行の時刻の `YYYY-MM-DDTHH:MM:SS±HH:MM`（`strftime` の `%Y-%m-%dT%H:%M:%S` に、`tm_gmtoff` から作った `±HH:MM` を付ける）にする。
+- `bool _decode_utf8_sig(const std::string& bytes, std::string& text)`: 先頭の BOM `EF BB BF` を 1 つだけ除いた残りが、次の形だけでできていれば `text` に入れて `true`、そうでなければ `false`（Python の `utf-8` の復号と同じ判定。サロゲートの符号化、U+10FFFF を超える符号位置、長すぎる符号化、途中で切れた列、5 バイト以上の列は読めない）:
+
+  | 先頭のバイト | 続くバイト |
+  |---|---|
+  | `00`〜`7F` | なし |
+  | `C2`〜`DF` | `80`〜`BF` が 1 つ |
+  | `E0` | `A0`〜`BF` の後に `80`〜`BF` が 1 つ |
+  | `E1`〜`EC`、`EE`〜`EF` | `80`〜`BF` が 2 つ |
+  | `ED` | `80`〜`9F` の後に `80`〜`BF` が 1 つ |
+  | `F0` | `90`〜`BF` の後に `80`〜`BF` が 2 つ |
+  | `F1`〜`F3` | `80`〜`BF` が 3 つ |
+  | `F4` | `80`〜`8F` の後に `80`〜`BF` が 2 つ |
+
+#### 6.12.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。誤りの文面は 2.1.4 の CF1〜CF7・A1〜A5・R1〜R3 と同じで、ここには写さない。違いは次の 3 つ。
+
+- CF1 の対処は、いつも `--config に渡したパスを確かめる`（C++ は既定のパスを持たない。[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「内部の起動口は既定パスを持たない」）。
+- CF3 の対処の `{example_path}` は、文字列 `params/config.ini.example` にする（C++ はソースツリーの場所を知らない。[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「CMP4 のビルド成果物からはソースツリーの場所が定まらない」。2.2 の「対処の行に書くコマンドは、ソースツリーの根で打つ形で書く」に合わせる）。
+- `{reason}` の作り方は 1.2 の C++ の規約（OS の失敗は `std::strerror`）。CF2・CF3 の書式の誤りは 2.1.3 の設定ファイルの書式の文。UTF-8 として読めないときは `UTF-8 として読めない`。
+
+全体に共通する場面（G3〜G7）とログの行（L1〜L3）は 2.2 のとおり。G1・G2 は CMP4 が出さない（ロックを掛けない）。C++ だけのメッセージは無い（`std::invalid_argument`・`std::logic_error` は呼ぶ側の誤りで、利用者に見せる文面を持たない。捕まらなければ G7 で止まる）。
+
+#### 6.12.5 UT 候補
+
+すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_common-NN` を付ける。ログファイルの行の期待は、先頭の時刻と空白を除いた文面で書く。`start_log` を呼ぶと標準出力に L1・L2 の行が時刻なしで出るので、標準出力の期待にはこれらも含める。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。
+
+- **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ケースごとに一時のディレクトリ（`mkdtemp`）を作る。設定ファイルを使うケースは、その下に設定ファイルを書いて絶対パスを渡す（`data_dir`・`log_dir` を書くときは、一時のディレクトリの下の絶対パス）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる（`start_log` を呼ばないので、シグナルのハンドラも `atexit` も付かない）。標準出力と標準エラー出力は、呼ぶ前に `dup`・`dup2` で記述子 1・2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す。
+- **子のプロセス**: 親は `fork` の直前に `std::fflush(nullptr)` を呼ぶ（GoogleTest が標準出力のバッファにためた行を、子が受け継いで付け替えた先へ書き出さないようにするため）。子の設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。`fork` した子の中で、記述子 1・2 を親が読む 2 つのパイプの書く側に付け替え、`StartTime::now()` と `load_config`（ケースが書かなければ `keys` は `data_dir` と `log_dir`、`required` は `data_dir`）を呼んでから、入力の列の処理を、1.2 の `main` の形に捕まらない例外の経路を足した形（`try { <処理>; } catch (const ExitRequest& e) { std::exit(e.code); } catch (...) { std::terminate(); } std::exit(EXIT_OK);`）で行う。`catch (...)` の中で `std::terminate()` を呼ぶのは、子の中にも GoogleTest のテストの呼び出しが残っていて、例外をそのまま外へ出すと GoogleTest が捕まえてしまうため（`catch` の中から呼べば、`_on_terminate` の `std::current_exception()` がその例外を返し、`main` から例外が出たときと同じ経路になる）。`UT-analyze_terrain_common-31` だけは `catch (const ExitRequest& e)` を置かず、`catch (...) { std::terminate(); }` だけにする（捕まえ忘れた `ExitRequest`）。`start_log` は入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, "test_common", <ケースの引数>, start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、処理の最初に呼ぶ。ケースの引数が書いていなければ空）。親は 2 つのパイプを `poll` で終わりまで読み、`waitpid` の終了状態（シグナルで死んでいたらケースの失敗）とログファイル（`<log_dir>` の下の `test_common_*_<子の PID>.log`）を確かめる。
+- **ログファイルに書けない場面**: 子の中で `start_log` の後に `SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` を 0 にする（以後のログファイルへの書き込みが `EFBIG`〔`File too large`〕で失敗する。パイプには効かない）。終わりの行だけを失敗させるときは、`start_log` の後に `std::atexit` で同じ制限を掛ける処理を登録する（`atexit` は登録の逆順に動くので、`_finish_log` より先に動く）。画面が切れたパイプの場面は、子の中で `pipe` を作って読む側を `close` し、書く側を記述子 1（か 2）に `dup2` する。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_common-01` | 正しい設定を読む（`UT-common-01` の C++ 版） | 同じプロセス。CMP4 の 6 キーをすべて書いた設定ファイル（`prominence_primary_m = 120`、`activation_zone_drop_m = 25`、`delete_zone_max_drop_m = 300`、`prominence_final_m = 150`） | 6 キー（`data_dir`・`log_dir`・`prominence_primary_m`・`activation_zone_drop_m`・`delete_zone_max_drop_m`・`prominence_final_m`）の `keys` と、`required` は `data_dir` | 整数の 4 キーは `is_integer` が真で `integer` が 120・25・300・150、パスの 2 キーは `text` が書いた値、6 キーとも `is_set` と `from_file` が真。`Config.path` は設定ファイルの絶対パス |
+| `UT-analyze_terrain_common-02` | デフォルト（`UT-common-02`） | 同じプロセス。`data_dir` だけを書いた設定ファイル | 6 キーの `keys` と、`required` は `data_dir` | `log_dir` の `text` が `<data_dir>/logs`、4 つの整数のキーが 130・25・250・150、この 5 つは `from_file` が偽。`data_dir` は `from_file` が真。6 キーとも `is_set` が真 |
+| `UT-analyze_terrain_common-03` | 設定ファイルが無い（`UT-common-03`） | 同じプロセス。一時のディレクトリの下の存在しないパスと、その相対パス（作業ディレクトリを、そのディレクトリを含む一時のディレクトリに移して渡す。呼んだ後に戻す） | `keys` は `data_dir` と `log_dir`、`required` は `data_dir`。絶対パスと相対パスをそれぞれ渡す | どちらも `ExitRequest` の `code` が 2。標準エラー出力が `ERROR: 設定ファイルが無い: <絶対パス>` と `対処: --config に渡したパスを確かめる` の 2 行。ログファイルを作らない |
+| `UT-analyze_terrain_common-04` | 読めない・INI でない（`UT-common-04`） | 同じプロセス。(a) `FF FE` だけのファイル、(b) 節の見出しより前にキーがあるファイル（CV-17 の中身）、(c) 同じキーが 2 回あるファイル（CV-19）、(d) 同じ節が 2 回あるファイル（CV-18）、(e) 設定ファイルの代わりにディレクトリ | 各パスを `load_config` に渡す（`keys` は `data_dir` と `log_dir`、`required` は `data_dir`） | どれも `code` が 2。(a) は CF2（`{reason}` は `UTF-8 として読めない`）、(b)(c)(d) は CF3 で `{reason}` が CV-17・CV-19・CV-18 の文、(e) は CF2（`{reason}` は `Is a directory`。CF1 でない） |
+| `UT-analyze_terrain_common-05` | 知らない節とキー（`UT-common-05`） | 同じプロセス。5 つの設定ファイル。どれも `[paths]` に `data_dir` を書き、(a) `[DEFAULT]` の節、(b) `[foo]` の節、(c) `[fetch]` の節に書いた `data_dir` のキー、(d) `[paths]` の節に書いた `Data_Dir` のキー、(e) `[analysis]` の節に書いた `foo` のキーを足す | 各ファイルを `load_config` に渡す（`keys` は `data_dir` と `log_dir`、`required` は `data_dir`） | どれも `code` が 2。(a)(b) は CF4（`[DEFAULT]`・`[foo]`）、(c) は CF5（`[fetch] data_dir`。対処に `max_parallel・interval_ms・user_agent_email`）、(d) は CF5（`[paths] Data_Dir`。対処に `data_dir・log_dir`）、(e) は CF5（`[analysis] foo`。対処に `prominence_primary_m・activation_zone_drop_m・delete_zone_max_drop_m`）。`keys` に無い節とキーも見つける |
+| `UT-analyze_terrain_common-06` | 整数のキーの境目（`UT-common-06`・`-30` の (iii)〜(vii)） | 同じプロセス。値ごとに別の設定ファイル（どれも `data_dir` を書く） | 6 キーの `keys`。(a) `prominence_primary_m` に `99`/`100`、`prominence_final_m` に `149`/`150`/`151`、`activation_zone_drop_m` に `24`/`25`/`26`、`delete_zone_max_drop_m` に `199`/`200`/`300`/`301`。(b) `prominence_primary_m` に書き方の違い（`+5`・`1.5`・全角の数字の `100`〈U+FF11、U+FF10、U+FF10〉・`-1`・空の値）。(c) `prominence_primary_m` に `1` の後に `0` を 17 個並べた 18 桁の数、`1` の後に `0` を 18 個並べた 19 桁の数、`1` の後に `0` を 4300 個並べた 4301 桁の数、`0` を 4300 個並べた後に `150` | (a) 端の内（100・150・25・200・300）は読める、外は `code` が 2 の CF6。(b) は CF6、`{value}` は書いたまま。(c) 18 桁は読めて `integer` が 100000000000000000、19 桁と 4301 桁は CF6、`0` を並べた後の `150` は 150 として読める |
+| `UT-analyze_terrain_common-07` | 必須と誤りのまとめ（`UT-common-08`・`-09`） | 同じプロセス。(a) `[paths]` に `log_dir = /x` だけを書いたファイル、(b) `[paths]` に `foo = 1` と `log_dir = rel` を書き、`data_dir` を書かないファイル | 6 キーの `keys`、`required` は `data_dir` | (a) は `code` が 2 の CF7（`data_dir`）。(b) は標準エラー出力に CF5（`[paths] foo`）・CF6（`[paths] log_dir = rel`）・CF7（`data_dir`）の 3 つのメッセージ（6 行）がこの順に出て、`ExitRequest` は 1 回 |
+| `UT-analyze_terrain_common-08` | 絶対パスでない（`UT-common-10`） | 同じプロセス。`data_dir = data`、`log_dir = logs` を書いた設定ファイル | `keys` は `data_dir` と `log_dir`、`required` は `data_dir` | `code` が 2。CF6 が `data_dir`、`log_dir` の順に 2 つ出る（`{range}` は `絶対パス`、`{value}` は書いたまま） |
+| `UT-analyze_terrain_common-09` | 呼ぶ側の誤り（`UT-common-11`） | 同じプロセス。`data_dir` と `log_dir` を書いた正しい設定ファイル | (a) `keys` に `data_dir` が無い、(b) `keys` に `log_dir` が無い、(c) `required` に `data_dir` が無い、(d) `keys` に表に無い名前 `foo`、(e) `required` に `keys` に無い名前、(f) `keys` に `user_agent_email`、(g) `keys` に `max_parallel` | どれも `std::invalid_argument`（`ExitRequest` でない）。標準エラー出力に何も出ない |
+| `UT-analyze_terrain_common-10` | NUL と BOM（`UT-common-30` の (i)(ii)・`-38` の設定） | 同じプロセス。バイト列で書いた 3 つのファイル | (i) `[`・NUL・`]` の節を足した設定、(ii) `[paths]` の `data_dir` の値の末尾に NUL を入れた設定、(iii) 先頭に BOM（`EF BB BF`）を付けた正しい設定 | (i)(ii) は `code` が 2 の CF3（`{reason}` は `NUL の文字がある`）、(iii) は読める（`data_dir` の値に BOM が付かない） |
+| `UT-analyze_terrain_common-11` | 設定ファイルの書式のテストベクトル（`UT-common-44`） | 同じプロセス。[2.1.3](#213-関数の細部)の設定ファイルの書式のテストベクトル（CV-01〜CV-27）の中身ごとに一時のファイルをバイト列で書く | 各ファイルを `load_config` に渡す（`keys` は `data_dir` と `log_dir`、`required` は `data_dir`） | 表の `load_config` の結果の列のとおり（読めたら `data_dir` の `text`、止まったら `code` が 2 と、出た記号の並び。CF2・CF3 は `{reason}` も表の書式の結果の列のとおり） |
+| `UT-analyze_terrain_common-12` | `--mesh` の値を読む（`UT-common-12`） | 同じプロセス。ファイルは一時のディレクトリに作る。相対パスのケースは、作業ディレクトリをその一時のディレクトリに移してから呼ぶ（呼んだ後に戻す） | `5339`、`0123`、空白と CR と空行と `#` の行と重複を含むファイル、相対パス | `{5339}`、`{0123}`、重なりを除いた集合、作業ディレクトリ基準で読む |
+| `UT-analyze_terrain_common-13` | `--mesh` の誤り（`UT-common-13`・`-39` の `read_mesh_arg`） | 同じプロセス。ファイルとディレクトリは一時のディレクトリに作る | (a) 空の値、(b) 無いファイル、(c) ディレクトリ、(d) 2 行目と 4 行目が誤りのファイル、(e) 全角の数字の `5339`（U+FF15、U+FF13、U+FF13、U+FF19）の行を含むファイル、(f) 有効な行が無いファイル、(g) `533`、(h) `FF FE` だけのファイル | どれも `code` が 2。(a) は A1、(b) は A2、(c) は A3（`{reason}` は `Is a directory`）、(d) は A4 で 2 行目、(e) は A4、(f) は A5、(g) はパスとして読むので A2、(h) は A3（`{reason}` は `UTF-8 として読めない`） |
+| `UT-analyze_terrain_common-14` | リストを読む（`UT-common-14`・`-39` の `read_mesh_list_file`） | 同じプロセス。ファイルとディレクトリは一時のディレクトリに作る | (a) 正しいリスト、(b) 空のファイル、(c) 無いファイルで `guidance` が `この案内` の文字列、(d) 無いファイルで `guidance` が空の文字列、(e) 誤りの行があるファイル、(f) ディレクトリ、(g) `FF FE` だけのファイル | (a) 集合、(b) 空の集合、(c) は `code` が 1 の R1 で対処が `この案内`、(d) は R1 で対処が既定（`ファイル <絶対パス> があり、読み取れることを確かめる`）、(e) は R3、(f) は R2（`Is a directory`）、(g) は R2（`UTF-8 として読めない`） |
+| `UT-analyze_terrain_common-15` | メッシュの読み方のテストベクトル（`UT-common-43`） | 同じプロセス。[2.1.3](#213-関数の細部)のメッシュの読み方のテストベクトル（MV-01〜MV-21）の中身ごとに一時のファイルをバイト列で書く | 各ファイルを `read_mesh_arg` と、`guidance` を空にした `read_mesh_list_file` に渡す | テストベクトルの表の結果のとおり。誤りの行は `read_mesh_arg` が A4、`read_mesh_list_file` が R3 で、`{line_no}` が表のとおり、`{line}` は NUL を含まない行だけ表のとおり。空の集合は `read_mesh_arg` が A5、`read_mesh_list_file` が空の集合。UTF-8 として読めないものは A3・R2（`{reason}` は `UTF-8 として読めない`） |
+| `UT-analyze_terrain_common-16` | `start_log` の前の出し先（`UT-common-15`） | 同じプロセス（`start_log` を呼ばない） | `log_info("x")`、`log_warning("w", "a")`、`log_error("e", "b")` | 標準出力は `x` の 1 行、標準エラー出力は `WARNING: w`・`対処: a`・`ERROR: e`・`対処: b` の 4 行。時刻は付かない |
+| `UT-analyze_terrain_common-17` | ログファイルの始まり（`UT-common-16`） | 子のプロセス。`load_config` の `keys` は `data_dir`・`log_dir`・`prominence_primary_m`（設定ファイルには `data_dir` と `log_dir` だけを書く） | 子の中で引数なしの `start_log` を呼び、その後に `log_info("hello")` と `log_warning("w", "a")` | `log_dir` を作る。ログファイルの名前が正規表現 `^test_common_\d{8}T\d{6}_<子の PID>\.log$` に合う。ログファイルの先頭は `開始: test_common`、`設定ファイル: <設定ファイルの絶対パス>`、`設定: [paths] data_dir = <値>（ファイル）`、`設定: [paths] log_dir = <値>（ファイル）`、`設定: [analysis] prominence_primary_m = 130（デフォルト）` の 5 行がこの順で、その後に `hello`・`WARNING: w`・`対処: a`。各行の先頭に正規表現 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}` に合う時刻と空白 1 つ（2 行のメッセージは各行に時刻）。標準出力は先頭の 5 行と `hello` が時刻なしで出る。標準エラー出力は `WARNING: w`・`対処: a` |
+| `UT-analyze_terrain_common-18` | 終わりの行（`UT-common-17`） | 子のプロセス（3 つの子を別々に） | 子の中で `start_log` の後に、(a) 何もせず最後まで進む、(b) `throw ExitRequest(2)`、(c) `throw ExitRequest(1)` | 終了コード 0・2・1。ログファイルの最後の行が L3 で同じ終了コード、標準出力の最後の行も同じ文面の L3（行頭の時刻なし）。`{sec}` は正規表現 `\d+\.\d{3}` に合う |
+| `UT-analyze_terrain_common-19` | 捕まらなかった例外（`UT-common-18`） | 子のプロセス | 子の中で `start_log` の後に `throw std::runtime_error("x")` | 終了コード 1。標準エラー出力とログファイルに G7 の 2 行（`予期しない例外で止まった: std::runtime_error: x`、`対処:` の行）。Traceback は出ない。ログファイルの最後の行は L3 で終了コード 1 |
+| `UT-analyze_terrain_common-20` | シグナル（`UT-common-19`） | 子のプロセス（`SIGTERM` の子と `SIGINT` の子を別々に） | 子の中で `start_log` の後に、`try { kill(getpid(), SIGTERM); check_signal(); } catch (...) { log_info("CLEANUP"); throw; }`（`SIGINT` の子は `SIGINT`） | 終了コード 143・130。標準出力に `CLEANUP` が出る。ログファイルの最後の行が `終了: 終了コード 143（SIGTERM を受けて止まった）、…`（`SIGINT` の子は 130 と `SIGINT`） |
+| `UT-analyze_terrain_common-21` | 区切りまで止まらない | 子のプロセス | 子の中で `start_log` の後に、`kill(getpid(), SIGTERM)`、`log_info("BEFORE")`、`check_signal()` | 標準出力に `BEFORE` が出る。終了コード 143 |
+| `UT-analyze_terrain_common-22` | 2 回目のシグナル（`UT-common-31`） | 子のプロセス | 子の中で `start_log` の後に、`try { kill(getpid(), SIGTERM); check_signal(); } catch (...) { kill(getpid(), SIGTERM); check_signal(); log_info("MARK"); throw; }` | 標準出力に `MARK` が出る。終了コード 143。ログファイルの終わりの行は 1 つ |
+| `UT-analyze_terrain_common-23` | 同じ名前のログファイル（`UT-common-20`） | 子のプロセス。子の中で `start_log` の前に、同じ `StartTime` と自分の PID から 6.12.3 の `start_log` の 3 の名前を作り、`log_dir` を作ってから、その下にその空のファイルを置く（親は子の PID を起動の前に知れないため） | 子の中で同じ名前のファイルを置いた後に `start_log` | 終了コード 1。標準エラー出力に G4。置いたファイルは空のまま変わらない |
+| `UT-analyze_terrain_common-24` | ログの出力先を用意できない（`UT-common-21`） | 子のプロセス。(a) `log_dir` のパスに通常のファイルを置く、(b) `log_dir` の途中の段に通常のファイルを置く（`<ファイル>/logs`） | 子の中で `start_log` | どちらも終了コード 1。標準エラー出力に G3 だけ（(a) の `{reason}` は `File exists`、(b) は `Not a directory`）。ログファイルは作られない |
+| `UT-analyze_terrain_common-25` | ログファイルに書けなくなった（`UT-common-22` の (a)(b)(c)(d)） | 子のプロセス（4 つの子を別々に）。共通の準備の `RLIMIT_FSIZE` で書き込みを失敗させる | 子の中で `start_log` の後に、(a) `log_info("x")`、(b) `try { log_info("x"); } catch (const std::exception&) { log_info("CAUGHT"); }`、(c) `try { log_info("x"); } catch (...) { log_info("要約"); throw; }`、(d) `throw std::runtime_error("x")` | どれも終了コード 1。ログファイルに終わりの行が無い。(a)(b)(c) は標準エラー出力に G5 が 1 回出る。(b) は標準出力に `CAUGHT` が出ない（`ExitRequest` は `std::exception` でない）。(c) は標準出力に `要約` が出ない（`broken` の後の `log_info` は何も出さない）。(a)(b)(c) の標準出力は L1・L2 の行と `x` だけ。(d) の標準エラー出力は、G7 の 2 行、G5 の 2 行の順 |
+| `UT-analyze_terrain_common-26` | 終わりの行だけ書けなかった（`UT-common-23`） | 子のプロセス。共通の準備の `atexit` での制限 | 子の中で `start_log` の後に何もせず最後まで進む | 終了コード 1。標準エラー出力に G6（`{reason}` は `File too large`）。標準出力に L3 は出ない |
+| `UT-analyze_terrain_common-27` | 始まりの行の引数（`UT-common-32`・`-33`） | 子のプロセス（2 つの子を別々に） | 子の中で、(a) 引数 `--config`・`/a b`・`it's`・空の引数、(b) 改行を 1 つ含む 1 つの引数（`x` の後に改行、その後に `y`）で `start_log` | (a) ログファイルの最初の行の、時刻と空白の後の文面が `開始: test_common --config '/a b' 'it'"'"'s' ''`（標準出力の最初の行は時刻なしの同じ文面）。(b) ログファイルの最初の 2 行が、時刻と空白の後に `開始: test_common 'x` と `y'`（2 行目にも時刻が付く）、標準出力の最初の 2 行が時刻なしの同じ 2 つの文面 |
+| `UT-analyze_terrain_common-28` | 標準出力が切れたパイプ（`UT-common-40`） | 子のプロセス（2 つの子を別々に）。`start_log` の後に、共通の準備の切れたパイプを記述子 1 に付ける | (a) `throw ExitRequest(2)`、(b) `log_info("x")` | (a) 終了コード 2、ログファイルの最後の行が L3 で終了コード 2。(b) 終了コード 1、ログファイルに G7（`予期しない例外で止まった: std::system_error: 標準出力: Broken pipe`）と、最後の行の L3 で終了コード 1 |
+| `UT-analyze_terrain_common-29` | 標準エラー出力が切れたパイプ（`UT-common-41`） | 子のプロセス。`start_log` の後に、共通の準備の切れたパイプを記述子 2 に付ける | `throw std::runtime_error("x")` | 終了コード 1。ログファイルに G7 の 2 行（`std::runtime_error: x`）がこの順にあり、その後が L3 で終了コード 1 |
+| `UT-analyze_terrain_common-30` | G5 を画面に出せない（`UT-common-35`） | 子のプロセス。`start_log` の後に、共通の準備の `RLIMIT_FSIZE` でログファイルに書けなくし、切れたパイプを記述子 2 に付ける | `try { log_info("x"); } catch (const std::exception&) { log_info("CAUGHT"); }` | 終了コード 1。標準出力に `CAUGHT` が出ない（G5 の出力の失敗でも `ExitRequest` が上がる） |
+| `UT-analyze_terrain_common-31` | 捕まえ忘れた `ExitRequest` | 子のプロセス。共通の準備の `UT-analyze_terrain_common-31` の形（`catch (...) { std::terminate(); }` だけ） | 子の中で `start_log` の後に `throw ExitRequest(2)` | 終了コード 2。G7 は出ない。ログファイルの最後の行は L3 で終了コード 2 |
+| `UT-analyze_terrain_common-32` | 終了コードの定数（`UT-common-26`） | 同じプロセス。なし | `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE` | 0・1・2 |
+| `UT-analyze_terrain_common-33` | シグナルの後の後始末で例外（`UT-common-37`） | 子のプロセス | 子の中で `start_log` の後に、`try { kill(getpid(), SIGTERM); check_signal(); } catch (...) { throw std::runtime_error("cleanup"); }` | 終了コード 143。G7（`std::runtime_error: cleanup`）が標準エラー出力とログファイルに出る。ログファイルの最後の行が `SIGTERM` を受けて止まった形の L3 で終了コード 143 |
+| `UT-analyze_terrain_common-34` | 前の止まり方が残らない | 同じプロセスで `load_config` を CF1 で止めて（存在しないパス）`ExitRequest` を捕まえた後に、子のプロセスを起こす | 子の中で `start_log` の後に何もせず最後まで進む | 子の終了コードが 0、ログファイルの最後の行が L3 で終了コード 0 |
+
+Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパス）・`-27`〜`-29`（変換）・`-34`（終わる途中で画面に出せない）・`-36`（`LogWriteError` を捕まえて続ける）・`-42`（全キーの名前の一覧）に当たるケースは持たない。CMP4 にロック・取得完了の記録・全キーの名前の一覧が無く、変換は 6.10 の群が持ち、終わる途中の画面の失敗は `_finish_log` が無視するだけで別の形にならず、`LogWriteError` を捕まえて続ける形は `ExitRequest` が `std::exception` の子でないことを `-25` の (b) で確かめるため。
