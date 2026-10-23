@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-28 |
-| 最終更新日 | 2026-10-20 |
+| 最終更新日 | 2026-10-23 |
 | ステータス | 確定 |
 | 参照 SRS | [`20_SRS.md`](20_SRS.md) |
 
@@ -1562,7 +1562,7 @@ CMP4（地形解析エンジン）は C++ の実行ファイル 1 本からな�
 
 `analyze_terrain` は、起動の直後、ほかの OpenCV の関数を呼ぶ前に `cv::setNumThreads(1)` を呼ぶ（[2.9.2](#292-cmp4-と-opencv-のスレッド)。[DEC28](#294-設計判断)「OpenCV は 1 スレッドで動かす」）。続けて、`parse_args` で引数を、`load_config` で設定を確かめ、[2.3.3](#233-検証と記録) の相互制約もここで確かめる。ここまでの誤りは、ログファイルを作らずに終了コード 2 で止まる。確かめ終えたら、`start_log` でログの出力先を用意し、使う設定値をログに書く（[2.3.3](#233-検証と記録) の、設定値をログに書く段落）。その後、`--mode` に従って `run_normal_mode` か `run_wide_mode` を呼ぶ。
 
-`load_config`・`read_mesh_arg`・`read_mesh_list_file`・`start_log`・`log_info`・`log_warning`・`log_error` と、終了コードの定数 `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE` は、[3.9](#39-共通部品) の同じ名前の部品と同じ決まりを C++ で別に実装したもので、下の表の「3.9 と同じ決まり」の群に載せる（[DEC150](#444-設計判断)「CMP4 は共通部品の決まりを C++ で別に実装する」）。
+`load_config`・`read_mesh_arg`・`read_mesh_list_file`・`start_log`・`log_info`・`log_warning`・`log_error` と、終了コードの定数 `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE` は、[3.9](#39-共通部品) の同じ名前の部品と同じ決まりを C++ で別に実装したもので、下の表の「3.9 と同じ決まり」の群に載せる（[DEC150](#444-設計判断)「CMP4 は共通部品の決まりを C++ で別に実装する」。同じ群の `check_signal` は C++ だけの関数）。
 
 「変換」の群の `latlon_to_z15_pixel`・`z15_pixel_center_latlon`・`latlon_to_mesh` は、CMP5（統合・突合）の同じ名前の関数（[3.5.3](#353-関数)・[3.5.4](#354-コンポーネント内の共通部品)）と同じ式を C++ で別に実装したものである（[DEC6](#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。「変換」の群の `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` は、Python の CMP1（行政区域前処理）と CMP2（タイル取得）にも同じ式がある。Python の側は、`mesh_to_latlon`・`latlon_to_tile` が [3.9](#39-共通部品) の部品、`tile_to_latlon` が CMP1 の関数（[3.1.3](#313-関数)）で、ここと同じ名前である（第 3 章の冒頭の名前の決まり）。CMP1 は、北方領土除外タイルと除外メッシュをこの 3 つの式で求める（[4.17.2](#4172-処理の流れ)）。
 
@@ -1616,6 +1616,7 @@ CMP2 は、取得するタイルの範囲を、メッシュ 1 つの範囲を求
 | 3.9 と同じ決まり | `read_mesh_list_file` | [3.9](#39-共通部品) の同じ名前の部品と同じ | 同じ | 同じ | [3.9](#39-共通部品) |
 | 3.9 と同じ決まり | `start_log` | [3.9](#39-共通部品) の同じ名前の部品と同じ | 同じ | 同じ | [3.9](#39-共通部品) |
 | 3.9 と同じ決まり | `log_info`・`log_warning`・`log_error` | [3.9](#39-共通部品) の同じ名前の部品と同じ | 同じ | 同じ | [3.9](#39-共通部品) |
+| 3.9 と同じ決まり | `check_signal` | `SIGINT`・`SIGTERM` を受けていれば止まる（C++ だけ。Python の部品は言語の割り込みで止まるので、[3.9](#39-共通部品) に同じ名前の部品は無い） | なし | なし | [5.7.2](#572-処理の流れ) の 4「始まりと終わりの行」・7「結果の要約」 |
 | 3.9 と同じ決まり | `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE` | 終了コード 0・1・2 の定数。[3.9](#39-共通部品) の同じ名前の部品と同じ | なし | なし | [3.9](#39-共通部品) |
 
 呼ぶ順:
@@ -1624,7 +1625,7 @@ CMP2 は、取得するタイルの範囲を、メッシュ 1 つの範囲を求
 - `run_normal_mode`: `read_mesh_list_file`（日本全土と北方領土除外）→ `select_target_meshes`（0 件なら結果の要約を出して終了コード 0）→ 対象メッシュごとに、`normal_window` → `check_mesh_tiles`（欠けの割合を見る）→ `build_grid_z15` → `render_terrain` → `write_terrain_png` → `make_scan_order` → `scan_peaks_and_cols` → `apply_sea_level_rule` → `build_col_list` → `filter_peak_rows` → `write_peak_csv` →（フィルタの後のリストの行ごとに、アクティベーションゾーン、delete判定ゾーンの順に `fill_zone` → `judge_area_complete` → `trace_outline`）→ `write_zone_geojson` → `write_meshset`。
 - `run_wide_mode`: `read_mesh_list_file`（日本全土と北方領土除外）→ `read_unresolved_peaks`（データの行が無ければ結果の要約を出して終了コード 0）→ `group_peaks_by_mesh` → 対象メッシュごとに、`normal_window`（存在メッシュの集合を渡す）→ `check_mesh_tiles`（欠けの割合は見ない）→ コーナーのパターンごとに、`pattern_window` → `is_pattern_covered`（真なら、省略したことと含んでいた `.meshset` をログに出して次のパターンへ）→ `check_mesh_tiles`（欠けの割合を見る）→ `build_grid_z14` → `render_terrain` → `write_terrain_png` → `make_scan_order` → `scan_peaks_and_cols` → `apply_sea_level_rule` → `build_col_list` → `filter_peak_rows` → `write_peak_csv` → `write_meshset` → `read_back_peak_csv`（組の対象ピークがすべて確定済みになれば、残りのパターンを行わない）。
 
-`is_pattern_covered` は `read_meshset` を、`build_grid_z15`・`build_grid_z14` は `tile_range` と `build_tile_elevation` を、`build_tile_elevation` は `read_tile`・`select_dem_rgb`・`decode_signed_elevation`・`clamp_to_sea_level`・`pixel_center_mesh` を呼ぶ。`fill_zone`・`judge_area_complete` も `pixel_center_mesh` を呼ぶ。「変換」の群の関数は、各群の関数が呼ぶ。各段の始まりのログは `run_normal_mode`・`run_wide_mode` が出す。どの関数も、止まるときは [4.4.3](#443-異常系)・[4.14.3](#4143-異常系) と、後段の各節の異常系の終了コードで止まる。止まり方（例外を使うか、その場で終えるか）は LLD で決める。
+`is_pattern_covered` は `read_meshset` を、`build_grid_z15`・`build_grid_z14` は `tile_range` と `build_tile_elevation` を、`build_tile_elevation` は `read_tile`・`select_dem_rgb`・`decode_signed_elevation`・`clamp_to_sea_level`・`pixel_center_mesh` を呼ぶ。`fill_zone`・`judge_area_complete` も `pixel_center_mesh` を呼ぶ。「変換」の群の関数は、各群の関数が呼ぶ。各段の始まりのログは `run_normal_mode`・`run_wide_mode` が出す。どの関数も、止まるときは [4.4.3](#443-異常系)・[4.14.3](#4143-異常系) と、後段の各節の異常系の終了コードで止まる。止まり方（例外を使うか、その場で終えるか）は LLD で決める。`start_log` の後に `SIGINT`・`SIGTERM` を受けたときは、時間のかかる処理（「タイルとグリッド」「走査」「ゾーン」「段の進行」の群）が区切りで `check_signal` を呼んで止まる。区切りの置き場と、受けてから止まるまでの遅れの上限は LLD で決める（[5.7.1](#571-目的と範囲) の対象外の行）。
 
 #### 3.4.4 コンポーネント内の共通部品
 
