@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と、それらが使う分の 1 章と 2.2〜2.4 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -33,6 +33,13 @@
     - [3.1.3 関数の細部](#313-関数の細部)
     - [3.1.4 メッセージ文面](#314-メッセージ文面)
     - [3.1.5 UT 候補](#315-ut-候補)
+- [4. CMP2 タイル取得](#4-cmp2-タイル取得)
+  - [4.1 `fetch_tiles`](#41-fetch_tiles)
+    - [4.1.1 ファイル割付](#411-ファイル割付)
+    - [4.1.2 型とデータ](#412-型とデータ)
+    - [4.1.3 関数の細部](#413-関数の細部)
+    - [4.1.4 メッセージ文面](#414-メッセージ文面)
+    - [4.1.5 UT 候補](#415-ut-候補)
 - [5. CMP3 パイプライン制御](#5-cmp3-パイプライン制御)
   - [5.1 `run_pipeline`](#51-run_pipeline)
     - [5.1.1 ファイル割付](#511-ファイル割付)
@@ -67,16 +74,16 @@
 - 関数の名前は HLD 第 3 章の名前を使う。LLD が足してよい名前は、内部の関数（`_` で始め、ほかのモジュールから呼ばない）と、型・定数・例外の名前だけ。ほかのモジュールから呼ぶ関数を足すときは、HLD 第 3 章を先に直す（文書管理ルールの[HLD と LLD の書き分け](CLAUDE.md#hld-と-lld-の書き分け)）。
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
-- 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・4.1 の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
-- 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られている）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1 である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1・FC2、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。
+- 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
+- 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1 である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1・FC2、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、取得完了の記録の誤り TR1、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1・3.1・5.1・5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.4 は今は 2.1・3.1・4.1・5.1・5.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -392,7 +399,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1・3.1・5.1・5.2 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュールも、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -434,15 +441,15 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・5.1 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
-- 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（CMP2 の節で指す）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
-- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1。CMP2・CMP5 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が開くときに中身を捨てて上書きする。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。
+- 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
+- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1。CMP5 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が開くときに中身を捨てて上書きする。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
-HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（CMP4 の「変換」の群）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、テスト方針書で決める（[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` の分だけを書いてある。
+HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（CMP4 の「変換」の群）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、この節の表で一致を確かめる。テストのコードとこの表の置き場とテストのレベルは、テスト方針書で決める（[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` と、メッシュの取得範囲の決まりの分だけを書いてある。
 
 計算の決まり（どの言語も IEEE 754 の倍精度で、書いた順に左から計算する。式の正本は用語集の[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)と[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)）:
 
@@ -501,6 +508,26 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | 28672 | 13162 | 15 | 33.33970700424027 | 135.0 |
 | 29946 | 11657 | 15 | 46.004593255744815 | 148.99658203125 |
 | 29127.5 | 12867.5 | 15 | 36.000229561780024 | 140.0042724609375 |
+
+**メッシュの取得範囲の決まり**: 1 次メッシュの取得範囲（タイル番号の範囲 x_min〜x_max・y_min〜y_max。両端を含む）は、CMP2 の `mesh_tile_range`（[4.1](#41-fetch_tiles)）と、CMP4 の `tile_range`（CMP4 の「タイルとグリッド」の群。解析対象メッシュの bounding box の四隅に同じ決まりを当てる）で同じに求める（[HLD 4.1.1](30_HLD.md#411-目的と範囲) の対象外の行、[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析範囲標高グリッドの生成」の 1「範囲を求める」、HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。
+
+1. `(x_min, y_min)` は `latlon_to_tile(北端の緯度, 西端の経度, z)`。
+2. `(x_e, y_max)` は `latlon_to_tile(南端の緯度, 東端の経度, z)`。
+3. `x_e` のタイルの西の境目の経度 `((x_e / 2^z) × 360) − 180`（上の `tile_to_latlon` の経度の式と同じ順。`x_e / 2^z` は 2 の冪で割るので丸めが無く、続く `× 360` と `− 180` もこの範囲の値では丸めが無いので、どの言語でも同じ値になる）が東端の経度と `==` で等しければ `x_max = x_e − 1`、違えば `x_max = x_e`。東端がタイルの境目に重なるとき、境目の東の列はメッシュの外なので含めない（[SRS FR-001](20_SRS.md#fr-001-標高タイル事前取得) の「そのメッシュをカバーする最小範囲」）。含めると、経度 135 度で終わる 5 つのメッシュ（`4934`・`5034`・`5134`・`5234`・`5334`）で、メッシュの外の列のタイルがそのメッシュの取得範囲に入り、CMP2 の DEM10b がすべて未整備かの検査と海の位置の数にメッシュの外のタイルが混ざる。
+4. 南端は 3 のように確かめない（`y_max` をそのまま使う）。日本全土 1 次メッシュコードリストの 175 メッシュの南端の緯度は、ズーム 14・15 で、`floor` の前の値と最も近い整数の差がどれも 0.016 以上あり、タイルの境目に重ならない（上の「期待値の導き方」の段落が調べた値）。緯度は `tan`・`cos`・`ln` を通るので、`==` で比べると言語で結果が割れうる。西端と北端は、境目に重なっても `latlon_to_tile` の `floor` がメッシュの中の側のタイルを返すので、確かめない。
+
+表 4（`mesh_tile_range`。メッシュと z を渡し、x_min・x_max・y_min・y_max を返す。値は上の式と決まりで 2026-10-23 に CPython 3.14.8 で求めた）:
+
+| メッシュ | z | x_min | x_max | y_min | y_max |
+|---|---|---|---|---|---|
+| `4934` | 15 | 28580 | 28671 | 13162 | 13235 |
+| `4934` | 14 | 14290 | 14335 | 6581 | 6617 |
+| `5235` | 15 | 28672 | 28763 | 12942 | 13016 |
+| `3622` | 14 | 13744 | 13789 | 7033 | 7066 |
+| `5339` | 15 | 29036 | 29127 | 12867 | 12942 |
+| `6848` | 15 | 29855 | 29946 | 11657 | 11744 |
+
+`4934` の 2 行は東端が経度 135 度でタイルの境目に重なり、3 の決まりで `latlon_to_tile` の値（ズーム 15 は 28672、ズーム 14 は 14336）より 1 小さい。`5235` は西端が経度 135 度で、境目の東のタイル（28672）から始まる。`5339` の `y_min` と `5235` の `y_max` の 12942 のように、隣のメッシュの範囲は境目のタイルを共有する。
 
 ## 3. CMP1 行政区域前処理
 
@@ -796,6 +823,410 @@ N03 行政区域 ZIP から、地域と市区町村の GeoJSON、北方領土除
 | `UT-preprocess_boundaries-36` | ポリゴンの計算ができない | 同じプロセス。小さな N03 を一時の ZIP にして `load_n03_features` で読み、`split_nt_polygons` で北方領土の 7 つのポリゴンとそれ以外の 60 のポリゴンに分ける | (a) `shapely.union_all` を `GEOSException('x')` を上げる物に差し替えて `build_regions`、(b) `shapely.union_all` を `shapely.GeometryCollection()` を返す物に差し替えて `build_regions`、(c) `shapely.relate_pattern` を `GEOSException('x')` を上げる物に差し替えて `list_excluded_tiles`（北方領土の 7 つのポリゴン）、(d) (c) と同じ差し替えで `list_excluded_meshes({'6848'}, <北方領土の 7 つのポリゴン>, <それ以外の 60 のポリゴン>)` | どれも 1、BF2、標準出力は空。1 行目の前半は (a) `ERROR: ポリゴンの計算ができない: 地域 愛知県 を合わせる（dissolve）: x（`、(b) `ERROR: ポリゴンの計算ができない: 地域 愛知県 を合わせる（dissolve）: 合わせた結果が面でない: GeometryCollection（`、(c) `ERROR: ポリゴンの計算ができない: 除外タイルを求める: x（`、(d) `ERROR: ポリゴンの計算ができない: 除外メッシュを求める: x（` |
 
 - UT の形の理由: 純粋な関数と、`start_log` を呼ばない関数は同じプロセスで呼ぶ。`main` を通すもの（引数・ロック・ログ・要約・シグナル）は子のプロセスで起動する（[2.1.5](#215-ut-候補)・5.2.5 と同じ分け方）。小さな N03 は、[DEC37](30_HLD.md#4174-設計判断)「地域の SOTA のコードは CMP1 の固定の表で付ける」の「地域が 60 にならなければ止まる」に当たらずに通る最小の入力として、地域ごとに 1 つの矩形と北方領土 6 村の矩形で作る（全国の N03 は大きく、UT の入力にしない。実物は IT の `IT-CMP1-EXT2-01` で読む）。
+
+## 4. CMP2 タイル取得
+
+この章は、CMP2（タイル取得）の 1 本のプログラム（[HLD 3.2.1](30_HLD.md#321-プログラム)）のモジュールを置く。CMP2 にコンポーネント内の共通部品は無い（[HLD 3.2.4](30_HLD.md#324-コンポーネント内の共通部品)）。
+
+### 4.1 `fetch_tiles`
+
+- **ID**: LLD-fetch_tiles
+- **対応 HLD**: [3.2](30_HLD.md#32-cmp2-タイル取得)・[4.1](30_HLD.md#41-fr-001-標高タイル事前取得)・[5.4](30_HLD.md#54-nfr-004-アクセスマナー)・[5.5](30_HLD.md#55-nfr-005-処理時間目標)
+- **ファイル**: `scripts/fetch_tiles.py`
+
+処理の正本は [HLD 4.1.2](30_HLD.md#412-処理の流れ)（再試行の正本は [HLD 4.1.3](30_HLD.md#413-異常系) の「再試行」）で、関数の名前と役割と呼ぶ順は [HLD 3.2.3](30_HLD.md#323-関数) の表のとおり。この節は Python で書くための細部（型、データの持ち方、スレッド、メッセージの文面、ログの行）だけを足す。[5.4](30_HLD.md#54-nfr-004-アクセスマナー)（アクセスマナー）は、4.1.3 の `build_user_agent`・`_Gate`・`fetch_one_tile` で受ける。[5.5](30_HLD.md#55-nfr-005-処理時間目標)（処理時間）は、実装の後に HLD 5.5.2 の「実測の計画」の 1 で測る（この節では測らない）。結合のつなぎ目は `CMP2-INT1`・`CMP2-EXT1`〜`CMP2-EXT4`（[HLD 3.2.5](30_HLD.md#325-結合のつなぎ目)）で、結合テスト（IT）のケースは `60_IT.md` の `IT-CMP2-INT1-01`〜`06`・`IT-CMP2-EXT1-01`〜`04`・`IT-CMP2-EXT2-01`〜`11`・`IT-CMP2-EXT3-01`〜`03`・`IT-CMP2-EXT4-01`・`02`。
+
+#### 4.1.1 ファイル割付
+
+- 関数はすべて `scripts/fetch_tiles.py` 1 本に置く。`venv/bin/python3 scripts/fetch_tiles.py` で起動され（[HLD 3.2.1](30_HLD.md#321-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。HTTP は標準の `http.client`（と `ssl`・`urllib.parse`）で行う（[環境定義](01_environment.md) の依存を足さない。`requests` は使わない。理由は 4.1.3 の `_Gate`）。並列は標準の `threading`・`queue` で行う。ファイルの先頭のコメントに `# trace: LLD-fetch_tiles` を書く。起動の部分は `if __name__ == '__main__': main()`。
+- UT のコードは `tests/scripts/test_fetch_tiles.py` に置く。各テストに `# trace: UT-fetch_tiles-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選ぶ。
+
+#### 4.1.2 型とデータ
+
+- 定数（モジュールの最上位。どれも内部。テストが差し替えるものは、使うたびにモジュールの属性として引く〈import のときに別の名前へ束縛しない〉）:
+  - `_SOURCE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`、`_JAPAN_MESH_LIST_PATH = os.path.join(_SOURCE_ROOT, 'params', 'mesh_list_japan.txt')`（[HLD 3.2.1](30_HLD.md#321-プログラム) の「自分の置き場から求め、起動した作業ディレクトリによらない」。3.1 と同じ形）。既定の設定ファイルは `common.DEFAULT_CONFIG_PATH`（[2.1.2](#212-型とデータ)）。
+  - `_BASE_URL = 'https://cyberjapandata.gsi.go.jp/xyz'`。タイルの URL は `f'{_BASE_URL}/{サービス名}/{z}/{x}/{y}.png'`（[SRS §6](20_SRS.md#6-外部インターフェース仕様) の「タイル URL」の行）。UT と IT は、起動の部分を通さずに `main` を呼ぶ試験用の短いプログラムで、この定数を模擬サーバーの URL に差し替える（4.1.5 の「子のプロセス」。3.1.5 の `UT-preprocess_boundaries-11` と同じ形）。
+  - `_KINDS = {'DEM10b': ('dem_png', 14), 'DEM5a': ('dem5a_png', 15), 'DEM5b': ('dem5b_png', 15), 'DEM5c': ('dem5c_png', 15)}`（DEM 種別の名前 → (サービス名, ズーム)。[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.5）。`_KIND_ORDER = ('DEM10b', 'DEM5a', 'DEM5b', 'DEM5c')`（要約と件数の辞書の順）、`_DEM5_KINDS = ('DEM5a', 'DEM5b', 'DEM5c')`（要求の順）。
+  - 再試行の固定値（[HLD 4.1.3](30_HLD.md#413-異常系) の「再試行」の表。HLD の固定値で、設定にしない）: `_FIRST_WAIT_S = 60.0`、`_WAIT_FACTOR = 2.0`、`_WAIT_CAP_S = 900.0`（1 回の待ちの上限 15 分）、`_MAX_RETRIES = 5`、`_TIMEOUT_S = 30.0`（接続・送信・読み取りのソケットの操作ごと。`http.client` の接続の `timeout=_TIMEOUT_S`）。
+  - `_TOOL_NAME = 'findsummits'`（User-Agent のツール名）。
+  - CMP1 の出力の名前（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「出力の置き場」の表）: `_NT_TILES_NAME = 'nt_excluded_tiles.txt'`、`_NT_MESHES_NAME = 'nt_excluded_meshes.txt'`、`_C1_VERSION_NAME = 'n03_version.txt'`。置き場は `os.path.join(<data_dir>, 'boundaries')`。
+  - `_PROGRESS_POLL_S = 0.2`（メインのスレッドが結果の待ち行列を待つ時間の区切り。4.1.3 の `_run_pool`）。
+- タイル: `tuple[int, int]`（`(x, y)`）。DEM 種別は別に持つ。ズーム 15 のタイルの位置も `tuple[int, int]`。キャッシュのパスは内部の関数 `_cache_path(tiles_dir: str, kind: str, tile: tuple[int, int]) -> str` で、`os.path.join(tiles_dir, <サービス名>, str(z), str(x), f'{y}.png')`（`tiles_dir` は `os.path.join(<data_dir>, 'tiles')`）。
+- `@dataclass(frozen=True) class _Args`: `config: str | None`（`--config` の値。渡されなければ `None`）、`mesh: str | None`（`--mesh` の値のまま。渡されなければ `None`）。
+- 1 枚のタイルの結果: `str` で、`'fetched'`（HTTP 200 を受けて置いた）・`'unchanged'`（HTTP 304）・`'missing'`（HTTP 404）のどれか。
+- `@dataclass(frozen=True) class _Stop`（取得を止める要因。ワーカーのスレッドが作ってメインのスレッドへ返す）: `why: str`（`'retry_exceeded'`・`'retry_after'`・`'immediate'`・`'unexpected'`・`'no_last_modified'`・`'file'` のどれか）、`kind: str`、`tile: tuple[int, int]`、`url: str`、`last: str`（最後の応答か失敗の種類の文。4.1.3 の `fetch_one_tile` の「`last` の文」）、`retries: int`（それまでに再試行した回数）、`path: str | None`・`reason: str | None`（`why` が `'file'` のときだけ。扱えなかったファイルのパスと `{reason}`）。
+- `class _Gate`（ワーカーの間で共有する待ちと間隔の状態。[HLD 3.2.3](30_HLD.md#323-関数) の `fetch_one_tile` の「持ち方は LLD」）: `__init__(self, interval_ms: int)`。属性は `cond: threading.Condition`、`interval_s: float`（`interval_ms / 1000`）、`next_start: float`（次の要求を始めてよい `time.monotonic()` の時刻。初めは `0.0`）、`pause_until: float`（429・503 で全ワーカーが新しい要求を出さない間の終わりの時刻。初めは `0.0`）、`stopping: bool`（初めは `False`）。属性は `cond` を持っているときだけ読み書きする。メソッドの細部は 4.1.3 の `_Gate`。1 回の起動で 1 つだけ作り、DEM10b と DEM5 の段で共有する（モジュールの状態の `_gate`。段をまたいでもリクエスト間隔と 429・503 の待ちを途切れさせないため）。
+- モジュールの状態（内部。モジュールの最上位の変数）: `_config_opt: str`（`main` が `start_log` の後に入れる。3.1 と同じく、`args.config is not None` なら `' --config ' + shlex.quote(config.path)`、それ以外は空の文字列）、`_rerun: str`（`main` が `start_log` の後に入れる、同じ引数で起動し直すコマンド。`'venv/bin/python3 scripts/fetch_tiles.py'` に、`sys.argv[1:]` が空でなければ空白 1 つと `shlex.join(sys.argv[1:])` を足したもの）、`_tally: dict[str, dict[str, int]]`（要約の件数。`main` が `start_log` の後に、`_KIND_ORDER` の各種別に `{'取得': 0, '変更なし': 0, '未整備': 0, '削除': 0}` を入れる。`delete_cached_tiles` と、`download_tiles`・`download_dem5` の結果の受け取り〈メインのスレッド〉が足す）、`_stage: str`（今の段の名前。初めは `'入力の読み込み'`。`main` が段に入るときに入れる）、`_gate: _Gate | None`（初めは `None`。`_run_pool` が初めて呼ばれたときに `_Gate(interval_ms)` を作って入れ、2 回目からはそれを使う）。
+- モジュールの状態の理由: 途中で止まったときの要約（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 7「結果の要約」の「そこまでに終えた分の件数」）には、止まった段の途中までの件数が要る。HLD 3.2.3 の表で件数は各関数の返すものなので、関数の中で `sys.exit` で止まると返らない。メッセージに要る `{config_opt}`・`{rerun}` も、HLD 3.2.3 の受け取るものに無い。3.1 の `_n03_source`・`_config_opt` と同じ扱い。
+
+#### 4.1.3 関数の細部
+
+- 止まるときは、メッセージを出してから `sys.exit(<定数>)` を呼ぶ（[1.2](#12-lld-の規約) の終わり方の規約と [2.1.3](#213-関数の細部) の呼ぶ側の書き方の型）。`start_log` の後に止まるときは、`main` の `finally` が結果の要約を出す。
+- 例外の受け方: 各関数が名前を挙げた例外だけを捕まえる（1.2）。`SignalStop`・`LogWriteError` は捕まえない。ワーカーのスレッドの最上位だけは `except Exception` で捕まえて、メインのスレッドへ渡す（下の `_run_pool`）。
+- `{reason}` は [2.1.4](#214-メッセージ文面) と同じ（`OSError` の `strerror`、無ければ `str(e)`）。
+- **スレッド**（[HLD 4.1.1](30_HLD.md#411-目的と範囲) の対象外の行「並列取得の実装の形」）: 並列の取得はスレッドで行う（`_run_pool`）。メインのスレッドは、ワーカーを起こし、ワーカーが返す結果を受け取り、件数を数え、途中経過とメッセージを出し、キャッシュを消し、止めると決める。ワーカーのスレッドは、要求を出し、タイルを書き、結果か止まる要因を返すだけで、`common.log_*`・`sys.exit`・`delete_cached_tiles` を呼ばない（1.2 の「`start_log`・`log_*` はメインのスレッドからだけ呼ぶ」。`sys.exit` はワーカーのスレッドでは、そのスレッドを終えるだけでプログラムを止めないため）。シグナル（`SignalStop`）はメインのスレッドだけが受ける。非同期 I/O でなくスレッドにする理由: 標準の `http.client` は同期で、依存を足さずに済む（非同期 I/O の HTTP には新しい依存が要る）。仕事は通信を待つ時間が長く、GIL で遅くならない。最大並列数は 16 まで（2.1.2 の `max_parallel`）。
+- 止め方（HLD 4.1.3 の「再試行」の「止めるときは新しい要求を出さず、実行中の要求の終了を待ってから終了コード 1」）: どの止まる要因（再試行の上限超過、すぐ止める応答、想定外の応答、`Last-Modified` が無い応答、ファイルの失敗、ワーカーの例外）でも、シグナルでも、メインのスレッドの `_run_pool` の `finally` が `_Gate` を止め（新しい要求を出させず、待っているワーカーを起こす）、全ワーカーの終わりを待ってから先へ進む。
+
+##### main（fetch_tiles）
+
+`main() -> None`。[2.1.3](#213-関数の細部) の呼ぶ側の書き方の型に従い、次の順に行う。
+
+1. `start = common.StartTime.now()`。
+2. `args = _parse_args(sys.argv[1:])`（`--help` と引数の誤りは、ここで止まる）。
+3. `mesh_arg = common.read_mesh_arg(args.mesh)`（`args.mesh` が `None` なら `mesh_arg = None`。誤りは A1〜A5 で終了コード 2）。
+4. `config_path` は `args.config` が `None` なら `common.DEFAULT_CONFIG_PATH`、それ以外は `args.config`。`config = common.load_config(config_path, ('data_dir', 'log_dir', 'max_parallel', 'interval_ms', 'user_agent_email'), ('data_dir', 'user_agent_email'))`（[HLD 2.3.2](30_HLD.md#232-設定ファイル) の表で CMP2 が使うキーと、[HLD 2.3.3](30_HLD.md#233-検証と記録) の必須のキー）。`data_dir`・`log_dir`・`max_parallel`・`interval_ms` は `config.values` のその値。`boundaries_dir = os.path.join(data_dir, 'boundaries')`、`tiles_dir = os.path.join(data_dir, 'tiles')`。
+5. `common.acquire_lock(data_dir)`。
+6. `common.start_log(log_dir, config, 'fetch_tiles', sys.argv[1:], start)`。モジュールの状態の `_config_opt`・`_rerun`・`_tally`・`_stage`（`'入力の読み込み'`）を入れる。
+7. `try` の前に、`completed = False`、`code = common.EXIT_OK`、要約のための状態（`outcome: str | None = None`〈`'fetched'` か `'empty'`〉、`targets: set[str] = set()`、`removed = False`〈取得完了の記録から対象を外したか〉、`sea_lines: list[tuple[str, int, int]] = []`、`sea_skipped = 0`）と、記録の書き込みに使う `record_path`・`kept: set[str]` を置く（[2.1.3](#213-関数の細部) の呼ぶ側の書き方の型）。`try` の中で次を呼ぶ（HLD 3.2.3 の呼ぶ順）:
+   1. `japan = common.read_mesh_list_file(_JAPAN_MESH_LIST_PATH, None)`。`nt_meshes = common.read_mesh_list_file(os.path.join(boundaries_dir, _NT_MESHES_NAME), _cmp1_action())`（`_cmp1_action()` は 4.1.4 の `{cmp1}` の文を返す内部の関数）。`nt_tiles = read_excluded_tiles(os.path.join(boundaries_dir, _NT_TILES_NAME))`。`check_c1_version_record(boundaries_dir)`。
+   2. `record_path = common.fetch_record_path(data_dir)`。`record = read_fetch_record(record_path)`。
+   3. `targets = select_fetch_meshes(mesh_arg, japan, nt_meshes)`。TL1 を `common.log_info` で出す。
+   4. `targets` が空なら: `_stage = '古いキャッシュの削除'`、`delete_cached_tiles(list_stale_tiles(japan, nt_meshes, nt_tiles), tiles_dir)`、`outcome = 'empty'`、`completed = True`（5 から 9 を行わない。`if`/`else` で分け、`return` を使わない。`return` で抜けると `finally` の後の `sys.exit(code)` に届かない）。
+   5. そうでなければ: `dem10b, positions = list_fetch_tiles(targets, nt_tiles)`。`kept = remove_from_record(record_path, record, targets, mesh_arg is not None)`、`removed = True`。
+   6. `_stage = '古いキャッシュの削除'`、`delete_cached_tiles(list_stale_tiles(japan, nt_meshes, nt_tiles), tiles_dir)`。
+   7. `user_agent = build_user_agent(config.values['user_agent_email'].value)`。TL2 を出す。`_stage = 'DEM10b の取得'`、`_, notfound = download_tiles(dem10b, tiles_dir, max_parallel, interval_ms, user_agent)`。
+   8. `_stage = 'DEM10b の検査'`、`check_dem10b_meshes(targets, dem10b, notfound, tiles_dir)`。`sea, sea_lines = find_sea_positions(positions, dem10b, notfound, targets, nt_tiles)`。
+   9. `_stage = 'DEM5 の取得'`、`_, sea_skipped = download_dem5(positions, sea, tiles_dir, max_parallel, interval_ms, user_agent)`。`outcome = 'fetched'`、`completed = True`。
+8. `finally` で結果の要約を `common.log_info` で 1 回出す（[4.1.4](#414-メッセージ文面) の TL4〜TL6。`completed` が真なら `outcome` で TL4 か TL5、偽なら TL6。件数は `_tally` から）。
+9. `finally` の後、`outcome == 'fetched'` なら `write_fetch_record(record_path, kept | targets)`（`--mesh` が無ければ `kept` は空なので、記録は今回の対象の集合ちょうど。`completed` が偽なら、例外が `finally` を抜けて伝わるので、ここに届かない）。
+10. `sys.exit(code)`。
+
+- 要約と記録の順: HLD 3.2.3 の呼ぶ順のとおり、要約を出してから記録を書く。[2.1.3](#213-関数の細部) の書き方の型で要約は `finally` に置くので、記録の書き込みは `finally` の後、`sys.exit(code)` の前に置く。記録を書けなかったときは、要約の後に TF1 が出て終了コード 1 になる。要約の 1 行目は「タイルの取得を終えた（取得完了の記録はこの後に書く）」として記録の書き込みに触れず、続く TF1 と終了コード 1 が途中で止まったことを示す（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 7「結果の要約」の「途中で止まったことが分かる形」を、要約と TF1 の組で満たす）。選ばなかった案: 記録を書いてから要約を出す（HLD 3.2.3 の順と食い違う）。
+
+##### _parse_args（fetch_tiles）
+
+`_parse_args(argv: Sequence[str]) -> _Args`（内部）。3.1 の `_parse_args` と同じ手順で、名前と記号だけが違う。
+
+1. [1.2](#12-lld-の規約) の利用者向けの Python のコマンドの引数の受け方で読む。受け付ける名前は、`--config`・`--mesh`（値を 1 つとる）、`--help`（値をとらない）だけ（[HLD 2.4.2](30_HLD.md#242-共通の書式)・[2.4.3](30_HLD.md#243-メッシュ範囲)）。
+2. 誤りは TA1（受け付けない引数）、TA2（値が無い）、TA4（同じ名前を 2 回）で、`common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。1 つの引数が値をとらない名前に `=` を付けたもの（`--help=x`）なら、同じ名前を読んだことがあっても TA1 とする（TA1 の判定を TA4 の判定より先にする）。
+3. `--help` は、[4.1.4](#414-メッセージ文面) の使い方の文を `sys.stdout.write` で出し、`sys.stdout.flush()` の後に `sys.exit(common.EXIT_OK)`。引数は左から 1 つずつ処理して、その場で 2 か 3 を行うので、`--help` より前の引数の誤り（TA1・TA2・TA4）は先に止まり、`--help` より後の引数は誤りも見ずに終わる（`--mesh 5339 --help --foo` は 0、`--foo --help` は TA1）。TA3 は読み終えた後に判定するので、`--config '' --help` は 0 になる。`--mesh` の値の中身（4 桁かファイルか）は見ない（`main` の 3 の `read_mesh_arg` が見る。`--mesh '' --help` も 0）。
+4. 読み終えたら、`--config` の値が空の文字列なら TA3 で `sys.exit(common.EXIT_USAGE)`。`--mesh` の値が空の文字列のときは、ここでは止めない（`read_mesh_arg` の A1）。
+5. `_Args(config=<値か None>, mesh=<値か None>)` を返す。
+
+##### read_excluded_tiles
+
+`read_excluded_tiles(path: str) -> set[tuple[int, int]]`
+
+1. `open(path, 'rb')` で全部を読む。`FileNotFoundError` なら TP1、ほかの `OSError`（ディレクトリを含む）なら TP2（`{detail}` は `{reason}`）で `sys.exit(common.EXIT_ERROR)`。
+2. 空のバイト列なら空の集合を返す。そうでなければ、最後の `b'\n'` を 1 つ除いてから `b'\n'` で行に分け、1 から番号を振る。各行が `re.fullmatch(rb'([0-9]{1,5}) ([0-9]{1,5})', line)` に合い、2 つの数がどちらも `2 ** 15` 未満なら `(int(x), int(y))` を集合に入れる（重なりは 1 つ）。合わない最初の行で TP2（`{detail}` は `{line_no} 行目が「x y」の形でない: {line}`。`{line}` は `line.decode('utf-8', 'backslashreplace')`）で止まる。
+3. 集合を返す。
+
+- 読み方の理由: リストは CMP1 だけが書くファイルで、書く側（[3.1.3](#313-関数の細部) の `write_temp_outputs`）は各行 `f'{x} {y}\n'`（ズーム 15）を書く。読み方を 2.3 の取得完了の記録と同じ厳しさにし、壊れたリストを読み飛ばさない（北方領土の除外はこのリストだけで担保される。[DEC39](30_HLD.md#414-設計判断)「CMP2 は CMP1 の版の記録が無ければ止まる」の理由と同じ）。空行・空白 2 つ・CR・`#` の行は書式違い。
+
+##### check_c1_version_record
+
+`check_c1_version_record(boundaries_dir: str) -> None`
+
+`path = os.path.join(boundaries_dir, _C1_VERSION_NAME)`。`os.path.isfile(path)` が偽なら TP3 で `sys.exit(common.EXIT_ERROR)`。中身は読まない（空のファイルや 8 桁の日付でない中身でも止まらない。[DEC39](30_HLD.md#414-設計判断)「CMP2 は CMP1 の版の記録が無ければ止まる」。`IT-CMP2-EXT1-04`）。同じ名前のディレクトリは無いものとする（[3.1.3](#313-関数の細部) の `needs_rebuild` の 2 と同じ）。
+
+##### read_fetch_record
+
+`read_fetch_record(path: str) -> set[str]`
+
+読み方は [2.3](#23-ファイルの名前と書き方) の取得完了の記録の決まりのとおり（[5.1.3](#513-関数の細部) の `check_fetch_record` と同じ判定）。
+
+1. `open(path, 'rb')` で全部を読む。`FileNotFoundError` なら空の集合を返す（記録が無ければ、取得を終えたメッシュは無い。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 2「入力を読む」）。ほかの `OSError`（ディレクトリを含む）なら TR1（`{detail}` は `{reason}`）で `sys.exit(common.EXIT_ERROR)`。
+2. 空のバイト列なら空の集合を返す。そうでなければ、最後の `b'\n'` を 1 つ除いてから `b'\n'` で行に分け、各行が `re.fullmatch(rb'[0-9]{4}', line)` に合えば `line.decode('ascii')` を集合に入れる。合わない最初の行で TR1（`{detail}` は `{line_no} 行目が 4 桁の数字でない: {line}`。`{line}` は `line.decode('utf-8', 'backslashreplace')`）で止まる。
+3. 集合を返す。
+
+##### select_fetch_meshes
+
+`select_fetch_meshes(mesh_arg: set[str] | None, japan: set[str], nt_meshes: set[str]) -> set[str]`
+
+`mesh_arg` が `None` なら `japan - nt_meshes` を返す（警告しない）。そうでなければ、`sorted(mesh_arg)` の順に、`japan` に無いコードは TW1、`nt_meshes` にあるコードは TW2 を `common.log_warning` で出して飛ばし（日本全土のリストに無いかを先に見る）、残りの集合を返す（空でもよい。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 3「対象のメッシュを決める」）。
+
+##### mesh_tile_range
+
+`mesh_tile_range(mesh: str, z: int) -> tuple[int, int, int, int]`（返すのは `(x_min, x_max, y_min, y_max)`。両端を含む）
+
+`((s, w), (n, e)) = common.mesh_to_latlon(mesh)` の四隅に、[2.4](#24-言語ごとに別に実装する式のテストベクトル) の「メッシュの取得範囲の決まり」を当てる（`(x_min, y_min) = common.latlon_to_tile(n, w, z)`、`(x_e, y_max) = common.latlon_to_tile(s, e, z)`、`((x_e / 2 ** z) * 360) - 180 == e` なら `x_max = x_e - 1`、違えば `x_max = x_e`。南端は確かめない）。引数を検査しない。
+
+##### list_fetch_tiles
+
+`list_fetch_tiles(meshes: set[str], nt_tiles: set[tuple[int, int]]) -> tuple[set[tuple[int, int]], set[tuple[int, int]]]`（返すのは（DEM10b のタイルの集合, ズーム 15 のタイルの位置の集合））
+
+- DEM10b: 各メッシュの `mesh_tile_range(mesh, 14)` の範囲のタイルを合わせ、`{(x // 2, y // 2) for (x, y) in nt_tiles}` を除く（[ADR-SRS-018](decisions/ADR-SRS-018-northern-territories-skip-at-tile-fetch.md)）。
+- ズーム 15 の位置: 各メッシュの `mesh_tile_range(mesh, 15)` の範囲の位置を合わせ、`nt_tiles` を除く。
+- `mesh_tile_range` はモジュールの属性として呼ぶ（テストが差し替える。[4.1.5](#415-ut-候補) の「小さな範囲」）。
+
+##### remove_from_record
+
+`remove_from_record(path: str, record: set[str], meshes: set[str], mesh_given: bool) -> set[str]`
+
+`kept = record - meshes`（`mesh_given` が偽なら `kept = set()`）。`write_fetch_record(path, kept)` を呼び（記録が無かったときも書く。中身が変わらないときも書き直す）、`kept` を返す（[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 5「取得完了の記録から、今回の対象のメッシュを外す」）。
+
+##### write_fetch_record
+
+`write_fetch_record(path: str, codes: set[str]) -> None`
+
+1. `os.makedirs(os.path.dirname(path), exist_ok=True)`（初めての起動では `tiles/` が無い）。`OSError` なら TF1（`{path}` は `tiles/` のパス）で止まる。
+2. [2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりの「書く」の段で、`path + '.tmp'` に `''.join(f'{c}\n' for c in sorted(codes))` を書く（テキストのモード、`encoding='ascii'`、`newline='\n'`。0 件なら空のファイル）。書けなければ、2.3 のとおり一時ファイルを消してから TF1（`{path}` は一時ファイルのパス）で止まる。
+3. `os.replace(path + '.tmp', path)`。`OSError` なら、一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、TF1（`{path}` は記録のパス）で止まる。
+
+止まるのは、どれも `common.log_error` の後の `sys.exit(common.EXIT_ERROR)`（[HLD 2.5.5](30_HLD.md#255-書き込みの失敗)）。
+
+##### list_stale_tiles
+
+`list_stale_tiles(japan: set[str], nt_meshes: set[str], nt_tiles: set[tuple[int, int]]) -> dict[str, set[tuple[int, int]]]`（返すのは `_KIND_ORDER` の 4 つの種別をキーにした辞書。DEM5a・5b・5c は同じ集合）
+
+[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 6「古いキャッシュを消す」の ① と ② の和を、ズームごとに求める。
+
+1. ズーム 15: ① `nt_tiles`。② `japan & nt_meshes` の各メッシュの `mesh_tile_range(mesh, 15)` の範囲の位置のうち、`japan - nt_meshes` のどのメッシュの `mesh_tile_range(mesh, 15)` の範囲にも入らないもの。
+2. ズーム 14: ① `{(x // 2, y // 2) for (x, y) in nt_tiles}`。② 1 の ② と同じく、`mesh_tile_range(mesh, 14)` で求める。
+3. `{'DEM10b': <2 の和>, 'DEM5a': <1 の和>, 'DEM5b': <1 の和>, 'DEM5c': <1 の和>}` を返す（DEM5 の 3 つは同じ集合を別々に入れる）。
+
+- ② の求め方: 除外メッシュでないメッシュの範囲は `(x_min, x_max, y_min, y_max)` の並びのまま持ち、タイルが範囲のどれかに入るかを比べる（日本全土のタイルの集合を作らない。北方領土除外メッシュは数が少ないので、比べる数は小さい）。`--mesh` で範囲を絞った実行でも、受け取る `japan` は日本全土 1 次メッシュコードリストのまま（呼ぶ側の `main` が渡す）。
+
+##### delete_cached_tiles
+
+`delete_cached_tiles(tiles_by_kind: Mapping[str, Iterable[tuple[int, int]]], tiles_dir: str) -> dict[str, int]`（返すのは `_KIND_ORDER` の 4 つの種別をキーにした、消した数〈無かったものは数えない〉）
+
+`_KIND_ORDER` の順に、`tiles_by_kind` にある種別のタイルを `sorted` の順に、`os.remove(_cache_path(tiles_dir, kind, tile))` で消す。`FileNotFoundError` は無視して数えない。ほかの `OSError`（ディレクトリのときの `IsADirectoryError`・`PermissionError` を含む）なら TF3 で `sys.exit(common.EXIT_ERROR)`。消した数を `_tally[kind]['削除']` にも足す。メインのスレッドだけが呼ぶ（前置きの「スレッド」）。
+
+##### build_user_agent
+
+`build_user_agent(user_agent_email: str) -> str`
+
+1. `version, problem = _software_version()`。`problem` が `None` でなければ TW3 を `common.log_warning` で出す（`{reason}` は `problem`）。
+2. `f'{_TOOL_NAME}/{version} (mailto:{user_agent_email})'` を返す（[HLD 2.3.2](30_HLD.md#232-設定ファイル) の User-Agent の段落、[SRS §2.2.1](20_SRS.md#221-設定可能項目) の形）。`user_agent_email` の検査は `load_config` が済ませている（[2.1.2](#212-型とデータ) の `_CONFIG_KEYS`）。
+
+`_software_version() -> tuple[str, str | None]`（内部。返すのは（版, 取れなかった理由か `None`））: `subprocess.run(['git', '-C', _SOURCE_ROOT, 'describe', '--tags', '--dirty', '--always'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10)`。`FileNotFoundError`（git が無い）なら `('unknown', 'git が無い')`、ほかの `OSError` と `subprocess.TimeoutExpired` なら `('unknown', 'git describe を起動できない: ' + <str(e) の 1 行目>)`、終了コードが 0 でなければ `('unknown', f'git describe の終了コード {rc}')`、標準出力の前後の空白を除いた文字列が `re.fullmatch(r'[0-9A-Za-z._+-]+', s)` に合わなければ `('unknown', 'git describe の出力が版の形でない')`、合えば `(s, None)`。
+
+- 版の取り方の理由: HLD 2.3.2 の「バージョンは解析ソフトウェアの版」を、HLD の [DEC98](30_HLD.md#494-設計判断)「版の文字列は出力を組み立てるときに git から取る」（`software_version`）と同じ取り方にする。「固定値」は設定で変えない値と読む（[開発ガイド](03_development.md#5-バージョンとタグ) は `VERSION` ファイルや文書内の番号表を作らないとしているので、版をコードの定数として持たない）。取れないときに止めないのは、User-Agent の目的（連絡先を示す）が版によらず満たせるため。選ばなかった案: 版をモジュールの定数に書く（版を上げるたびにコードを直すことになり、開発ガイドの「正本は git の annotated tag」と二重になる）。版を付けない（SRS §2.2.1 の形にならない）。
+
+##### _Gate
+
+`_Gate`（内部のクラス。[4.1.2](#412-型とデータ)）。メソッドはどれもワーカーのスレッドからもメインのスレッドからも呼んでよく、属性は `cond` を持って読み書きする。時刻は `time.monotonic()`。
+
+- `send(self, do_send: Callable[[], None]) -> bool`: 次の要求を始めてよくなるまで待ち、`cond` を持ったまま `do_send()`（要求の行とヘッダーを送る。`fetch_one_tile` の 2 の 2）を呼んで真を返す。止まる（`stopping`）なら `do_send` を呼ばずに偽を返す。`cond` を持って繰り返す: `stopping` なら偽を返す。`now = time.monotonic()`、`t = max(next_start, pause_until)`。`now >= t` なら `do_send()` を呼び、`finally` で `next_start = time.monotonic() + interval_s`（送信を終えた時刻から間隔を取る。例外は `next_start` を進めてからそのまま呼ぶ側へ伝わる）にして、真を返す。そうでなければ `cond.wait(t - now)`。リクエスト間隔は、全ワーカーの要求の開始（送信）どうしの間隔として守る（[HLD 4.1.3](30_HLD.md#413-異常系) の「全体で要求の開始どうしの間隔として守る」）。次の送信は前の送信を終えてから `interval_s` 後より前に始まらないので、ロックの中で送信が遅れても、送信の始まりどうしの間隔は `interval_s` 以上になる。`interval_s` が 0 なら、`pause_until` の前のほかは待たない。
+- `pause(self, seconds: float) -> None`: `cond` を持って `pause_until = max(pause_until, time.monotonic() + seconds)`、`cond.notify_all()`（429・503 の待ちのあいだ、全ワーカーが新しい要求を出さない。実行中の要求は止めない）。
+- `sleep(self, seconds: float) -> bool`: `deadline = time.monotonic() + seconds`。`cond` を持って、`stopping` でなく `time.monotonic() < deadline` のあいだ `cond.wait(deadline - time.monotonic())`。`not stopping` を返す（429・503 以外の失敗で、そのタイルのワーカーだけが待つ）。
+- `stop(self) -> None`: `cond` を持って `stopping = True`、`cond.notify_all()`。
+- `restart(self) -> None`: `cond` を持って `stopping = False`（`_run_pool` が段の始めに呼ぶ。`next_start` と `pause_until` はそのまま引き継ぐ）。
+
+判定と送信を同じロックの中で行うので、`pause`・`stop` は送信中のワーカーの送信が終わるまで待ち、`pause`・`stop` の後に送信が始まることは無い（HLD 4.1.3 の「全ワーカーが新しい要求を出さない」「止めるときは新しい要求を出さず」）。送信を終えて応答を待っている要求は、実行中の要求としてそのまま完了させる。ロックを持つのは要求の行とヘッダー（数百バイト）を送るあいだだけで、応答はロックの外で読む（並列は応答を待つあいだに効く）。送信が詰まったときにロックを持つ時間の上限は、ソケットのタイムアウト（`_TIMEOUT_S`）。
+
+- 判定と送信を 1 つのロックで行い、標準の `http.client` を使う理由: 判定の後にロックを放してから送ると、その間に別のワーカーが `pause`・`stop` をしても送信が始まり、HLD 4.1.3 の字句に反する。`requests` は 1 回の呼び出しで送信と応答の読み取りをするので、送信だけをロックの中に入れられない。選ばなかった案: `requests` のまま、判定の時点を要求の開始と定義する（HLD の語を LLD で読み替えることになる）。ロックを持ったまま応答まで読む（並列にならず、HLD の [DEC155](30_HLD.md#234-設計判断)「タイル取得は並列 8・間隔なしを既定にする」と合わない）。
+
+##### _run_pool
+
+`_run_pool(items: Sequence[T], work: Callable[[T, _Gate], tuple[object | None, _Stop | None]], max_parallel: int, interval_ms: int, what: str, on_done: Callable[[T, object], None]) -> _Stop | None`（内部。`download_tiles`・`download_dem5` が使う。`T` は各関数の仕事の単位〈タイルか位置〉。`work` は（確定した結果か `None`, 止まる要因か `None`）を返す）
+
+1. `items` が空なら `None` を返す（途中経過も出さない。[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 5「途中経過」の「全件数が 0 のときは出さない」）。
+2. `_gate` が `None` なら `_gate = _Gate(interval_ms)` にする。`gate = _gate`、`gate.restart()`。`results = queue.Queue()`、`it = iter(items)` と、`it` を引くための `threading.Lock`、起こしたワーカーの並び `threads = []`。
+3. ワーカー: `try` の中で繰り返し、ロックを持って `next(it, None)` で次の単位を取り（`None` なら抜ける）、`res, stop = work(item, gate)` を呼ぶ。`res` が `None` でなければ `results.put(('done', item, res))`（止まる要因と一緒に返った、そこまでに確定した結果も送る）。`stop` が `None` でなければ `results.put(('stop', stop))`、`gate.stop()` して抜ける。`res` も `stop` も `None`（止まるので待ちを切り上げた。止まった後は `work` の中の `gate.send()` が偽を返す）なら抜ける。`except Exception as e` なら `results.put(('crash', e))`、`gate.stop()`。`finally` で `results.put(('exit', None))`。
+4. メインのスレッド: `done = 0`、`last_pct = 0`、`alive = 0`、`first_stop = None`、`crash = None`。`try` の中で、まず `threading.Thread(target=<ワーカー>, daemon=True)` を `min(max_parallel, len(items))` 個、1 つずつ作り、`threads` に足してから `start()` し、`alive += 1` する（起こしている途中でシグナルを受けても、下の `finally` を通るように、起こすのも `try` の中で行う。`start()` の前に足すので、`start()` の直後にシグナルを受けても、起こしたワーカーは `threads` に入っている）。続けて、`alive > 0` のあいだ `ev = results.get(timeout=_PROGRESS_POLL_S)`（`queue.Empty` なら続ける。シグナルを受けられるように、区切って待つ）を受けて、下の「受け取り」をする。`finally` で `gate.stop()`、`threads` のワーカーのうち始まったもの（`t.ident is not None`。`start()` の前にシグナルを受けたワーカーは始まっていないので、`join()` すると `RuntimeError` になる）を `join()` し、その後に待ち行列に残っているものを `results.get_nowait()` で `queue.Empty` まで取り出して、同じ「受け取り」をする（シグナル・`LogWriteError`・`on_done` の中の `sys.exit` で抜けるときも、実行中の要求の終わりを待ち、その間に確定した結果も数える。HLD 4.1.3 の「再試行」、HLD 5.7.2 の 7「結果の要約」の「そこまでに終えた分の件数」）。
+   - 受け取り: `'done'` なら `on_done(item, res)`、`done += 1`、`pct = done * 100 // len(items)` が `last_pct` より大きければ TL3 を `common.log_info` で出して `last_pct = pct`。`'stop'` なら、最初のものだけを `first_stop` に入れる。`'crash'` なら最初のものだけを `crash` に入れる。`'exit'` なら `alive -= 1`。
+5. `crash` があれば `raise crash`（ワーカーの例外をメインのスレッドで上げ直し、[2.1.3](#213-関数の細部) の `_excepthook` の G7 と Traceback で止まる）。なければ `first_stop`（`None` のこともある）を返す。
+
+- `on_done` はメインのスレッドで呼ばれ、`_tally` に足し、キャッシュを消す（`delete_cached_tiles`）。止まる要因を受けた後に届いた `'done'` も数える（止める前に実行中だった要求の結果）。
+- `finally` の `join()` の途中で 2 回目のシグナルを受けても、2.1 の `_on_signal` は 2 回目から何もしない（例外を上げない）ので、`join()` は続く。`finally` の後の取り出しで `on_done` が `sys.exit` を呼ぶと（TF3）、シグナルで抜ける途中なら 2.1 の `_finish_log` の 2 のとおり、終了コードは 128＋シグナルの番号のままになる。
+- ワーカーごとに 1 つの接続（`http.client.HTTPConnection` か `HTTPSConnection`）を使う（`threading.local()` に持ち、初めて要求を出すときに作る。スレッドの間で共有しない。作り方と使い直し方は `fetch_one_tile` の「接続」）。
+- 仕事の配り方の理由: 単位ごとに `Future` を作る `concurrent.futures` でなく、ワーカーが共有の反復子から 1 つずつ取る形にする。止めると決めたときに、まだ取っていない単位はどのワーカーも取らないので、取り消しの手順が要らない（`Future` を先に全部作ると、止めるときに未着手の `Future` を取り消す手順が要る）。結果は 1 つの待ち行列で、終わった順にメインのスレッドへ届く。全国の DEM5 の位置は 100 万を超え、単位ごとに `Future` と結果を持つと、そのぶんのメモリも先に使う。
+
+##### download_tiles
+
+`download_tiles(tiles: set[tuple[int, int]], tiles_dir: str, max_parallel: int, interval_ms: int, user_agent: str) -> tuple[dict[str, int], set[tuple[int, int]]]`（返すのは（`{'取得': …, '変更なし': …, '未整備': …}`, HTTP 404 だったタイルの集合））
+
+1. `sorted(tiles)` を単位にして `_run_pool` を呼ぶ（`what` は `DEM10b のタイル`）。`work` は `r = fetch_one_tile('DEM10b', tile, _cache_path(tiles_dir, 'DEM10b', tile), user_agent, gate)` を呼び、`r` が結果の文字列なら `(r, None)`、`_Stop` なら `(None, r)`、`None` なら `(None, None)` を返す。`on_done` は、結果の名前（`'fetched'` → `取得`、`'unchanged'` → `変更なし`、`'missing'` → `未整備`）の数と `_tally['DEM10b']` に 1 を足し、`'missing'` ならタイルを 404 の集合に入れる。HTTP 404 のタイルのキャッシュはここでは消さない（[HLD 3.2.3](30_HLD.md#323-関数) の表）。
+2. `_run_pool` が `_Stop` を返したら、`_report_stop(stop)`（下）で止まる。
+3. 数と 404 の集合を返す。
+
+`_report_stop(stop: _Stop) -> NoReturn`（内部）: `stop.why` が `'no_last_modified'` なら TG2、`'file'` なら TF2、それ以外なら TG1 を `common.log_error` で出して `sys.exit(common.EXIT_ERROR)`。
+
+##### check_dem10b_meshes
+
+`check_dem10b_meshes(meshes: set[str], dem10b_tiles: set[tuple[int, int]], notfound: set[tuple[int, int]], tiles_dir: str) -> int`
+
+1. `sorted(meshes)` の順に、`mesh_tile_range(mesh, 14)` の範囲のタイルのうち `dem10b_tiles` にあるものを求める。それが空のメッシュは見ない（範囲がすべて北方領土除外で除かれたメッシュ）。それがすべて `notfound` にあるメッシュを、タイルの数とともに控える。
+2. 控えたメッシュがあれば TD1 で `sys.exit(common.EXIT_ERROR)`（DEM5 を要求せず、404 のキャッシュも消さない。HLD の [DEC154](30_HLD.md#414-設計判断)「DEM10b がすべて 404 のメッシュでは止める」）。
+3. 無ければ、`delete_cached_tiles({'DEM10b': notfound}, tiles_dir)` で 404 だったタイルのキャッシュを消し、消した数を返す。
+
+##### find_sea_positions
+
+`find_sea_positions(positions: set[tuple[int, int]], dem10b_tiles: set[tuple[int, int]], notfound: set[tuple[int, int]], meshes: set[str], nt_tiles: set[tuple[int, int]]) -> tuple[set[tuple[int, int]], list[tuple[str, int, int]]]`（返すのは（海の位置の集合, メッシュごとの（メッシュ, 判定対象の位置数, 海の位置数）の並び。メッシュの昇順））
+
+1. `positions` の各位置 `(x, y)` について、DEM10b のタイル `(x // 2 + dx, y // 2 + dy)`（`dx`・`dy` は `-1`・`0`・`1` の 9 枚）がすべて `notfound` にあれば海の位置とする（`notfound` は `dem10b_tiles` の部分集合なので、`dem10b_tiles` に無いタイル〈今回の対象の範囲の外と、北方領土除外で要求しないタイル〉は 404 でなかったものとして扱われる。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 7「タイルを次の順に取得する」の 3、HLD の [DEC153](30_HLD.md#414-設計判断)「海の位置では DEM5 を取らない」）。
+2. `sorted(meshes)` の順に、`mesh_tile_range(mesh, 15)` の範囲の位置のうち `nt_tiles` に無いものの数（判定対象の位置数）と、そのうち海の位置の数を求める（隣のメッシュと共有する位置は、それぞれのメッシュで数える。HLD 4.1.2 の 8「件数と海の位置を要約して出す」）。
+
+##### download_dem5
+
+`download_dem5(positions: set[tuple[int, int]], sea: set[tuple[int, int]], tiles_dir: str, max_parallel: int, interval_ms: int, user_agent: str) -> tuple[dict[str, dict[str, int]], int]`（返すのは（`_DEM5_KINDS` の各種別に `{'取得': …, '変更なし': …, '未整備': …, '404 で削除': …, '下位で削除': …}` を入れた辞書, 海として要求しなかった位置の数 `len(sea)`））
+
+1. `sorted(positions - sea)` を単位にして `_run_pool` を呼ぶ（`what` は `DEM5 の位置`）。海の位置は要求せず、キャッシュにも手を入れない（HLD の [DEC153](30_HLD.md#414-設計判断)「海の位置では DEM5 を取らない」）。
+2. `work(pos, gate)`: `results = []`。`_DEM5_KINDS` の順に `r = fetch_one_tile(kind, pos, _cache_path(tiles_dir, kind, pos), user_agent, gate)`。`r` が `_Stop` なら `(results or None, r)` を、`None` なら `(results or None, None)` を返す（そこまでに確定した種別の結果も返す）。`results.append((kind, r))`。`r` が `'missing'` なら次の種別へ。`'fetched'` か `'unchanged'` なら `(results, None)` を返す。DEM5c まで `'missing'` なら `(results, None)` を返す。`results` は要求した種別ごとの結果の並び（例 `[('DEM5a', 'missing'), ('DEM5b', 'fetched')]`）。
+3. `on_done(pos, results)`: 要求した各種別の結果の数と `_tally` に 1 を足す。続けて `delete_cached_tiles` を 2 回に分けて呼ぶ。1 回目は `'missing'` だった種別の、その位置のキャッシュを消し（`{<種別>: [pos], …}`）、返った数を `404 で削除` に足す。2 回目は、最後の結果が `'fetched'` か `'unchanged'` のときだけ、その種別より下位の種別（DEM5a なら DEM5b・5c、DEM5b なら DEM5c）の、その位置のキャッシュを消し、返った数を `下位で削除` に足す（HLD 4.1.2 の 7 の 4・5、HLD の [DEC152](30_HLD.md#414-設計判断)「DEM5 は上の種別が無い位置でだけ取る」）。止まる要因と一緒に返った途中までの結果（最後が `'missing'`）では、2 回目を呼ばない。
+4. `_run_pool` が `_Stop` を返したら、`_report_stop(stop)` で止まる。
+
+- 消す時機の理由: HLD 4.1.2 の応答の表の「DEM5 は 7 の 4・5 の位置ごとの処理のとき」。位置の要求を終えたワーカーが結果を返し、メインのスレッドが受け取った時点で消す（ワーカーは消さない。前置きの「スレッド」）。同じ位置は 1 つのワーカーだけが扱い、結果を返した後はその位置に触れないので、消す間に同じパスへ書くワーカーは無い。
+
+##### fetch_one_tile
+
+`fetch_one_tile(kind: str, tile: tuple[int, int], path: str, user_agent: str, gate: _Gate) -> str | _Stop | None`（返すのは 1 枚の結果〈[4.1.2](#412-型とデータ)〉か、止まる要因か、止まるので待ちを切り上げたときの `None`。ワーカーのスレッドで動く。キャッシュは消さない）
+
+1. `url = f'{_BASE_URL}/{サービス名}/{z}/{x}/{y}.png'`（メッセージに出す URL）。`headers = {'User-Agent': user_agent}`。`os.stat(path)` が成功し、通常のファイル（`stat.S_ISREG`）なら `headers['If-Modified-Since'] = email.utils.formatdate(st.st_mtime, usegmt=True)`（[ADR-SRS-032](decisions/ADR-SRS-032-gsi-tile-latest-date-provenance.md)）。`FileNotFoundError` なら付けない。ほかの `OSError` と、通常のファイルでないとき（同じ名前のディレクトリなど）は `_Stop(why='file', path=path, reason=<{reason}、通常のファイルでないときは 'ファイルでない'>)` を返す。
+2. `retries = 0` で繰り返す:
+   1. スレッドの接続 `conn` を用意する（下の「接続」）。使い直す接続（`conn.sock` が `None` でない）なら、`select.select([conn.sock], [], [], 0)` で読める状態かを見て、読めるなら（使っていない keep-alive の接続にサーバーが切断か想定外のデータを送った）`conn.close()` で閉じる。接続が無ければ、ロックの外で `conn.connect()` する（`TimeoutError` か `OSError` なら、この 2 の 2 の失敗と同じに扱い、4 へ）。切られた接続を要求を出す前に見つけて張り直すので、要求の数は増えない。
+   2. `gate.send(lambda: conn.request('GET', path_q, headers=headers))` を呼ぶ（`path_q` は URL のパスの部分 `{_BASE_URL のパス}/{サービス名}/{z}/{x}/{y}.png`）。偽なら `None` を返す。続けてロックの外で `resp = conn.getresponse()`、`body = resp.read()`（本体を全部読む）。送信か応答の読み取りで、`TimeoutError` なら失敗 `タイムアウト（{_TIMEOUT_S の整数} 秒）`、ほかの `OSError`・`http.client.HTTPException`（`RemoteDisconnected`・`IncompleteRead`・`ssl.SSLError` を含む）なら失敗 `通信の失敗: <例外のクラス名>`。どちらも、接続を `conn.close()` で閉じて捨て（次は新しく張る）、429・503 でない失敗として 4 へ（使い直した接続での失敗も同じく再試行に数える。応答を受けていなくても、要求がサーバーに届いていないとは言えないため。HLD 4.1.3 の「再試行の上限回数」）。応答を読み終えたら、`resp.will_close` が真なら接続を閉じて捨てる。
+   3. 応答 `s = resp.status` ごとに（HLD 4.1.2 の応答の表、HLD 4.1.3 の「再試行」）:
+      - 200: `lm = _parse_http_date(resp.getheader('Last-Modified'))`。`None` なら `_Stop(why='no_last_modified', …)`。そうでなければ `save_tile(body, lm, path)`（`OSError` なら `_Stop(why='file', path=<e.filename か path>, reason=<{reason}>)`）を呼び、`'fetched'` を返す。
+      - 304: `If-Modified-Since` を付けていれば `'unchanged'`、付けていなければ `_Stop(why='unexpected', …)`。
+      - 404: `'missing'`。
+      - 429・503: 4 へ（全ワーカーを待たせる）。
+      - 500〜599 のそのほか: 4 へ（このタイルだけが待つ）。
+      - 400〜499 のそのほか: `_Stop(why='immediate', …)`。
+      - それ以外（リダイレクトの 3xx、200 以外の 2xx など）: `_Stop(why='unexpected', …)`（リダイレクトは追わない）。
+   4. 再試行: `retries += 1`。`retries > _MAX_RETRIES` なら `_Stop(why='retry_exceeded', retries=_MAX_RETRIES, …)`。`ra = _parse_retry_after(resp.getheader('Retry-After'))`（応答が無い失敗では `None`）、`wait = _retry_wait(retries, ra)`。`wait` が `None` なら待たずに `_Stop(why='retry_after', retries=retries - 1, …)`。429・503 なら `gate.pause(wait)` して 1 に戻る（自分も `gate.send` で待つ）。そのほかの失敗なら `gate.sleep(wait)` が偽なら `None` を返し、真なら 1 に戻る。
+
+- 接続: `_BASE_URL` を呼び出しのたびに `urllib.parse.urlsplit` で分け、`scheme` が `https` なら `http.client.HTTPSConnection(host, port, timeout=_TIMEOUT_S, context=ssl.create_default_context())`（証明書を確かめる）、`http` なら `http.client.HTTPConnection(host, port, timeout=_TIMEOUT_S)` を作る。`_TIMEOUT_S` はソケットの 1 回の操作（接続・送信・読み取り）ごとのタイムアウト（HLD 4.1.3 の「タイムアウト（接続・読み取り）30 秒」）。接続はスレッドごとに `threading.local()` に持ち、応答を読み終えた後の次の要求で使い直す（keep-alive）。`http.client` はリダイレクトを追わない（HLD 4.1.2 の応答の表の「リダイレクトは追わない」）。要求に付けるヘッダーは `User-Agent` と、キャッシュがあるときの `If-Modified-Since` だけ（`Host` などは `http.client` が付ける）。
+- `last` の文（`_Stop.last`）: 応答があれば `HTTP {s}` に、`Retry-After` があれば `（Retry-After: {値}）`、3xx で `Location` があれば `（Location: {値}）`、304 で `If-Modified-Since` を付けていなければ `（If-Modified-Since を付けていない要求）`、200 で `Last-Modified` が無いか読めなければ `（Last-Modified: {値か なし}）` を続ける。応答が無ければ 2 の 2 の失敗の文（`タイムアウト（{_TIMEOUT_S の整数} 秒）`・`通信の失敗: {クラス名}`）。
+- `retries` は、`_Stop` を作った時点で済ませた再試行の回数（`'retry_exceeded'` は `_MAX_RETRIES`、`'retry_after'` は打ち切った要求の前の回数、すぐ止める応答と想定外の応答と `Last-Modified` の無い応答は、それまでの回数）。
+
+`_retry_wait(n: int, retry_after: float | None) -> float | None`（内部。`n` は 1 から数えた再試行の回数）: `exp = min(_FIRST_WAIT_S * _WAIT_FACTOR ** (n - 1), _WAIT_CAP_S)`。`retry_after` が `None` なら `exp`。`retry_after > _WAIT_CAP_S` なら `None`（待たずに打ち切る）。それ以外は `max(exp, retry_after)`（1 回の待ちの上限は指数の待ち時間にだけ掛け、`Retry-After` は短くしない。HLD 4.1.3 の「再試行」）。
+
+`_parse_retry_after(value: str | None) -> float | None`（内部）: `None` なら `None`。前後の空白を除き、`re.fullmatch(r'[0-9]+', v)` に合えば、先頭の `0` を除いた `d = v.lstrip('0') or '0'` が 19 桁以上なら `math.inf`、それ以外は `float(int(d))`（2.1.2 の整数の種類と同じく、先頭の `0` を除いてから桁数を見る。`0000000000000000000` は 0 になる）。合わなければ `_parse_http_date(v)` が `None` でないとき `max(0.0, <その時刻> - time.time())`、`None` なら `None`（読めない値は無いものとする）。
+
+`_parse_http_date(value: str | None) -> float | None`（内部。返すのは UNIX 時刻の秒）: `None` か空なら `None`。`email.utils.parsedate_to_datetime(value)` が `TypeError`・`ValueError`・`IndexError`・`OverflowError` なら `None`。時差の無い時刻（`-0000`）は UTC とする。`.timestamp()` を返す。
+
+##### save_tile
+
+`save_tile(body: bytes, last_modified: float, path: str) -> None`（ワーカーのスレッドで動く。失敗は `OSError` のまま呼ぶ側へ伝える）
+
+1. `os.makedirs(os.path.dirname(path), exist_ok=True)`。
+2. 一時ファイル `tmp = path + '.tmp'`（`{y}.png.tmp`。`.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落、[2.3](#23-ファイルの名前と書き方)）に、2.3 の一時ファイルの決まりの「書く」の段で `body` を書く（失敗したら一時ファイルを消してから上げる）。
+3. `os.utime(tmp, (last_modified, last_modified))`。失敗したら一時ファイルを消してから（消せないときの `OSError` は無視する）上げる。
+4. `os.replace(tmp, path)`。失敗したら一時ファイルを消してから上げる（前のキャッシュはそのまま残る）。
+
+- mtime を置き換えの前に一時ファイルに付けるのは、置き換えた時点で正規のパスのファイルが `Last-Modified` の mtime を持つようにするため（`os.replace` は mtime を変えない）。一時ファイルの名前を固定にしてよいのは、2.3 の理由に加えて、同じタイルは 1 つのワーカーだけが扱うため。
+
+#### 4.1.4 メッセージ文面
+
+前置き: 書き方は [2.2](#22-ログとメッセージの文面)。ロックとログの場面（G1〜G7）は 2.2、設定の誤り（CF1〜CF7）・`--mesh` の誤り（A1〜A5）・メッシュのリストの誤り（R1〜R3）は [2.1.4](#214-メッセージ文面) の文面のまま。日本全土 1 次メッシュコードリストの R1〜R3 の案内は `None`（既定の対処）、北方領土除外メッシュリストの R1〜R3 の案内は `{cmp1}`。L1〜L3 は 2.2（`{program}` は `fetch_tiles`）。プレースホルダーの意味:
+
+- `{path}` は `data_dir` から組み立てたパスのまま（`data_dir` は絶対パスなので、どれも絶対パス）。`{dir}` は `{path}` のディレクトリ（`os.path.dirname`）。`{reason}` は [4.1.3](#413-関数の細部) の前置きのとおり。`{option}`・`{arg}`・`{value}` は [3.1.4](#314-メッセージ文面) と同じ（`{arg}`・`{value}` は 2.2 の引用の決まりで書いたもの）。
+- `{config_opt}`・`{rerun}` はモジュールの状態の `_config_opt`・`_rerun`（[4.1.2](#412-型とデータ)）。`{cmp1}` は `venv/bin/python3 scripts/preprocess_boundaries.py{config_opt} を起動して正常に終えてから、もう一度起動する`（[HLD 4.1.3](30_HLD.md#413-異常系) の「それを作る操作〈除外リストと版の記録は CMP1 の実行〉」）。
+- `{kind}` は DEM 種別の名前（`DEM10b` など）、`{url}` は要求した URL、`{last}`・`{retries}` は `_Stop` の `last`・`retries`。`{tile}` は `{kind} {z}/{x}/{y}`（例 `DEM10b 14/14290/6581`）。
+
+`ERROR:`・`WARNING:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| TA1 | 受け付けない引数 | `fetch_tiles の知らない引数: {arg}` | `使える引数は --config・--mesh・--help（venv/bin/python3 scripts/fetch_tiles.py --help で使い方を出す）` | 2 |
+| TA2 | 値が無い | `{option} の値が無い` | `{option} の後に値を書く（venv/bin/python3 scripts/fetch_tiles.py --help で使い方を出す）` | 2 |
+| TA3 | 値が違う | `--config の値が違う: {value}` | `--config には空でないパスを渡す` | 2 |
+| TA4 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` | 2 |
+| TP1 | 北方領土除外タイルリストが無い | `北方領土除外タイルリストが無い: {path}` | `{cmp1}` | 1 |
+| TP2 | 北方領土除外タイルリストを読めない・書式が違う | `北方領土除外タイルリストを読めないか、書式が違う: {path}: {detail}`（`{detail}` は 4.1.3 の `read_excluded_tiles` のとおり） | `{cmp1}` | 1 |
+| TP3 | CMP1 の版の記録が無い | `行政区域前処理の版の記録が無い（行政区域前処理が正常に終わっていない）: {path}` | `{cmp1}` | 1 |
+| TR1 | 取得完了の記録が読めない・書式が違う | `取得完了の記録が読めないか、書式が違う: {path}: {detail}`（`{detail}` は 4.1.3 の `read_fetch_record` のとおり。[5.1.4](#514-メッセージ文面) の FC2 と同じ文面） | `{path} を消してから、venv/bin/python3 scripts/fetch_tiles.py{config_opt} を --mesh なしで起動し直す（--mesh を付けると、記録はそのメッシュだけになる）` | 1 |
+| TW1 | `--mesh` のコードが日本全土のリストに無い（`WARNING:`） | `--mesh のメッシュコードを飛ばした（日本全土1次メッシュコードリストに無い）: {code}` | `日本全土1次メッシュコードリスト {list_path} にあるコードを渡す（残りのメッシュは続けて取得する）`（`{list_path}` は `_JAPAN_MESH_LIST_PATH`） | 0 |
+| TW2 | `--mesh` のコードが北方領土除外メッシュ（`WARNING:`） | `--mesh のメッシュコードを飛ばした（北方領土除外メッシュ）: {code}` | `北方領土除外メッシュは取得しない（隣のメッシュと共有する境目のタイルは、隣のメッシュの取得で取る）` | 0 |
+| TW3 | User-Agent の版を取れない（`WARNING:`） | `User-Agent に入れる版を git から取れない: {reason}`（`{reason}` は `_software_version` の理由） | `版を unknown にして取得を続ける。ソースツリーが git の作業ツリーで、git のコマンドを使えるかを確かめる` | 0 |
+| TG1 | 再試行の上限超過・すぐ止める応答・想定外の応答・`Retry-After` が上限を超えた | `標高タイルの取得を止めた（{why}）: {tile}（{url}）: 最後の応答 {last}、再試行 {retries} 回`（`{why}` は `_Stop.why` が `'retry_exceeded'` なら `再試行の上限を超えた`、`'retry_after'` なら `Retry-After が 1 回の待ちの上限の 900 秒を超えた`〈900 は `_WAIT_CAP_S` の整数〉、`'immediate'` なら `再試行しない応答`、`'unexpected'` なら `想定外の応答`） | `時間をおいて {rerun} を起動し直す（取得済みのタイルは残っていて、起動し直すと If-Modified-Since で更新のあったタイルだけを取り直す）` | 1 |
+| TG2 | HTTP 200 に `Last-Modified` が無いか読めない | `HTTP 200 の応答に Last-Modified が無いか読めない: {tile}（{url}）: {last}` | `提供元の更新日を得られないので取得を止めた。時間をおいて {rerun} を起動し直し、続くなら提供元の応答の変化を確かめる（開発者に知らせる）` | 1 |
+| TD1 | 取得範囲の DEM10b がすべて未整備のメッシュがある | `取得範囲の DEM10b のタイルがすべて未整備（HTTP 404）のメッシュがある: {meshes}`（`{meshes}` は控えたメッシュを昇順に `{mesh}（{n} 枚）` にして `、` でつないだもの。`{n}` はそのメッシュの範囲で要求した DEM10b のタイルの数） | `取得の誤りが疑われる。時間をおいて {rerun} を起動し直し、続けて 404 になるなら提供元の状態を確かめる` | 1 |
+| TF1 | 取得完了の記録を書けない | `取得完了の記録を書けない: {path}: {reason}` | `ディスクの空きと {dir} の権限を確かめてから {rerun} を起動し直す（記録はこの書き換えの前の内容のまま）` | 1 |
+| TF2 | タイルのキャッシュを読み書きできない | `標高タイルのキャッシュを読み書きできない: {path}: {reason}` | `ディスクの空きと {dir} の権限を確かめてから {rerun} を起動し直す` | 1 |
+| TF3 | タイルのキャッシュを消せない | `標高タイルのキャッシュを消せない: {path}: {reason}` | TF2 と同じ | 1 |
+
+TF1 の「この書き換え」は、2 つの場面のどちらかを指す。対象のメッシュを記録から外す書き換え（`remove_from_record`）で止まったときは、記録もキャッシュも起動の前のまま。最後の書き換え（`main` の 9）で止まったときは、記録は対象を外した後のままで、取得したタイルは残る。どちらも、起動し直して正常に終えれば記録に戻る。
+
+通常のログに出す行（`common.log_info` で標準出力とログファイルに出す）:
+
+| 記号 | 行 | 文面 |
+|---|---|---|
+| TL1 | 対象のメッシュ | `対象のメッシュ {n} 件: {codes}`（`{codes}` は昇順に空白 1 つでつないだもの。0 件なら `対象のメッシュ 0 件`） |
+| TL2 | User-Agent | `User-Agent: {user_agent}` |
+| TL3 | 途中経過 | `途中経過: {what} {done}/{total}（{pct}%）`（`{what}` は `_run_pool` の `what`〈`DEM10b のタイル` か `DEM5 の位置`〉。[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 5「途中経過」） |
+| TL4 | 結果の要約（取得を終えた） | 1 行目 `結果の要約: タイルの取得を終えた（取得完了の記録はこの後に書く）。対象のメッシュ {n} 件`、続けて `_KIND_ORDER` の順に `{kind}: 取得 {a}、変更なし {b}、未整備 {c}、削除 {d}`（`_tally` の値）の 4 行、`海として DEM5 を要求しなかった位置: {sea}`、対象のメッシュごとに昇順に `海の位置: {mesh} 判定対象 {judged}、海 {sea_n}、割合 {ratio}`（`{ratio}` は `f'{sea_n * 100 / judged:.1f}%'`、`judged` が 0 なら `-`）。1 回の `log_info` に改行でつないで渡す |
+| TL5 | 結果の要約（対象が 0 件） | 1 行目 `結果の要約: 対象のメッシュが 0 件なので取得しなかった（取得完了の記録は変えていない）`、続けて TL4 と同じ種別ごとの 4 行（削除のほかは 0） |
+| TL6 | 結果の要約（途中で止まった） | 1 行目 `結果の要約: 途中で止まった（{stage}）。終えた分:`（`{stage}` は `_stage`）、続けて TL4 と同じ種別ごとの 4 行。`removed` が真なら最後に `今回の対象のメッシュは取得完了の記録から外したまま（起動し直して正常に終えると記録に戻る）` |
+
+使い方の文（`--help`。標準出力に、次の行をこのまま出す。最後の行の後にも LF を付ける）:
+
+```text
+使い方: venv/bin/python3 scripts/fetch_tiles.py [--config <パス>] [--mesh <メッシュコードかファイル>]
+       venv/bin/python3 scripts/fetch_tiles.py --help
+
+国土地理院のタイルサーバーから標高タイル（DEM10b と DEM5a〜5c）を取得してキャッシュに置き、取得を終えたメッシュを取得完了の記録に残す。
+
+  --config <パス>  設定ファイル（省くとソースツリーの params/config.ini）
+  --mesh <値>      取得するメッシュ。4 桁のメッシュコードか、1 行 1 件で書いたファイルのパス（省くと日本全土）
+  --help           この使い方を出して終わる
+```
+
+- TL4 の中身の正本は [HLD 4.1.2](30_HLD.md#412-処理の流れ) の 8「件数と海の位置を要約して出す」（HLD 5.7.2 の「結果の要約の中身」の `fetch_tiles` の行）。削除は 6 と HTTP 404 と 7 の 5 で消した数の和（`_tally` の `削除`）。
+- TR1 の文面を 5.1.4 の FC2 と同じにする理由: 同じ記録の同じ誤りを、CMP2 と CMP3 のどちらで見つけても同じに案内するため。2.2 の共有の表には移さない（2.2 の共有の表は、終了コード 2 の設定・引数の誤りを置く表で、5.1 の節を書き換えることになるため）。
+
+#### 4.1.5 UT 候補
+
+前置き: すべて自動。共通の準備は次の 4 つ。止まるケースの期待の「メッセージ」は、標準エラー出力の行の文面（[2.2](#22-ログとメッセージの文面)・[2.1.4](#214-メッセージ文面)・[4.1.4](#414-メッセージ文面) の文面に値を入れたもの）。ログファイルの行の期待は、先頭の時刻と空白を除いた文面。時刻を照らすケースの許容差は、各ケースの期待に書いた値を正とする（試験の計算機の遅れを見込んで、待ち時間より少し短い値と比べる）。
+
+- **同じプロセス**: テストのプロセスの中で `scripts/` を import の探索先に入れて `import fetch_tiles` し、関数を直接呼ぶ（`start_log` を呼ばない。`log_info` などは画面にだけ出る）。止まるケースは `SystemExit` を捕まえて終了コードを読み、標準出力と標準エラー出力は `contextlib.redirect_stdout`・`redirect_stderr` で捕まえる。一時のディレクトリ `<tmp>` をケースごとに作る。各ケースの前に `fetch_tiles._tally` を `_KIND_ORDER` の各種別の `{'取得': 0, '変更なし': 0, '未整備': 0, '削除': 0}` に、`_config_opt` を空の文字列に、`_rerun` を `venv/bin/python3 scripts/fetch_tiles.py` に、`_gate` を `None` にする。差し替えた定数と関数は、ケースの後に元に戻す。待ちを照らすケースは `_FIRST_WAIT_S = 0.05`、`_WAIT_CAP_S = 0.4`、`_TIMEOUT_S = 0.5` に差し替える（ケースが別に書けばその値）。`fetch_one_tile` を直接呼ぶケースは `_Gate(0)` を渡す。
+- **模擬サーバー**: `http.server.ThreadingHTTPServer(('127.0.0.1', 0), <ハンドラ>)` をテストのプロセスのスレッドで動かし、`fetch_tiles._BASE_URL` を `http://127.0.0.1:<ポート>/xyz` にする。ハンドラは、パス（`/xyz/dem_png/14/100/200.png` の形）ごとに応答の台本（応答の並び。並びの最後の応答を、それより後の要求にも使う）を引き、台本の無いパスには `Last-Modified: Wed, 21 Oct 2015 07:28:00 GMT`（UNIX 時刻 1445412480）と本体 `PNG` の 200 を返す。応答には `status`（既定 200）、`headers`、`body`（既定 `PNG`）、`delay`（返す前に待つ秒）、`wait_for`（返す前に、そのパスの要求を受けるまで待つ。5 秒まで）、`hold`（返す前に、テストが `set` する `threading.Event` を待つ）、`close`（応答を返さずに接続を切る）を書ける。台本の応答も、`status` が 200 で `headers` に `Last-Modified` を書かなければ、台本の無いパスと同じ `Last-Modified` を付ける。`Last-Modified` を付けない 200 は、`headers` に `Last-Modified` を `None` と書いて表す。受けた要求ごとに、パス・`User-Agent`・`If-Modified-Since`（無ければ `None`）・クライアントのポート（`self.client_address[1]`）・受けた時刻・返し終えた時刻（どちらも `time.monotonic()`。切ったときは切った時刻）を記録する。`Content-Length` を付ける。ハンドラの `protocol_version` は `'HTTP/1.1'` にする（既定の HTTP/1.0 では応答のたびに接続が切られ、`fetch_one_tile` の接続の使い直しを通らないため）。
+- **小さな範囲**: `fetch_tiles.mesh_tile_range` を、次の表を引く関数に差し替える（実物の範囲はタイルが多いので）。日本全土 1 次メッシュコードリストは `5339`・`5340`・`6848`、北方領土除外メッシュは `6848`、北方領土除外タイルは `(207, 403)`・`(209, 403)`（DEM10b にすると `(103, 201)`・`(104, 201)`）。
+
+  | メッシュ | ズーム 14 の範囲（x_min, x_max, y_min, y_max） | ズーム 15 の範囲 | 役 |
+  |---|---|---|---|
+  | `5339` | (100, 101, 200, 201) | (200, 203, 400, 403) | A |
+  | `5340` | (102, 103, 200, 201) | (204, 207, 400, 403) | B（`(207, 403)` が北方領土除外） |
+  | `6848` | (103, 104, 200, 201) | (206, 209, 400, 403) | 北方領土除外メッシュ（B と x = 103・206・207 の列を共有する） |
+  | `5439` | (110, 114, 210, 214) | (220, 229, 420, 429) | 海の位置を見るメッシュ |
+  | `5341` | (103, 103, 201, 201) | (206, 207, 402, 403) | DEM10b の範囲がすべて北方領土除外のメッシュ |
+
+- **子のプロセス**: 一時のソースツリー `<tmp>/src` を作り、`<tmp>/src/scripts/` にテストする `scripts/fetch_tiles.py` と `scripts/common.py` を写し、`<tmp>/src/params/mesh_list_japan.txt` に `5339\n5340\n6848\n` を書く。一時の設定 `<tmp>/c.ini` に `[paths]` の `data_dir = <tmp>/data`・`log_dir = <tmp>/logs` と、`[fetch]` の `user_agent_email = test@example.com`・`max_parallel = 2`・`interval_ms = 0` を書く。`<tmp>/data/boundaries/` に `nt_excluded_tiles.txt`（`207 403\n209 403\n`）・`nt_excluded_meshes.txt`（`6848\n`）・`n03_version.txt`（`20250101\n`）を置く。`<tmp>/work` を作る。起動は `subprocess.run([sys.executable, '-c', <試験用の短いプログラム>], cwd='<tmp>/work', capture_output=True, timeout=60)`（シグナルのケースは `subprocess.Popen`）。試験用のプログラムは、`<tmp>/src/scripts` を `sys.path` の先頭に入れて `import fetch_tiles` し、`_BASE_URL` を模擬サーバーの URL に、`_FIRST_WAIT_S`・`_WAIT_CAP_S`・`_TIMEOUT_S` を `0.05`・`0.4`・`1.0` に、`mesh_tile_range` を小さな範囲の関数に、`_software_version` を `('v0-test', None)` を返す関数に差し替えてから、`sys.argv = ['fetch_tiles.py', *<引数>]` にして `fetch_tiles.main()` を呼ぶ（ケースが書かなければ引数は `--config ../c.ini` と、ケースの `--mesh`）。User-Agent は `findsummits/v0-test (mailto:test@example.com)` になる。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-fetch_tiles-01` | 引数の正しい形 | 同じプロセス | `_parse_args` に (a) `[]`、(b) `['--config', 'a.ini']`、(c) `['--config=a=b.ini', '--mesh', '5339']`、(d) `['--mesh', '--help']`、(e) `['--mesh=-x', '--config', 'c']` | (a) `_Args(None, None)`、(b) `_Args('a.ini', None)`、(c) `_Args('a=b.ini', '5339')`、(d) `_Args(None, '--help')`、(e) `_Args('c', '-x')` |
+| `UT-fetch_tiles-02` | 引数の誤り | 同じプロセス | `_parse_args` に (a) `['foo']`、(b) `['--foo']`、(c) `['--help=x']`、(d) `['--']`、(e) `['--me', '5339']`、(f) `['--mesh']`、(g) `['--config', '']`、(h) `['--config=']`、(i) `['--mesh', '5339', '--mesh', '5340']`、(j) `['--config', 'a', '--config']` | どれも 2、標準出力は空。(a)〜(e) は TA1（(a) の 1 行目は `ERROR: fetch_tiles の知らない引数: foo`、(c) の引数は `--help=x`、(e) の引数は `--me`）、(f) は TA2（`--mesh の値が無い`）、(g)(h) は TA3（`ERROR: --config の値が違う: ''`）、(i) は TA4（`--mesh を 2 回渡した`）、(j) は TA4（`--config を 2 回渡した`。TA2 でない） |
+| `UT-fetch_tiles-03` | `--help` | 子のプロセス | 引数を (a) `--mesh 5339 --help --foo`、(b) `--foo --help`、(c) `--config '' --help`（`--config` の値は空の文字列） | (a)(c) は 0、標準出力は [4.1.4](#414-メッセージ文面) の使い方の文と等しい、標準エラー出力は空、`<tmp>/data/findsummits.lock` と `<tmp>/logs` が無い、模擬サーバーは要求を受けない。(b) は 2、TA1（`--foo`）、標準出力は空 |
+| `UT-fetch_tiles-04` | 待ち時間の計算 | 同じプロセス（定数は差し替えない） | `_retry_wait(n, ra)` に (n, ra) を (1, None)、(2, None)、(3, None)、(4, None)、(5, None)、(6, None)、(1, 1.0)、(1, 120.0)、(5, 0.0)、(2, 900.0)、(1, 900.5) | 順に `60.0`、`120.0`、`240.0`、`480.0`、`900.0`、`900.0`、`60.0`、`120.0`、`900.0`、`900.0`、`None` |
+| `UT-fetch_tiles-05` | `Retry-After` の読み方 | 同じプロセス | `_parse_retry_after` に (a) `None`、(b) `'120'`、(c) `' 7 '`、(d) `'1.5'`、(e) `'abc'`、(f) `'9'` を 19 字、(g) `email.utils.formatdate(time.time() + 100, usegmt=True)`、(h) `'Wed, 21 Oct 2015 07:28:00 GMT'`、(i) `'0'` を 19 字、(j) `'0'` を 19 字の後に `'900'` | (a) `None`、(b) `120.0`、(c) `7.0`、(d)(e) `None`、(f) `math.inf`、(g) 98 以上 101 以下、(h) `0.0`、(i) `0.0`、(j) `900.0`（先頭の `0` を除いてから桁数を見る） |
+| `UT-fetch_tiles-06` | HTTP の日付の読み方 | 同じプロセス | `_parse_http_date` に (a) `'Wed, 21 Oct 2015 07:28:00 GMT'`、(b) `'Wed, 21 Oct 2015 07:28:00 -0000'`、(c) `'garbage'`、(d) `''`、(e) `None`、(f) `'Wed, 32 Oct 2015 07:28:00 GMT'` | (a)(b) `1445412480.0`、(c)〜(f) `None` |
+| `UT-fetch_tiles-07` | 取得範囲（2.4 の表 4） | 同じプロセス | `mesh_tile_range` に [2.4](#24-言語ごとに別に実装する式のテストベクトル) の表 4 の 6 行のメッシュと z | 各行の `(x_min, x_max, y_min, y_max)` と等しい |
+| `UT-fetch_tiles-08` | 北方領土除外タイルリストを読む | 同じプロセス | `read_excluded_tiles` に、中身が (a) `207 403\n209 403\n`、(b) 空、(c) `1 2`（最後の改行なし）、(d) `1  2\n`、(e) `1 2\n\n`、(f) `1 2\r\n`、(g) `32768 1\n`、(h) `x y\n` のファイル、(i) 無いパス、(j) ディレクトリ | (a) `{(207, 403), (209, 403)}`、(b) 空の集合、(c) `{(1, 2)}`。(d)〜(j) は 1。(d)(f)(g)(h) は TP2（`{detail}` は `1 行目が「x y」の形でない: <行>`）、(e) は TP2（`{detail}` は `2 行目が「x y」の形でない:` の後に空白 1 つだけ。行は空）、(i) は TP1、(j) は TP2（`{detail}` は `Is a directory`）。TP1〜TP2 の 2 行目は `venv/bin/python3 scripts/preprocess_boundaries.py を起動して正常に終えてから、もう一度起動する` |
+| `UT-fetch_tiles-09` | CMP1 の版の記録の有無 | 同じプロセス。`<tmp>/b/` を作る | `check_c1_version_record('<tmp>/b')` に、`<tmp>/b/n03_version.txt` を (a) `20250101\n`、(b) 空のファイル、(c) 置かない、(d) ディレクトリにする | (a)(b) は止まらない（標準エラー出力は空）。(c)(d) は 1、TP3（`{path}` は `<tmp>/b/n03_version.txt`） |
+| `UT-fetch_tiles-10` | 取得完了の記録を読む | 同じプロセス | `read_fetch_record` に、(a) 無いパス、中身が (b) 空、(c) `5339\n5340`、(d) `5339\n5339\n`、(e) `5339\n\n`、(f) `52a9\n`、(g) `EF BB BF` と `5339\n` のファイル、(h) ディレクトリ | (a)(b) 空の集合、(c) `{'5339', '5340'}`、(d) `{'5339'}`。(e)〜(h) は 1、TR1。`{detail}` は (e) `2 行目が 4 桁の数字でない:` の後に空白 1 つだけ、(f) `1 行目が 4 桁の数字でない: 52a9`、(g) `1 行目が 4 桁の数字でない:` で始まる、(h) `Is a directory`。2 行目は `<パス> を消してから、venv/bin/python3 scripts/fetch_tiles.py を --mesh なしで起動し直す（--mesh を付けると、記録はそのメッシュだけになる）` |
+| `UT-fetch_tiles-11` | 対象のメッシュを決める | 同じプロセス | `select_fetch_meshes(m, {'5339', '5340', '6848'}, {'6848'})` の `m` を (a) `None`、(b) `{'5339', '9999', '6848'}`、(c) `{'6848'}` | (a) `{'5339', '5340'}`、標準エラー出力は空。(b) `{'5339'}`、標準エラー出力は TW2（`WARNING: --mesh のメッシュコードを飛ばした（北方領土除外メッシュ）: 6848`）の 2 行の後に TW1（`…（日本全土1次メッシュコードリストに無い）: 9999`）の 2 行。(c) 空の集合、TW2 の 2 行 |
+| `UT-fetch_tiles-12` | 取得するタイルの集合 | 同じプロセス。小さな範囲 | `list_fetch_tiles({'5339', '5340'}, {(207, 403), (209, 403)})` | DEM10b は `(100, 200)`・`(100, 201)`・`(101, 200)`・`(101, 201)`・`(102, 200)`・`(102, 201)`・`(103, 200)` の 7 枚（`(103, 201)` が除かれる）。ズーム 15 の位置は、x = 200〜207・y = 400〜403 の 32 から `(207, 403)` を除いた 31 |
+| `UT-fetch_tiles-13` | 古いキャッシュのタイル | 同じプロセス。小さな範囲 | `list_stale_tiles({'5339', '5340', '6848'}, {'6848'}, {(207, 403), (209, 403)})` | `DEM10b` は `{(103, 201), (104, 200), (104, 201)}`。`DEM5a`・`DEM5b`・`DEM5c` はどれも、x = 208・209 と y = 400〜403 の 8 つに `(207, 403)` を足した 9 つ（x = 206・207 の列は B の範囲に入るので、除外メッシュの取得範囲から除かれる。`(207, 403)` は北方領土除外タイルとして入る） |
+| `UT-fetch_tiles-14` | 記録から対象を外す | 同じプロセス。`<tmp>/data/tiles/` を作る | `remove_from_record('<tmp>/data/tiles/fetch_complete.txt', record, {'5339'}, given)` を (a) `record = {'5339', '5340'}`・`given = True`、(b) 同じ `record`・`given = False`、(c) 記録のファイルを置かず `record = set()`・`given = True`、(d) 記録 `5339\n5340\n` を置き、`fetch_tiles` の中の `os.replace` を `OSError(errno.EACCES, os.strerror(errno.EACCES))` を上げる物に差し替えてから (a) と同じく | (a) 返り値 `{'5340'}`、ファイルは `5340\n`。(b) 返り値は空の集合、ファイルは空。(c) 返り値は空の集合、空のファイルができる。(d) 1、TF1（2 行目は `ディスクの空きと <tmp>/data/tiles の権限を確かめてから venv/bin/python3 scripts/fetch_tiles.py を起動し直す（記録はこの書き換えの前の内容のまま）`）、記録は `5339\n5340\n` のまま。どれも `fetch_complete.txt.tmp` が残らない |
+| `UT-fetch_tiles-15` | 記録を書く | 同じプロセス | `write_fetch_record('<tmp>/data/tiles/fetch_complete.txt', codes)` を (a) `<tmp>/data/tiles/` を作らずに `{'5340', '5339'}`、(b) `set()`、(c) `fetch_complete.txt.tmp` をディレクトリにしてから `{'5339'}`、(d) 記録 `5339\n` を置き、`fetch_tiles` の中の `os.replace` を `OSError(errno.EACCES, os.strerror(errno.EACCES))` を上げる物に差し替えてから `{'5340'}` | (a) `tiles/` ができ、ファイルは `5339\n5340\n`。(b) 空のファイル。(c) 1、TF1（`{path}` は `<tmp>/data/tiles/fetch_complete.txt.tmp`）。(d) 1、TF1（`{path}` は記録のパス、`{reason}` は `Permission denied`）、記録は `5339\n` のまま、`.tmp` は残らない。(a)(b) も `.tmp` は残らない |
+| `UT-fetch_tiles-16` | キャッシュを消す | 同じプロセス。`<tiles>` = `<tmp>/tiles` に DEM10b の `(100, 200)` と DEM5a の `(200, 400)` のキャッシュを置く | (a) `delete_cached_tiles({'DEM10b': {(100, 200), (101, 200)}, 'DEM5a': {(200, 400)}}, '<tiles>')`、(b) DEM5b の `(200, 400)` のパスをディレクトリにしてから `delete_cached_tiles({'DEM5b': {(200, 400)}}, '<tiles>')` | (a) 返り値は `{'DEM10b': 1, 'DEM5a': 1, 'DEM5b': 0, 'DEM5c': 0}`、2 つのファイルが無い、`_tally` の `削除` が DEM10b と DEM5a で 1。(b) 1、TF3（`{path}` は `<tiles>/dem5b_png/15/200/400.png`） |
+| `UT-fetch_tiles-17` | タイルを置く | 同じプロセス | (a) `save_tile(b'abc', 1445412480.0, '<tmp>/t/dem_png/14/1/2.png')`（ディレクトリは無い）、(b) 中身 `old` のファイルがあるパスに同じく、(c) 中身 `old` のファイルがあるパスで、`fetch_tiles` の中の `os.fsync` を `OSError(errno.EIO, os.strerror(errno.EIO))` を上げる物に差し替えて呼ぶ、(d) 同じく `os.replace` を `OSError(errno.EACCES, …)` を上げる物に差し替えて呼ぶ | (a)(b) ファイルの中身は `abc`、mtime は 1445412480、`2.png.tmp` が無い。(c)(d) `OSError` が上がる、ファイルは `old` のまま、`.tmp` が無い |
+| `UT-fetch_tiles-18` | User-Agent と版 | 同じプロセス | (a) `_software_version` を `('v1.2.3', None)` を返す物に差し替えて `build_user_agent('a@b')`、(b) `('unknown', 'git が無い')` を返す物に差し替えて同じく、(c) `fetch_tiles` の中の `subprocess.run` を、(i) `FileNotFoundError` を上げる、(ii) 終了コード 128 を返す、(iii) 標準出力 `v1 2\n` を返す、(iv) 標準出力 `v1.2.3-4-gabcdef0-dirty\n` を返す物に差し替えて `_software_version()` | (a) `'findsummits/v1.2.3 (mailto:a@b)'`、標準エラー出力は空。(b) `'findsummits/unknown (mailto:a@b)'`、標準エラー出力に TW3（`WARNING: User-Agent に入れる版を git から取れない: git が無い`）。(c) (i) `('unknown', 'git が無い')`、(ii) `('unknown', 'git describe の終了コード 128')`、(iii) `('unknown', 'git describe の出力が版の形でない')`、(iv) `('v1.2.3-4-gabcdef0-dirty', None)`。(c) は `git` に `-C <ソースツリーの根> describe --tags --dirty --always` を渡す |
+| `UT-fetch_tiles-19` | HTTP 200 で置く | 同じプロセス。模擬サーバー | `fetch_one_tile('DEM10b', (100, 200), _cache_path('<tmp>/tiles', 'DEM10b', (100, 200)), 'UA/1', _Gate(0))` | `'fetched'`。`<tmp>/tiles/dem_png/14/100/200.png` の中身は `PNG`、mtime は 1445412480。模擬サーバーは `/xyz/dem_png/14/100/200.png` の要求を 1 回受け、`User-Agent` は `UA/1`、`If-Modified-Since` は無い |
+| `UT-fetch_tiles-20` | HTTP 304 | 同じプロセス。模擬サーバーは `(100, 200)` に 304。キャッシュに中身 `old`・mtime 1445412480 のファイルを置く | 19 と同じ | `'unchanged'`。要求の `If-Modified-Since` は `Wed, 21 Oct 2015 07:28:00 GMT`。ファイルの中身と mtime は変わらない |
+| `UT-fetch_tiles-21` | HTTP 404 | 同じプロセス。模擬サーバーは `(100, 200)` に 404。キャッシュに中身 `old` のファイルを置く | 19 と同じ | `'missing'`。キャッシュのファイルは残る（`fetch_one_tile` は消さない） |
+| `UT-fetch_tiles-22` | すぐ止める応答 | 同じプロセス。模擬サーバー | 19 と同じ呼び方で、模擬サーバーが `(100, 200)` に (a) 403、(b) `Location: /xyz/x.png` の 301、(c) 206、(d) 304（キャッシュなし）、(e) `Last-Modified` の無い 200（キャッシュに中身 `old`・mtime 1000000000 のファイルを置く）、(f) `Last-Modified: garbage` の 200、(g) キャッシュのパスをディレクトリにする | どれも `_Stop`。`why`・`last`・`retries` は (a) `immediate`・`HTTP 403`・0、(b) `unexpected`・`HTTP 301（Location: /xyz/x.png）`・0（`/xyz/x.png` の要求は無い）、(c) `unexpected`・`HTTP 206`・0、(d) `unexpected`・`HTTP 304（If-Modified-Since を付けていない要求）`・0、(e) `no_last_modified`・`HTTP 200（Last-Modified: なし）`・0（キャッシュの中身は `old`、mtime は 1000000000 のまま）、(f) `no_last_modified`・`HTTP 200（Last-Modified: garbage）`・0。(a)〜(f) の要求は 1 回。(g) `why` は `file`、`reason` は `ファイルでない`、要求は 0 回 |
+| `UT-fetch_tiles-23` | 再試行 | 同じプロセス。模擬サーバー。待ちの定数を差し替える | 19 と同じ呼び方で、`(100, 200)` の台本を (a) 503 を 6 回、(b) 502・200、(c) `delay` 1.0 の 200・200、(d) `close`・200、(e) 500 を 6 回 | (a) `_Stop`（`retry_exceeded`・`HTTP 503`・5）、要求は 6 回で、k 回目を返し終えてから k + 1 回目を受けるまでが、順に 0.05・0.1・0.2・0.4・0.4 秒から 0.02 を引いた値以上。(b)(c)(d) `'fetched'`、要求は 2 回（(c) の 1 回目は 0.5 秒でタイムアウト）。(e) `_Stop`（`retry_exceeded`・`HTTP 500`・5） |
+| `UT-fetch_tiles-24` | `Retry-After` | 同じプロセス。模擬サーバー。待ちの定数を差し替える | 19 と同じ呼び方で、`(100, 200)` の台本を (a) `Retry-After: 1` の 429（1 は差し替えた `_WAIT_CAP_S` の 0.4 より大きい）、(b) `Retry-After: 0` の 503・200 | (a) `_Stop`（`retry_after`・`HTTP 429（Retry-After: 1）`・0）、要求は 1 回、呼んでから 0.3 秒より前に返る（待たない）。(b) `'fetched'`、2 回目の要求を受けたのは 1 回目を返し終えてから 0.03 秒以上後（指数の待ち時間 0.05 と 0 の長い方） |
+| `UT-fetch_tiles-25` | 間隔と全体の待ちと止め方 | 同じプロセス。`do_send` は、呼ばれた時刻（`time.monotonic()`）を並びに足す関数 | (a) `_Gate(100)` で、2 つのスレッドがそれぞれ `send(do_send)` を 2 回呼ぶ、(b) `_Gate(0)` で `pause(0.3)` の直後に別のスレッドが `send(do_send)`、(c) `_Gate(0)` で `pause(10)` の後に別のスレッドが `send(do_send)` を呼び、0.1 秒後に `stop()`、続けて `sleep(10)`、(d) `_Gate(0)` で、スレッド A が、`threading.Event` を待ってから時刻を足す `do_send` で `send` を呼び、A が `do_send` に入ったら（もう 1 つの `Event` で知らせる）、メインのスレッドが `pause(0.5)` を呼んで、それが返った時刻を控え、0.2 秒後に A の `Event` を `set` する、(e) (d) と同じく A が `do_send` の中で止まっているあいだに、メインのスレッドが `stop()` を呼び、返った後に別のスレッド B が `send(do_send)` | (a) 4 回とも真を返し、`do_send` が呼ばれた時刻を並べた差がどれも 0.09 秒以上。(b) 真を返し、`do_send` は `pause` から 0.28 秒以上後に呼ばれる。(c) `send` は `stop()` から 0.3 秒より前に偽を返し、`do_send` は呼ばれない。`sleep(10)` はすぐ偽を返す。(d) `pause(0.5)` が返ったのは A の `do_send` が終わった後（`set` から後。判定と送信が同じロックの中なので、送信の途中に全体の待ちが割り込まない）。(e) `stop()` が返ったのは A の `do_send` が終わった後で、B の `send` は `do_send` を呼ばずに偽を返す |
+| `UT-fetch_tiles-26` | 429 の待ちのあいだ全ワーカーが要求を出さない | 同じプロセス。模擬サーバー。小さな範囲の A の DEM10b の 4 枚。`_FIRST_WAIT_S` を 0.5 に、`_WAIT_CAP_S` を 1.0 に差し替える（待ちは `min(0.5, 1.0)` の 0.5 秒）。台本は `(100, 200)` が `wait_for` `(100, 201)` の 429・200、`(100, 201)` が `delay` 0.3 の 200 | `download_tiles(<A の 4 枚>, '<tmp>/tiles', 2, 0, 'UA/1')` | 返り値の数は `取得` 4・`変更なし` 0・`未整備` 0、404 の集合は空。429 を返し終えた時刻 t から t + 0.45 秒までに受けた要求は無い。`(100, 200)` の 2 回目を受けたのは t + 0.45 秒以後 |
+| `UT-fetch_tiles-27` | 数と 404 の集合と途中経過 | 同じプロセス。模擬サーバー。A の DEM10b の 4 枚。台本は `(100, 201)` が 304、`(101, 200)`・`(101, 201)` が 404。`(100, 201)` と `(101, 201)` のキャッシュを置く | `download_tiles(<A の 4 枚>, '<tmp>/tiles', 2, 0, 'UA/1')` | 返り値は（`{'取得': 1, '変更なし': 1, '未整備': 2}`, `{(101, 200), (101, 201)}`）。`(101, 201)` のキャッシュは残る。標準出力は `途中経過: DEM10b のタイル 1/4（25%）`・`2/4（50%）`・`3/4（75%）`・`4/4（100%）` の 4 行（2 行目からは `途中経過: DEM10b のタイル` と空白 1 つの後の部分を書いた）。`_tally['DEM10b']` は `取得` 1・`変更なし` 1・`未整備` 2 |
+| `UT-fetch_tiles-28` | 止めるときは実行中の要求を待つ | 同じプロセス。模擬サーバー。A の DEM10b の 4 枚。`_TIMEOUT_S` を 2.0 に差し替える（応答の遅れ 0.5 秒でタイムアウトにならないように）。台本は `(100, 200)` が `delay` 0.5 の 200、`(100, 201)` が `wait_for` `(100, 200)` の 403 | `download_tiles(<A の 4 枚>, '<tmp>/tiles', 2, 0, 'UA/1')` | 1、TG1（`ERROR: 標高タイルの取得を止めた（再試行しない応答）: DEM10b 14/100/201（<URL>）: 最後の応答 HTTP 403、再試行 0 回`）。`SystemExit` を捕まえた時刻は `(100, 200)` を返し終えた時刻より後。`(100, 200)` のキャッシュの中身は `PNG`、mtime は 1445412480。`(101, 200)`・`(101, 201)` の要求は無い。`<tmp>/tiles` の下に `.tmp` で終わるファイルは無い |
+| `UT-fetch_tiles-29` | 最大並列数とリクエスト間隔 | 同じプロセス。模擬サーバー。A と B の DEM10b の 8 枚（北方領土除外を除かない） | (a) 各タイルの台本を `delay` 0.2 の 200 にして `download_tiles(<8 枚>, '<tmp>/tiles', 2, 0, 'UA/1')`、(b) 遅れなしで `download_tiles(<8 枚>, '<tmp>/tiles', 4, 100, 'UA/1')` | (a) 模擬サーバーの記録で、同時に応答中の要求の数の最大がちょうど 2。(b) 受けた時刻を並べた差がどれも 0.09 秒以上 |
+| `UT-fetch_tiles-30` | ワーカーのファイルの失敗はメインで止まる | 同じプロセス。模擬サーバー。`<tmp>/tiles/dem_png/14/100` を通常のファイルにする | `download_tiles({(100, 200)}, '<tmp>/tiles', 2, 0, 'UA/1')` | 1、TF2（`{path}` は `<tmp>/tiles/dem_png/14/100/200.png`、`{reason}` は `Not a directory`）。模擬サーバーは要求を受けない |
+| `UT-fetch_tiles-31` | DEM10b がすべて 404 のメッシュ | 同じプロセス。小さな範囲 | (a) `check_dem10b_meshes({'5339', '5340'}, <12 の DEM10b の 7 枚>, <A の 4 枚>, '<tmp>/tiles')`（A の 4 枚のキャッシュを置く）、(b) 404 の集合を `{(100, 200), (103, 200)}` にして同じく（その 2 枚と `(101, 200)` のキャッシュを置く）、(c) `check_dem10b_meshes({'5340', '5341'}, <list_fetch_tiles({'5340', '5341'}, 北方領土除外タイル) の DEM10b>, set(), '<tmp>/tiles')`、(d) (c) の 404 の集合を B の DEM10b の 3 枚にする | (a) 1、TD1（`ERROR: 取得範囲の DEM10b のタイルがすべて未整備（HTTP 404）のメッシュがある: 5339（4 枚）`）、4 枚のキャッシュは残る。(b) 返り値 2、2 枚のキャッシュが無く、`(101, 200)` は残る。(c) 返り値 0（`5341` は範囲の DEM10b がすべて北方領土除外なので見ない）。(d) 1、TD1 の `{meshes}` は `5340（3 枚）` だけ |
+| `UT-fetch_tiles-32` | 海の位置 | 同じプロセス。小さな範囲 | `find_sea_positions(<positions>, <dem10b>, <notfound>, {'5439'}, <nt>)` を (a) `list_fetch_tiles({'5439'}, set())` の 2 つの集合、`notfound` は DEM10b の 25 枚すべて、`nt = set()`、(b) (a) の `notfound` から `(114, 214)` を除く、(c) `nt = {(220, 420)}` で `list_fetch_tiles({'5439'}, nt)` の 2 つの集合、`notfound` はその DEM10b の 24 枚すべて | (a) 海の位置は x = 222〜227・y = 422〜427 の 36、並びは `[('5439', 100, 36)]`。(b) (a) の 36 から x = 226・227・y = 426・427 の 4 を除いた 32、`[('5439', 100, 32)]`。(c) (a) の 36 から x = 222・223・y = 422・423 の 4 を除いた 32（北方領土除外で要求しない `(110, 210)` を 404 でなかったものとして扱う）、`[('5439', 99, 32)]` |
+| `UT-fetch_tiles-33` | DEM5 の位置ごとの取り方と消し方 | 同じプロセス。模擬サーバー。位置 P1 = `(200, 400)`、P2 = `(200, 401)`、P3 = `(201, 400)`、P4 = `(201, 401)`、P5 = `(202, 400)`、海の位置 S = `(202, 401)`。台本は P2 の DEM5a が 404、P3 の DEM5a・5b が 404、P4 の DEM5a が 304、P5 の DEM5a が 404・DEM5b が 304（ほかは既定の 200）。キャッシュは P1 の DEM5b・5c、P2 の DEM5a・5c、P4 の DEM5a・5b、P5 の DEM5b・5c、S の DEM5a に置く | `download_dem5({P1, P2, P3, P4, P5, S}, {S}, '<tmp>/tiles', 2, 0, 'UA/1')` | 要求は、P1 は DEM5a、P2 は DEM5a・5b、P3 は DEM5a・5b・5c、P4 は DEM5a、P5 は DEM5a・5b だけで、S には無い。後のキャッシュは、P1 は DEM5a だけ、P2 は DEM5b だけ、P3 は DEM5c だけ、P4 は DEM5a だけ（中身と mtime は前のまま）、P5 は DEM5b だけ（前のまま）、S は DEM5a（前のまま）。返り値は（`DEM5a` が `取得` 1・`変更なし` 1・`未整備` 3・`404 で削除` 1・`下位で削除` 0、`DEM5b` が 1・1・1・0・2、`DEM5c` が 1・0・0・0・3, 1）。標準出力は `途中経過: DEM5 の位置 1/5（20%）` から `5/5（100%）` までの 5 行 |
+| `UT-fetch_tiles-34` | 初めての取得 | 子のプロセス。模擬サーバー | `--mesh 5339` | 0。取得完了の記録は `5339\n`。要求は DEM10b が x = 100・101・y = 200・201 の 4 枚、DEM5a が x = 200〜203・y = 400〜403 の 16 で、DEM5b・5c は無い。どの要求も `User-Agent` は `findsummits/v0-test (mailto:test@example.com)` で、`If-Modified-Since` は無い。DEM10b の 4 枚を返し終えてから DEM5a の最初の要求を受ける。キャッシュの 20 のファイルの mtime は 1445412480。ログファイルの行は、L1（`開始: fetch_tiles --config ../c.ini --mesh 5339`）、L2（`設定ファイル: <tmp>/c.ini` と、`data_dir`・`log_dir`・`max_parallel`・`interval_ms`・`user_agent_email` の 5 行。どれも `ファイル`）、TL1（`対象のメッシュ 1 件: 5339`）、TL2、TL3 の DEM10b の 4 行、TL3 の DEM5 の 16 行、TL4（`結果の要約: タイルの取得を終えた（取得完了の記録はこの後に書く）。対象のメッシュ 1 件`、`DEM10b: 取得 4、変更なし 0、未整備 0、削除 0`、`DEM5a: 取得 16、変更なし 0、未整備 0、削除 0`、`DEM5b: 取得 0、変更なし 0、未整備 0、削除 0`、`DEM5c: 取得 0、変更なし 0、未整備 0、削除 0`、`海として DEM5 を要求しなかった位置: 0`、`海の位置: 5339 判定対象 16、海 0、割合 0.0%`）、L3（終了コード 0）の順。標準出力は同じ文面が時刻なしで同じ順 |
+| `UT-fetch_tiles-35` | 記録の書き直し | 子のプロセス。模擬サーバー | (a) 記録を `5339\n` にして `--mesh 5340`、(b) 記録を `5339\n9999\n` にして `--mesh` なし | (a) 0、記録は `5339\n5340\n`。要求は DEM10b が `(102, 200)`・`(102, 201)`・`(103, 200)` の 3 枚、DEM5a が B の 16 から `(207, 403)` を除いた 15。(b) 0、記録は `5339\n5340\n`（`9999` の行は残らない） |
+| `UT-fetch_tiles-36` | 対象が 0 件 | 子のプロセス。模擬サーバー。記録を `5339\n` にして、バイト列と mtime を控える。キャッシュに DEM10b の `(104, 200)`、DEM5a の `(208, 400)`、DEM5b の `(207, 403)`、DEM5a の `(205, 400)` を置く。`<tmp>/work/m.txt` に `9999\n6848\n` を書く | `--mesh m.txt` | 0。標準エラー出力は TW2（`6848`）の 2 行の後に TW1（`9999`）の 2 行。模擬サーバーは要求を受けない。記録のバイト列と mtime は控えたとおり。DEM10b の `(104, 200)`、DEM5a の `(208, 400)`、DEM5b の `(207, 403)` のキャッシュが無く、DEM5a の `(205, 400)` は残る。ログの要約は TL5（`結果の要約: 対象のメッシュが 0 件なので取得しなかった（取得完了の記録は変えていない）`、`DEM10b: 取得 0、変更なし 0、未整備 0、削除 1`、`DEM5a: 取得 0、変更なし 0、未整備 0、削除 1`、`DEM5b: 取得 0、変更なし 0、未整備 0、削除 1`、`DEM5c: 取得 0、変更なし 0、未整備 0、削除 0`）。TL1 は `対象のメッシュ 0 件` |
+| `UT-fetch_tiles-37` | 起動前提条件の不足と記録の誤り | 子のプロセス。模擬サーバー。記録を `5339\n` にし、DEM10b の `(100, 200)` のキャッシュを置き、記録とキャッシュのバイト列と mtime を控える | `--mesh 5339` で、(a) `nt_excluded_tiles.txt` を消す、(b) `nt_excluded_meshes.txt` をディレクトリにする、(c) `n03_version.txt` を消す、(d) 記録を `52a9\n` にする（控えもこの中身で採る）、(e) `<tmp>/src/params/mesh_list_japan.txt` を消す（それぞれ） | どれも 1。メッセージは (a) TP1、(b) R2（2 行目は `venv/bin/python3 scripts/preprocess_boundaries.py --config <tmp>/c.ini を起動して正常に終えてから、もう一度起動する`）、(c) TP3、(d) TR1（`{detail}` は `1 行目が 4 桁の数字でない: 52a9`、2 行目の `{config_opt}` は空白 1 つと `--config <tmp>/c.ini`）、(e) R1（既定の対処）。模擬サーバーは要求を受けない。記録とキャッシュは控えたとおり。ログの要約は TL6（`結果の要約: 途中で止まった（入力の読み込み）。終えた分:` と 4 行の 0）で、記録から外した旨の行は無い |
+| `UT-fetch_tiles-38` | DEM10b がすべて 404 で止まる | 子のプロセス。模擬サーバーは A の DEM10b の 4 枚に 404。記録を `5339\n5340\n` にし、DEM10b の `(100, 200)` のキャッシュを置く | `--mesh 5339` | 1、TD1（`5339（4 枚）`）。DEM5 の要求は無い。記録は `5340\n`。`(100, 200)` のキャッシュは残る。ログの要約は TL6（`結果の要約: 途中で止まった（DEM10b の検査）。終えた分:`、`DEM10b: 取得 0、変更なし 0、未整備 4、削除 0`、DEM5 の 3 行は 0、最後に `今回の対象のメッシュは取得完了の記録から外したまま（起動し直して正常に終えると記録に戻る）`） |
+| `UT-fetch_tiles-39` | シグナルでも実行中の要求を待つ | 子のプロセス（`subprocess.Popen`）。模擬サーバーは `(100, 200)` の DEM10b を `hold` で止める。記録を `5339\n` にする | `--mesh 5339` で起動し、模擬サーバーが A の DEM10b の 4 枚すべての要求を受けたら（10 秒まで待つ）子に `SIGTERM` を送り、0.3 秒後に `hold` の `Event` を `set` する | 143。子が終わったのは `set` より後。`SIGTERM` を送ってから 0.1 秒より後に受けた要求は無い。ログファイルの最後の行は `SIGTERM` を受けて止まった形の L3 で、その前が TL6（`結果の要約: 途中で止まった（DEM10b の取得）。終えた分:`、`DEM10b: 取得 4、変更なし 0、未整備 0、削除 0`〈止めた後に終わった `(100, 200)` も数える〉、DEM5 の 3 行は 0、最後に記録から外した旨の行）。記録は空のファイル。`(100, 200)` のキャッシュは中身 `PNG`・mtime 1445412480。`<tmp>/data/tiles` の下に `.tmp` で終わるファイルは無い |
+| `UT-fetch_tiles-40` | 同時起動 | 子のプロセス。模擬サーバー。テストのプロセスが `<tmp>/data/findsummits.lock` を開いて `fcntl.flock(LOCK_EX)` で持つ | `--mesh 5339` | 1、G1（`{lock_path}` は `<tmp>/data/findsummits.lock`）。`<tmp>/logs` が無い。模擬サーバーは要求を受けない |
+| `UT-fetch_tiles-41` | ワーカーの例外はメインで止まる | 子のプロセス。模擬サーバー。試験用のプログラムで、さらに `fetch_tiles.save_tile` を `RuntimeError('boom')` を上げる関数に差し替える。記録を `5339\n` にする | `--mesh 5339` | 1。標準エラー出力に `ERROR: 予期しない例外で止まった: RuntimeError: boom` と `Traceback (most recent call last):` の行。ログの要約は TL6（`DEM10b の取得`）。記録は空のファイル |
+| `UT-fetch_tiles-42` | DEM5 の途中で止まっても確定した結果は数えて消す | 同じプロセス。模擬サーバー。位置 P1 = `(200, 400)` の DEM5a が 404、DEM5b が 403。P1 の DEM5a のキャッシュを置く | `download_dem5({(200, 400)}, set(), '<tmp>/tiles', 1, 0, 'UA/1')` | 1、TG1（`DEM5b 15/200/400`、`再試行しない応答`、`HTTP 403`）。P1 の DEM5a のキャッシュが無い（止まる前に確定した 404 で消す）。`_tally['DEM5a']` は `未整備` 1・`削除` 1、`_tally['DEM5b']` はどれも 0 |
+| `UT-fetch_tiles-43` | 最後の記録の書き込みに失敗する | 子のプロセス。模擬サーバー。試験用のプログラムで、さらに `os.replace` を、置き換え先の名前が `fetch_complete.txt` の呼び出しの 2 回目だけ `OSError(errno.EACCES, os.strerror(errno.EACCES))` を上げる物（ほかは元の `os.replace` を呼ぶ）に差し替える。記録を `5339\n` にする | `--mesh 5339` | 1。ログの行は、TL4（1 行目 `結果の要約: タイルの取得を終えた（取得完了の記録はこの後に書く）。対象のメッシュ 1 件`）の後に TF1 の 2 行（`{path}` は記録のパス、`{reason}` は `Permission denied`）、L3（終了コード 1）の順。記録は空のファイル（対象を外した後のまま）。キャッシュの 20 のファイルは残る。`fetch_complete.txt.tmp` は残らない |
+| `UT-fetch_tiles-44` | ワーカーを起こす途中のシグナル | 子のプロセス。模擬サーバーは `(100, 200)` の DEM10b を `delay` 0.5 にする。試験用のプログラムで、さらに `threading.Thread.start` を、元の `start` を呼んだ後、1 回目の呼び出しのときだけ自分へ `SIGTERM` を送る物に差し替える。記録を `5339\n` にする | `--mesh 5339` | 143。ログファイルの最後の行は `SIGTERM` を受けて止まった形の L3 で、その前が TL6（`DEM10b の取得`。最後に記録から外した旨の行）。模擬サーバーが受けた要求は 1 回以下で、受けた要求は返し終えている（子は実行中の要求を待ってから終わる）。`<tmp>/data/tiles` の下に `.tmp` で終わるファイルは無い |
+| `UT-fetch_tiles-45` | 段をまたいでも間隔を守る | 同じプロセス。模擬サーバー | `download_tiles({(100, 200)}, '<tmp>/tiles', 1, 300, 'UA/1')` の直後に、`download_dem5({(200, 400)}, set(), '<tmp>/tiles', 1, 300, 'UA/1')` | 2 回の要求を受けた時刻の差が 0.27 秒以上（2 つの段で同じ `_gate` を使う） |
+| `UT-fetch_tiles-46` | 使い直す前に切られた接続を見つけて張り直す | 同じプロセス。模擬サーバーは、どの応答の後にも、`Connection: close` を付けずにハンドラの側で接続を切る（`self.close_connection = True`）。`_FIRST_WAIT_S` を 1.0 に差し替える | 同じスレッドで、同じ `_Gate(0)` を渡して `fetch_one_tile` を `(100, 200)` の DEM10b に呼び、0.1 秒おいて `(100, 201)` に呼ぶ | どちらも `'fetched'`。模擬サーバーが受けた要求は 2 回で、どちらも応答を返し終えている（切られた接続には要求を出さない）。2 回の要求のクライアントのポートが違う（2 回目は張り直した接続で来る）。2 回目の呼び出しは 0.5 秒より前に終わる（再試行の待ち 1.0 秒を待たない） |
+
+- UT 候補の数の理由: [HLD 4.1.2](30_HLD.md#412-処理の流れ) の 1〜8、応答の表の各行、[HLD 4.1.3](30_HLD.md#413-異常系) の異常系の表と「再試行」の各段落、IT が UT に送った待ち時間の計算（`IT-CMP2-EXT2-06` の「待ち時間の計算は UT で照らす」）を、それぞれ 1 つ以上のケースで照らす。実サーバーへの要求（`IT-CMP2-EXT2-01`）と、実時間の 60 秒以上の待ち（IT の `CMP2-EXT2`）は UT で行わない。
+- 子のプロセスのケースも、起動の部分ではなく試験用の短いプログラムから `main` を呼ぶ（`_BASE_URL` と範囲と待ちの定数を差し替えるため。3.1.5 の `UT-preprocess_boundaries-11` と同じ形）。待ちの定数を小さくして、待ちの計算（`UT-fetch_tiles-04`）と待ちの振る舞い（`23`〜`26`）を分けて照らす。
 
 ## 5. CMP3 パイプライン制御
 
