@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -55,6 +55,12 @@
     - [5.2.4 メッセージ文面](#524-メッセージ文面)
     - [5.2.5 UT 候補](#525-ut-候補)
 - [6. CMP4 地形解析エンジン](#6-cmp4-地形解析エンジン)
+  - [6.1 `analyze_terrain_launch`](#61-analyze_terrain_launch)
+    - [6.1.1 ファイル割付](#611-ファイル割付)
+    - [6.1.2 型とデータ](#612-型とデータ)
+    - [6.1.3 関数の細部](#613-関数の細部)
+    - [6.1.4 メッセージ文面](#614-メッセージ文面)
+    - [6.1.5 UT 候補](#615-ut-候補)
   - [6.12 `analyze_terrain_common`](#612-analyze_terrain_common)
     - [6.12.1 ファイル割付](#6121-ファイル割付)
     - [6.12.2 型とデータ](#6122-型とデータ)
@@ -83,10 +89,10 @@
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`。C++ は宣言の形。例 `std::set<std::string>`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
-  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`）。`main` を置くファイルは 6.1 の節で決める。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
+  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
   - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数と状態は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、定数は HLD の名前（`EXIT_OK` など）。
   - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
-  - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
+  - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。ただし、`start_log` の前に誤りのメッセージを画面に書けずに `std::system_error` が出たときは `EXIT_USAGE` を返す（[6.1](#61-analyze_terrain_launch) の `main`。`start_log` の前は終わりの行が無い）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
   - 結果の要約（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 7「結果の要約」）: 要約を出す関数は、次の形で書く（中身は各モジュールの節で決める）。
 
     ```cpp
@@ -105,14 +111,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -482,7 +488,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.12 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.12 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -517,7 +523,7 @@ def main() -> None:
 
 誤りの文面は、その誤りを確かめる部品か関数の節に置く（2.1 では CF1〜CF7・A1〜A5・R1〜R3、5.2 では RA1・RA2・RP1）。同じ入力（同じ設定のキー、同じファイル）を 2 つ以上のモジュールが同じ確かめで見る誤りは、終了コードによらず、下の表に置き、各モジュールの節から指す。各プログラムの起動の引数の誤り（3.1 の BA1〜BA4、4.1 の TA1〜TA4、5.1 の PA1〜PA5 など）は、文面が同じになっても、それぞれのモジュールの節に置く（[1.2](#12-lld-の規約)。確かめるのはそれぞれの引数で、使える引数の案内も違う）。
 
-設定の相互制約（[HLD 2.3.3](30_HLD.md#233-検証と記録)）。確かめるのは、5.2 の `resolve_config`、CMP4（地形解析エンジン）の `analyze_terrain`、CMP5（統合・突合）の `merge_peaks` で、同じ文面を出す。
+設定の相互制約（[HLD 2.3.3](30_HLD.md#233-検証と記録)）。確かめるのは、5.2 の `resolve_config`、CMP4（地形解析エンジン）の `analyze_terrain`（[6.1](#61-analyze_terrain_launch) の `_check_cross`）、CMP5（統合・突合）の `merge_peaks` で、同じ文面を出す。
 
 | 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
 |---|---|---|---|---|
@@ -634,10 +640,11 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 
 [HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
-- CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。
-- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- `main` の振る舞いを確かめるための試験用の実行ファイル `build/test_launch_main`: `src/analyze_terrain.cpp`・`src/launch.cpp`・`src/common.cpp` と `tests/src/stub_stage.cpp`（[6.1.5](#615-ut-候補) の段の進行のスタブ）をコンパイルしてリンクする（`gtest_main` はリンクしない。指定は CMP4 の実行ファイルと同じ）。`build/test_launch` が子のプロセスで起動する（6.1.5）。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
-- `make test` は、テスト用の実行ファイルをすべてビルドして順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- `make test` は、`build/test_launch_main` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 ## 3. CMP1 行政区域前処理
 
@@ -1833,7 +1840,154 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 ## 6. CMP4 地形解析エンジン
 
-この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.12 だけを書き、ほかの群の節は書くときに 6.1〜6.11 の番号で足す（6.12 を先に書いたのは、ほかの群がその型と関数を使うため）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1 と 6.12 を書き、ほかの群の節は書くときに 6.2〜6.11 の番号で足す（6.12 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+
+### 6.1 `analyze_terrain_launch`
+
+- **ID**: LLD-analyze_terrain_launch
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.4](30_HLD.md#44-fr-004-33メッシュ結合解析オーケストレーション)・[4.14](30_HLD.md#414-fr-014-広域結合解析オーケストレーション)
+- **ファイル**: `src/launch.hpp`・`src/launch.cpp`・`src/analyze_terrain.cpp`
+
+処理の正本は [HLD 3.4.3](30_HLD.md#343-関数) の前置きの段落と呼ぶ順の「起動」で、引数は [HLD 2.4.5](30_HLD.md#245-内部引数) の CMP4（地形解析エンジン）の行と [HLD 2.4.2](30_HLD.md#242-共通の書式)・[2.4.3](30_HLD.md#243-メッシュ範囲)、誤りは [HLD 4.4.3](30_HLD.md#443-異常系)・[4.14.3](30_HLD.md#4143-異常系) の「引数・設定の誤り」の行である。この節は、それを C++ で書くための細部だけを足す。1.2 の C++ の規約と、6.12 の型と関数を使う。`run_pipeline` とのつなぎ目は `CMP4-EXT1`（[HLD 3.4.5](30_HLD.md#345-結合のつなぎ目)）で、その結合テスト（IT）のケースは `60_IT.md` の `IT-CMP4-EXT1-01`・`-02` である。結果の要約（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 7「結果の要約」の `analyze_terrain` の行）は 6.11 の `run_normal_mode`・`run_wide_mode` が出し、6.1 は持たない（`start_log` から段までの間に処理が無い）。
+
+#### 6.1.1 ファイル割付
+
+- `src/launch.hpp`: `Args` と `parse_args` の宣言。`#include "common.hpp"` はしない（`Args` は標準ライブラリの型だけ）。`<set>`・`<string>`・`<vector>` を読む。
+- `src/launch.cpp`: `parse_args` と、無名の名前空間の内部の関数（[6.1.3](#613-関数の細部)）。`#include "launch.hpp"` と `#include "common.hpp"`。
+- `src/analyze_terrain.cpp`: `int main(int argc, char* argv[])` と、無名の名前空間の `_check_cross`。プログラムの名前（[HLD 3.4.1](30_HLD.md#341-プログラム)）にそろえた名前で、ヘッダーを持たない。`#include <opencv2/core.hpp>`（`cv::setNumThreads`。[HLD 2.6.5](30_HLD.md#265-ビルド構成)のモジュールごとのヘッダ）、`"common.hpp"`・`"launch.hpp"`・`"stage.hpp"`（6.11 のヘッダー。宣言の形は [6.1.2](#612-型とデータ)）。6.1 の 3 本のうち OpenCV を読むのはこのファイルだけで、`src/launch.hpp`・`src/launch.cpp` は OpenCV のヘッダーを読まず、OpenCV の関数を直接使わない。`build/test_launch` がどのファイルをリンクするかは [2.5](#25-ビルドとテストの名前)のとおりで、6.1 では決めない。
+- `main` を `src/launch.cpp` に置かず別のファイルに分けるのは、2.5 の決まり（テスト用の実行ファイルに `main` を持たない `.cpp` をすべてリンクする）のまま、`parse_args` を `build/test_launch` から直接呼べるようにするため。
+- 3 本とも先頭のコメントに `// trace: LLD-analyze_terrain_launch` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする（1.2）。
+- UT のコードは `tests/src/test_launch.cpp`（`build/test_launch`。2.5）と、`main` の振る舞いを確かめる試験用の実行ファイルにだけリンクする段の進行のスタブ `tests/src/stub_stage.cpp`（`build/test_launch_main`。2.5）に置く。`tests/src/test_launch.cpp` の各テストに `// trace: UT-analyze_terrain_launch-NN`（確かめる UT 候補の ID）を書く。`tests/src/stub_stage.cpp` の先頭のコメントには、スタブを使うケースの ID を並べて書く: `// trace: UT-analyze_terrain_launch-16, UT-analyze_terrain_launch-17, UT-analyze_terrain_launch-20, UT-analyze_terrain_launch-21, UT-analyze_terrain_launch-22, UT-analyze_terrain_launch-23`（`tools/lint_trace.py` は `tests/src/` の下のファイルごとにテストケースの ID を求め、無ければ単体テスト（UT）の段で T5 で止めるため。`LLD-` の trace はここで数えない）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+
+#### 6.1.2 型とデータ
+
+`src/launch.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <set>
+#include <string>
+#include <vector>
+
+struct Args {
+    std::string config_path;              // --config の値（絶対パス。受け取ったまま）
+    bool wide = false;                    // --mode wide なら真、normal なら偽
+    std::string japan_mesh_list;          // --japan-mesh-list の値（絶対パス。受け取ったまま）
+    int n = 0;                            // --n の値（4・5・6）。通常は 0
+    std::string unresolved;               // --unresolved の値（絶対パス。受け取ったまま）。通常は空
+    bool has_mesh = false;                // --mesh を受け取ったら真（通常だけ）
+    std::string mesh_value;               // --mesh の値（受け取ったまま）。無ければ空
+    std::set<std::string> mesh_codes;     // read_mesh_arg(mesh_value) の結果。無ければ空
+};
+
+Args parse_args(const std::vector<std::string>& args);   // args は argv[1] から後
+```
+
+- `wide` を `bool` にするのは、1.2 の「値の有無は `bool` の印で持つ」に合わせ、モードが 2 つだけなので列挙の型を足さないため。
+- `run_normal_mode`・`run_wide_mode` の宣言の形（6.11 の `src/stage.hpp` に置く。[HLD 3.4.3](30_HLD.md#343-関数)の表の受け取るものの順。`Config` は 6.12）:
+
+  ```cpp
+  void run_normal_mode(const std::string& japan_mesh_list, bool has_mesh,
+                       const std::set<std::string>& mesh_codes, const Config& config);
+  void run_wide_mode(const std::string& japan_mesh_list, int n,
+                     const std::string& unresolved, const Config& config);
+  ```
+
+  `has_mesh` が偽なら `mesh_codes` は空で、HLD の「なし」に当たる。止まるときは `ExitRequest` を投げ、最後まで進んだら戻る。
+- `main` が `load_config` に渡すキーの定数（`src/analyze_terrain.cpp` の無名の名前空間の `const std::vector<std::string> _load_keys` と `_load_required`。6.12 の内部の `_config_keys` と読み違えないよう別の名前にする）: `_load_keys` は `data_dir`・`log_dir`・`prominence_primary_m`・`activation_zone_drop_m`・`delete_zone_max_drop_m`・`prominence_final_m`（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の表で CMP4 が入っている 6 キー。6.12.2 の `_config_keys` の値を判定する 6 行と同じ）、`_load_required` は `data_dir`（[HLD 2.3.3](30_HLD.md#233-検証と記録)）。
+
+#### 6.1.3 関数の細部
+
+関数ごとに `#####` の見出しを立てる。5.2 など同じ名前の見出しは、重複（MD024）を避けるために `（analyze_terrain_launch）` を付ける。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<定数>)` する（1.2 の C++ の規約）。
+
+##### main（analyze_terrain_launch）
+
+`int main(int argc, char* argv[])`（`src/analyze_terrain.cpp`）。1.2 の C++ の規約の止まり方のとおり、次の順に行う。
+
+1. `StartTime start = StartTime::now();`（6.12.2 の「`main` は最初に」）。
+2. `cv::setNumThreads(1);`（[HLD 2.9.2](30_HLD.md#292-cmp4-と-opencv-のスレッド)、[DEC28](30_HLD.md#294-設計判断)「OpenCV は 1 スレッドで動かす」。1 の後で、ほかの OpenCV の関数の前。1 回だけ）。
+3. `std::vector<std::string> args;` を空で作り、`argc > 1` のときだけ `args.assign(argv + 1, argv + argc);`（`argc` が 0 か 1 のときは空。`argc` が 0 のときに `args(argv + 1, argv + argc)` と書くと範囲が逆になるため、この形にする）。
+4. 1 つ目の `try`（`start_log` の前の検査）の前に `Args a; Config config;` を宣言し、`try` の中で順に代入する: `a = parse_args(args);` → `config = load_config(a.config_path, _load_keys, _load_required);` → `_check_cross(config);`（`try` の中で `Args a = …` と宣言し直さない。外の変数が初期値のまま 5 に渡るため）。`catch (const ExitRequest& e)` で `return e.code;`。`catch (const std::system_error&)` で `return EXIT_USAGE;`（標準エラー出力が読む相手の無いパイプなどで書けず、`log_error` の中の 6.12 の `_emit` が投げたもの。`SIGPIPE` は 6.12 の起動のときの準備で無視されている。捕まえないと 6.12 の `_on_terminate` が終了コード 1 で止めて、HLD の「引数・設定の誤りは終了コード 2」と食い違うため、`start_log` の前に限って捕まえる。`start_log` の前は終わりの行が無いので、1.2 の「`main` は `EXIT_OK` か `ExitRequest` の `code` だけを返す」理由（終わりの行の終了コードとそろえる）を壊さない。5.2 の `main` の 2 と同じ考え）。
+5. 2 つ目の `try` の中で、順に: `start_log(config.values.at("log_dir").text, config, "analyze_terrain", args, start);` → `a.wide` なら `run_wide_mode(a.japan_mesh_list, a.n, a.unresolved, config)`、偽なら `run_normal_mode(a.japan_mesh_list, a.has_mesh, a.mesh_codes, config)`。`catch (const ExitRequest& e)` で `return e.code;`。ほかの例外は捕まえない（6.12 の `_on_terminate` が G7 で止める。`start_log` の後の `std::system_error` もここに当たる）。`catch (...)` は置かない（後始末が無い）。
+6. 2 つ目の `try` を抜けたら `return EXIT_OK;`。
+
+`start_log` より前に止まる誤り（`parse_args`、`load_config`、`_check_cross`）は、標準エラー出力だけに出て、ログファイルと `log_dir` を作らない（[HLD 3.4.3](30_HLD.md#343-関数)の「ここまでの誤りは、ログファイルを作らずに終了コード 2」。`start_log` が `log_dir` を作るため）。`start_log` の前に受けたシグナルは既定の扱い（6.12.3 の `check_signal`）。
+
+##### _check_cross
+
+`void _check_cross(const Config& config)`（内部。`src/analyze_terrain.cpp`）
+
+`config.values.at("prominence_primary_m").integer >= config.values.at("prominence_final_m").integer` なら、[2.2](#22-ログとメッセージの文面)の CX1 を `log_error` で出して `throw ExitRequest(EXIT_USAGE)`。`{primary}`・`{final}` は 10 進（先頭の `0` なし）、`{primary_source}`・`{final_source}` は `from_file` が真なら `ファイル`、偽なら `デフォルト`、`{config_path}` は `config.path`。どちらもデフォルトのときも比べる（5.2 の `_check_resolved` の 2 と同じ）。
+
+##### parse_args（analyze_terrain_launch）
+
+`Args parse_args(const std::vector<std::string>& args)`（`src/launch.cpp`）。止まるときは、[6.1.4](#614-メッセージ文面)のメッセージを `log_error` で出して `throw ExitRequest(EXIT_USAGE)`（`start_log` の前なので、標準エラー出力だけに出る）。最初に見つけた誤り 1 つで止まる（5.1 の `parse_args` と 5.2 の `_parse_args` と同じ）。引数は、名前と値を別の引数で渡す形だけを受け、順は問わず、同じ名前は 2 回渡せない。`run_pipeline` が渡す 2 つの形（[5.1.3](#513-関数の細部)の `_run_child`・`run_normal_stage`・`run_wide_stage`）が必ず通り、CMP4 を単独で試す人が名前の順を間違えても通るため。次の順に行う。
+
+1. **名前と値を読む**。`args` を左から読む。各位置の引数が次の 6 つの名前のどれかと一致すれば（バイト列の完全一致）、次の引数をその値にして 2 つ進む: `--config`・`--mode`・`--japan-mesh-list`・`--n`・`--unresolved`・`--mesh`。値の引数は `-` で始まっていてもそのまま値にする（1.2 の利用者向けの Python のコマンドの受け方と同じ）。次の誤りは、見つけた位置で止まる:
+   - 6 つの名前のどれでもない引数（位置引数、知らない名前、`--config=<パス>` のような `=` の付いた形、`--help`、`--` だけ、空の引数）: LA1（`{arg}` はその引数）。`=` の形を受けないのは、`run_pipeline` が名前と値を別の引数で渡すため（5.1.3 の `_run_child`）。`--help` を受けないのは、内部の起動口だから（[HLD 2.4.2](30_HLD.md#242-共通の書式)。5.2 と同じ）。
+   - 名前を読んだとき、その名前がすでに出ていた: LA3（値を見る前に判定する）。
+   - 名前が最後の引数で、値が無い: LA2。
+2. **必須の名前**。`--config`・`--mode`・`--japan-mesh-list` の順に、無いものの最初で LA4。
+3. **`--mode` の値**。`normal` か `wide`（バイト列の完全一致）でなければ LA5。
+4. **モードの組み合わせ**。通常（`normal`）で `--n` があれば LA8（`{option}` は `--n`）、無くて `--unresolved` があれば LA8（`--unresolved`）。広域（`wide`）で `--mesh` があれば LA8（`--mesh`）。続けて、広域で `--n`・`--unresolved` の順に、無いものの最初で LA4。[HLD 4.14.3](30_HLD.md#4143-異常系)の「`--mesh` が付いている」は、この組み合わせの誤りとして見る。
+5. **`--n` の値**（広域だけ）。値が 1 バイトで `4`・`5`・`6` のどれかでなければ LA7（`04`・`+4`・先頭に空白の付いた 4・`4.0`・空も LA7）。
+6. **絶対パス**。`--config`・`--japan-mesh-list`・`--unresolved`（広域だけ）の順に、値が `/` で始まらないもの（空を含む）の最初で LA6。ファイルがあるか、読めるかはここで見ない（`--config` は `load_config` が CF1・CF2 で、`--japan-mesh-list` は 6.11 の `run_normal_mode`・`run_wide_mode` が 6.12 の `read_mesh_list_file` で R1・R2 として〈終了コード 1〉、`--unresolved` は 6.2 の `read_unresolved_peaks` が見る。HLD 4.4.3・4.14.3）。値は正規化しない（受け取ったまま `Args` に入れる）。
+7. **`--mesh`**（通常で、あるときだけ）。`has_mesh = true`、`mesh_value` に値、`mesh_codes = read_mesh_arg(mesh_value)`（6.12。誤りは `read_mesh_arg` が A1〜A5 を出して `ExitRequest(EXIT_USAGE)` で止まり、`parse_args` は捕まえない）。最後に行うのは、ファイルを読む処理を、引数の形の誤りより後にするため。
+8. `Args` を返す（6.1.2 の「通常は」の値は、受け取らなかった項目の初期値）。
+
+`{option}` は名前（`--n` など）、`{value}`・`{arg}` は受け取った値を [2.2](#22-ログとメッセージの文面)の引用の決まりで書いたもの（内部の関数 `_quote_arg`。6.12.3 の同じ名前の関数と同じ決まりで、`src/launch.cpp` の無名の名前空間に別に置く。6.12 のものは `src/common.cpp` の中だけの関数で呼べないため）。`{mode}` は `normal` か `wide`。
+
+#### 6.1.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。どれも終了コード 2。CX1 は 2.2、A1〜A5・CF1〜CF7 は [2.1.4](#214-メッセージ文面)（と [6.12.4](#6124-メッセージ文面)の違い）にあり、ここに写さない。`{option}`・`{value}`・`{arg}`・`{mode}` の作り方は 6.1.3 の `parse_args`。
+
+| 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） |
+|---|---|---|---|
+| LA1 | 受け付けない引数 | `analyze_terrain の知らない引数: {arg}` | `analyze_terrain は run_pipeline が起動する内部の起動口。使える名前は --config・--mode・--japan-mesh-list・--n・--unresolved・--mesh で、値は次の引数で渡す` |
+| LA2 | 値が無い | `{option} の値が無い` | `{option} の後に値を渡す` |
+| LA3 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` |
+| LA4 | 必須の名前が無い | `{option} が無い` | `--config・--mode・--japan-mesh-list は必ず渡し、--mode wide ではさらに --n・--unresolved を渡す` |
+| LA5 | `--mode` の値が違う | `--mode の値が違う: {value}` | `--mode には normal か wide を渡す` |
+| LA6 | 絶対パスでない | `{option} のパスが絶対パスでない: {value}` | `{option} に絶対パスを渡す` |
+| LA7 | `--n` の値が違う | `--n の値が違う: {value}` | `--n には 4・5・6 のどれかを渡す` |
+| LA8 | モードに合わない名前 | `{option} は --mode {mode} と一緒に使えない` | `--n と --unresolved は --mode wide だけ、--mesh は --mode normal だけで使う` |
+
+表は 5.2.4 の列から終了コードの列を除いた 4 列にした（どれも 2 なので、終了コードは表の前の 1 文に書いた）。`{arg}` が空の引数なら `''`（2.2 の引用の決まり）。
+
+#### 6.1.5 UT 候補
+
+すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_launch-NN` を付ける。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。期待の「誤りの 2 行」は、6.1.4 の文面に値を入れた `ERROR:` と `対処:` の 2 行で、そのとき標準出力は空。表の中の「01」「04 の (a)」のように番号だけで指すものは、この表のその番号のケースの入力を指す。
+
+- **同じプロセス**: 6.12.5 の「同じプロセス」と同じ（記述子 1・2 を一時のファイルに付け替えて捕まえ、`ExitRequest` を捕まえて `code` を確かめる）。`parse_args` を直接呼ぶ。`--mesh` のファイルを使うケースは、一時のディレクトリにファイルを書く。
+- **起動**: `build/test_launch_main` を子のプロセスで起動する。パスは、テストの実行ファイルの置き場（`readlink("/proc/self/exe")` の親のディレクトリ）の `test_launch_main`。親は `std::fflush(nullptr)` の後に `fork` し、子は記述子 1・2 を親が読む 2 つのパイプの書く側に付け替えて元の 4 つの記述子を閉じ、`unsetenv("STUB_STAGE")` で親から受け継いだ値を必ず消してから、ケースが `STUB_STAGE`（下のスタブの動き）を書いたときだけ `setenv` で付けて、`execv(<パス>, <argv>)` する（`argv[0]` は `analyze_terrain`）。`execv` が戻ったら子は `_exit(127)`。親は 6.12.5 の「子のプロセス」と同じく、2 つのパイプを `poll` で EOF まで読み、`waitpid` の終了状態（シグナルで死んでいたら、そのシグナルの番号を期待と比べる。期待に無ければケースの失敗）とログファイル（`<log_dir>` の下の `analyze_terrain_*_<子の PID>.log`）を確かめる。設定ファイルは、親が一時のディレクトリ `<tmp>` に置く（ケースが書かなければ `[paths]` に `data_dir = <tmp>/data` と `log_dir = <tmp>/logs` だけ）。引数はケースが書かなければ、通常の `--config <tmp>/config.ini --mode normal --japan-mesh-list /nonexistent/j.txt`（スタブは日本全土のリストを読まないので、ファイルは無くてよい）。
+- **段の進行のスタブ**（`tests/src/stub_stage.cpp`。`"stage.hpp"`・`"common.hpp"`・`<opencv2/core.hpp>` を読み、宣言の形がずれたらコンパイルで分かるようにする）: `run_normal_mode` は `log_info("stub: run_normal_mode japan=" + japan_mesh_list + " has_mesh=" + (has_mesh ? "1" : "0") + " meshes=" + <mesh_codes を昇順に , でつないだもの> + " threads=" + std::to_string(cv::getNumThreads()) + " data_dir=" + config.values.at("data_dir").text)` を出す。`run_wide_mode` は `log_info("stub: run_wide_mode japan=" + japan_mesh_list + " n=" + std::to_string(n) + " unresolved=" + unresolved + " threads=" + std::to_string(cv::getNumThreads()) + " data_dir=" + config.values.at("data_dir").text)` を出す。どちらも出した後、`std::getenv("STUB_STAGE")` が `exit1` なら `log_error("stub", "stub")` の後に `throw ExitRequest(EXIT_ERROR)`、`runtime` なら `throw std::runtime_error("stub runtime")`、`sigterm` なら `raise(SIGTERM)` の後に `check_signal()`、それ以外（無いときを含む）は戻る。スタブの動きを環境変数で選ぶのは、試験用の実行ファイルを 1 本にして、段が止まる 3 つの経路（`ExitRequest`、捕まらない例外、シグナル）を `main` の外から作れるようにするため。スタブはテストの準備で、製品のコードは環境変数を読まない（[HLD 2.3.1](30_HLD.md#231-受け渡す値の種類)の「環境変数では設定を受け取らない」に当たらない）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_launch-01` | 通常の最小の形 | 同じプロセス | `--config /c/a.ini --mode normal --japan-mesh-list /p/j.txt` | `config_path` `/c/a.ini`、`wide` 偽、`japan_mesh_list` `/p/j.txt`、`n` 0、`unresolved` 空、`has_mesh` 偽、`mesh_value` 空、`mesh_codes` 空。出力なし |
+| `UT-analyze_terrain_launch-02` | 通常の `--mesh`（コード） | 同じプロセス | 01 の後に `--mesh 5339` | `has_mesh` 真、`mesh_value` `5339`、`mesh_codes` `{5339}`。ほかは 01 と同じ |
+| `UT-analyze_terrain_launch-03` | 通常の `--mesh`（相対パスのファイル） | 同じプロセス。一時のディレクトリに `m.txt`（`MV-02` の中身）を書き、作業ディレクトリをそこへ移す（呼んだ後に戻す） | 01 の後に `--mesh m.txt` | `mesh_value` `m.txt`、`mesh_codes` は `MV-02` の期待の集合 |
+| `UT-analyze_terrain_launch-04` | 広域の形と、名前の順によらないこと | 同じプロセス | (a) `--config /c/a.ini --mode wide --japan-mesh-list /p/j.txt --n 5 --unresolved /d/u.csv`、(b) 同じ名前と値を `--unresolved /d/u.csv --n 5 --mode wide --japan-mesh-list /p/j.txt --config /c/a.ini` の順で | どちらも `wide` 真、`n` 5、`unresolved` `/d/u.csv`、`has_mesh` 偽、ほかは 01 と同じ |
+| `UT-analyze_terrain_launch-05` | 値は `-` で始まっても値 | 同じプロセス | `--config --mode --mode normal --japan-mesh-list /p/j.txt` | `code` 2、LA6（`{option}` `--config`、`{value}` `--mode`）の 2 行（1 つ目の `--mode` は `--config` の値として読まれ、LA3 にならない） |
+| `UT-analyze_terrain_launch-06` | 受け付けない引数 | 同じプロセス | 01 の後にそれぞれ: (a) `x`、(b) `--help`、(c) `--config=/c/a.ini` を 01 の `--config /c/a.ini` の代わりに、(d) `--`、(e) 空の引数、(f) `--conf /c/a.ini` を 01 の前に | どれも `code` 2、LA1 の 2 行で、`{arg}` は (a) `x`、(b) `--help`、(c) `--config=/c/a.ini`、(d) `--`、(e) `''`、(f) `--conf` |
+| `UT-analyze_terrain_launch-07` | 値が無い | 同じプロセス | (a) `--config`、(b) 01 の後に `--mesh` | (a) LA2（`--config`）、(b) LA2（`--mesh`）。どちらも `code` 2 |
+| `UT-analyze_terrain_launch-08` | 同じ名前を 2 回 | 同じプロセス | (a) 01 の後に `--mode wide`、(b) 01 の後に `--config` だけ（値なし） | どちらも `code` 2、LA3（(a) は `--mode`、(b) は `--config`。(b) は値を見る前に LA3 で、LA2 にならない） |
+| `UT-analyze_terrain_launch-09` | 必須の名前が無い | 同じプロセス | (a) 引数なし、(b) `--mode normal --japan-mesh-list /p/j.txt`、(c) `--config /c/a.ini --japan-mesh-list /p/j.txt`、(d) `--config /c/a.ini --mode normal`、(e) `--config /c/a.ini --mode wide --japan-mesh-list /p/j.txt --unresolved /d/u.csv`、(f) `--config /c/a.ini --mode wide --japan-mesh-list /p/j.txt --n 4` | どれも `code` 2、LA4 で `{option}` は (a) `--config`、(b) `--config`、(c) `--mode`、(d) `--japan-mesh-list`、(e) `--n`、(f) `--unresolved` |
+| `UT-analyze_terrain_launch-10` | `--mode` の値 | 同じプロセス | 01 の `normal` を (a) `Normal`、(b) 空、(c) `wide` の後に空白 1 つを付けたもの に | どれも `code` 2、LA5 で `{value}` は (a) `Normal`、(b) `''`、(c) `wide` と空白を `'` で囲んだもの |
+| `UT-analyze_terrain_launch-11` | `--n` の値 | 同じプロセス | 04 の (a) の `5` を、(a) `4`、(b) `6`、(c) `3`、(d) `7`、(e) `04`、(f) `+4`、(g) 空、(h) `4.0` に | (a)(b) は `n` 4・6。(c)〜(h) は `code` 2、LA7 で `{value}` はその値（(g) は `''`） |
+| `UT-analyze_terrain_launch-12` | 絶対パス | 同じプロセス | (a) 01 の `/c/a.ini` を `a.ini`、(b) 01 の `/p/j.txt` を `j.txt`、(c) 04 の (a) の `/d/u.csv` を `u.csv`、(d) 01 の `/c/a.ini` を空、(e) (a) と (b) を両方 | どれも `code` 2、LA6 で (a) `--config`・`a.ini`、(b) `--japan-mesh-list`・`j.txt`、(c) `--unresolved`・`u.csv`、(d) `--config`・`''`、(e) `--config`・`a.ini`（最初の 1 つだけ） |
+| `UT-analyze_terrain_launch-13` | モードの組み合わせ | 同じプロセス | (a) 01 の後に `--n 4`、(b) 01 の後に `--unresolved /d/u.csv`、(c) 04 の (a) の後に `--mesh 5339`、(d) 01 の後に `--n 9 --unresolved u.csv` | どれも `code` 2、LA8 で (a) `--n`・`normal`、(b) `--unresolved`・`normal`、(c) `--mesh`・`wide`、(d) `--n`・`normal`（`--n` の値と絶対パスの誤りより先） |
+| `UT-analyze_terrain_launch-14` | 検査の順 | 同じプロセス | (a) `--mesh 12 --mode normal`（`--config` と `--japan-mesh-list` が無い）、(b) `--config a.ini --mode bad --japan-mesh-list /p/j.txt`、(c) 04 の (a) の `--n 5` を `--n 9` に、`/d/u.csv` を `u.csv` に | (a) LA4（`--config`。`--mesh` の誤りにならない）、(b) LA5（LA6 より先）、(c) LA7（LA6 より先）。どれも `code` 2 |
+| `UT-analyze_terrain_launch-15` | `--mesh` の誤りは `read_mesh_arg` のまま | 同じプロセス | 01 の後に (a) `--mesh ''`、(b) `--mesh /nonexistent/m.txt` | どちらも `code` 2。(a) は A1、(b) は A2（`{path}` は `/nonexistent/m.txt`）の 2 行（2.1.4 の文面。6.12 の `read_mesh_arg` のとおり） |
+| `UT-analyze_terrain_launch-16` | 通常の起動 | 起動 | 既定の引数の後に `--mesh 5339` | 終了コード 0。標準出力は L1（`開始: analyze_terrain --config <tmp>/config.ini --mode normal --japan-mesh-list /nonexistent/j.txt --mesh 5339`）、L2 の行（設定ファイルの行と 6 キーの行）、`stub: run_normal_mode japan=/nonexistent/j.txt has_mesh=1 meshes=5339 threads=1 data_dir=<tmp>/data`、L3（終了コード 0）の順。標準エラー出力は空。ログファイルが 1 つあり、同じ行がこの順で時刻付きで並ぶ（`threads=1` が `cv::setNumThreads(1)` の呼び忘れを見分けるのは、CPU が 2 つ以上の計算機だけ） |
+| `UT-analyze_terrain_launch-17` | 広域の起動 | 起動。日本全土のリストと未確定のリストのファイルは置かない | `--config <tmp>/config.ini --mode wide --japan-mesh-list /nonexistent/j.txt --n 4 --unresolved /nonexistent/u.csv` | 終了コード 0。標準出力に `stub: run_wide_mode japan=/nonexistent/j.txt n=4 unresolved=/nonexistent/u.csv threads=1 data_dir=<tmp>/data` が L2 の後、L3（終了コード 0）の前に 1 行 |
+| `UT-analyze_terrain_launch-18` | 引数の誤りではログを作らない | 起動 | 既定の引数から `--mode normal` を除く | 終了コード 2。標準エラー出力は LA4（`--mode`）の 2 行だけ、標準出力は空。`<tmp>/logs` が無い |
+| `UT-analyze_terrain_launch-19` | 設定の誤りではログを作らない | 起動。設定ファイルを置かない | 既定の引数 | 終了コード 2。標準エラー出力は CF1（`<tmp>/config.ini`、対処は `--config に渡したパスを確かめる`）の 2 行だけ。標準出力は空。`<tmp>/logs` が無い |
+| `UT-analyze_terrain_launch-20` | 相互制約 | 起動。設定ファイルの `[analysis]` に `prominence_primary_m` を書く（値は入力ごと。`prominence_final_m` は書かない） | (a) `prominence_primary_m = 149`、(b) `prominence_primary_m = 150` | (a) 終了コード 0、スタブの行が出る。(b) 終了コード 2、標準エラー出力は CX1 の 2 行だけで、1 行目は `ERROR: プロミネンス一次フィルタ閾値が最終フィルタ閾値以上: [analysis] prominence_primary_m = 150（ファイル）、[merge] prominence_final_m = 150（デフォルト）（<tmp>/config.ini）`、標準出力は空、`<tmp>/logs` が無い |
+| `UT-analyze_terrain_launch-21` | 段が止まったときの終了コード | 起動。`STUB_STAGE=exit1` | 既定の引数 | 終了コード 1。標準エラー出力は `ERROR: stub` と `対処: stub`。ログファイルの最後の行は L3（終了コード 1） |
+| `UT-analyze_terrain_launch-22` | 捕まらない例外 | 起動。`STUB_STAGE=runtime` | 既定の引数 | 終了コード 1。標準エラー出力に G7（`{type}` は `std::runtime_error`、`{message}` は `stub runtime`）の 2 行。ログファイルにも G7 の 2 行があり、最後の行は L3（終了コード 1） |
+| `UT-analyze_terrain_launch-23` | シグナルで止まる | 起動。`STUB_STAGE=sigterm` | 既定の引数 | 終了コード 143（`waitpid` の終了状態は正常終了で 143。シグナルで死んでいない）。ログファイルの最後の行は `SIGTERM` を受けて止まった形の L3（143） |
+| `UT-analyze_terrain_launch-24` | 標準エラー出力に書けないときの `start_log` の前の誤り | 起動。ただし子は、`pipe` を作って読む側を閉じ、書く側を記述子 2 に付け替える（読む相手のいない標準エラー出力。親は標準出力のパイプだけを読む）。設定ファイルは入力ごと | (a) 既定の引数から `--mode normal` を除く（LA4）、(b) 設定ファイルを置かない（CF1）、(c) 設定ファイルに `prominence_primary_m = 150` を足す（CX1） | どれも終了コード 2（1 でない）。標準出力は空。`<tmp>/logs` が無い |
 
 ### 6.12 `analyze_terrain_common`
 
