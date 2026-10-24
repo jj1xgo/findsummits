@@ -1917,7 +1917,7 @@ void check_signal();
   | `merge` | `prominence_final_m` | 整数 | `150` | `150` | `150` | `150` |
 
   `load_config` の `keys` に、この 6 キーのほかの名前（`user_agent_email`・`max_parallel` など）を渡したら、呼ぶ側の誤り（`std::invalid_argument`）。パスの種類は「空でなく、先頭が `/`」。整数の種類は 2.1.2 の表の後の段落のとおり（ASCII の数字だけ、先頭の `0` を除いて 18 桁まで、`long long` に入れる。符号・小数点・全角の数字・空は型に合わない）。
-- 内部の状態 `_state`（`.cpp` の無名の名前空間の 1 つの `struct` の変数）: `bool started`、`int log_fd`（`-1` は無し）、`std::string log_path`、`std::string program`、`StartTime start`、`bool broken`（ログファイルに書けなくなった）、`bool has_exit_code`、`int exit_code`、`bool signal_thrown`（`check_signal` が一度投げた）。受けたシグナルは別の変数 `volatile std::sig_atomic_t _signum`（`0` は無し。ハンドラが書く）。
+- 内部の状態 `_state`（`.cpp` の無名の名前空間の 1 つの `struct` の変数）: `bool started`、`int log_fd`（`-1` は無し）、`std::string log_path`、`std::string program`、`StartTime start`、`bool broken`（ログファイルに書けなくなった）、`bool has_exit_code`、`int exit_code`、`bool signal_thrown`（`check_signal` が一度投げた）、`bool finished`（`_finish_log` が始まった）。受けたシグナルは別の変数 `volatile std::sig_atomic_t _signum`（`0` は無し。ハンドラが書く）。
 - 起動のときの準備（内部。`.cpp` の無名の名前空間の、コンストラクタを持つ静的な変数 1 つ。`main` より前に動く）: `SIGPIPE` を無視にし（`signal(SIGPIPE, SIG_IGN)`。切れたパイプへの書き込みを `EPIPE` の失敗にする。Python が起動時に `SIGPIPE` を無視にするのと同じ）、`std::set_terminate(_on_terminate)` にする。
 
 #### 6.12.3 関数の細部
@@ -1951,7 +1951,7 @@ void check_signal();
 1. 2 回目の呼び出しは `throw std::logic_error("start_log の 2 回目")`。
 2. `_make_dirs(log_dir, err)`（下）が失敗なら、2.2 の G3（`{path}` は `log_dir`、`{reason}` は `err` の文）を出して `throw ExitRequest(EXIT_ERROR)`。
 3. `path = _join(log_dir, program + "_" + _local_time(start.wall, true) + "_" + std::to_string(getpid()) + ".log")`。`open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666)`。失敗が `EEXIST` なら G4（`{path}` は `path`）、ほかの失敗は G3（`{path}` は `path`）を出して `throw ExitRequest(EXIT_ERROR)`（既にあるファイルには触れない）。
-4. `_state` の `has_exit_code` を偽、`exit_code` を 0、`broken` と `signal_thrown` を偽にしてから、`log_fd`・`log_path`・`program`・`start` を入れ、最後に `started` を真にする（`start_log` の前に作った `ExitRequest` は記録しないが、念のためここで初期化する。6.12.2 の `ExitRequest`）。続けて、次をこの順に取り付ける: `std::atexit(_finish_log)`、最後に `SIGINT` と `SIGTERM` のハンドラを `_on_signal` にする（`sigaction`、`sa_flags = SA_RESTART`、`sa_mask` は空。シグナルのハンドラを最後にする理由は 2.1.3 の `start_log` の 4 と同じ）。
+4. `_state` の `has_exit_code` を偽、`exit_code` を 0、`broken`・`signal_thrown`・`finished` を偽にしてから、`log_fd`・`log_path`・`program`・`start` を入れ、最後に `started` を真にする（`start_log` の前に作った `ExitRequest` は記録しないが、念のためここで初期化する。6.12.2 の `ExitRequest`）。続けて、次をこの順に取り付ける: `std::atexit(_finish_log)`、最後に `SIGINT` と `SIGTERM` のハンドラを `_on_signal` にする（`sigaction`、`sa_flags = SA_RESTART`、`sa_mask` は空。シグナルのハンドラを最後にする理由は 2.1.3 の `start_log` の 4 と同じ）。
 5. 2.2 の L1・L2 の行を `_emit`（標準出力）で出す。L1 の `{args}` は 2.2 の引用の決まりで 1 つずつ書いて空白 1 つでつなぐ（`_quote_arg`。引数が無ければ `開始: {program}`）。L2 は `設定ファイル: {config.path}` の後、`config.values` のキーを `_config_keys` の順に `設定: [{section}] {key} = {value}（{source}）`。`{value}` は整数なら 10 進（先頭の `0` なし）、パスならその文字列、未設定なら `未設定`。`{source}` は `from_file` が真なら `ファイル`、偽なら `デフォルト`（未設定のときもデフォルト）。
 
 ##### _emit（analyze_terrain_common）
@@ -1961,7 +1961,7 @@ void check_signal();
 2.1.3 の `_emit` のとおり（渡された各行の中の `\n` でさらに行を分け、全行を先に画面へ時刻なしで出し、その後で全行をログファイルへ時刻付きで書く）。C++ の細部:
 
 1. 画面: 1 行ごとに `<行>` と `\n` を `_write_all(fd, ...)`（下）で書く。失敗したとき、`ignore_screen_errors` が偽なら `throw std::system_error(errno, std::generic_category(), fd == 1 ? "標準出力" : "標準エラー出力")`（`what()` は `標準出力: Broken pipe` の形）、真なら無視して次の行へ進む。
-2. ログファイル: `_state.log_fd` が `-1` でなく `broken` が偽のときだけ、1 行ごとに `<時刻> <行>` と `\n` を 1 回の `_write_all` で書く。時刻は書く時点の `_local_time(std::chrono::system_clock::now(), false)`（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 3「行の書式」）。失敗したら `_state.broken = true` にし、G5（`{path}` は `_state.log_path`、`{reason}` は失敗の `errno` の文）の 2 行を標準エラー出力にだけ出し（この出力の失敗は無視）、`throw ExitRequest(EXIT_ERROR)`。
+2. ログファイル: `_state.log_fd` が `-1` でなく、`broken` と `finished` が偽のときだけ（`finished` が真なら、ログファイルは閉じたか閉じる途中）、1 行ごとに `<時刻> <行>` と `\n` を 1 回の `_write_all` で書く。時刻は書く時点の `_local_time(std::chrono::system_clock::now(), false)`（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 3「行の書式」）。失敗したら `_state.broken = true` にし、G5（`{path}` は `_state.log_path`、`{reason}` は失敗の `errno` の文）の 2 行を標準エラー出力にだけ出し（この出力の失敗は無視）、`throw ExitRequest(EXIT_ERROR)`。
 
 ##### log_info・log_warning・log_error（analyze_terrain_common）
 
@@ -1973,7 +1973,7 @@ void check_signal();
 
 `void _finish_log()`（内部。`std::atexit` から呼ばれる）
 
-1. `SIGINT`・`SIGTERM` を無視にする（`signal(sig, SIG_IGN)`）。`_state.broken` が真なら、終わりの行を書かず `_exit(EXIT_ERROR)`（HLD 5.7.2 の 4「始まりと終わりの行」の「ログファイルに書けなくなって止まるときは、終わりの行を書こうとせず」。[HLD 5.7.3](30_HLD.md#573-異常系)）。
+1. `_state.finished` が真なら何もせずに戻る（2 回目の呼び出し。`std::exit` の途中で `_on_terminate` に来たとき）。偽なら真にしてから、`SIGINT`・`SIGTERM` を無視にする（`signal(sig, SIG_IGN)`）。`_state.broken` が真なら、終わりの行を書かず `_exit(EXIT_ERROR)`（HLD 5.7.2 の 4「始まりと終わりの行」の「ログファイルに書けなくなって止まるときは、終わりの行を書こうとせず」。[HLD 5.7.3](30_HLD.md#573-異常系)）。
 2. 終了コード `code`: `_signum` が 0 でなければ `128 + _signum`、そうでなく `has_exit_code` が真なら `exit_code`、どちらでもなければ `EXIT_OK`。2.2 の L3 の行（シグナルを受けていれば `（{signame} を受けて止まった）` つき。`{signame}` は `SIGINT` か `SIGTERM`。`{sec}` は `start.mono` からの秒を `%.3f`。`{end}` は今の `_local_time(..., false)`）を、ログファイルへ `<時刻> <L3>` と `\n` を 1 回の `_write_all` で書き、`close(log_fd)`。書くか閉じるのに失敗したら、G6（`{path}` は `log_path`、`{reason}` は失敗の `errno` の文）の 2 行を標準エラー出力にだけ出し（失敗は無視）、`_exit(EXIT_ERROR)`（終了コード 0 などで終わるはずだったときも 1。HLD 5.7.3）。
 3. 書けたら、同じ L3 の文面を標準出力へ時刻なしで出す（失敗は無視）。`_signum` が 0 でなければ `_exit(128 + _signum)`。そうでなければ戻る（プロセスは `main` が返した値で終わる。1.2 の規約で、それは記録した値と同じ）。
 
@@ -1999,7 +1999,7 @@ void check_signal();
 
 1. 今の例外を `std::current_exception()` で取り、`std::rethrow_exception` して捕まえ分ける。`ExitRequest` なら（`main` の最上位で捕まえ忘れた）、`code` を終了コードにし、メッセージを出さない。`std::exception` の子なら `{type}` は `abi::__cxa_demangle(typeid(e).name(), ...)` の結果（失敗したら `typeid(e).name()`）、`{message}` は `e.what()`。そのほかは `{type}` を `不明な型`、`{message}` を空にする。例外が無いときは `{type}` を `std::terminate`、`{message}` を `例外なしで呼ばれた` にする。
 2. `ExitRequest` 以外なら、2.2 の G7 の 2 行を `_emit`（標準エラー出力、`ignore_screen_errors` は真）で出す。`start_log` の後なら、ログファイルにも出る（書けなければ `broken` になる）。`_emit` が投げる `ExitRequest` は `try` で囲んで捕まえ、次へ進む。
-3. 終了コードは、`_signum` が 0 でなければ `128 + _signum`、そうでなければ、1 で取った例外が `ExitRequest` ならその `code`、ほかは `EXIT_ERROR`。`started` が真なら `has_exit_code = true`、`exit_code` にその値を入れて `_finish_log()` を呼ぶ。最後に `_exit(<終了コード>)`。
+3. 終了コードは、`_signum` が 0 でなければ `128 + _signum`、そうでなければ、1 で取った例外が `ExitRequest` ならその `code`、ほかは `EXIT_ERROR`。`started` が真で `finished` が偽なら `has_exit_code = true`、`exit_code` にその値を入れて `_finish_log()` を呼ぶ（`finished` が真なら、終わりの行は書いたか書く途中なので呼ばない）。最後に `_exit(<終了コード>)`。
 
 ##### read_mesh_arg（analyze_terrain_common）・read_mesh_list_file（analyze_terrain_common）
 
@@ -2018,7 +2018,7 @@ void check_signal();
 - `std::string _join(const std::string& a, const std::string& b)`: `a` が `/` で終われば `a + b`、そうでなければ `a + "/" + b`（`b` は `/` で始まらない名前だけを渡す）。
 - `bool _read_file(const std::string& path, std::string& data, int& err)`: `open(path, O_RDONLY | O_CLOEXEC)` と `read` を、`EINTR` のほかの失敗か 0 まで繰り返して全部を読み、`close`。失敗したら `err` に `errno` を入れて `false`（ディレクトリは `read` の `EISDIR`）。
 - `bool _write_all(int fd, const std::string& s)`: `write` を、全部書くか `EINTR` のほかの失敗まで繰り返す。失敗したら `false`（`errno` は残す）。
-- `bool _make_dirs(const std::string& path, int& err)`: `path` を `/` で区切った先頭からの各段のパス（空の要素は飛ばす）に `mkdir(<段>, 0777)` を呼ぶ。`EEXIST` なら `stat` でディレクトリかを見て、ディレクトリなら次の段へ進む。ディレクトリでなければ、最後の段なら `err = EEXIST`、途中の段なら `err = ENOTDIR` で失敗。ほかの失敗はその `errno` で失敗。Python の `os.makedirs(..., exist_ok=True)` と同じ `{reason}` にする（`log_dir` がファイルなら `File exists`、途中の段がファイルなら `Not a directory`）。
+- `bool _make_dirs(const std::string& path, int& err)`: `path` を `/` で区切った先頭からの各段のパス（空の要素は飛ばす）に `mkdir(<段>, 0777)` を呼ぶ。途中の段の `EEXIST` は、`stat` を見ずに次の段へ進む（途中の段がディレクトリでなければ、次の段の `mkdir` が本当の理由の `errno` で失敗する）。最後の段の `EEXIST` は、`stat` でディレクトリかを見て、ディレクトリなら成功、ディレクトリでないか `stat` が失敗すれば `err = EEXIST` で失敗。ほかの失敗はその `errno` で失敗。Python の `os.makedirs(..., exist_ok=True)` と同じ順で、同じ `{reason}` にする（`log_dir` がファイルなら `File exists`、途中の段がファイルなら `Not a directory`、`log_dir` がリンク先の無いシンボリックリンクなら `File exists`、その下の `logs` なら `No such file or directory`）。
 - `std::string _quote_arg(const std::string& a)`: 2.2 の引用の決まり（バイトで判定する。`a` が空でなく、どのバイトも ASCII の英数字か `_@%+=:,./-` のどれかならそのまま。そうでなければ `'` で囲み、中の `'` を `'"'"'` に置き換える。空は `''`）。
 - `std::string _local_time(std::chrono::system_clock::time_point t, bool for_name)`: `localtime_r` で求めたローカル時刻を、`for_name` が真ならファイルの名前の `YYYYMMDDTHHMMSS`、偽なら行の時刻の `YYYY-MM-DDTHH:MM:SS±HH:MM`（`strftime` の `%Y-%m-%dT%H:%M:%S` に、`tm_gmtoff` から作った `±HH:MM` を付ける）にする。
 - `bool _decode_utf8_sig(const std::string& bytes, std::string& text)`: 先頭の BOM `EF BB BF` を 1 つだけ除いた残りが、次の形だけでできていれば `text` に入れて `true`、そうでなければ `false`（Python の `utf-8` の復号と同じ判定。サロゲートの符号化、U+10FFFF を超える符号位置、長すぎる符号化、途中で切れた列、5 バイト以上の列は読めない）:
@@ -2049,7 +2049,7 @@ void check_signal();
 すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_common-NN` を付ける。ログファイルの行の期待は、先頭の時刻と空白を除いた文面で書く。`start_log` を呼ぶと標準出力に L1・L2 の行が時刻なしで出るので、標準出力の期待にはこれらも含める。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。
 
 - **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ケースごとに一時のディレクトリ（`mkdtemp`）を作る。設定ファイルを使うケースは、その下に設定ファイルを書いて絶対パスを渡す（`data_dir`・`log_dir` を書くときは、一時のディレクトリの下の絶対パス）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる（`start_log` を呼ばないので、シグナルのハンドラも `atexit` も付かない）。標準出力と標準エラー出力は、呼ぶ前に `dup`・`dup2` で記述子 1・2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す。
-- **子のプロセス**: 親は `fork` の直前に `std::fflush(nullptr)` を呼ぶ（GoogleTest が標準出力のバッファにためた行を、子が受け継いで付け替えた先へ書き出さないようにするため）。子の設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。`fork` した子の中で、記述子 1・2 を親が読む 2 つのパイプの書く側に付け替え、`StartTime::now()` と `load_config`（ケースが書かなければ `keys` は `data_dir` と `log_dir`、`required` は `data_dir`）を呼んでから、入力の列の処理を、1.2 の `main` の形に捕まらない例外の経路を足した形（`try { <処理>; } catch (const ExitRequest& e) { std::exit(e.code); } catch (...) { std::terminate(); } std::exit(EXIT_OK);`）で行う。`catch (...)` の中で `std::terminate()` を呼ぶのは、子の中にも GoogleTest のテストの呼び出しが残っていて、例外をそのまま外へ出すと GoogleTest が捕まえてしまうため（`catch` の中から呼べば、`_on_terminate` の `std::current_exception()` がその例外を返し、`main` から例外が出たときと同じ経路になる）。`UT-analyze_terrain_common-31` だけは `catch (const ExitRequest& e)` を置かず、`catch (...) { std::terminate(); }` だけにする（捕まえ忘れた `ExitRequest`）。`start_log` は入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, "test_common", <ケースの引数>, start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、処理の最初に呼ぶ。ケースの引数が書いていなければ空）。親は 2 つのパイプを `poll` で終わりまで読み、`waitpid` の終了状態（シグナルで死んでいたらケースの失敗）とログファイル（`<log_dir>` の下の `test_common_*_<子の PID>.log`）を確かめる。
+- **子のプロセス**: 親は `fork` の直前に `std::fflush(nullptr)` を呼ぶ（GoogleTest が標準出力のバッファにためた行を、子が受け継いで付け替えた先へ書き出さないようにするため）。子の設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。`fork` した子の中で、記述子 1・2 を親が読む 2 つのパイプの書く側に付け替えて、2 つのパイプの元の 4 つの記述子を閉じ、`StartTime::now()` と `load_config`（ケースが書かなければ `keys` は `data_dir` と `log_dir`、`required` は `data_dir`）を呼んでから、入力の列の処理を、1.2 の `main` の形に捕まらない例外の経路を足した形（`try { <処理>; } catch (const ExitRequest& e) { std::exit(e.code); } catch (...) { std::terminate(); } std::exit(EXIT_OK);`）で行う。`catch (...)` の中で `std::terminate()` を呼ぶのは、子の中にも GoogleTest のテストの呼び出しが残っていて、例外をそのまま外へ出すと GoogleTest が捕まえてしまうため（`catch` の中から呼べば、`_on_terminate` の `std::current_exception()` がその例外を返し、`main` から例外が出たときと同じ経路になる）。`UT-analyze_terrain_common-31` だけは `catch (const ExitRequest& e)` を置かず、`catch (...) { std::terminate(); }` だけにする（捕まえ忘れた `ExitRequest`）。`start_log` は入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, "test_common", <ケースの引数>, start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、処理の最初に呼ぶ。ケースの引数が書いていなければ空）。親は `fork` の後に 2 つのパイプの書く側を閉じ、2 つのパイプを `poll` で両方が終わり（EOF）になるまで読み、`waitpid` の終了状態（シグナルで死んでいたらケースの失敗）とログファイル（`<log_dir>` の下の `test_common_*_<子の PID>.log`）を確かめる。
 - **ログファイルに書けない場面**: 子の中で `start_log` の後に `SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` を 0 にする（以後のログファイルへの書き込みが `EFBIG`〔`File too large`〕で失敗する。パイプには効かない）。終わりの行だけを失敗させるときは、`start_log` の後に `SIGXFSZ` を無視にし、`std::atexit` で同じ制限（`rlim_cur` を 0 にする）を掛ける処理を登録する（`atexit` は登録の逆順に動くので、`_finish_log` より先に動く）。画面が切れたパイプの場面は、子の中で `pipe` を作って読む側を `close` し、書く側を記述子 1（か 2）に `dup2` する。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
@@ -2088,5 +2088,6 @@ void check_signal();
 | `UT-analyze_terrain_common-32` | 終了コードの定数（`UT-common-26`） | 同じプロセス。なし | `EXIT_OK`・`EXIT_ERROR`・`EXIT_USAGE` | 0・1・2 |
 | `UT-analyze_terrain_common-33` | シグナルの後の後始末で例外（`UT-common-37`） | 子のプロセス | 子の中で `start_log` の後に、`try { kill(getpid(), SIGTERM); check_signal(); } catch (...) { throw std::runtime_error("cleanup"); }` | 終了コード 143。G7（`std::runtime_error: cleanup`）が標準エラー出力とログファイルに出る。ログファイルの最後の行が `SIGTERM` を受けて止まった形の L3 で終了コード 143 |
 | `UT-analyze_terrain_common-34` | 前の止まり方が残らない | 同じプロセスで `load_config` を CF1 で止めて（存在しないパス）`ExitRequest` を捕まえた後に、子のプロセスを起こす | 子の中で `start_log` の後に何もせず最後まで進む | 子の終了コードが 0、ログファイルの最後の行が L3 で終了コード 0 |
+| `UT-analyze_terrain_common-35` | 呼ぶ側が `ExitRequest` を捕まえて続ける（`UT-common-36`） | 子のプロセス。共通の準備の `RLIMIT_FSIZE` で書き込みを失敗させる | 子の中で `start_log` の後に、`try { log_info("x"); } catch (const ExitRequest&) { std::exit(EXIT_OK); }`（1.2 の規約に反する書き方を、わざと試す） | 終了コード 1（0 でない）。標準エラー出力に G5 が 1 回出る。ログファイルに終わりの行が無い |
 
-Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパス）・`-27`〜`-29`（変換）・`-34`（終わる途中で画面に出せない）・`-36`（`LogWriteError` を捕まえて続ける）・`-42`（全キーの名前の一覧）に当たるケースは持たない。CMP4 にロック・取得完了の記録・全キーの名前の一覧が無く、変換は 6.10 の群が持ち、終わる途中の画面の失敗は `_finish_log` が無視するだけで別の形にならず、`LogWriteError` を捕まえて続ける形は `ExitRequest` が `std::exception` の子でないことを `-25` の (b) で確かめるため。
+Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパス）・`-27`〜`-29`（変換）・`-34`（終わる途中で画面に出せない）・`-42`（全キーの名前の一覧）に当たるケースは持たない。CMP4 にロック・取得完了の記録・全キーの名前の一覧が無く、変換は 6.10 の群が持ち、終わる途中の画面の失敗は `_finish_log` が無視するだけで別の形にならないため。`-36`（`LogWriteError` を捕まえて続ける）は `-35` が受ける。
