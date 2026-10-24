@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-23 |
+| 最終更新日 | 2026-10-24 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -2050,7 +2050,7 @@ void check_signal();
 
 - **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ケースごとに一時のディレクトリ（`mkdtemp`）を作る。設定ファイルを使うケースは、その下に設定ファイルを書いて絶対パスを渡す（`data_dir`・`log_dir` を書くときは、一時のディレクトリの下の絶対パス）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる（`start_log` を呼ばないので、シグナルのハンドラも `atexit` も付かない）。標準出力と標準エラー出力は、呼ぶ前に `dup`・`dup2` で記述子 1・2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す。
 - **子のプロセス**: 親は `fork` の直前に `std::fflush(nullptr)` を呼ぶ（GoogleTest が標準出力のバッファにためた行を、子が受け継いで付け替えた先へ書き出さないようにするため）。子の設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。`fork` した子の中で、記述子 1・2 を親が読む 2 つのパイプの書く側に付け替え、`StartTime::now()` と `load_config`（ケースが書かなければ `keys` は `data_dir` と `log_dir`、`required` は `data_dir`）を呼んでから、入力の列の処理を、1.2 の `main` の形に捕まらない例外の経路を足した形（`try { <処理>; } catch (const ExitRequest& e) { std::exit(e.code); } catch (...) { std::terminate(); } std::exit(EXIT_OK);`）で行う。`catch (...)` の中で `std::terminate()` を呼ぶのは、子の中にも GoogleTest のテストの呼び出しが残っていて、例外をそのまま外へ出すと GoogleTest が捕まえてしまうため（`catch` の中から呼べば、`_on_terminate` の `std::current_exception()` がその例外を返し、`main` から例外が出たときと同じ経路になる）。`UT-analyze_terrain_common-31` だけは `catch (const ExitRequest& e)` を置かず、`catch (...) { std::terminate(); }` だけにする（捕まえ忘れた `ExitRequest`）。`start_log` は入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, "test_common", <ケースの引数>, start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、処理の最初に呼ぶ。ケースの引数が書いていなければ空）。親は 2 つのパイプを `poll` で終わりまで読み、`waitpid` の終了状態（シグナルで死んでいたらケースの失敗）とログファイル（`<log_dir>` の下の `test_common_*_<子の PID>.log`）を確かめる。
-- **ログファイルに書けない場面**: 子の中で `start_log` の後に `SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` を 0 にする（以後のログファイルへの書き込みが `EFBIG`〔`File too large`〕で失敗する。パイプには効かない）。終わりの行だけを失敗させるときは、`start_log` の後に `std::atexit` で同じ制限を掛ける処理を登録する（`atexit` は登録の逆順に動くので、`_finish_log` より先に動く）。画面が切れたパイプの場面は、子の中で `pipe` を作って読む側を `close` し、書く側を記述子 1（か 2）に `dup2` する。
+- **ログファイルに書けない場面**: 子の中で `start_log` の後に `SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` を 0 にする（以後のログファイルへの書き込みが `EFBIG`〔`File too large`〕で失敗する。パイプには効かない）。終わりの行だけを失敗させるときは、`start_log` の後に `SIGXFSZ` を無視にし、`std::atexit` で同じ制限（`rlim_cur` を 0 にする）を掛ける処理を登録する（`atexit` は登録の逆順に動くので、`_finish_log` より先に動く）。画面が切れたパイプの場面は、子の中で `pipe` を作って読む側を `close` し、書く側を記述子 1（か 2）に `dup2` する。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
