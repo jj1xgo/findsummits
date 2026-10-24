@@ -125,7 +125,7 @@
 #### 2.1.1 ファイル割付
 
 - 部品はすべて `scripts/common.py` 1 本に置く。プログラムは `venv/bin/python3 scripts/<名前>.py` で起動され（HLD 第 3 章）、`scripts/` が import の探索先の先頭になるので、`import common` で読む。
-- UT のコードは `tests/scripts/test_common.py` に置く（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成) の `tests/scripts/`、[DEC18](30_HLD.md#266-設計判断)「テストは対象と同じ名前で分ける」）。テストの枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選ぶので、LLD では決めない。UT のコードの各テストには、`# trace: <UT の ID>`（例 `# trace: UT-common-01`）のコメントを付ける（文書管理ルールの[追跡の宣言](CLAUDE.md#追跡の宣言)）。
+- UT のコードは `tests/scripts/test_common.py` に置く（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成) の `tests/scripts/`、[DEC18](30_HLD.md#266-設計判断)「テストは対象と同じ名前で分ける」）。テストの枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ（Python は標準の `unittest`）。UT のコードの各テストには、`# trace: <UT の ID>`（例 `# trace: UT-common-01`）のコメントを付ける（文書管理ルールの[追跡の宣言](CLAUDE.md#追跡の宣言)）。
 - `scripts/common.py` の親の親をソースツリーの根とする。既定の設定ファイル `params/config.ini` とその見本 `params/config.ini.example` は、その下にある（[2.1.2](#212-型とデータ)の `DEFAULT_CONFIG_PATH`・`_EXAMPLE_CONFIG_PATH`）。
 
 #### 2.1.2 型とデータ
@@ -654,7 +654,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 #### 3.1.1 ファイル割付
 
 - 関数はすべて `scripts/preprocess_boundaries.py` 1 本に置く。`venv/bin/python3 scripts/preprocess_boundaries.py` で起動され（[HLD 3.1.1](30_HLD.md#311-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。shapely は `import shapely` と `from shapely.geometry import box, mapping, shape, MultiPolygon, Polygon`・`from shapely.geometry.polygon import orient`・`from shapely.errors import GEOSException` で読む（[環境定義](01_environment.md) の既存の依存。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 5「市区町村の GeoJSON を展開する」）。ファイルの先頭のコメントに `# trace: LLD-preprocess_boundaries` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_preprocess_boundaries.py` に置く。各テストに `# trace: UT-preprocess_boundaries-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選ぶ。
+- UT のコードは `tests/scripts/test_preprocess_boundaries.py` に置く。各テストに `# trace: UT-preprocess_boundaries-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
 
 #### 3.1.2 型とデータ
 
@@ -949,7 +949,7 @@ N03 行政区域 ZIP から、地域と市区町村の GeoJSON、北方領土除
 #### 4.1.1 ファイル割付
 
 - 関数はすべて `scripts/fetch_tiles.py` 1 本に置く。`venv/bin/python3 scripts/fetch_tiles.py` で起動され（[HLD 3.2.1](30_HLD.md#321-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。HTTP は標準の `http.client`（と `ssl`・`urllib.parse`）で行う（[環境定義](01_environment.md) の依存を足さない。`requests` は使わない。理由は 4.1.3 の `_Gate`）。並列は標準の `threading`・`queue` で行う。ファイルの先頭のコメントに `# trace: LLD-fetch_tiles` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_fetch_tiles.py` に置く。各テストに `# trace: UT-fetch_tiles-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選ぶ。
+- UT のコードは `tests/scripts/test_fetch_tiles.py` に置く。各テストに `# trace: UT-fetch_tiles-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
 
 #### 4.1.2 型とデータ
 
@@ -1352,7 +1352,7 @@ TF1 の「この書き換え」は、2 つの場面のどちらかを指す。�
 #### 5.1.1 ファイル割付
 
 - 関数と本体はすべて `scripts/run_pipeline.sh` 1 本に置く。1 行目は `#!/usr/bin/env bash`、2 行目は `# trace: LLD-run_pipeline`、3 行目は `set -euo pipefail`。ファイルは実行できる権限で git に入れる（利用者は `scripts/run_pipeline.sh` で起動する。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)）。並びは、定数、関数の定義、本体の順。
-- UT のコードは `tests/scripts/test_run_pipeline.py` に置き、`scripts/run_pipeline.sh` を子のプロセスで起動して確かめる（[5.1.5](#515-ut-候補)の共通の準備）。各テストに `# trace: UT-run_pipeline-NN` のコメントを付ける。テストの枠組みは[2.1.1](#211-ファイル割付)と同じくテスト方針書 3.4 で選ぶ。Python から子のプロセスで起動する形は、テスト方針書 3.4 が CMP3 の bash のテストのしかたを選ぶまでの暫定で、選んだときはそれに合わせて直す。
+- UT のコードは `tests/scripts/test_run_pipeline.py` に置き、`scripts/run_pipeline.sh` を子のプロセスで起動して確かめる（[5.1.5](#515-ut-候補)の共通の準備）。各テストに `# trace: UT-run_pipeline-NN` のコメントを付ける。テストの枠組みは[2.1.1](#211-ファイル割付)と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。Python から子のプロセスで起動する形は、テスト方針書 3.4 が CMP3 の bash のテストのしかたとして選んだもの。
 
 UT のコードを Python で書く理由: UT 候補はどれも、起動の引数・終了コード・画面の出力・ログファイル・内部の起動口に渡した引数・消したファイルを、プログラムの外から見るものなので、子のプロセスで起動して確かめる。テストを動かす環境は 2.1・5.2 と同じ venv にする。bash のテストの枠組み（bats など）は新しい依存になり、[HLD 2.6.3](30_HLD.md#263-ライブラリと使う範囲)の判断が要るので使わない。
 
