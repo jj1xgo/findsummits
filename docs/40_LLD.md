@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-24 |
+| 最終更新日 | 2026-10-25 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -2051,7 +2051,7 @@ Args parse_args(const std::vector<std::string>& args);   // args は argv[1] か
 | `UT-analyze_terrain_launch-21` | 段が止まったときの終了コード | 起動。`STUB_STAGE=exit1` | 既定の引数 | 終了コード 1。標準エラー出力は `ERROR: stub` と `対処: stub`。ログファイルの最後の行は L3（終了コード 1） |
 | `UT-analyze_terrain_launch-22` | 捕まらない例外 | 起動。`STUB_STAGE=runtime` | 既定の引数 | 終了コード 1。標準エラー出力に G7（`{type}` は `std::runtime_error`、`{message}` は `stub runtime`）の 2 行。ログファイルにも同じ G7 の 2 行（1 行目は `ERROR: 予期しない例外で止まった: std::runtime_error: stub runtime`）があり、最後の行は L3（終了コード 1） |
 | `UT-analyze_terrain_launch-23` | シグナルで止まる | 起動。`STUB_STAGE=sigterm` | 既定の引数 | 終了コード 143（`waitpid` の終了状態は正常終了で 143。シグナルで死んでいない）。ログファイルの最後の行は `SIGTERM` を受けて止まった形の L3（143） |
-| `UT-analyze_terrain_launch-24` | 標準エラー出力に書けないときの `start_log` の前の誤り | 起動。ただし標準エラー出力は、読む側を閉じた `pipe` の書く側にする（読む相手のいない標準エラー出力。親が `pipe` を作り、`fork` の前に読む側を閉じ、子は書く側を記述子 2 に付け替える。親は標準出力のパイプだけを読む）。設定ファイルは入力ごと | (a) 既定の引数から `--mode normal` を除く（LA4）、(b) 設定ファイルを置かない（CF1）、(c) 設定ファイルに `prominence_primary_m = 150` を足す（CX1） | どれも終了コード 2（1 でない）。標準出力は空。`<tmp>/logs` が無い |
+| `UT-analyze_terrain_launch-24` | 標準エラー出力に書けないときの `start_log` の前の誤り | 起動。ただし標準エラー出力は、読む側を閉じた `pipe` の書く側にする（読む相手のいない標準エラー出力。親が `pipe` を作り、`fork` の前に読む側を閉じ、子は書く側を記述子 2 に付け替える。親は標準出力のパイプだけを読む）。設定ファイルは入力ごと | (a) 既定の引数から `--mode normal` を除く（LA4）、(b) 設定ファイルを置かない（CF1）、(c) 設定ファイルの `[analysis]` に `prominence_primary_m = 150` を書く（20 の (b) と同じ。CX1） | どれも終了コード 2（1 でない）。標準出力は空。`<tmp>/logs` が無い |
 
 ### 6.10 `analyze_terrain_convert`
 
@@ -2059,7 +2059,7 @@ Args parse_args(const std::vector<std::string>& args);   // args は argv[1] か
 - **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
 - **ファイル**: `src/convert.hpp`・`src/convert.cpp`
 
-関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「変換」の群で、式の正本は用語集の座標変換計算式（[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)・[緯度経度 → メッシュコード](00_GLOSSARY.md#latlon-to-mesh)・[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)・[XYZ タイル番号 → 緯度経度](00_GLOSSARY.md#tile-to-latlon)）である。言語をまたいで同じ値にするための計算の順とテストベクトルは [2.4](#24-言語ごとに別に実装する式のテストベクトル) に置いた（HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。`mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` は Python の [2.1](#21-共通部品)・[3.1](#31-preprocess_boundaries) の同じ名前の関数と、`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` は CMP5（統合・突合）の同じ名前の関数（[HLD 3.5.3](30_HLD.md#353-関数)・[3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）と、同じ表で一致を確かめる。Z15 の画素とその中心の使い方は [HLD 4.7.2](30_HLD.md#472-処理の流れ) の 2「ピークの Z15 の画素を求める」〜5「対象ピークの照合」と [DEC54](30_HLD.md#474-設計判断)「ピークの座標は Z15 の画素の中心にする」である。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、2.4 の計算の順と [HLD 2.6.5](30_HLD.md#265-ビルド構成)のコンパイルの指定で受ける（同じ入力から、どの計算機でも同じ値になる）。この節は、C++ で書くための細部だけを足す。1.2 の C++ の規約に従う。
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「変換」の群で、式の正本は用語集の座標変換計算式（[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)・[緯度経度 → メッシュコード](00_GLOSSARY.md#latlon-to-mesh)・[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)・[XYZ タイル番号 → 緯度経度](00_GLOSSARY.md#tile-to-latlon)）である。言語をまたいで同じ値にするための計算の順とテストベクトルは [2.4](#24-言語ごとに別に実装する式のテストベクトル) に置いた（HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。`mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon` は Python の [2.1](#21-共通部品)・[3.1](#31-preprocess_boundaries) の同じ名前の関数と、`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` は CMP5（統合・突合）の同じ名前の関数（[HLD 3.5.3](30_HLD.md#353-関数)・[3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）と、同じ表で一致を確かめる。Z15 の画素とその中心の使い方は [HLD 4.7.2](30_HLD.md#472-処理の流れ) の 2「ピークの Z15 の画素を求める」〜5「対象ピークの照合」と [DEC54](30_HLD.md#474-設計判断)「ピークの座標は Z15 の画素の中心にする」である。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、2.4 の計算の順と [HLD 2.6.5](30_HLD.md#265-ビルド構成)のコンパイルの指定で受ける（同じ入力から、経度と整数の結果〈メッシュコード・タイル番号・画素〉はどの計算機でも同じ値になり、`sinh`・`atan` を通る緯度は 2.4 の許容差〈`1e-12` 度〉の中で一致する）。この節は、C++ で書くための細部だけを足す。1.2 の C++ の規約に従う。
 
 #### 6.10.1 ファイル割付
 
