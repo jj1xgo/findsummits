@@ -31,11 +31,11 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 常駐ドキュメント（ステージ不問）:
 
-- `docs/00_GLOSSARY.md` — 用語集（全文書から参照）
-- `docs/01_environment.md` — 環境定義
-- `docs/02_test_policy.md` — テスト方針書（UT/IT/ST横断のテストレベル定義・開始基準・合否判定基準・テスト計画・テストの記録）
-- `docs/03_development.md` — 共通開発規則の詳細（依存管理・検証・フェーズゲート・バージョン・要求の追跡・課題とレビュー）
-- `ref/SOURCES.md` — 参照資料の出典一覧
+- [`docs/00_GLOSSARY.md`](00_GLOSSARY.md) — 用語集（全文書から参照）
+- [`docs/01_environment.md`](01_environment.md) — 環境定義
+- [`docs/02_test_policy.md`](02_test_policy.md) — テスト方針書（UT/IT/ST横断のテストレベル定義・開始基準・合否判定基準・テスト計画・テストの記録）
+- [`docs/03_development.md`](03_development.md) — 共通開発規則の詳細（依存管理・検証・フェーズゲート・バージョン・要求の追跡・課題とレビュー）
+- [`ref/SOURCES.md`](../ref/SOURCES.md) — 参照資料の出典一覧
 - `docs/decisions/ADR-*.md` — アーキテクチャ決定記録（ADR）
 - `docs/decisions/research/` — ADR 決定前の設計調査資料
 
@@ -58,8 +58,8 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 | ファイル | 役割 | 書くこと | 書かないこと |
 |---|---|---|---|
-| `docs/00_GLOSSARY.md` | 用語の概念定義（What） | 「〇〇とは何か」の説明。必要に応じて仕様リンクや SOURCES へのリンク | 利用規約 URL・帰属表示義務の詳細 |
-| `ref/SOURCES.md` | 出典・利用規約の詳細（Where/How） | 取得元 URL・利用規約 URL・帰属表示義務・利用形態 | 概念の説明 |
+| [`docs/00_GLOSSARY.md`](00_GLOSSARY.md) | 用語の概念定義（What） | 「〇〇とは何か」の説明。必要に応じて仕様リンクや SOURCES へのリンク | 利用規約 URL・帰属表示義務の詳細 |
+| [`ref/SOURCES.md`](../ref/SOURCES.md) | 出典・利用規約の詳細（Where/How） | 取得元 URL・利用規約 URL・帰属表示義務・利用形態 | 概念の説明 |
 
 **更新ルール**:
 
@@ -129,7 +129,7 @@ docs/ 配下および `ref/SOURCES.md` を編集・作成するときはこの�
 
 ## SRS 機能要件（FR）記述規約
 
-`docs/20_SRS.md` の機能要件は以下の規約に従って記述する。
+[`docs/20_SRS.md`](20_SRS.md) の機能要件は以下の規約に従って記述する。
 
 - **データ辞書への一元定義**: 入出力データ・設定可能項目はデータ辞書セクションで一元定義し、FR本文では参照名を使う。設定可能項目は「デフォルト値と許容範囲」のみSRSに記述し、渡し方（CLI引数/設定ファイル/環境変数）はHLDに委ねる
 - **統一テンプレート**: 全FRを「概要/入力/出力/処理/異常系」の構造で記述する
@@ -206,7 +206,7 @@ HLD（`30_HLD.md`）で同じ決定を複数の箇所に書き写すと、直し
 - 判断の中身が最も自然に属するステージを選ぶ（上流側で決められるなら上流を優先）
 - `NNN` は 3 桁連番で **ステージごとに独立**
 - 既存 ADR の番号は維持。新規は各ステージの現状最大値 + 1 から採番（`ls docs/decisions/ | grep ADR-{STAGE}` で最大値を確認して +1）
-- 詳細は `docs/00_GLOSSARY.md` の「ADR 命名規約」を参照
+- 詳細は [`docs/00_GLOSSARY.md` の「ADR 命名規約」](00_GLOSSARY.md#adr-命名規約)を参照
 
 **フォーマット**:
 

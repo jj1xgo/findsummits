@@ -131,7 +131,7 @@
 | タイトル | SOTA日本支部 参照マニュアル 2025年7月改定版 |
 | 提供元 | [SOTA日本支部](https://www.kawauchi.homeip.mydns.jp/sotajp/) |
 | 参照URL | <https://www.kawauchi.homeip.mydns.jp/sotajp/%e3%82%84%e3%81%a3%e3%81%a6%e3%81%bf%e3%82%88%e3%81%86/> （セクション「8. その場所は何ポイント?」） |
-| 備考 | 標高バンドに基づくポイント数（1/2/4/6/8/10）の算出表を規定。全国統一（地域依存なし）。本プロジェクトでは `points` / `sota_points` の算出根拠として参照する。詳細な表は `docs/00_GLOSSARY.md` の「標高バンド（Points 算出表）」を参照。 |
+| 備考 | 標高バンドに基づくポイント数（1/2/4/6/8/10）の算出表を規定。全国統一（地域依存なし）。本プロジェクトでは `points` / `sota_points` の算出根拠として参照する。詳細な表は [`docs/00_GLOSSARY.md` の「標高バンド（Points 算出表）」](../docs/00_GLOSSARY.md#標高バンドpoints-算出表)を参照。 |
 
 ---
 
