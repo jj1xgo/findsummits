@@ -38,7 +38,7 @@ text { font-size: 18px; fill: #111827; }
     <rect x="380" y="170" width="640" height="780" rx="14" fill="#eff6ff" stroke="#1d4ed8" stroke-width="3"/>
     <text x="395" y="196" class="b blue">findsummits のローカル実行部分（CMP1〜CMP7）</text>
 
-    <!-- バッチ処理ブロック（取得時のネットワーク接続は C2 の入力に表示） -->
+    <!-- バッチ処理ブロック（取得時のネットワーク接続は CMP2 の入力に表示） -->
     <rect x="405" y="210" width="590" height="370" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="2"/>
     <text x="420" y="236" class="b">解析・成果物生成は入力とキャッシュ配置後オフライン</text>
 
@@ -71,7 +71,7 @@ text { font-size: 18px; fill: #111827; }
     <text x="887" y="482" class="b" text-anchor="middle">CMP6</text>
     <text x="887" y="508" text-anchor="middle">可視化生成</text>
 
-    <!-- バッチ → C7 （ファイル） -->
+    <!-- バッチ → CMP7 （ファイル） -->
     <line x1="900" y1="580" x2="900" y2="678" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
     <text x="888" y="610" text-anchor="end">merged_viewer.html ＋</text>
     <text x="888" y="636" text-anchor="end">merged_viewer_data.js（CMP6）</text>
@@ -176,11 +176,11 @@ text { font-size: 18px; fill: #111827; }
     <polyline points="1330,725 1370,725 1370,1003" fill="none" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
     <text x="1362" y="990" text-anchor="end">利用者が提出</text>
 
-    <!-- ZIP → C8（③ 利用者が手動配置） -->
+    <!-- ZIP → CMP8（③ 利用者が手動配置） -->
     <line x1="1060" y1="946" x2="1060" y2="1003" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
     <text x="1070" y="985" class="b">③</text>
 
-    <!-- 静的ホスティングと C8 -->
+    <!-- 静的ホスティングと CMP8 -->
     <rect x="690" y="1005" width="400" height="170" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
     <text x="705" y="1031" class="b">静的ホスティング（外部サービス）</text>
     <rect x="705" y="1043" width="370" height="122" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>

@@ -81,12 +81,12 @@ text { font-size: 18px; fill: #111827; }
   <text x="258" y="662" class="m b">可視化生成</text>
   <text x="258" y="682" class="s">作業用ビューアを生成</text>
 
-  <!-- バッチ → C7（作業用 HTML ビューア） -->
+  <!-- バッチ → CMP7（作業用 HTML ビューア） -->
   <line x1="430" y1="620" x2="518" y2="620" stroke="#334155" stroke-width="2.5" marker-end="url(#ah1)"/>
   <text x="474" y="586" class="s" text-anchor="middle">作業用</text>
   <text x="474" y="606" class="s" text-anchor="middle">ビューア</text>
 
-  <!-- C7 -->
+  <!-- CMP7 -->
   <rect x="520" y="420" width="220" height="290" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
   <text x="535" y="450" class="b">CMP7 申請書生成 UI</text>
   <text x="535" y="478" class="s">作業用ビューアの中で動く</text>
@@ -94,7 +94,7 @@ text { font-size: 18px; fill: #111827; }
   <text x="535" y="546" class="s">・除外判断</text>
   <text x="535" y="572" class="s">・申請書類を作る</text>
 
-  <!-- C8 -->
+  <!-- CMP8 -->
   <rect x="760" y="420" width="200" height="290" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
   <text x="775" y="450" class="b">CMP8 公開用ビューア</text>
   <text x="775" y="478" class="s">リポジトリに置く</text>

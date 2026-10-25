@@ -43,7 +43,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="560" y="197" class="c note">事前準備（この図の範囲外）：前処理・標高タイル取得</text>
 <path d="M560,220 V258" class="lnd"/>
 
-<!-- C3 開始 -->
+<!-- CMP3 開始 -->
 <rect x="360" y="260" width="400" height="100" rx="8" class="gray"/>
 <text x="560" y="292" class="c b">CMP3 パイプライン制御（FR-023）</text>
 <text x="560" y="319" class="c">通し実行を開始（N = 3）</text>
@@ -152,7 +152,7 @@ text{font-family:"Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Hiragino Kak
 <text x="1060" y="1211" class="c b">CMP6（ビューア生成）は起動しない</text>
 <text x="1060" y="1239" class="c note">N = 6 でも未確定が残った場合もここ</text>
 
-<!-- 正常終了 → C6 -->
+<!-- 正常終了 → CMP6 -->
 <path d="M560,1230 V1288" class="ln"/>
 <text x="572" y="1262" class="lbl">正常終了</text>
 <rect x="360" y="1290" width="400" height="100" rx="8" class="green"/>

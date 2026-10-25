@@ -27,7 +27,7 @@ text { font-size: 18px; fill: #111827; }
   <rect x="940" y="160" width="430" height="38" fill="#374151"/>
   <text x="1155" y="186" class="w" text-anchor="middle">出力（→ 宛先）</text>
 
-  <!-- C1: y=210 h=160 -->
+  <!-- CMP1: y=210 h=160 -->
   <rect x="30" y="210" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="244"><tspan class="man">[手動配置]</tspan> N03 行政区域 ZIP（国土数値情報）</text>
   <text x="44" y="270">日本全土1次メッシュコードリスト（ソース同梱）</text>
@@ -46,7 +46,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="290" x2="538" y2="290" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="290" x2="938" y2="290" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C2: y=384 h=186 -->
+  <!-- CMP2: y=384 h=186 -->
   <rect x="30" y="384" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="418"><tspan class="pre">[事前取得]</tspan> 国土地理院 標高タイル（HTTP）</text>
   <text x="44" y="444">　DEM5a/5b/5c・DEM10b、PNG</text>
@@ -68,7 +68,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="477" x2="538" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="477" x2="938" y2="477" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C3: y=584 h=186 -->
+  <!-- CMP3: y=584 h=186 -->
   <rect x="30" y="584" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="618">利用者のコマンド（1次メッシュコードリスト</text>
   <text x="44" y="644">　（任意）・フェーズ指定）</text>
@@ -91,7 +91,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="677" x2="538" y2="677" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="677" x2="938" y2="677" stroke="#334155" stroke-width="2.5" stroke-dasharray="2 5" marker-end="url(#ah2)"/>
 
-  <!-- C4: y=784 h=186 -->
+  <!-- CMP4: y=784 h=186 -->
   <rect x="30" y="784" width="470" height="186" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="818">標高タイル（ローカルキャッシュ）← CMP2</text>
   <text x="44" y="844">北方領土除外メッシュリスト ← CMP1</text>
@@ -114,7 +114,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="877" x2="538" y2="877" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="877" x2="938" y2="877" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C5: y=984 h=212 -->
+  <!-- CMP5: y=984 h=212 -->
   <rect x="30" y="984" width="470" height="212" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="1018">per-mesh CSV・GeoJSON ← CMP4</text>
   <text x="44" y="1044">N03 前処理済み GeoJSON・北方領土除外</text>
@@ -140,7 +140,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="1090" x2="538" y2="1090" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="1090" x2="938" y2="1090" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C6: y=1210 h=134 -->
+  <!-- CMP6: y=1210 h=134 -->
   <rect x="30" y="1210" width="470" height="134" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="1244">merged_summit.geojson ← CMP5</text>
   <text x="44" y="1270">テンプレート（ソース同梱）</text>
@@ -156,7 +156,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="1277" x2="538" y2="1277" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="1277" x2="938" y2="1277" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C7: y=1358 h=160 -->
+  <!-- CMP7: y=1358 h=160 -->
   <rect x="30" y="1358" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="1392">merged_viewer.html＋data.js ← CMP6</text>
   <text x="44" y="1418">（ファイルのみ・バッチと実行時通信しない）</text>
@@ -178,7 +178,7 @@ text { font-size: 18px; fill: #111827; }
   <line x1="500" y1="1438" x2="538" y2="1438" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
   <line x1="900" y1="1438" x2="938" y2="1438" stroke="#334155" stroke-width="2.5" marker-end="url(#ah2)"/>
 
-  <!-- C8: y=1532 h=160 -->
+  <!-- CMP8: y=1532 h=160 -->
   <rect x="30" y="1532" width="470" height="160" rx="6" fill="#f9fafb" stroke="#9ca3af"/>
   <text x="44" y="1566"><tspan class="man">[手動配置]</tspan> ZIP 同梱の GeoJSON 5本</text>
   <text x="44" y="1592">（利用者が公開用データ置き場へ配置・無改変）</text>
