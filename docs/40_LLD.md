@@ -2422,7 +2422,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 - 公開の宣言は `src/record.hpp`、定義と内部の関数は `src/record.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_record` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/record.hpp` は `<set>`・`<string>` を読む。`src/record.cpp` は `"record.hpp"`・`"common.hpp"`・`<cerrno>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<unistd.h>` を読む。OpenCV のヘッダーは読まない。
-- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp`・`window.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NN`（確かめる UT 候補の ID）のコメントを付ける。UT-analyze_terrain_record-05 は 6.3 の `read_meshset` を呼ぶので、`"window.hpp"` も読む。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp`・`window.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.9.2 型とデータ
 
@@ -2452,9 +2452,9 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
    - `meshes` が空: `write_meshset: meshes が空`（通常の対象メッシュも広域の対象メッシュも解析対象メッシュに入るので、空は呼ぶ側の誤り）。
    - `meshes` を昇順に見て、4 バイトの ASCII の数字でないコードがある: `write_meshset: meshes のコードが 4 桁の数字でない: <値>`（6.10 の `mesh_to_latlon` と同じ判定。日本全土1次メッシュコードリストにあるかは見ない）。
 2. 中身を作る。`meshes` を集合の順（昇順）に、コードと `\n` を続けて 1 つの `std::string` にする（見出し・注釈・BOM・CR・空行を書かない。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」。6.3 の `read_meshset` がそのまま受ける形）。
-3. パスを決める。`path = csv_dir + "/" + analysis_id + ".meshset"`、一時ファイル `tmp = path + ".tmp"`（[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まり）。
-4. 書く（2.3 の「書く（C++）」）。`open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`_write_all(fd, 中身)`、`fsync(fd)`、`close(fd)` の順に行う。どれかが失敗したら、その時点の `errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない）、`unlink(tmp)`（失敗は無視する）してから、MW1（`{reason}` は控えた `errno` の `std::strerror`）を出して止まる。`close` が失敗したときは、もう一度 `close` を呼ばない。途中で止まっても、書きかけの `.meshset` が本来の名前で残らないようにするために、一時ファイルに書く。
-5. 置き換える（2.3 の「置き換える（C++）」）。`rename(tmp, path)` を呼ぶ。失敗したら、`errno` を控え、`unlink(tmp)`（失敗は無視する）してから、MW1 を出して止まる。
+3. パスを決める。`path = csv_dir + "/" + analysis_id + ".meshset"`、一時ファイル `tmp = path + ".tmp"`（[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まり）。一時ファイルに書いてから置き換えるのは、途中で止まっても、書きかけの `.meshset` が本来の名前で残らないようにするため。
+4. 書く。2.3 の一時ファイルの決まりの「書く（C++）」で、`tmp` に 2 の中身を書く（`_write_all` を使う）。開く・書く・`fsync`・`close` のどれで失敗しても、2.3 のとおり後始末をしてから、MW1（`{reason}` は控えた `errno` の `std::strerror`）を出して止まる。
+5. 置き換える。2.3 の「置き換える（C++）」で `rename(tmp, path)` を呼ぶ。失敗したら、`errno` を控え、`unlink(tmp)`（失敗は無視する）してから、MW1 を出して止まる（置き換えに失敗したときに一時ファイルを消すかは節で決めるとある。6.9 は消す）。
 6. 戻る。`path` が書き終えた中身か、前の起動が書いた中身のどちらかになる。書けずに止まったときは、前の起動の `.meshset` を消さない（同じ解析識別子の `.meshset` は、起動し直せば同じメッシュかパターンで書き直す。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 5「終了コード 0 で終わる」・[4.14.2](30_HLD.md#4142-処理の流れ) の 5「終了コード 0 で終わる」の、それより前の出力は残すとする決まりも、古いものを消すとはしていない）。
 
 - MW1 の `{path}` は、どの段で失敗しても `path`（一時ファイルでなく本来の名前）。
@@ -2470,6 +2470,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 |---|---|---|---|---|
 | MW1 | `.meshset` を書けない | `.meshset を書けない: {path}: {reason}` | `{dir} の空きと権限を確かめてから、{rerun}` | 1 |
 
+- MW1 は `write_meshset` が出す（呼ぶ側の 6.11 は出さない）。
 - `{rerun}`: `analysis_id` の先頭の 1 字が `3` なら（通常解析）`止まったコマンドを同じ引数で起動し直す（それより前のメッシュの出力は残っていて、起動し直すと書き直す）`。`4`・`5`・`6` なら（広域解析）`scripts/run_pipeline.sh --phase 3 --n {n} を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）`（`{n}` は先頭の 1 字）。[HLD 2.5.5](30_HLD.md#255-書き込みの失敗) は書き込みの失敗の終了コードだけを決め、案内の文面は決めていない。通常解析は、通しの起動でも `--phase 2` でも `--mesh` を付けた起動でも止まりうるが、関数には起動の仕方が分からないので、止まった起動と同じ引数で起動し直す形にする。広域解析は、6.3 の MS1〜MS3 と同じく、フェーズ 3 の `--n` を指す。括弧の「設定ファイルを…」は、関数が設定ファイルの指定の有無を知らないので、いつでもそのまま書く（6.3 の MS3 と同じ）。
 
 #### 6.9.5 UT 候補
@@ -2477,7 +2478,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_record-NN` を付ける。共通の準備は 2 つ。
 
 - **同じプロセス**: 6.3.5 の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、`csv_dir` はその下に作ったディレクトリの絶対パス。ファイルの中身はバイト列で読んで比べる。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。
-- **子のプロセス（書けない）**: 親が `csv_dir` と、ケースが前もって置くファイルを作ってから、`std::fflush(nullptr)` の後に `fork` する。子は記述子 2 を、親が読むパイプの書く側に付け替えて元の 2 つの記述子を閉じ、`SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` をケースの値（0 か 5）にしてから（[6.12.5](#6125-ut-候補) の「ログファイルに書けない場面」と同じ。0 なら以後のファイルへの `write` が `EFBIG`〔`File too large`〕で失敗する。5 なら最初の `write` は 5 バイトだけ書けて、書いた数を返し、続く `write` が `EFBIG` で失敗する。パイプには効かない。`rlim_max` は変えない）、`try { write_meshset(...); } catch (const ExitRequest& e) { std::_Exit(e.code); } catch (...) { std::_Exit(99); } std::_Exit(EXIT_OK);` を行う（`start_log` を呼ばないので、終わりの行も `atexit` も無い。`std::_Exit` は GoogleTest の後始末を子の中で動かさないため）。親はパイプを読み切ってから `waitpid` し、終了コードと標準エラー出力を確かめる。
+- **子のプロセス（書けない）**: 親が `csv_dir` と、ケースが前もって置くファイルを作ってから、`std::fflush(nullptr)` の後に `fork` する。子は記述子 2 を、親が読むパイプの書く側に付け替えて元の 2 つの記述子を閉じ、`SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` をケースの値（0 か 5）にしてから（[6.12.5](#6125-ut-候補) の「ログファイルに書けない場面」と同じ。0 なら以後のファイルへの `write` が `EFBIG`〔`File too large`〕で失敗する。5 なら最初の `write` は 5 バイトだけ書けて、書いた数を返し、続く `write` が `EFBIG` で失敗する。パイプには効かない。`rlim_max` は変えない）、`try { write_meshset(...); } catch (const ExitRequest& e) { std::_Exit(e.code); } catch (...) { std::_Exit(99); } std::_Exit(EXIT_OK);` を行う（`start_log` を呼ばないので、終わりの行も `atexit` も無い。`std::_Exit` は GoogleTest の後始末を子の中で動かさないため）。親は `fork` の後、読み始める前に、パイプの書く側を閉じる（閉じないと、子が終わっても EOF にならない）。パイプを EOF まで読み切ってから `waitpid` し、終了コードと標準エラー出力を確かめる。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -2485,11 +2486,12 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 | `UT-analyze_terrain_record-02` | 広域の `.meshset` を書く | 同じプロセス | `write_meshset({5135, 5136, 5235, 5236}, "4-5135-NW", csv_dir)` | `<csv_dir>/4-5135-NW.meshset` の中身が `5135\n5136\n5235\n5236\n`。`.tmp` が無い。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_record-03` | 昇順で書く | 同じプロセス | `write_meshset({"5340", "0099", "5339"}, "3-5339", csv_dir)`（初期化子の並びをわざと崩す） | 中身が `0099\n5339\n5340\n`。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_record-04` | 置き換える | 同じプロセス。`<csv_dir>/3-5339.meshset` に `9999\n`、`<csv_dir>/3-5339.meshset.tmp` に `5238\n5239\n5240\n5338\n`（前の起動の残り。新しい中身より長い） | `write_meshset({5339}, "3-5339", csv_dir)` | `3-5339.meshset` の中身が `5339\n`。`.tmp` が無い。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-05` | 6.3 の `read_meshset` で読める | 同じプロセス | (a) UT-analyze_terrain_record-01 と同じ呼び出し（`3-5339`）の後に `read_meshset(<csv_dir>/3-5339.meshset, 4)`、(b) 緯度の番号 46〜51・経度の番号 35〜40 のすべてのコード（36 件）を `"6-5135-NW"` で書いた後に `read_meshset(<csv_dir>/6-5135-NW.meshset, 6)` | どちらも書いた集合と同じ集合が返り、標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-06` | 置き場が無い、案内の分け方 | 同じプロセス。`csv_dir` は一時のディレクトリの下の、存在しないパス | (a) `write_meshset({5339}, "3-5339", csv_dir)`、(b) `write_meshset({5135}, "5-5135-SE", csv_dir)` | どちらも `code` 1。(a) は `ERROR: .meshset を書けない: <csv_dir>/3-5339.meshset: No such file or directory` と `対処: <csv_dir> の空きと権限を確かめてから、止まったコマンドを同じ引数で起動し直す（それより前のメッシュの出力は残っていて、起動し直すと書き直す）`。(b) は 1 行目のパスが `<csv_dir>/5-5135-SE.meshset`、2 行目が `対処: <csv_dir> の空きと権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n 5 を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` |
-| `UT-analyze_terrain_record-07` | 置き換えに失敗する | 同じプロセス。`<csv_dir>/3-5339.meshset` という名前の空のディレクトリ | `write_meshset({5339}, "3-5339", csv_dir)` | `code` 1 の MW1（`{reason}` は `Is a directory`、`{path}` は `<csv_dir>/3-5339.meshset`）。`.tmp` が無い。ディレクトリは残る |
-| `UT-analyze_terrain_record-08` | 書く途中で失敗する | 子のプロセス（書けない）。親が `<csv_dir>/3-5339.meshset` に `5339\n` を置く。上限は (a) 0、(b) 5（中身 `5238\n5339\n` の 10 バイトのうち 5 バイトだけ書けて、残りで失敗する） | 子で `write_meshset({5238, 5339}, "3-5339", csv_dir)` | (a)(b) とも、子の終了コード 1。標準エラー出力が MW1（`{reason}` は `File too large`）の 2 行。`3-5339.meshset` の中身は `5339\n` のまま。`.tmp` が無い（(b) は、`write` を 1 回だけ呼んで書いた数を見ない実装を落とす） |
-| `UT-analyze_terrain_record-09` | 呼ぶ側の誤り | 同じプロセス | (a) `meshes` が空、(b) `meshes` に `53a9`、(c) `meshes` に `53390`、(d) `analysis_id` が `3-533`、(e) `7-5135-NW`、(f) `4-5135`、(g) `3-5339-NW`、(h) `4-5135-nw`、(i) `csv_dir` が空、(j) `csv_dir` の末尾が `/`。ほかの引数は UT-analyze_terrain_record-01 と同じ | どれも `std::invalid_argument`。標準エラー出力に何も出ない。`csv_dir` の下にファイルができない（(i)(j) を除く） |
+| `UT-analyze_terrain_record-05` | 置き場が無い、案内の分け方 | 同じプロセス。`csv_dir` は一時のディレクトリの下の、存在しないパス | (a) `write_meshset({5339}, "3-5339", csv_dir)`、(b) `write_meshset({5135}, "5-5135-SE", csv_dir)` | どちらも `code` 1。(a) は `ERROR: .meshset を書けない: <csv_dir>/3-5339.meshset: No such file or directory` と `対処: <csv_dir> の空きと権限を確かめてから、止まったコマンドを同じ引数で起動し直す（それより前のメッシュの出力は残っていて、起動し直すと書き直す）`。(b) は 1 行目のパスが `<csv_dir>/5-5135-SE.meshset`、2 行目が `対処: <csv_dir> の空きと権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n 5 を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` |
+| `UT-analyze_terrain_record-06` | 置き換えに失敗する | 同じプロセス。`<csv_dir>/3-5339.meshset` という名前の空のディレクトリ | `write_meshset({5339}, "3-5339", csv_dir)` | `code` 1 の MW1（`{reason}` は `Is a directory`、`{path}` は `<csv_dir>/3-5339.meshset`）。`.tmp` が無い。ディレクトリは残る |
+| `UT-analyze_terrain_record-07` | 書く途中で失敗する | 子のプロセス（書けない）。親が `<csv_dir>/3-5339.meshset` に `5339\n` を置く。上限は (a) 0、(b) 5（中身 `5238\n5339\n` の 10 バイトのうち 5 バイトだけ書けて、残りで失敗する） | 子で `write_meshset({5238, 5339}, "3-5339", csv_dir)` | (a)(b) とも、子の終了コード 1。標準エラー出力が MW1（`{reason}` は `File too large`）の 2 行。`3-5339.meshset` の中身は `5339\n` のまま。`.tmp` が無い（(b) は、`write` を 1 回だけ呼んで書いた数を見ない実装を落とす） |
+| `UT-analyze_terrain_record-08` | 呼ぶ側の誤り | 同じプロセス | (a) `meshes` が空、(b) `meshes` が `{5238, 5239, 5339, 53a9}`、(c) `meshes` が `{5238, 5239, 5339, 53390}`、(d) `analysis_id` が `3-533`、(e) `7-5135-NW`、(f) `4-5135`、(g) `3-5339-NW`、(h) `4-5135-nw`、(i) `csv_dir` が空、(j) `csv_dir` の末尾が `/`。ほかの引数は UT-analyze_terrain_record-01 と同じ | どれも `std::invalid_argument`。標準エラー出力に何も出ない。`csv_dir` の下にファイルができない（(i)(j) を除く） |
+
+- 書いた `.meshset` を 6.3 の `read_meshset` で読み戻して、同じ集合になることを確かめるケースは、2 つのモジュールの関数のつながりを確かめるので、6.11 の UT 候補に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2。6.11 を書くときに足し、6.9 からそのケースを指す）。ここでは、出力のバイト列（UT-analyze_terrain_record-01〜03）で、6.3 の `read_meshset` が受ける形を確かめる。
 
 ### 6.10 `analyze_terrain_convert`
 
