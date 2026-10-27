@@ -2422,7 +2422,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 - 公開の宣言は `src/record.hpp`、定義と内部の関数は `src/record.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_record` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/record.hpp` は `<set>`・`<string>` を読む。`src/record.cpp` は `"record.hpp"`・`"common.hpp"`・`<cerrno>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<unistd.h>` を読む。OpenCV のヘッダーは読まない。
-- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp`・`window.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.9.2 型とデータ
 
@@ -2484,7 +2484,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 |---|---|---|---|---|
 | `UT-analyze_terrain_record-01` | 通常の `.meshset` を書く | 同じプロセス | `write_meshset({5238, 5239, 5339}, "3-5339", csv_dir)` | `<csv_dir>/3-5339.meshset` の中身が `5238\n5239\n5339\n`。`<csv_dir>/3-5339.meshset.tmp` が無い。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_record-02` | 広域の `.meshset` を書く | 同じプロセス | `write_meshset({5135, 5136, 5235, 5236}, "4-5135-NW", csv_dir)` | `<csv_dir>/4-5135-NW.meshset` の中身が `5135\n5136\n5235\n5236\n`。`.tmp` が無い。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-03` | 昇順で書く | 同じプロセス | `write_meshset({"5340", "0099", "5339"}, "3-5339", csv_dir)`（初期化子の並びをわざと崩す） | 中身が `0099\n5339\n5340\n`。標準エラー出力に何も出ない |
+| `UT-analyze_terrain_record-03` | 昇順で書く | 同じプロセス | `write_meshset({5340, 0099, 5339}, "3-5339", csv_dir)`（初期化子の並びをわざと崩す） | 中身が `0099\n5339\n5340\n`。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_record-04` | 置き換える | 同じプロセス。`<csv_dir>/3-5339.meshset` に `9999\n`、`<csv_dir>/3-5339.meshset.tmp` に `5238\n5239\n5240\n5338\n`（前の起動の残り。新しい中身より長い） | `write_meshset({5339}, "3-5339", csv_dir)` | `3-5339.meshset` の中身が `5339\n`。`.tmp` が無い。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_record-05` | 置き場が無い、案内の分け方 | 同じプロセス。`csv_dir` は一時のディレクトリの下の、存在しないパス | (a) `write_meshset({5339}, "3-5339", csv_dir)`、(b) `write_meshset({5135}, "5-5135-SE", csv_dir)` | どちらも `code` 1。(a) は `ERROR: .meshset を書けない: <csv_dir>/3-5339.meshset: No such file or directory` と `対処: <csv_dir> の空きと権限を確かめてから、止まったコマンドを同じ引数で起動し直す（それより前のメッシュの出力は残っていて、起動し直すと書き直す）`。(b) は 1 行目のパスが `<csv_dir>/5-5135-SE.meshset`、2 行目が `対処: <csv_dir> の空きと権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n 5 を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` |
 | `UT-analyze_terrain_record-06` | 置き換えに失敗する | 同じプロセス。`<csv_dir>/3-5339.meshset` という名前の空のディレクトリ | `write_meshset({5339}, "3-5339", csv_dir)` | `code` 1 の MW1（`{reason}` は `Is a directory`、`{path}` は `<csv_dir>/3-5339.meshset`）。`.tmp` が無い。ディレクトリは残る |
