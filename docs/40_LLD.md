@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -73,6 +73,12 @@
     - [6.3.3 関数の細部](#633-関数の細部)
     - [6.3.4 メッセージ文面](#634-メッセージ文面)
     - [6.3.5 UT 候補](#635-ut-候補)
+  - [6.4 `analyze_terrain_grid`](#64-analyze_terrain_grid)
+    - [6.4.1 ファイル割付](#641-ファイル割付)
+    - [6.4.2 型とデータ](#642-型とデータ)
+    - [6.4.3 関数の細部](#643-関数の細部)
+    - [6.4.4 メッセージ文面](#644-メッセージ文面)
+    - [6.4.5 UT 候補](#645-ut-候補)
   - [6.9 `analyze_terrain_record`](#69-analyze_terrain_record)
     - [6.9.1 ファイル割付](#691-ファイル割付)
     - [6.9.2 型とデータ](#692-型とデータ)
@@ -135,14 +141,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -512,7 +518,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.9・6.12 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.9・6.12 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -574,7 +580,7 @@ def main() -> None:
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
 - 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
-- 標高タイルのキャッシュ: `data_dir` の `tiles/` の下の `<サービス名>/<z>/<x>/<y>.png`（[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 7「タイルを次の順に取得する」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.5）。サービス名とズームは、DEM5a が `dem5a_png`・DEM5b が `dem5b_png`・DEM5c が `dem5c_png` でズーム 15、DEM10b が `dem_png` でズーム 14（[4.1](#41-fetch_tiles) の `_KINDS` と同じ）。`<z>`・`<x>`・`<y>` は 10 進。書くのは 4.1 の `fetch_tiles` だけで、あるかを見るのは [6.3](#63-analyze_terrain_window) の `check_mesh_tiles`、読むのは CMP4 の「タイルとグリッド」の群。
+- 標高タイルのキャッシュ: `data_dir` の `tiles/` の下の `<サービス名>/<z>/<x>/<y>.png`（[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 7「タイルを次の順に取得する」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.5）。サービス名とズームは、DEM5a が `dem5a_png`・DEM5b が `dem5b_png`・DEM5c が `dem5c_png` でズーム 15、DEM10b が `dem_png` でズーム 14（[4.1](#41-fetch_tiles) の `_KINDS` と同じ）。`<z>`・`<x>`・`<y>` は 10 進。書くのは 4.1 の `fetch_tiles` だけで、あるかを見るのは [6.3](#63-analyze_terrain_window) の `check_mesh_tiles`、読むのは [6.4](#64-analyze_terrain_grid) の `read_tile`（パスを組み立てるのは `build_tile_elevation`）。
 - 解析済みウィンドウメッシュ集合（`.meshset`）: `data_dir` の `results/csv/` の下の `<解析識別子>.meshset`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.13）。書くのは [6.9](#69-analyze_terrain_record) の `write_meshset` だけで、下の一時ファイルの決まりで `<解析識別子>.meshset.tmp` に書いてから置き換える。読むのは [6.3](#63-analyze_terrain_window) の `is_pattern_covered`（名前の一致で選ぶので、`.tmp` で終わる名前は読まない）と `read_meshset`。
 - 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.9。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.9 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
 
@@ -645,14 +651,14 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | 29946 | 11657 | 15 | 46.004593255744815 | 148.99658203125 |
 | 29127.5 | 12867.5 | 15 | 36.000229561780024 | 140.0042724609375 |
 
-**メッシュの取得範囲の決まり**: 1 次メッシュの取得範囲（タイル番号の範囲 x_min〜x_max・y_min〜y_max。両端を含む）は、CMP2 の `mesh_tile_range`（[4.1](#41-fetch_tiles)）と、CMP4 の `tile_range`（CMP4 の「タイルとグリッド」の群。解析対象メッシュの bounding box の四隅に同じ決まりを当てる）と、CMP4 の `check_mesh_tiles`（[6.3](#63-analyze_terrain_window)。メッシュ 1 つずつに、ズーム 15 と 14 で同じ決まりを当てる）で同じに求める（[HLD 4.1.1](30_HLD.md#411-目的と範囲) の対象外の行、[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析範囲標高グリッドの生成」の 1「範囲を求める」、HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。
+**メッシュの取得範囲の決まり**: 1 次メッシュの取得範囲（タイル番号の範囲 x_min〜x_max・y_min〜y_max。両端を含む）は、CMP2 の `mesh_tile_range`（[4.1](#41-fetch_tiles)）と、CMP4 の `tile_range`（[6.4](#64-analyze_terrain_grid)。解析対象メッシュの bounding box の四隅に同じ決まりを当てる）と、CMP4 の `check_mesh_tiles`（[6.3](#63-analyze_terrain_window)。メッシュ 1 つずつに、ズーム 15 と 14 で同じ決まりを当てる）で同じに求める（[HLD 4.1.1](30_HLD.md#411-目的と範囲) の対象外の行、[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析範囲標高グリッドの生成」の 1「範囲を求める」、HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。
 
 1. `(x_min, y_min)` は `latlon_to_tile(北端の緯度, 西端の経度, z)`。
 2. `(x_e, y_max)` は `latlon_to_tile(南端の緯度, 東端の経度, z)`。
 3. `x_e` のタイルの西の境目の経度 `((x_e / 2^z) × 360) − 180`（上の `tile_to_latlon` の経度の式と同じ順。`x_e / 2^z` は 2 の冪で割るので丸めが無く、続く `× 360` と `− 180` もこの範囲の値では丸めが無いので、どの言語でも同じ値になる）が東端の経度と `==` で等しければ `x_max = x_e − 1`、違えば `x_max = x_e`。東端がタイルの境目に重なるとき、境目の東の列はメッシュの外なので含めない（[SRS FR-001](20_SRS.md#fr-001-標高タイル事前取得) の「そのメッシュをカバーする最小範囲」）。含めると、経度 135 度で終わる 5 つのメッシュ（`4934`・`5034`・`5134`・`5234`・`5334`）で、メッシュの外の列のタイルがそのメッシュの取得範囲に入り、CMP2 の DEM10b がすべて未整備かの検査と海の位置の数にメッシュの外のタイルが混ざる。
 4. 南端は 3 のように確かめない（`y_max` をそのまま使う）。日本全土 1 次メッシュコードリストの 175 メッシュの南端の緯度は、ズーム 14・15 で、`floor` の前の値と最も近い整数の差がどれも 0.016 以上あり、タイルの境目に重ならない（上の「期待値の導き方」の段落が調べた値）。緯度は `tan`・`cos`・`ln` を通るので、`==` で比べると言語で結果が割れうる。西端と北端は、境目に重なっても `latlon_to_tile` の `floor` がメッシュの中の側のタイルを返すので、確かめない。
 
-表 4（`mesh_tile_range`。メッシュと z を渡し、x_min・x_max・y_min・y_max を返す。値は上の式と決まりで 2026-10-23 に CPython 3.14.8 で求めた。CMP4 の `tile_range` は、メッシュ 1 つの集合を渡したときに、ズーム 15 の行と同じ値を返す。複数のメッシュの bounding box の行は、CMP4 の節を書くときに足す）:
+表 4（`mesh_tile_range`。メッシュと z を渡し、x_min・x_max・y_min・y_max を返す。値は上の式と決まりで 2026-10-23 に CPython 3.14.8 で求めた。CMP4 の `tile_range` は、メッシュ 1 つの集合を渡したときに、ズーム 15 の行と同じ値を返す。複数のメッシュの bounding box の行は表 8）:
 
 | メッシュ | z | x_min | x_max | y_min | y_max |
 |---|---|---|---|---|---|
@@ -664,6 +670,16 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 | `6848` | 15 | 29855 | 29946 | 11657 | 11744 |
 
 `4934` の 2 行は東端が経度 135 度でタイルの境目に重なり、3 の決まりで `latlon_to_tile` の値（ズーム 15 は 28672、ズーム 14 は 14336）より 1 小さい。`5235` は西端が経度 135 度で、境目の東のタイル（28672）から始まる。`5235` の `y_min` と `5339` の `y_max` が同じ 12942 であるように、緯度 35.333… の境目のタイルの行は、南北に隣り合うメッシュ（`5235` と `5335`、`5239` と `5339` など）の両方の範囲に入る。
+
+表 8（`tile_range`。メッシュの集合を渡し、ズーム 15 の x_min・x_max・y_min・y_max を返す。bounding box の四隅に上の決まりを当てる。値は上の式と決まりで 2026-10-27 に CPython で求めた）:
+
+| メッシュの集合 | x_min | x_max | y_min | y_max |
+|---|---|---|---|---|
+| `4934`・`5034` | 28580 | 28671 | 13089 | 13235 |
+| `5235`・`5336` | 28672 | 28854 | 12867 | 13016 |
+| `4934`・`5235` | 28580 | 28763 | 12942 | 13235 |
+
+`4934`・`5034` の行は、bounding box の東端が経度 135 度で、3 の補正が当たる。
 
 **緯度経度と Z15 の画素の変換のテストベクトル**: `latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` の表 5〜7 は、上の式と順で 2026-10-24 に CPython 3.14.8 で求めた。選んだ点は、[HLD 4.7.1](30_HLD.md#471-目的と範囲)の対象外の行が挙げる 4 つ（画素の中心の往復、経度 135° の境目、メッシュの南と西の境目に近い点、境目に最も近い中心の画素）で、どの行がどれに当たるかは各表の後に書く。境目に最も近い中心の画素は、日本の範囲（緯度 20〜46 度の 2/3 度ごと、経度 122〜154 度の 1 度ごと）の 1次メッシュの境目を全部調べて選んだ（緯度は約 1.33×10⁻⁷ 度、経度は約 4.77×10⁻⁷ 度。HLD の [DEC55](30_HLD.md#474-設計判断)「地理的範囲フィルタは CSV に書く値で判定する」の数と同じ）。表 6 の行の `floor` の前の値は、ちょうど整数（経度 −180・135 と緯度 0）か、最も近い整数から 0.43 以上離れている（画素の中心から戻す行は約 0.5、境目に乗る行の緯度の側が最も近く約 0.436。表 2 の 0.016 より大きく離れた点だけになった）ので、言語の `tan`・`cos`・`ln` の最後の桁の違いで結果が割れない。表 5 と表 6 の画素の中心の行の緯度経度は、表 7 の値を小数点 8 桁にしたもので、±5×10⁻⁹ 度ずらしても同じ画素とコードになる。8 桁にする関数は CMP4 では「CSV と早期終了」の群の `format_coord` なので、表は 8 桁にした後の数を入力に書く（UT が `format_coord` に頼らないため）。
 
@@ -725,7 +741,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 [HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
-- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
 - `main` の振る舞いを確かめるための試験用の実行ファイル `build/test_launch_main`: `src/analyze_terrain.cpp`・`src/launch.cpp`・`src/common.cpp` と `tests/src/stub_stage.cpp`（[6.1.5](#615-ut-候補) の段の進行のスタブ）をコンパイルしてリンクする（`gtest_main` はリンクしない。指定は CMP4 の実行ファイルと同じ）。`build/test_launch` が子のプロセスで起動する（6.1.5）。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
@@ -1924,7 +1940,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 ## 6. CMP4 地形解析エンジン
 
-この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1・6.2・6.3・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.4〜6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1・6.2・6.3・6.4・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.5〜6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
 
 ### 6.1 `analyze_terrain_launch`
 
@@ -2276,7 +2292,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 - メッシュの集合は 6.2 と同じ `std::set<std::string>`（4 バイトの ASCII の数字。昇順はコードの数の昇順）。返す窓も集合で、並びは集合の順。
 - `PatternCover` は 6.2 の構造体と同じく名前で読める形にし、値の有無を持つ型（`std::optional`）を使わない（1.2）。パスを返すのは、省略したことのログ（[6.3.4](#634-メッセージ文面) の WN1）を 6.11 が出すため（[HLD 3.4.3](30_HLD.md#343-関数) の「含んでいた `.meshset` のパス（ログに出すため）」）。
 - 内部（`src/window.cpp` の無名の名前空間）は、`struct TileRange { int x_min, x_max, y_min, y_max; }`（両端を含む）と `TileRange _mesh_tile_range(const std::string& mesh, int z)`（`check_mesh_tiles` の 1）、`_read_file`（[6.2.3](#623-関数の細部) の `_read_file` と同じ形）、サービス名とズームの定数（DEM5a `dem5a_png`・DEM5b `dem5b_png`・DEM5c `dem5c_png` はズーム 15、DEM10b `dem_png` はズーム 14。[2.3](#23-ファイルの名前と書き方) の「標高タイルのキャッシュ」）。
-- メッシュ 1 つの範囲を求める内部の関数を 6.3 が持つのは、[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ関係で `tile_range`（解析対象メッシュの bounding box の範囲を求める。CMP4 の「タイルとグリッド」の群）を呼ぶのが `build_grid_z15`・`build_grid_z14` だけで、`check_mesh_tiles` はメッシュ 1 つずつの範囲を要るため。2.4 の決まりの C++ の写しが `tile_range` とこの関数の 2 か所になり、同じ範囲になることは表 4 の行を写した UT で確かめる（UT 18・19）。
+- メッシュ 1 つの範囲を求める内部の関数を 6.3 が持つのは、[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ関係で `tile_range`（解析対象メッシュの bounding box の範囲を求める。[6.4](#64-analyze_terrain_grid)）を呼ぶのが `build_grid_z15`・`build_grid_z14` だけで、`check_mesh_tiles` はメッシュ 1 つずつの範囲を要るため。2.4 の決まりの C++ の写しが `tile_range` とこの関数の 2 か所になり、同じ範囲になることは表 4 の行を写した UT で確かめる（UT 18・19）。
 
 #### 6.3.3 関数の細部
 
@@ -2341,7 +2357,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 1. 範囲は内部の `_mesh_tile_range(mesh, z)` で求める。[2.4](#24-言語ごとに別に実装する式のテストベクトル) の「メッシュの取得範囲の決まり」の 1〜4 のとおりに、6.10 の `mesh_to_latlon`・`latlon_to_tile` と、3 の西の境目の経度の式（`((x_e / 2^z) × 360) − 180` を倍精度で、2.4 の字句の順に求める。`2^z` は 6.10.3 と同じく `std::ldexp(1.0, z)`）で `x_min`・`x_max`・`y_min`・`y_max` を求める。
 2. 4 より前に引数を全部確かめる。`tiles_dir` が空か最後のバイトが `/` なら `std::invalid_argument`。`meshes` を昇順に見て、メッシュのコードでなければ前置きの文の `std::invalid_argument`、下 2 桁（経度の番号）が 79 以上なら `std::invalid_argument("check_mesh_tiles: mesh の東端が経度 180 以上: " + mesh)`（東端が `101 + 経度の番号` 度で、180 度以上になり、6.10.3 の `latlon_to_tile` の渡せる範囲〈経度 180 未満〉の外。日本全土1次メッシュコードリストは 6.12.3 で 4 桁の形しか確かめないので、手で書き換えたリストで起きうる）。
-3. タイルのパスは `tiles_dir + "/" + サービス名 + "/" + z + "/" + x + "/" + y + ".png"`（z・x・y は 10 進）。「ある」は `stat` が成功したとき（種類を問わない。ディレクトリも「ある」）。`stat` が `ENOENT` か `ENOTDIR` で失敗したら「無い」。ほかの失敗（`EACCES` など）は「ある」として扱う（読めるかは、タイルを読む CMP4 の「タイルとグリッド」の群が見る。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 3 の「ここではファイルがあるかだけを見て、読めるかは 4 で見る」）。
+3. タイルのパスは `tiles_dir + "/" + サービス名 + "/" + z + "/" + x + "/" + y + ".png"`（z・x・y は 10 進）。「ある」は `stat` が成功したとき（種類を問わない。ディレクトリも「ある」）。`stat` が `ENOENT` か `ENOTDIR` で失敗したら「無い」。ほかの失敗（`EACCES` など）は「ある」として扱う（読めるかは、[6.4](#64-analyze_terrain_grid) の `read_tile` が見る。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 3 の「ここではファイルがあるかだけを見て、読めるかは 4 で見る」）。
 4. 1 枚も無い検査: `meshes` を昇順にすべて見て、ズーム 15 の範囲の位置の DEM5a・DEM5b・DEM5c のファイルと、ズーム 14 の範囲の DEM10b のファイルが、どれも無いメッシュを控える（1 枚見つかったら、そのメッシュの残りは見ない）。控えたものが 1 つ以上あれば TT1 を出して止まる。
 5. 欠けの割合の検査（`check_dem10b` が真で、4 で止まらなかったときだけ）: `meshes` を昇順にすべて見て、メッシュごとに、ズーム 15 の範囲の位置 `(x, y)` を `y` の昇順、同じ `y` では `x` の昇順に見る。DEM5a・DEM5b・DEM5c のどれかのファイルがある位置の数を `p`、そのうち DEM10b の `(x / 2, y / 2)`（整数の割り算。位置は 0 以上）のファイルが無い位置の数を `m` とし、無かった DEM10b のタイル `(x / 2, y / 2)` を、重ねずに控えた順（位置を見る順に、初めて出たもの）に並べる。`p` が 0 でなく `m × 100 > p`（整数で比べる。ちょうど 1% は超えない）なら、そのメッシュを控える。控えたものが 1 つ以上あれば TT2 を出して止まる。
 6. 止まらなければ戻る。
@@ -2409,6 +2425,260 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 | `UT-analyze_terrain_window-22` | 複数のメッシュ | 同じプロセス。`4934` に 20 の (b) の置き方、`5235` に 21 の (a) の置き方 | 21 と同じ | `code` が 1 の TT2。1 行目が `ERROR: DEM10b のタイルの欠けが 1% を超える解析対象メッシュがある: 4934（DEM5 のタイルがある位置 100、うち DEM10b のタイルが無い位置 2、2.000%、DEM10b のタイルが無い先頭のタイル: 14/14290/6581 14/14291/6581）、5235（DEM5 のタイルがある位置 100、うち DEM10b のタイルが無い位置 2、2.000%、DEM10b のタイルが無い先頭のタイル: 14/14336/6471 14/14337/6471）` |
 | `UT-analyze_terrain_window-23` | 検査の呼ぶ側の誤り | 同じプロセス | (a) `meshes` に `53a9`、(b) `tiles_dir` が空、(c) 末尾が `/`、(d) `meshes` に `5380`、(e) `meshes` に `5379`（東端がちょうど 180 度） | どれも `std::invalid_argument`。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_window-24` | 経度の端の内側 | 同じプロセス。`tiles_dir` の下に `dem5a_png/15/32585/12867.png`（`5378` の範囲の北西の隅）だけ | `check_mesh_tiles({5378}, tiles_dir, false)`（`5378` の東端は 179 度で渡せる範囲の内側） | 止まらない。標準エラー出力に何も出ない |
+
+### 6.4 `analyze_terrain_grid`
+
+- **ID**: LLD-analyze_terrain_grid
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.2](30_HLD.md#42-fr-002-dem-階層フォールバック)・[4.3](30_HLD.md#43-fr-003-標高デコードnodata-処理)・[4.4](30_HLD.md#44-fr-004-33メッシュ結合解析オーケストレーション)・[4.14](30_HLD.md#414-fr-014-広域結合解析オーケストレーション)・[4.16](30_HLD.md#416-fr-016-ピーク域ポリゴン生成)・[5.1](30_HLD.md#51-nfr-001-精度検出網羅性)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)
+- **ファイル**: `src/grid.hpp`・`src/grid.cpp`
+
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「タイルとグリッド」の群で、処理の正本は [HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析範囲標高グリッドの生成」の 1〜5 と「解析対象メッシュ範囲情報」（通常モード）、[4.14.2](30_HLD.md#4142-処理の流れ) の「Z14 のグリッドの生成」の 1〜4（広域モード）、DEM の選び方は [4.2.2](30_HLD.md#422-処理の流れ)、デコードは [4.3.2](30_HLD.md#432-処理の流れ)、止まる場面とメッセージに含める内容は [4.4.3](30_HLD.md#443-異常系)・[4.14.3](30_HLD.md#4143-異常系) である。メッシュの集合のタイルの範囲は [2.4](#24-言語ごとに別に実装する式のテストベクトル) の「メッシュの取得範囲の決まり」、タイルの置き場は [2.3](#23-ファイルの名前と書き方) の「標高タイルのキャッシュ」で決まっている。`pixel_center_mesh` は 6.8 の `fill_zone`・`judge_area_complete` も呼ぶ（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の 2「塗る」・3「`area_complete` を決める」）。関数を呼ぶ順は 6.11 の `run_normal_mode`・`run_wide_mode`（[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順）で決まっている。非機能要件は 2 つで、[5.1](30_HLD.md#51-nfr-001-精度検出網羅性)（精度・検出網羅性）の DEM の項目（DEM5 を優先し DEM10b で補う）は `select_dem_rgb` で受け、[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ使用量）は、グリッドを `float` の 1 本の配列で持ち、タイルを位置ごとに読んで捨てる（メモリに持つのはグリッドと、読んでいるタイル 4 枚と、256×256 の標高 1 つ）ことで受ける（実測は [HLD 5.2.2](30_HLD.md#522-処理の流れ) の実測の計画の 1・2）。この節は、それを C++ で書くための細部を足す。1.2 の C++ の規約に従う。
+
+#### 6.4.1 ファイル割付
+
+- 公開の宣言は `src/grid.hpp`、定義と内部の関数は `src/grid.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_grid` を書き、ヘッダーは次の行を `#pragma once` にする。
+- `src/grid.hpp` は `<opencv2/core.hpp>`（`cv::Mat`・`cv::Vec3b`）・`"convert.hpp"`（`MeshBounds`・`TileXY`・`Z15Pixel`）・`"target.hpp"`（`TargetPeak`）・`<compare>`・`<cstdint>`・`<map>`・`<set>`・`<string>`・`<vector>` を読む。`src/grid.cpp` は `"grid.hpp"`・`"common.hpp"`・`"convert.hpp"`・`<opencv2/imgcodecs.hpp>`・`<algorithm>`・`<cerrno>`・`<cmath>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<unistd.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは core と imgcodecs のものだけを読む（[HLD 2.6.5](30_HLD.md#265-ビルド構成) のモジュールごとのヘッダー。imgproc は使わない）。
+- UT のコードは `tests/src/test_grid.cpp` に置き、`build/test_grid` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_grid-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 4`・`2.4 の表 7` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。テストは PNG のファイルを `cv::imwrite` で一時のディレクトリに作り、リポジトリに画像を置かない。
+
+#### 6.4.2 型とデータ
+
+`src/grid.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <compare>
+#include <cstdint>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+#include <opencv2/core.hpp>
+#include "convert.hpp"
+#include "target.hpp"
+
+constexpr float NODATA_ELEVATION = -9999.0f;
+
+struct AnalysisBox {
+    MeshBounds bbox;     // 解析対象メッシュを囲む最小の矩形の四隅
+    int x_min = 0;       // Z15 のタイル番号の範囲（両端を含む）
+    int x_max = 0;
+    int y_min = 0;
+    int y_max = 0;
+};
+
+struct TileImage {
+    cv::Mat bgr;              // CV_8UC3・256×256。無い・読めないときは全画素が cv::Vec3b(0, 0, 128)
+    bool unreadable = false;  // 真なら読めないタイル（無いタイルは偽）
+    std::string reason;       // 読めないときの理由（それ以外は空）
+};
+
+struct DecodedElevation {
+    std::int32_t x = 0;       // R×65536 + G×256 + B（0〜0xFFFFFF）
+    float elevation = 0.0f;   // 符号付きの標高（NODATA は NODATA_ELEVATION）
+};
+
+struct UnreadableTile {
+    std::string path;
+    std::string reason;
+};
+
+struct TileElevation {
+    std::vector<float> values;                // 65,536 個。タイル内の画素 (i, j) は values[j * 256 + i]
+    std::vector<UnreadableTile> unreadable;   // 読めなかったタイル（読んだ順）
+};
+
+struct GridXY {
+    int px = 0;
+    int py = 0;
+    auto operator<=>(const GridXY&) const = default;
+};
+
+struct ElevationGrid {
+    int width = 0;
+    int height = 0;
+    std::vector<float> values;   // 画素 (px, py) は values[static_cast<std::int64_t>(py) * width + px]
+};
+
+struct GridRange {
+    std::set<std::string> meshes;       // 解析対象メッシュ
+    bool z14 = false;                   // 偽なら Z15 のグリッド（タイル 1 枚が 256 画素）、真なら Z14（128 画素）
+    AnalysisBox box;                    // tile_range の結果（Z14 のグリッドも Z15 のタイル番号の範囲）
+    std::map<GridXY, Z15Pixel> picks;   // Z14 だけ。縮約で採った画素の Z15 の座標の控え（Z15 は空）
+};
+
+struct GridResult {
+    ElevationGrid grid;
+    GridRange range;
+};
+
+AnalysisBox tile_range(const std::set<std::string>& meshes);
+TileImage read_tile(const std::string& path);
+cv::Vec3b select_dem_rgb(const cv::Vec3b& dem5a, const cv::Vec3b& dem5b,
+                         const cv::Vec3b& dem5c, const cv::Vec3b& dem10b);
+DecodedElevation decode_signed_elevation(const cv::Vec3b& bgr);
+float clamp_to_sea_level(std::int32_t x, float elevation);
+std::string pixel_center_mesh(const Z15Pixel& pixel);
+TileElevation build_tile_elevation(const TileXY& tile, const std::set<std::string>& meshes,
+                                   const MeshBounds& bbox, const std::string& tiles_dir);
+GridResult build_grid_z15(const std::set<std::string>& meshes, const std::string& tiles_dir);
+GridResult build_grid_z14(const std::set<std::string>& meshes,
+                          const std::vector<TargetPeak>& peaks, const std::string& tiles_dir);
+```
+
+- 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`tiles_dir` は `data_dir` の下の `tiles` の絶対パスで、末尾に `/` を付けない（6.3 と同じ。6.11 が組み立てて渡す）。`peaks` は 6.2 の `PeakGroups` のその対象メッシュの組。
+- 画素の色: `cv::Vec3b` は OpenCV の並び（`[0]` が B、`[1]` が G、`[2]` が R。[HLD 4.3.2](30_HLD.md#432-処理の流れ) の「画素の表現」）。HLD の RGB (128, 0, 0) は `cv::Vec3b(0, 0, 128)`。UT の色も、RGB で書いた値を `cv::Vec3b(b, g, r)` にして書く。
+- グリッドを `std::vector<float>` で持つのは、後の群（走査）が画素の番号 `py × W + px`（64 ビット。[HLD 4.5.2](30_HLD.md#452-処理の流れ) の前置き）で読み書きし、OpenCV の型に頼らずに済むため。`width`・`height` は `int`（最大の窓でも 2³¹ に届かない）、番号の計算は `std::int64_t` で行う。
+- `GridRange` が HLD の「解析対象メッシュ範囲情報」。グリッドの画素と全球の画素の対応は、Z15 では (256 × `x_min` + px − 1, 256 × `y_min` + py − 1)、Z14 では全球の Z14 の画素 (128 × `x_min` + px − 1, 128 × `y_min` + py − 1)（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析対象メッシュ範囲情報」、[4.14.2](30_HLD.md#4142-処理の流れ) の「Z14 のグリッドの生成」の 4「解析対象メッシュ範囲情報」）。対応を計算する関数は足さず（1.2 の「LLD が足してよい名前」。ほかのモジュールから呼ぶ関数は HLD 3.4.3 の名前だけ）、後の群がこの式で求める。地理的範囲フィルタと `area_complete` の「範囲」は bounding box でなく `meshes`（解析対象メッシュの矩形を合わせたもの。[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 4「地理的範囲フィルタ」、[4.16.2](30_HLD.md#4162-処理の流れ) の 3「`area_complete` を決める」）。`box.bbox` は、NODATA で埋める範囲（6.4 の `build_tile_elevation`）と、`area_complete` の外の隣が bounding box の中か外か（NODATA で埋めた範囲か、はみ出しか。HLD 4.16.2 の 3 の 2 つ目と 3 つ目の箇条）の区別に使う。
+- `picks` の鍵はグリッドの画素、値は採った画素の全球の Z15 の座標（HLD の「タイル座標とタイル内の画素位置の組」と同じ値で、(256 × tx + i, 256 × ty + j)。[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 2「ピークの Z15 の画素を求める」がこの形で使う）。
+- 構造体は 6.2・6.10 と同じく名前で読める形にし、値の有無を持つ型（`std::optional`）を使わない（1.2）。`AnalysisBox` を 6.3 の内部の `TileRange` と別の名前にするのは、bounding box の四隅も持つことと、読み違えないため。
+- 内部（`src/grid.cpp` の無名の名前空間）は、サービス名とズームの定数（6.3 と同じ。[2.3](#23-ファイルの名前と書き方) の「標高タイルのキャッシュ」）、PNG の署名の 8 バイト `89 50 4E 47 0D 0A 1A 0A`、`_tile_path(tiles_dir, service, z, x, y)`、`_check_tiles_dir(関数名, tiles_dir)`、`_fill_grid(...)`（Z15 と Z14 の共通の走り方）。
+
+#### 6.4.3 関数の細部
+
+処理の正本は上の前置きのとおりで、この節は C++ で書くための細部を足す。`check_signal` を呼ぶのは `build_grid_z15`・`build_grid_z14` の、タイルの位置ごとの処理の前と、全部の位置を終えた後（読めないタイルを挙げる前）だけ（[HLD 3.4.3](30_HLD.md#343-関数) の `check_signal` を呼ぶ群に「タイルとグリッド」が入っている）。受けてから止まるまでの遅れは、タイルの位置 1 つの処理（タイル 4 枚の読み込みと 65,536 画素）の分までで、グリッドの確保と 0 の書き込みの間（最大の窓で約 18GB。数秒から数十秒）だけは、その後の最初の位置の前まで延びる（確保は 1 回の呼び出しで、途中に区切りを置けない）。ほかの 7 関数は呼ばない（1 回で終わる計算か、タイル 1 枚の処理）。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(EXIT_ERROR)` する（1.2 の C++ の規約）。呼ぶ側の誤りは `std::invalid_argument` を投げる（6.2・6.3・6.10・6.12 と同じ。メッセージの形は `<関数名>: <引数名> が空か / で終わる: <値>`、`<関数名>: meshes が空`、そのほかは各関数の見出しの下。UT は例外の型だけを確かめる）。通常のログと警告は出さない。グリッドを確保できないときの `std::bad_alloc` は捕まえない（6.12 の `_on_terminate` が G7 で止める。終了コード 1。[HLD 4.5.3](30_HLD.md#453-異常系) の走査のメモリと同じ扱い）。
+
+関数ごとに `#####` の見出しを立てる。
+
+##### tile_range
+
+`AnalysisBox tile_range(const std::set<std::string>& meshes)`
+
+1. `meshes` が空なら `std::invalid_argument`。各コードを昇順に見て、6.10 の `mesh_to_latlon` と同じ形の判定（4 バイトで、どのバイトも ASCII の `0`〜`9`）に当たらなければ `std::invalid_argument("tile_range: mesh が 4 桁の数字でない: " + mesh)`。上 2 桁が 01〜98 でないか、下 2 桁が 01〜78 でなければ `std::invalid_argument("tile_range: mesh の上 2 桁が 01〜98 でないか、下 2 桁が 01〜78 でない: " + mesh)`。
+2. `bbox` は、各メッシュの `mesh_to_latlon` の `south` の最小、`west` の最小、`north` の最大、`east` の最大。
+3. 範囲は [2.4](#24-言語ごとに別に実装する式のテストベクトル) の「メッシュの取得範囲の決まり」の 1〜4 を、`bbox` の四隅とズーム 15 で当てる（東端の補正は 6.3 の `_mesh_tile_range` と同じ式・同じ順。`2^z` は `std::ldexp(1.0, 15)`）。
+
+- 1 の上 2 桁・下 2 桁の範囲は、範囲のタイルのどの画素の中心でも `pixel_center_mesh` が空でないコードを返す（はみ出しは 1 タイル〈約 0.011 度〉で、メッシュの 1 行・1 列より小さい）ことと、6.10.3 の `latlon_to_tile` の渡せる範囲（経度 180 未満）を守るため。下 2 桁が 79 以上を止めるのは 6.3 の `check_mesh_tiles` と同じ理由。日本全土1次メッシュコードリスト（上 2 桁 30〜68、下 2 桁 22〜48）はどれも入る。
+- 南端の補正をしない（2.4 の 4）理由は bounding box でも同じ: `bbox.south` はどれかのメッシュの南端で、2.4 の 4 が調べた 175 メッシュの南端のどれか。
+
+##### read_tile
+
+`TileImage read_tile(const std::string& path)`
+
+1. `open(path, O_RDONLY | O_CLOEXEC | O_NONBLOCK)`（`O_NONBLOCK` は、キャッシュに名前付きパイプが置かれていても書き手を待って止まらないため。普通のファイルの読み方は変わらない）。`ENOENT` か `ENOTDIR` で失敗したら、無いタイル: 全画素が `cv::Vec3b(0, 0, 128)` の 256×256 の `CV_8UC3`、`unreadable` は偽、`reason` は空を返す（6.3 の `check_mesh_tiles` の「無い」と同じ判定）。ほかの理由で失敗したら、読めないタイル（`reason` は `PNG として読めない（{reason}）`。`{reason}` は `errno` の文。1.2）。
+2. 先頭の 8 バイトを `read` で読む（`EINTR` は繰り返す。8 バイトに満たずに終わりが来たら、そこまで）。`read` が失敗したら（ディレクトリは `EISDIR`）`close` して、読めないタイル（`PNG として読めない（{reason}）`）。読めたら `close`（結果は見ない）。
+3. 8 バイトに満たないか、署名と違えば、読めないタイル（`PNG の署名でない`）。
+4. `cv::imread(path, cv::IMREAD_UNCHANGED)` を `try` で囲んで呼ぶ。`cv::Exception` が上がったか、空の画像なら読めないタイル（`PNG として読めない`）。
+5. `type()` が `CV_8UC3` でなければ `8 ビット・3 チャンネルでない`、`rows` か `cols` が 256 でなければ `256×256 画素でない`（この順に見る）。
+6. どれにも当たらなければ、読んだ画像、`unreadable` は偽、`reason` は空を返す。
+
+- 読めないタイルの `bgr` は、無いタイルと同じく全画素が `cv::Vec3b(0, 0, 128)`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 3「タイルの位置ごとの処理」の「全画素が (128, 0, 0) のタイルとして続ける」）。
+- 署名を先に見るのは HLD 4.4.2 の 3 の「`cv::imread` は PNG でない画像の形式も読むため」。OpenCV や libpng が標準エラー出力に出す警告は止めない（UT は `read_tile` の標準エラー出力を比べない）。
+- ファイルを開けない・読めないとき（権限、ディレクトリ）の理由を「PNG として読めない」に括弧で OS の理由を添えて入れるのは、`cv::imread` が開けないファイルを空の画像で返し、HLD 4.4.2 の 3 の「`cv::imread` が空の画像を返すもの」に当たるため。6.3 の `check_mesh_tiles` が「ある」とした位置（ディレクトリと権限で読めないものを含む）を、利用者に見えない NODATA にせず、挙げて止める。
+
+##### select_dem_rgb
+
+`cv::Vec3b select_dem_rgb(const cv::Vec3b& dem5a, const cv::Vec3b& dem5b, const cv::Vec3b& dem5c, const cv::Vec3b& dem10b)`
+
+DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB (128, 0, 0) と 3 つの値のどれか 1 つでも違う）ものを最初に返す。4 つとも等しければ `cv::Vec3b(0, 0, 128)` を返す（[HLD 4.2.2](30_HLD.md#422-処理の流れ) の 1〜3）。
+
+##### decode_signed_elevation
+
+`DecodedElevation decode_signed_elevation(const cv::Vec3b& bgr)`
+
+`x = R × 65536 + G × 256 + B`（`R = bgr[2]`、`G = bgr[1]`、`B = bgr[0]`。`std::int32_t` で求める）。`x == 0x800000` なら `elevation = NODATA_ELEVATION`。`x > 0x800000` なら `static_cast<float>(x - 16777216) / 100.0f`。それ以外は `static_cast<float>(x) / 100.0f`（[HLD 4.3.2](30_HLD.md#432-処理の流れ) の 1、DEC44「標高は float32 でプロトタイプと同じ順に計算する」の順。整数を `float` に変えてから `float` の 100 で割る。`0.01f` を掛けない）。
+
+##### clamp_to_sea_level
+
+`float clamp_to_sea_level(std::int32_t x, float elevation)`
+
+`x == 0x800000` なら `NODATA_ELEVATION`。それ以外で `elevation < 0.0f` なら `0.0f`、そうでなければ `elevation`（HLD 4.3.2 の 2。NODATA かは `x` で決め、値で決めない）。
+
+##### pixel_center_mesh
+
+`std::string pixel_center_mesh(const Z15Pixel& pixel)`
+
+`const LatLon c = z15_pixel_center_latlon(pixel); return latlon_to_mesh(c.lat, c.lon);`（6.10）。引数を検査しない（どの値でも未定義の動作にならない。6.10.3）。
+
+- 境目の扱い（[HLD 4.4.1](30_HLD.md#441-目的と範囲) の対象外の行）: 中心は `latlon_to_mesh` の `floor` で決まり、メッシュの南と西の境目はそのメッシュに、北と東の境目は隣のメッシュに入る（2.4 の表 5 の後の段落）。経度は中心が境目にちょうど乗ることが無い（中心の経度は `((gx + 0.5) / 2²³) × 360 − 180` で、整数の経度 `k − 180` に等しいには `gx + 0.5 = k × 2²³ / 360 = k × 2²⁰ / 45` が要り、左は整数と 0.5 の和、右は分母が奇数の分数なので等しくならない）。緯度は `sinh`・`atan` を通るので乗るかを式では言えないが、乗っても `floor` が 1 つに決める。
+- 呼ぶ側（6.4 の `build_tile_elevation`、6.8 の `fill_zone`・`judge_area_complete`）は、返ったコードが集合にあるかを引く。空の文字列はどの集合にも無い（6.10.3 の `latlon_to_mesh`）。
+
+##### build_tile_elevation
+
+`TileElevation build_tile_elevation(const TileXY& tile, const std::set<std::string>& meshes, const MeshBounds& bbox, const std::string& tiles_dir)`
+
+1. `tiles_dir` が空か最後のバイトが `/` なら、`meshes` が空なら `std::invalid_argument`（この順に検査する）。
+2. 4 枚を `read_tile` で読む。パスは `tiles_dir + "/" + サービス名 + "/" + z + "/" + x + "/" + y + ".png"`（2.3。z・x・y は 10 進）で、DEM5a・DEM5b・DEM5c はズーム 15 の `(tile.x, tile.y)`、DEM10b はズーム 14 の `(tile.x / 2, tile.y / 2)`（整数の割り算。位置は 0 以上）。この順に読み、読めないタイルを `unreadable` にこの順に足す。DEM10b を読み直すか持っておくか（HLD 4.4.1 の対象外の行）は、位置ごとに読み直す（4 つの位置で同じ 1 枚を読む）。
+3. 行と列のメッシュの番号: `k` を 0〜255 にして `pixel_center_mesh({256 × tile.x + k, 256 × tile.y + k})` を求め、その上 2 桁を行 `k` の、下 2 桁を列 `k` の番号として控える。空の文字列が返ったら `std::invalid_argument("build_tile_elevation: 画素の中心がメッシュの番号の範囲の外: " + 10 進の x + "/" + 10 進の y)`。画素 (i, j) の中心が入るメッシュは、行 `j` の上 2 桁と列 `i` の下 2 桁をつないだコードで、`pixel_center_mesh({256 × tile.x + i, 256 × tile.y + j})` と同じになる（中心の緯度は gy だけ、経度は gx だけで決まり〈2.4 の `z15_pixel_center_latlon`〉、`latlon_to_mesh` の上 2 桁は緯度だけ、下 2 桁は経度だけで決まるため）。
+4. NODATA で埋める画素（HLD 4.4.2 の 4、DEC47「bbox 内で解析対象外の画素は中心で NODATA にする」）: 3 のコードの `mesh_to_latlon` が `bbox` の中（`south >= bbox.south`・`west >= bbox.west`・`north <= bbox.north`・`east <= bbox.east`）にあり、`meshes` に無い画素。`bbox` の値はどれかのメッシュの `mesh_to_latlon` の値そのもので、同じ式で求めた値どうしを比べるので、丸めで割れない。コードの組（タイルの中で高々 4 つ）ごとに 1 回だけ判定する。
+5. 画素ごとに（`j` を 0〜255、各 `j` で `i` を 0〜255）: 4 の画素なら `NODATA_ELEVATION`。それ以外は、`select_dem_rgb(a(j, i), b(j, i), c(j, i), d(128 × (tile.x % 2) + i / 2 の列, 128 × (tile.y % 2) + j / 2 の行))`（`cv::Mat::at<cv::Vec3b>(行, 列)`。DEM10b の対応付けは HLD 4.4.2 の 3 の 2 つ目の箇条）を `decode_signed_elevation`、`clamp_to_sea_level` の順に当てた値。`values[j * 256 + i]` に書く。
+6. 読んだタイルは返す前に捨てる（`cv::Mat` は関数を出るときに解放される。HLD 4.4.2 の 3 の最後の箇条、[NFR-002](20_SRS.md#nfr-002-メモリ使用量)）。
+
+- 4 の画素は 4 つの DEM 種別の RGB をすべて (128, 0, 0) にしたのと同じ結果（`select_dem_rgb` が (128, 0, 0) を返し、デコードと 0m にそろえる処理が -9999 のまま残す）なので、直接 `NODATA_ELEVATION` を書く。
+- 3 で 256 回だけ `pixel_center_mesh` を呼ぶのは、65,536 画素ごとに `sinh`・`atan` を通すと、最大の窓（約 46.5 億画素）で時間がかかるため。結果は画素ごとに呼んだときと同じで、UT で確かめる（UT 15）。
+
+##### build_grid_z15
+
+`GridResult build_grid_z15(const std::set<std::string>& meshes, const std::string& tiles_dir)`
+
+1. `tiles_dir` を `build_tile_elevation` の 1 と同じに確かめ、`box = tile_range(meshes)`（`meshes` の誤りは `tile_range` が投げる）。
+2. 返す `GridResult result` を先に作り、`result.grid.width = (x_max − x_min + 1) × 256 + 2`、`result.grid.height = (y_max − y_min + 1) × 256 + 2`、`result.grid.values` を `std::int64_t` の `width × height` 個の `0.0f` にする（外周の 1 画素が海面ボーダーの 0。内側はすべて 3 で書く）。グリッドはこの 1 本だけを持ち、別の変数に作ってから写さない（写すと、写す間に同じ大きさの配列が 2 本になる）。
+3. `y` を `y_min`〜`y_max`、各 `y` で `x` を `x_min`〜`x_max` の昇順に: `check_signal()`、`build_tile_elevation({x, y}, meshes, box.bbox, tiles_dir)`、読めないタイルのうちパスがまだ控えていないものを控え（読んだ順。同じパスは最初の理由のまま）、タイルの画素 (i, j) を `result.grid` の (256 × (x − x_min) + i + 1, 256 × (y − y_min) + j + 1) に写す。
+4. 全部の位置を終えた後、`check_signal()` を呼び、控えが 1 つ以上あれば TR1 を出して止まる（HLD 4.4.2 の 5、DEC49「読めないタイルでは窓のタイルを読み終えてから挙げて止める」）。
+5. `result.range` を `{meshes, false, box, {}}` にして `return result;`（コピーしない）。
+
+##### build_grid_z14
+
+`GridResult build_grid_z14(const std::set<std::string>& meshes, const std::vector<TargetPeak>& peaks, const std::string& tiles_dir)`
+
+1. `build_grid_z15` の 1 と同じ。`peaks` の各 `pixel` が `256 × x_min ≤ gx < 256 × (x_max + 1)` と `256 × y_min ≤ gy < 256 × (y_max + 1)` に無ければ `std::invalid_argument("build_grid_z14: 対象ピークの画素が範囲の外: " + 10 進の gx + "/" + 10 進の gy)`（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の「Z14 のグリッドの生成」の 3 の「必ずグリッドの範囲にある」。呼ぶ側の誤り）。
+2. `width = (x_max − x_min + 1) × 128 + 2`、`height = (y_max − y_min + 1) × 128 + 2`。ほかは `build_grid_z15` の 2 と同じ（`GridResult result` を先に作り、そのメンバーに書く）。
+3. `build_grid_z15` の 3 と同じ順に位置を回し、`check_signal()`・`build_tile_elevation`・読めないタイルの控えも同じ。各位置で、`i`・`j` を 0〜127 にして、タイルの画素 (2i, 2j)・(2i + 1, 2j)・(2i, 2j + 1)・(2i + 1, 2j + 1) をこの順に見て、前に見たものより大きい（`>`）ときだけ採る（同じ値なら先のもの。北の行が先、同じ行は西が先。HLD 4.14.2 の 3、ADR-SRS-055）。採った値をグリッドの (128 × (x − x_min) + i + 1, 128 × (y − y_min) + j + 1) に書く。
+4. 控え（DEC50「縮約で採った画素の座標は対象ピークを含む 2×2 だけ控える」）: その位置のタイルに入る対象ピーク（`gx / 256 == x` かつ `gy / 256 == y`）ごとに、`i = (gx % 256) / 2`、`j = (gy % 256) / 2` の 2×2 で 3 が採った画素の全球の Z15 の座標 `{256 × x + 採った列, 256 × y + 採った行}` を、`picks[{128 × (x − x_min) + i + 1, 128 × (y − y_min) + j + 1}]` に入れる（同じ 2×2 に対象ピークが 2 つあっても 1 つの項目）。
+5. `build_grid_z15` の 4 と同じ。`result.range` を `{meshes, true, box, <4 の控え>}` にして `return result;`（控えは `result.range.picks` に直接入れてよい）。
+
+- 4 つとも NODATA の 2×2 は、`>` で先の画素（(2i, 2j)）を採り、値は NODATA になる（HLD 4.14.2 の 2）。
+
+#### 6.4.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。`{entries}`・`{meshes}` は表の後に書く。
+
+`ERROR:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| TR1 | 読めない標高タイルがある | `読めない標高タイルがある: {entries}` | `挙げたファイルを消してから、それを取得範囲に含むメッシュ {meshes} のメッシュごとに venv/bin/python3 scripts/fetch_tiles.py --mesh <コード> を起動してタイルを取り直し、解析を起動し直す（消さずに取り直すと、提供元のタイルが変わっていなければ取り直さない。設定ファイルを指定して起動したときは、どちらにも同じ --config を付ける）` | 1 |
+
+- `{entries}`: 控えた読めないタイルを控えた順に、1 件を `{path}（{reason}）` にして `、` でつないだもの。`{path}` は `build_tile_elevation` が組み立てた絶対パス、`{reason}` は `read_tile` の理由の文（6.4.3）。全件を挙げる（[HLD 4.4.3](30_HLD.md#443-異常系) の「読めなかったタイルのパスすべて」）。
+- `{meshes}`: bounding box に入る 1 次メッシュ（上 2 桁が `meshes` の上 2 桁の最小〜最大、下 2 桁が下 2 桁の最小〜最大のコード。解析対象でないものも含む）のうち、控えた読めないタイルのどれかを取得範囲に含むものを、昇順に `、` でつないだもの。含むかは `tile_range({コード})` の範囲で見る: DEM5a・DEM5b・DEM5c のタイル (x, y) は `x_min ≤ x ≤ x_max` かつ `y_min ≤ y ≤ y_max`、DEM10b のタイル (X, Y) は `x_min / 2 ≤ X ≤ x_max / 2` かつ `y_min / 2 ≤ Y ≤ y_max / 2`（整数の割り算。ズーム 14 の取得範囲は、2.4 の決まりでズーム 15 の範囲を 2 で割ったものと同じになる）。`<コード>` は文字どおりそのまま書く（6.3 の `{refetch}` と同じ）。
+- `{meshes}` に解析対象でないメッシュも入れるのは、bounding box の中の解析対象でないメッシュ（`--mesh` で範囲を絞った実行で起きる）の位置のタイルも、HLD 4.4.1 の「範囲のタイルはすべて読む」で読まれて挙がり、利用者が消したまま取り直さないと、後でそのメッシュを解析するときに取得完了の記録の後で消えたタイルとして黙って NODATA になる（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「取得完了の記録の後でキャッシュから消えたタイル」）ため。日本全土1次メッシュコードリストに無いコードか北方領土除外メッシュが入っても、CMP2 が警告して飛ばす（4.1 の TW1・TW2）。
+- 括弧の「消さずに取り直すと…」は HLD 4.4.3 の表の行の注（`If-Modified-Since` で 304 になる）を利用者向けにしたもの。「設定ファイルを指定して…」は関数が設定ファイルの指定の有無を知らないので、いつでもそのまま書く（6.3 と同じ）。
+
+出し方: `build_grid_z15`・`build_grid_z14` が出す。
+
+#### 6.4.5 UT 候補
+
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_grid-NN`。共通の準備は 3 つ。
+
+- **同じプロセス**: 6.2.5 の同じ名前の準備と同じ（`mkdtemp`、絶対パス、記述子 2 の付け替えで標準エラー出力を捕まえる、止まるケースは `ExitRequest` の `code` とメッセージの 2 行の全文）。
+- **タイルを置く**: `tiles_dir` は一時のディレクトリの下の `tiles`（作る）。タイルは `<tiles_dir>/<サービス名>/<z>/<x>/<y>.png` に、ディレクトリを作ってから、`cv::Mat(256, 256, CV_8UC3, cv::Scalar(b, g, r))` を `cv::imwrite` で書く（RGB で書いた色を B・G・R の順に渡す）。ケースが一部の画素の色を書くときは、書く前にその画素を `at<cv::Vec3b>(行, 列)` で替える。標高の色: 50m は RGB (0, 19, 136)、70m は (0, 27, 88)、100m は (0, 39, 16)、200m は (0, 78, 32)、300m は (0, 117, 48)、400m は (0, 156, 64)、500m は (0, 195, 80)（それぞれ x が 5000・7000・10000・20000・30000・40000・50000）。NODATA は (128, 0, 0)。期待の標高は `static_cast<float>(x) / 100.0f` と `EXPECT_EQ`（`50.0f` などに等しい）。
+- **子のプロセス**: 6.12.5 の同じ名前の準備と同じ。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_grid-01` | 範囲（2.4 の表 4・表 8） | 同じプロセス | `tile_range` に 2.4 の表 4 のズーム 15 の 4 行のメッシュ 1 つの集合（`{4934}`・`{5235}`・`{5339}`・`{6848}`）と、表 8 の 3 行の集合 | `x_min`・`x_max`・`y_min`・`y_max` が表の行と等しい。`bbox` の 4 つは集合の各メッシュの 2.4 の表 1 の値の最小・最大と `==`（`{5235, 5336}` は `34.666666666666664`・`135.0`・`36.0`・`137.0`） |
+| `UT-analyze_terrain_grid-02` | 範囲の呼ぶ側の誤り | 同じプロセス | `tile_range` に (a) 空、(b) `{53a9}`、(c) `{0035}`、(d) `{9935}`、(e) `{5200}`、(f) `{5279}`、(g) `{5235, 533}` | どれも `std::invalid_argument`。ほかに `{0101}`・`{9878}` は投げない |
+| `UT-analyze_terrain_grid-03` | DEM の順 | 同じプロセス。RGB で `A = (0, 39, 16)`、`B = (0, 78, 32)`、`C = (0, 117, 48)`、`D = (0, 156, 64)`、`N = (128, 0, 0)` | `select_dem_rgb` に (a) `A, B, C, D`、(b) `N, B, C, D`、(c) `N, N, C, D`、(d) `N, N, N, D`、(e) `N, N, N, N`、(f) `(128, 0, 1), B, C, D`、(g) `N, B, N, D` | (a) `A`、(b) `B`、(c) `C`、(d) `D`、(e) `N`（`cv::Vec3b(0, 0, 128)`）、(f) `(128, 0, 1)`、(g) `B` |
+| `UT-analyze_terrain_grid-04` | デコード | 同じプロセス | `decode_signed_elevation` に RGB (a) `(0, 39, 16)`、(b) `(0, 0, 0)`、(c) `(127, 255, 255)`、(d) `(128, 0, 0)`、(e) `(128, 0, 1)`、(f) `(240, 190, 36)`、(g) `(255, 255, 255)` | `x` は (a) 10000、(b) 0、(c) 8388607、(d) 8388608、(e) 8388609、(f) 15777316、(g) 16777215。`elevation` は (a) `10000.0f / 100.0f`、(b) `0.0f`、(c) `8388607.0f / 100.0f`、(d) `-9999.0f`、(e) `-8388607.0f / 100.0f`、(f) `-999900.0f / 100.0f`（`-9999.0f` に等しい）、(g) `-1.0f / 100.0f`（どれも `EXPECT_EQ`） |
+| `UT-analyze_terrain_grid-05` | 0m にそろえる | 同じプロセス | `clamp_to_sea_level` に (a) `(8388608, -9999.0f)`、(b) `(15777316, -9999.0f)`、(c) `(16777215, -0.01f)`、(d) `(10000, 100.0f)`、(e) `(0, 0.0f)` | (a) `-9999.0f`、(b) `0.0f`（値が -9999 でも NODATA でない）、(c) `0.0f`、(d) `100.0f`、(e) `0.0f` |
+| `UT-analyze_terrain_grid-06` | 画素の中心のメッシュ（2.4 の表 7） | 同じプロセス | `pixel_center_mesh` に `(7374984, 3685299)`・`(7374984, 3685300)`・`(7153617, 3553537)`・`(7153618, 3553537)`・`(7340031, 3322709)`・`(7340032, 3322709)` | `3236`・`3136`・`3926`・`3927`・`5234`・`5235` |
+| `UT-analyze_terrain_grid-07` | タイルを読む | 同じプロセス。タイルを置く（DEM5a の (28700, 12980) に 100m の色、画素 (列 3, 行 5) だけ 200m の色） | `read_tile(<そのパス>)` | `unreadable` が偽、`reason` が空、`type()` が `CV_8UC3`、256×256、`at<cv::Vec3b>(5, 3)` が `cv::Vec3b(32, 78, 0)`、`at<cv::Vec3b>(0, 0)` が `cv::Vec3b(16, 39, 0)` |
+| `UT-analyze_terrain_grid-08` | 無いタイル | 同じプロセス | (a) 存在しないパス、(b) 普通のファイルの下のパス（`<ファイル>/1.png`） | どちらも `unreadable` が偽、`reason` が空、256×256 の `CV_8UC3` で全画素が `cv::Vec3b(0, 0, 128)`（`cv::countNonZero` を各チャンネルで数えるか、全画素を比べる） |
+| `UT-analyze_terrain_grid-09` | 読めないタイル | 同じプロセス。ファイルごとに別のパス | (a) 中身が `<?xml version="1.0"?>`、(b) 0 バイト、(c) 署名の先頭 7 バイトだけ、(d) 署名の 8 バイトの後に `xxxx`、(e) `.png` で終わる名前のディレクトリ、(f) `CV_8UC4` の 256×256 を `cv::imwrite`、(g) `CV_16UC3` の 256×256、(h) `CV_8UC1` の 256×256、(i) `cv::Mat(256, 255, CV_8UC3, …)`（行 256・列 255）、(j) `cv::Mat(255, 256, CV_8UC3, …)`（行 255・列 256） | どれも `unreadable` が真で、全画素が `cv::Vec3b(0, 0, 128)` の 256×256。`reason` は (a)(b)(c) `PNG の署名でない`、(d) `PNG として読めない`、(e) `PNG として読めない（Is a directory）`、(f)(g)(h) `8 ビット・3 チャンネルでない`、(i)(j) `256×256 画素でない` |
+| `UT-analyze_terrain_grid-10` | 権限で開けない | 同じプロセス。100m の色の PNG を置いて `chmod 000`。`geteuid() == 0` なら `GTEST_SKIP()` | `read_tile(<そのパス>)` | `unreadable` が真、`reason` が `PNG として読めない（Permission denied）` |
+| `UT-analyze_terrain_grid-11` | DEM の順とデコード（タイルから） | 同じプロセス。それぞれ別の `tiles_dir`。位置は (28700, 12980)、`meshes` は `{5235}`、`bbox` は `tile_range({5235}).bbox` | (a) DEM5a に、列 0〜127 が 100m・列 128〜255 が NODATA の色のタイル、DEM5b に 200m の色のタイル（DEM5c と DEM10b は置かない）、(b) タイルを 1 枚も置かない、(c) DEM5a に画素 (列 0, 行 0) だけ RGB (255, 255, 255)・ほかは 100m のタイル | (a) 列 0〜127 は `100.0f`、列 128〜255 は `200.0f`、`unreadable` は空。(b) 全画素が `-9999.0f`。(c) (0, 0) が `0.0f`（海面下を 0m に）、ほかは `100.0f` |
+| `UT-analyze_terrain_grid-12` | DEM10b の対応付け | 同じプロセス。DEM10b の (14350, 6490) に、列 0〜127・行 0〜127 が 100m、列 128〜255・行 0〜127 が 200m、列 0〜127・行 128〜255 が 300m、列 128〜255・行 128〜255 が 400m、画素 (列 133, 行 7) だけ 500m のタイル。DEM5 は置かない | `build_tile_elevation` を位置 (28700, 12980)・(28701, 12980)・(28700, 12981)・(28701, 12981) で（`meshes` と `bbox` は 11 と同じ） | 全画素が順に `100.0f`・`200.0f`・`300.0f`・`400.0f`。ただし (28701, 12980) の画素 (列 10〜11, 行 14〜15) の 4 つは `500.0f` |
+| `UT-analyze_terrain_grid-13` | NODATA で埋める範囲（2.4 の表 4） | 同じプロセス。DEM5a の (28763, 13000) と (28700, 12942) に 100m の色のタイル | (a) 位置 (28763, 13000)、`meshes` が `{5235, 5336}`、`bbox` は `tile_range({5235, 5336}).bbox`、(b) (a) の位置で `meshes` が `{5235}`、`bbox` は `tile_range({5235}).bbox`、(c) 位置 (28700, 12942)、(a) と同じ `meshes`・`bbox` | (a) 列 0〜5 は `100.0f`、列 6〜255 は `-9999.0f`（`5236` は bounding box の中で解析対象でない）。(b) 全画素が `100.0f`（`5236` は bounding box の外のはみ出し）。(c) 行 0〜55 は `-9999.0f`（`5335`）、行 56〜255 は `100.0f` |
+| `UT-analyze_terrain_grid-14` | 読めないタイルを返す | 同じプロセス。位置 (28700, 12980)。DEM5a に NODATA の色のタイル、DEM5b に中身が `<?xml version="1.0"?>` のファイル、DEM5c に 300m の色のタイル、DEM10b の (14350, 6490) に `CV_8UC4` の PNG | `build_tile_elevation`（`meshes` と `bbox` は 11 と同じ） | 全画素が `300.0f`。`unreadable` は 2 件で、順に `{<DEM5b のパス>, "PNG の署名でない"}`、`{<DEM10b のパス>, "8 ビット・3 チャンネルでない"}`。標準エラー出力に `ERROR:` の行が無い |
+| `UT-analyze_terrain_grid-15` | 行と列で求めたメッシュが画素ごとと同じ | 同じプロセス。DEM5a の (28763, 12942) に 100m の色のタイル | `build_tile_elevation` を位置 (28763, 12942)、`meshes` が `{5235}`、`bbox` は `tile_range({5235, 5336}).bbox` で | 各画素 (i, j) が、`pixel_center_mesh({256 × 28763 + i, 256 × 12942 + j})` が `5235` なら `100.0f`、そうでなければ `-9999.0f`（65,536 画素をすべて比べる）。行 56〜255 かつ列 0〜5 だけが `100.0f` |
+| `UT-analyze_terrain_grid-16` | タイルの呼ぶ側の誤り | 同じプロセス | `build_tile_elevation` の (a) `tiles_dir` が空、(b) 末尾が `/`、(c) `meshes` が空 | どれも `std::invalid_argument` |
+| `UT-analyze_terrain_grid-17` | Z15 のグリッド | 同じプロセス。DEM5a の (28672, 12942) に 100m、(28763, 13016) に 200m の色のタイル | `build_grid_z15({5235}, tiles_dir)` | `width` が 23554、`height` が 19202。外周（px が 0 か 23553、py が 0 か 19201）はすべて `0.0f`。(1, 1) が `100.0f`、(23552, 19200) が `200.0f`（南東の隅のタイルの画素 (255, 255)。中心は `5136` で、bounding box の外のはみ出しなので値が残る）、(257, 1) が `-9999.0f`（タイルが無い位置）。`range.meshes` が `{5235}`、`range.z14` が偽、`range.box` が `tile_range({5235})` と同じ、`range.picks` が空 |
+| `UT-analyze_terrain_grid-18` | 読めないタイルで止まる | 同じプロセス。DEM5a の (28672, 12942) と DEM10b の (14336, 6471) に、中身が `<?xml version="1.0"?>` のファイル | (a) `build_grid_z15({5235}, tiles_dir)`、(b) `build_grid_z14({5235}, {}, tiles_dir)`。ほかに (c) 別の `tiles_dir` で、DEM5a の (28800, 12980)（`5236` の取得範囲だけに入る位置）に同じ中身のファイルを置き、`build_grid_z14({5235, 5336}, {}, tiles_dir)` | (a)(b) `code` が 1 の TR1。1 行目は `ERROR: 読めない標高タイルがある: <tiles_dir>/dem5a_png/15/28672/12942.png（PNG の署名でない）、<tiles_dir>/dem_png/14/14336/6471.png（PNG の署名でない）`（DEM10b のタイルは 4 つの位置で読むが 1 件）。2 行目は 6.4.4 の TR1 の文で `{meshes}` が `5235`。(c) `code` が 1 の TR1 で、`{meshes}` が `5236`（解析対象でない bounding box の中のメッシュ） |
+| `UT-analyze_terrain_grid-19` | Z14 のグリッドと縮約 | 同じプロセス。DEM5a の (28700, 12980) に 50m の色で、画素 (列 10, 行 20) が 100m、(11, 20) が 300m、(10, 21) が 300m、(11, 21) が 200m のタイル。DEM5a の (28701, 12980) に 70m の色で、画素 (0, 0)・(1, 0)・(0, 1) が NODATA の色のタイル。`peaks` は `TargetPeak` 1 つで `pixel` が `{256 × 28700 + 10, 256 × 12980 + 21}`（`peak` は既定の値） | `build_grid_z14({5235}, peaks, tiles_dir)` | `width` が 11778、`height` が 9602。(3590, 4875) が `300.0f`、(3585, 4865) が `50.0f`、(3713, 4865) が `70.0f`（3 つが NODATA の 2×2）、(1, 1) が `-9999.0f`。`range.z14` が真、`range.picks` は 1 件で、鍵 `{3590, 4875}`、値 `{256 × 28700 + 11, 256 × 12980 + 20}`（同じ 300m の 2 つのうち北の行） |
+| `UT-analyze_terrain_grid-20` | 控えの重なりと範囲の外 | 同じプロセス。タイルは置かない | (a) `peaks` の `pixel` が `{256 × 28700 + 10, 256 × 12980 + 21}` と `{256 × 28700 + 11, 256 × 12980 + 20}`（同じ 2×2）、(b) `peaks` の `pixel` が `{256 × 28764, 256 × 12980}`（x が範囲の外） | (a) `range.picks` が 1 件で、鍵 `{3590, 4875}`、値 `{256 × 28700 + 10, 256 × 12980 + 20}`（4 つとも NODATA で、先の画素）。(b) `std::invalid_argument`（`meshes` は `{5235}`） |
+| `UT-analyze_terrain_grid-21` | シグナルで止まる | 子のプロセス。タイルは置かない | 子の中で `start_log` の後に、`kill(getpid(), SIGTERM)`、`build_grid_z15({5235}, tiles_dir)` | `ExitRequest` の `code` が 143（最初の位置の `check_signal`）。子の終了コードが 143 |
+| `UT-analyze_terrain_grid-22` | グリッドの呼ぶ側の誤り | 同じプロセス | `build_grid_z15`・`build_grid_z14` のそれぞれに (a) `tiles_dir` が空、(b) 末尾が `/`、(c) `meshes` が空 | どれも `std::invalid_argument` |
+
+- UT 17〜21 はメッシュ 1 つの窓で、Z15 のグリッドは約 1.8GB（約 4.5 億画素の `float`）、Z14 は約 0.45GB を使う（メモリを多く使うので、実行する環境のメモリを確かめてから回す）。
 
 ### 6.9 `analyze_terrain_record`
 
@@ -2551,7 +2821,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 - `MeshBounds` は 4 つの名前の付いた値にする（Python の [2.1](#21-共通部品) の `((南, 西), (北, 東))` の組の並びを、名前で取り違えないようにする。[HLD 3.4.3](30_HLD.md#343-関数) の「緯度経度 2 組」と同じ中身）。
 - `TileXY`・`Z15Pixel` の比べ方（既定の `<=>`。`==` も既定で決まる）は、`std::set`・`std::map` の鍵と、一致の判定のためのもの。順は宣言の順（`x` か `gx` が先）で、出力の並び（HLD の DEC83 の gy・gx の順など）を決めるものではない。出力の並びは、並べる群の節で決める。
 - メッシュコードは 6.12 と同じく `std::string`（4 バイトの ASCII の数字）。
-- `Z15Pixel` を `TileXY` と分けるのは、z=23 のタイル番号と同じ値でも意味（Z15 の画素）が違い、後の群（タイルとグリッド、CSV と早期終了）が鍵として使うため。
+- `Z15Pixel` を `TileXY` と分けるのは、z=23 のタイル番号と同じ値でも意味（Z15 の画素）が違い、後の群（[6.4](#64-analyze_terrain_grid) の Z14 の控え〈`GridRange::picks` の値〉、CSV と早期終了）が使うため。
 
 #### 6.10.3 関数の細部
 
@@ -2573,7 +2843,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 
 `TileXY latlon_to_tile(double lat, double lon, int z)`。式と計算の順は 2.4 の `latlon_to_tile` のとおり。`floor` の後の倍精度の値を `static_cast<int>` で `x`・`y` にする。引数を検査しない（2.1 の Python と同じ）。
 
-渡せるのは、`lat` が −85.0511287798066 以上 85.0511287798066 以下（Web メルカトルの緯度の限界。[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 1「リストを読む」の座標として読める条件の (3) の注）、`lon` が −180 以上 180 未満（同じく (2)）、`z` が 0 以上 23 以下のときだけである。このとき `x` は 0 以上 `2^z` 以下（`lon` が 180 未満の最大の倍精度の値のときは、`lon + 180` が丸めで 360 になり `x = 2^z`）、`y` は −1 以上 `2^z − 1` 以下（緯度 +85.0511287798066 で −1、緯度 −85.0511287798066 で `2^z − 1`）に入り、`int` に変えられる。範囲の外を渡すと、`int` に変えるところで未定義の動作になりうる（−90 に最も近い倍精度の緯度では `tan(r) + 1 / cos(r)` が 0 になり、`log` が負の無限大を返す。NaN も同じ）ので、呼ぶ側が範囲を守る。今の呼ぶ側は、メッシュの四隅で呼ぶ「タイルとグリッド」の群、所属メッシュが存在メッシュだと確かめた後の対象ピークで `latlon_to_z15_pixel` を通して呼ぶ「対象」の群、読み戻した値で呼ぶ「CSV と早期終了」の群である。範囲を確かめてから渡すかは、それぞれの群の節で決める。
+渡せるのは、`lat` が −85.0511287798066 以上 85.0511287798066 以下（Web メルカトルの緯度の限界。[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 1「リストを読む」の座標として読める条件の (3) の注）、`lon` が −180 以上 180 未満（同じく (2)）、`z` が 0 以上 23 以下のときだけである。このとき `x` は 0 以上 `2^z` 以下（`lon` が 180 未満の最大の倍精度の値のときは、`lon + 180` が丸めで 360 になり `x = 2^z`）、`y` は −1 以上 `2^z − 1` 以下（緯度 +85.0511287798066 で −1、緯度 −85.0511287798066 で `2^z − 1`）に入り、`int` に変えられる。範囲の外を渡すと、`int` に変えるところで未定義の動作になりうる（−90 に最も近い倍精度の緯度では `tan(r) + 1 / cos(r)` が 0 になり、`log` が負の無限大を返す。NaN も同じ）ので、呼ぶ側が範囲を守る。今の呼ぶ側は、bounding box の四隅で呼ぶ [6.4](#64-analyze_terrain_grid) の `tile_range`（上 2 桁と下 2 桁の範囲を確かめてから呼ぶ）と、6.3 の `check_mesh_tiles`（メッシュの四隅で呼ぶ）、所属メッシュが存在メッシュだと確かめた後の対象ピークで `latlon_to_z15_pixel` を通して呼ぶ「対象」の群、読み戻した値で呼ぶ「CSV と早期終了」の群である。範囲を確かめてから渡すかは、それぞれの群の節で決める。
 
 ##### tile_to_latlon（analyze_terrain_convert）
 
