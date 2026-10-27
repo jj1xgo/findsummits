@@ -2598,7 +2598,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 
 1. `tiles_dir` が空か最後のバイトが `/` なら `std::invalid_argument`。それでなくて `meshes` が空でも `std::invalid_argument("build_tile_elevation: meshes が空")`（この順に検査する。どちらか一方で投げる）。
 2. 4 枚を `read_tile` で読む。パスは `tiles_dir + "/" + サービス名 + "/" + z + "/" + x + "/" + y + ".png"`（2.3。z・x・y は 10 進）で、DEM5a・DEM5b・DEM5c はズーム 15 の `(tile.x, tile.y)`、DEM10b はズーム 14 の `(tile.x / 2, tile.y / 2)`（整数の割り算。位置は 0 以上）。この順に読み、読めないタイルを `unreadable` にこの順に足す。DEM10b を読み直すか持っておくか（HLD 4.4.1 の対象外の行）は、位置ごとに読み直す（4 つの位置で同じ 1 枚を読む）。
-3. 行と列のメッシュの番号: `k` を 0〜255 にして `pixel_center_mesh({256 × tile.x + k, 256 × tile.y + k})` を求め、その上 2 桁を行 `k` の、下 2 桁を列 `k` の番号として控える。空の文字列が返ったら `std::invalid_argument("build_tile_elevation: 画素の中心がメッシュの番号の範囲の外: " + 10 進の x + "/" + 10 進の y)`。画素 (i, j) の中心が入るメッシュは、行 `j` の上 2 桁と列 `i` の下 2 桁をつないだコードで、`pixel_center_mesh({256 × tile.x + i, 256 × tile.y + j})` と同じになる（中心の緯度は gy だけ、経度は gx だけで決まり〈2.4 の `z15_pixel_center_latlon`〉、`latlon_to_mesh` の上 2 桁は緯度だけ、下 2 桁は経度だけで決まるため）。
+3. 行と列のメッシュの番号: `k` を 0〜255 にして `pixel_center_mesh({256 × tile.x + k, 256 × tile.y + k})` を求め、その上 2 桁を行 `k` の、下 2 桁を列 `k` の番号として控える。空の文字列が返ったら `std::invalid_argument("build_tile_elevation: 画素の中心がメッシュの番号の範囲の外: " + 10 進の tile.x + "/" + 10 進の tile.y)`（タイルの位置を書く。画素の座標ではない）。画素 (i, j) の中心が入るメッシュは、行 `j` の上 2 桁と列 `i` の下 2 桁をつないだコードで、`pixel_center_mesh({256 × tile.x + i, 256 × tile.y + j})` と同じになる（中心の緯度は gy だけ、経度は gx だけで決まり〈2.4 の `z15_pixel_center_latlon`〉、`latlon_to_mesh` の上 2 桁は緯度だけ、下 2 桁は経度だけで決まるため）。
 4. NODATA で埋める画素（HLD 4.4.2 の 4、DEC47「bbox 内で解析対象外の画素は中心で NODATA にする」）: 3 のコードの `mesh_to_latlon` が `bbox` の中（`south >= bbox.south`・`west >= bbox.west`・`north <= bbox.north`・`east <= bbox.east`）にあり、`meshes` に無い画素。`bbox` の値はどれかのメッシュの `mesh_to_latlon` の値そのもので、同じ式で求めた値どうしを比べるので、丸めで割れない。コードの組（タイルの中で高々 4 つ）ごとに 1 回だけ判定する。
 5. 画素ごとに（`j` を 0〜255、各 `j` で `i` を 0〜255）: 4 の画素なら `NODATA_ELEVATION`。それ以外は、`select_dem_rgb(a(j, i), b(j, i), c(j, i), d(128 × (tile.x % 2) + i / 2 の列, 128 × (tile.y % 2) + j / 2 の行))`（`cv::Mat::at<cv::Vec3b>(行, 列)`。DEM10b の対応付けは HLD 4.4.2 の 3 の 2 つ目の箇条）を `decode_signed_elevation`、`clamp_to_sea_level` の順に当てた値。`values[j * 256 + i]` に書く。
 6. 読んだタイルは返す前に捨てる（`cv::Mat` は関数を出るときに解放される。HLD 4.4.2 の 3 の最後の箇条、[NFR-002](20_SRS.md#nfr-002-メモリ使用量)）。
@@ -2614,7 +2614,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 2. 返す `GridResult result` を先に作り、`result.grid.width = (x_max − x_min + 1) × 256 + 2`、`result.grid.height = (y_max − y_min + 1) × 256 + 2`、`result.grid.values` を `std::int64_t` の `width × height` 個の `0.0f` にする（外周の 1 画素が海面ボーダーの 0。内側はすべて、この後の 3 でタイルの位置ごとに書く）。グリッドはこの 1 本だけを持ち、別の変数に作ってから写さない（写すと、写す間に同じ大きさの配列が 2 本になる）。
 3. `y` を `y_min`〜`y_max`、各 `y` で `x` を `x_min`〜`x_max` の昇順に: `check_signal()`、`build_tile_elevation({x, y}, meshes, box.bbox, tiles_dir)`、読めないタイルのうちパスがまだ控えていないものを控え（読んだ順。同じパスは最初の理由のまま）、タイルの画素 (i, j) を `result.grid` の (256 × (x − x_min) + i + 1, 256 × (y − y_min) + j + 1) に写す。
 4. 全部の位置を終えた後、`check_signal()` を呼び、控えが 1 つ以上あれば TR1 を出して止まる（HLD 4.4.2 の 5、DEC49「読めないタイルでは窓のタイルを読み終えてから挙げて止める」）。
-5. `result.range` を `{meshes, false, box, {}}` にして `return result;`（コピーしない）。
+5. `result.range` を `{meshes, false, box, {}}` にして `return result;`（グリッドの値をコピーしない。`range.meshes` には引数の `meshes` の複製を入れる）。
 
 ##### build_grid_z14
 
