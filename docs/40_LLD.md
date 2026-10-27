@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -79,6 +79,12 @@
     - [6.4.3 関数の細部](#643-関数の細部)
     - [6.4.4 メッセージ文面](#644-メッセージ文面)
     - [6.4.5 UT 候補](#645-ut-候補)
+  - [6.6 `analyze_terrain_scan`](#66-analyze_terrain_scan)
+    - [6.6.1 ファイル割付](#661-ファイル割付)
+    - [6.6.2 型とデータ](#662-型とデータ)
+    - [6.6.3 関数の細部](#663-関数の細部)
+    - [6.6.4 メッセージ文面](#664-メッセージ文面)
+    - [6.6.5 UT 候補](#665-ut-候補)
   - [6.9 `analyze_terrain_record`](#69-analyze_terrain_record)
     - [6.9.1 ファイル割付](#691-ファイル割付)
     - [6.9.2 型とデータ](#692-型とデータ)
@@ -141,14 +147,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.6・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -741,7 +747,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 [HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
-- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.6 は `build/test_scan`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
 - `main` の振る舞いを確かめるための試験用の実行ファイル `build/test_launch_main`: `src/analyze_terrain.cpp`・`src/launch.cpp`・`src/common.cpp` と `tests/src/stub_stage.cpp`（[6.1.5](#615-ut-候補) の段の進行のスタブ）をコンパイルしてリンクする（`gtest_main` はリンクしない。指定は CMP4 の実行ファイルと同じ）。`build/test_launch` が子のプロセスで起動する（6.1.5）。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
@@ -1940,7 +1946,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 ## 6. CMP4 地形解析エンジン
 
-この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1・6.2・6.3・6.4・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.5〜6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1・6.2・6.3・6.4・6.6・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.5・6.7・6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
 
 ### 6.1 `analyze_terrain_launch`
 
@@ -2527,7 +2533,7 @@ GridResult build_grid_z14(const std::set<std::string>& meshes,
 
 - 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`tiles_dir` は `data_dir` の下の `tiles` の絶対パスで、末尾に `/` を付けない（6.3 と同じ。6.11 が組み立てて渡す）。`peaks` は 6.2 の `PeakGroups` のその対象メッシュの組。
 - 画素の色: `cv::Vec3b` は OpenCV の並び（`[0]` が B、`[1]` が G、`[2]` が R。[HLD 4.3.2](30_HLD.md#432-処理の流れ) の「画素の表現」）。HLD の RGB (128, 0, 0) は `cv::Vec3b(0, 0, 128)`。UT の色も、RGB で書いた値を `cv::Vec3b(b, g, r)` にして書く。
-- グリッドを `std::vector<float>` で持つのは、後の群（走査）が画素の番号 `py × W + px`（64 ビット。[HLD 4.5.2](30_HLD.md#452-処理の流れ) の前置き）で読み書きし、OpenCV の型に頼らずに済むため。`width`・`height` は `int`（最大の窓でも 2³¹ に届かない）、番号の計算は `std::int64_t` で行う。
+- グリッドを `std::vector<float>` で持つのは、後の群（[6.6](#66-analyze_terrain_scan) の走査）が画素の番号 `py × W + px`（64 ビット。[HLD 4.5.2](30_HLD.md#452-処理の流れ) の前置き）で読み書きし、OpenCV の型に頼らずに済むため。`width`・`height` は `int`（最大の窓でも 2³¹ に届かない）、番号の計算は `std::int64_t` で行う。
 - `GridRange` が HLD の「解析対象メッシュ範囲情報」。グリッドの画素と全球の画素の対応は、Z15 では (256 × `x_min` + px − 1, 256 × `y_min` + py − 1)、Z14 では全球の Z14 の画素 (128 × `x_min` + px − 1, 128 × `y_min` + py − 1)（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析対象メッシュ範囲情報」、[4.14.2](30_HLD.md#4142-処理の流れ) の「Z14 のグリッドの生成」の 4「解析対象メッシュ範囲情報」）。対応を計算する関数は足さず（1.2 の「LLD が足してよい名前」。ほかのモジュールから呼ぶ関数は HLD 3.4.3 の名前だけ）、後の群がこの式で求める。地理的範囲フィルタと `area_complete` の「範囲」は bounding box でなく `meshes`（解析対象メッシュの矩形を合わせたもの。[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 4「地理的範囲フィルタ」、[4.16.2](30_HLD.md#4162-処理の流れ) の 3「`area_complete` を決める」）。`box.bbox` は、NODATA で埋める範囲（6.4 の `build_tile_elevation`）と、`area_complete` の外の隣が bounding box の中か外か（NODATA で埋めた範囲か、はみ出しか。HLD 4.16.2 の 3 の 2 つ目と 3 つ目の箇条）の区別に使う。
 - `picks` の鍵はグリッドの画素、値は採った画素の全球の Z15 の座標（HLD の「タイル座標とタイル内の画素位置の組」と同じ値で、(256 × tx + i, 256 × ty + j)。[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 2「ピークの Z15 の画素を求める」がこの形で使う）。
 - 構造体は 6.2・6.10 と同じく名前で読める形にし、値の有無を持つ型（`std::optional`）を使わない（1.2）。`AnalysisBox` を 6.3 の内部の `TileRange` と別の名前にするのは、bounding box の四隅も持つことと、読み違えないため。
@@ -2679,6 +2685,176 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 | `UT-analyze_terrain_grid-22` | グリッドの呼ぶ側の誤り | 同じプロセス | `build_grid_z15`・`build_grid_z14` のそれぞれに (a) `tiles_dir` が空、(b) 末尾が `/`、(c) `meshes` が空 | どれも `std::invalid_argument` |
 
 - UT 17〜21 は、UT 18 の (c) 以外はメッシュ 1 つの窓で、Z15 のグリッドは約 1.8GB（約 4.5 億画素の `float`）、Z14 は約 0.45GB を使う。UT 18 の (c) は `{5235, 5336}` の 2 メッシュの窓で、Z14 でも約 1.8GB を使う（メモリを多く使うので、実行する環境のメモリを確かめてから回す）。
+
+### 6.6 `analyze_terrain_scan`
+
+- **ID**: LLD-analyze_terrain_scan
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.5](30_HLD.md#45-fr-005-ピーク候補検出)・[4.6](30_HLD.md#46-fr-006-コル検出プロミネンス計算)・[5.1](30_HLD.md#51-nfr-001-精度検出網羅性)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
+- **ファイル**: `src/scan.hpp`・`src/scan.cpp`
+
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「走査」の群で、処理の正本は [HLD 4.5.2](30_HLD.md#452-処理の流れ) の「走査の準備」「1 画素の処理」「連結成分のデータ」「ピーク候補リスト」と、[4.6.2](30_HLD.md#462-処理の流れ) の「成分ごとに足すもの」「合流のとき」「走査の後（海面確定規則）」「コルの座標」「`col_margin_px`」「ピーク候補・コル情報リスト」である。止まる場面は [4.5.3](30_HLD.md#453-異常系)・[4.6.3](30_HLD.md#463-異常系) である。コルの座標の式は [2.4](#24-言語ごとに別に実装する式のテストベクトル) の `tile_to_latlon`・`z15_pixel_center_latlon`（[6.10](#610-analyze_terrain_convert) の関数を呼ぶ）。関数を呼ぶ順は 6.11 の `run_normal_mode`・`run_wide_mode`（[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順）で決まっていて、通常モードと広域モードで同じ関数を呼ぶ（違うのは `build_col_list` のコルの座標だけ）。非機能要件は 3 つで、[5.1](30_HLD.md#51-nfr-001-精度検出網羅性)（精度・検出網羅性）は、`key_col_resolved` と海面確定規則を HLD 4.6.2 のとおりに決める（一次フィルタと最終フィルタが `key_col_resolved=false` の行を残すか落とすかの元になる）ことで受け、[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ使用量）は [6.6.2](#662-型とデータ) のメモリの箇条（画素ごとの成分の番号を関数の中で捨てる、成分ごとのデータを 32 バイトにする）で受ける（実測は [HLD 5.2.2](30_HLD.md#522-処理の流れ) の実測の計画の 1）。[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、走査の順をキーの降順と番号の昇順にし（DEC58「走査の順は標高を 0.01m 単位の整数にして数え上げで作る」）、成分の番号を作った順にし、行を成分の番号の順に並べる（並べ替えない）ことで受ける。この節は、それを C++ で書くための細部を足す。1.2 の C++ の規約に従う。
+
+#### 6.6.1 ファイル割付
+
+- 公開の宣言は `src/scan.hpp`、定義と内部の関数は `src/scan.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_scan` を書き、ヘッダーは次の行を `#pragma once` にする。
+- `src/scan.hpp` は `<cstdint>`・`<vector>`・`"grid.hpp"`（`ElevationGrid`・`GridRange`・`GridXY`）を読む。`src/scan.cpp` は `"scan.hpp"`・`"common.hpp"`（`check_signal`）・`"convert.hpp"`（`LatLon`・`Z15Pixel`・`tile_to_latlon`・`z15_pixel_center_latlon`）・`<algorithm>`・`<cmath>`・`<cstdint>`・`<stdexcept>`・`<string>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーを直接読まない（`grid.hpp` が core を読む）。
+- UT のコードは `tests/src/test_scan.cpp` に置き、`build/test_scan` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_scan-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 12・13）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+
+#### 6.6.2 型とデータ
+
+`src/scan.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <cstdint>
+#include <vector>
+#include "grid.hpp"
+
+constexpr std::int64_t NO_COL_PIXEL = -1;
+
+enum class KeyCol : std::uint8_t {
+    Undecided,   // Key コルが決まっていない（根の成分）
+    Pixel,       // グリッドの画素で決まった（合流で残さなかった成分）
+    Sea,         // 海面確定規則で海面にした
+};
+
+struct Component {
+    std::int64_t peak_pixel = 0;            // ピーク候補の画素の番号（py × W + px）
+    std::int64_t col_pixel = NO_COL_PIXEL;  // key_col が Pixel のときの Key コルの画素の番号
+    std::uint32_t parent = 0;               // Union-Find の親（根は自分の番号。根が代表の成分を兼ねる）
+    float peak_elevation = 0.0f;
+    float col_elevation = 0.0f;             // Pixel なら Key コルの画素の標高、Sea なら 0.0f
+    KeyCol key_col = KeyCol::Undecided;
+    bool border = false;                    // 人工ボーダーへの接触の印（根のものだけが今の成分の印）
+    bool key_col_resolved = false;
+};
+static_assert(sizeof(Component) == 32);
+
+struct PeakColRow {
+    GridXY peak;                  // ピークのグリッドの画素
+    float peak_elevation = 0.0f;
+    double col_lat = 0.0;         // key_col_resolved が偽の行と海面確定の行は 0.0
+    double col_lon = 0.0;
+    float col_elevation = 0.0f;   // key_col_resolved が偽の行は未確定（0.0f を入れ、読まない）
+    float prominence = 0.0f;      // 同上
+    bool key_col_resolved = false;
+    int col_margin_px = 0;
+};
+
+std::vector<std::int64_t> make_scan_order(const ElevationGrid& grid);
+std::vector<Component> scan_peaks_and_cols(const ElevationGrid& grid,
+                                           const std::vector<std::int64_t>& order);
+std::vector<Component> apply_sea_level_rule(std::vector<Component> components);
+std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
+                                       int width, int height, const GridRange& range);
+```
+
+- 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`width`・`height` はグリッドの `width`・`height`（6.11 が渡す）。`apply_sea_level_rule` は値で受け取り、直して返す（6.11 が `std::move` で渡すので写さない）。
+- 成分ごとのデータが HLD の「連結成分のデータ」と「成分ごとに足すもの」で、`std::vector<Component>` の添字が成分の番号（作った順。[HLD 4.5.2](30_HLD.md#452-処理の流れ) の「ピーク候補リスト」のとおり、ピーク候補リストを兼ねる）。代表の成分の番号は持たない（根の番号が代表。[6.6.3](#663-関数の細部) の `scan_peaks_and_cols`）。HLD の「未決」は `key_col` の `Undecided` で表し、そのときの `col_pixel` は `NO_COL_PIXEL`、`col_elevation` は `0.0f`。`key_col_resolved` は `Pixel` と `Sea` のときと、海面確定規則で偽にした `Undecided` のときに意味を持つ。`Pixel` で `key_col_resolved` が偽の成分も、合流の画素と標高を記録したままにする（[HLD 4.6.2](30_HLD.md#462-処理の流れ) の「合流のとき」の 2 のとおり記録し、3 のとおり使わない）。
+- `PeakColRow` が HLD の「ピーク候補・コル情報リスト」の 1 行。`key_col_resolved` が偽の行の `col_elevation`・`prominence` は未確定（[FR-006](20_SRS.md#fr-006-コル検出プロミネンス計算) の sentinel: 空欄。空欄にして書くのは 6.7）。`std::optional` を使わず（1.2）、`key_col_resolved` で見分ける。
+- 画素ごとの成分の番号は `scan_peaks_and_cols` の中の `std::vector<std::uint32_t>`（グリッドと同じ数）で持ち、返す前に捨てる（関数を出るときに解放される）。値: 内部の定数 `_not_component = 0xFFFFFFFFu`（人工ボーダー・海面・NODATA）、`_unprocessed = 0xFFFFFFFEu`（まだ処理していない陸地）、それより小さい値は成分の番号。成分の数は (W を 2 で割って切り上げた数) × (H を 2 で割って切り上げた数) 以下（HLD 4.5.2 の「連結成分のデータ」）で、最大の窓でも約 11.6 億なので `_unprocessed` に届かない。
+- メモリ（[HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)）: 走査の間に持つのは、グリッド（画素ごとに 4 バイト）、走査の順（陸地の画素ごとに 8 バイト）、画素ごとの成分の番号（4 バイト）、成分ごとのデータ（成分ごとに 32 バイト。`std::vector` の `push_back` で伸ばすので、伸ばす間は一時に最大で約 3 倍）、キーごとの画素の数（`make_scan_order` の中だけ。キーの最大値 + 1 個の `std::int64_t`、最大で 64MiB）。画素の番号を詰めるかは [#187](https://github.com/jj1xgo/findsummits/issues/187)「最大の窓で画素の番号を詰めるか」で決める（決まったら、この節の型を直す）。
+- 内部（`src/scan.cpp` の無名の名前空間）: `_not_component`・`_unprocessed`、`_scan_key(float)`（キー）、`_check_grid(関数名, grid)`（グリッドを確かめて陸地の画素の数を返す）、`_find(components, x)`（経路の半減で根を返す）。
+
+#### 6.6.3 関数の細部
+
+処理の正本は 6.6 の前置きのとおりで、この節は C++ で書くための細部を足す。どの関数もメッセージを出さず、通常のログと警告も出さない。止まるのは、メモリを確保できないとき（`std::bad_alloc` を捕まえない。6.12 の `_on_terminate` が G7 で止める。終了コード 1。[HLD 4.5.3](30_HLD.md#453-異常系) の 1 行目）、OS に止められるとき（137。同 2 行目）、シグナル（`check_signal`）だけ。`check_signal` は、この群のどのループでも（確かめのループと初期化のループを含む）次の区切りで呼ぶ（[HLD 3.4.3](30_HLD.md#343-関数) の `check_signal` を呼ぶ群に「走査」が入っている）。グリッドを py・px の順に走るループ（`_check_grid`、`make_scan_order` の 2・4 の各走り、`scan_peaks_and_cols` の 2）は各行（py）の始め、走査の順・キー・成分を添字で走るループ（`scan_peaks_and_cols` の 1 の走査の順の確かめと 3 の処理、`make_scan_order` の 3、`apply_sea_level_rule` の 1・2、`build_col_list` の 1・2）は添字（0 から）が 2²⁰ の倍数のときの、その要素の前。受けてから止まるまでの遅れは、グリッドの 1 行（最大の窓で約 7 万画素）か、2²⁰ 個の要素の処理の分まで。区切りを置けないのは `std::vector` の確保（画素ごとの成分の番号は最大の窓で約 17GiB、走査の順は陸地の画素ごとに 8 バイト）と `push_back` が伸ばすときの写しの間だけで、その間は、その後の最初の区切りまで延びる。数と番号の計算は `std::int64_t` で行う（`static_cast<std::int64_t>(width) * height` など。`int` の積は最大の窓であふれる）。呼ぶ側の誤りは `std::invalid_argument` を投げる（6.4 と同じ。メッセージは `<関数名>: <内容>` の形で、内容は各関数の見出しの下。UT は例外の型だけを確かめる）。
+
+関数ごとに `#####` の見出しを立てる。
+
+##### _check_grid（内部）
+
+`std::int64_t _check_grid(const char* func, const ElevationGrid& grid)`。次のどれかなら `std::invalid_argument`: `width` か `height` が 3 未満（`<func>: グリッドの幅か高さが 3 未満`）、`values.size()` が `static_cast<std::int64_t>(width) * height` と違う（`<func>: values の数が幅×高さと違う`）、外周の画素（px が 0 か W − 1、または py が 0 か H − 1）の値が `0.0f` と `==` でない（`<func>: 外周の画素が 0 でない: (<px>, <py>)`）、外周でない画素の値が `NODATA_ELEVATION` と `==` でも、`0.0f` と `==` でも、陸地（`> 0.0f` で `static_cast<double>(v) * 100.0 < 8388607.5`）でもない（NaN、負の値、無限大、キーが 8388607 を超える値。`<func>: 画素の値が NODATA でも 0 でも陸地の標高でもない: (<px>, <py>)`）。陸地の画素の数を返す。
+
+- 陸地のキーの上限 8388607 は、デコードの最大の正の値 `8388607 / 100.0f`（[HLD 4.3.2](30_HLD.md#432-処理の流れ)）のキー。Z14 のグリッドは 2×2 の最大なので同じ範囲。外周の画素がどれも 0 で、外周に陸地が無いので、陸地の画素の 8 近傍がいつもグリッドの中になる（[HLD 4.5.2](30_HLD.md#452-処理の流れ) の「1 画素の処理」の 1）。
+
+##### _scan_key（内部）
+
+`std::int64_t _scan_key(float v)`。`std::llround(static_cast<double>(v) * 100.0)`（HLD 4.5.2 の「走査の準備」の 3、DEC58「走査の順は標高を 0.01m 単位の整数にして数え上げで作る」。掛け算は倍精度で、`float` のまま掛けない）。
+
+##### make_scan_order
+
+`std::vector<std::int64_t> make_scan_order(const ElevationGrid& grid)`
+
+1. `_check_grid("make_scan_order", grid)` で陸地の数 `L` を得る。`L` が 0 なら空の並びを返す。
+2. 1 回目の走り（py を 0〜H − 1、各 py で px を 0〜W − 1）で、陸地（`> 0.0f`）の画素のキーの最大値 `K` を求める。2 回目の走り（同じ順）で、`std::vector<std::int64_t> count(K + 1)` にキーごとの数を数える。
+3. キーの大きい順に置き場所の始まりを決める（`K` から 0 へ、始まり = それまでの数の和）。
+4. 3 回目の走り（同じ順）で、陸地の画素の番号 `static_cast<std::int64_t>(py) * W + px` を、そのキーの置き場所に順に置く。これで、キーの降順、同じキーは番号の昇順に並ぶ。長さは `L`。
+
+- 海面（`0.0f`）・NODATA・人工ボーダーは並べない（HLD 4.5.2 の「走査の準備」の 1・3、DEC57「陸地でない画素は成分に入れず、近傍の成分に数えない」）。
+
+##### scan_peaks_and_cols
+
+`std::vector<Component> scan_peaks_and_cols(const ElevationGrid& grid, const std::vector<std::int64_t>& order)`
+
+1. `_check_grid("scan_peaks_and_cols", grid)` で陸地の数 `L` を得る。走査の順を確かめる: どの番号も 0 以上 W × H 未満（`scan_peaks_and_cols: 走査の順の画素の番号が範囲の外: <番号>`）、その画素が陸地（`scan_peaks_and_cols: 走査の順に陸地でない画素がある: <番号>`）、`k` が 1 以上のどれでも、`k − 1` 番目のキーが `k` 番目のキーより大きいか、キーが等しく `k − 1` 番目の番号が `k` 番目の番号より小さい（どちらでもなければ `scan_peaks_and_cols: 走査の順がキーの降順と番号の昇順でない: <k>`。番号が等しいときも当たる）、長さが `L`（`scan_peaks_and_cols: 走査の順の数が陸地の画素の数と違う`）。この 4 つで、走査の順が `make_scan_order` の返すものと同じであることが決まる（重なりは 3 で、抜けは 4 で見つかる）。
+2. 画素ごとの成分の番号を用意する: 陸地の画素は `_unprocessed`、ほかは `_not_component`（HLD 4.5.2 の「走査の準備」の 2）。
+3. 走査の順に、画素 `p`（px = p % W、py = p / W、標高 `v`）を次のとおり処理する（HLD 4.5.2 の「1 画素の処理」の 1〜5、[4.6.2](30_HLD.md#462-処理の流れ) の「合流のとき」の 1〜4）。
+   1. 8 近傍の画素のうち、成分の番号が `_unprocessed` より小さいものについて `_find` で根を求め、重なりを除いて集める（最大 8 つ。集める順は結果に効かない）。
+   2. 根が 0 個: 新しい成分を `push_back` する（`peak_pixel = p`、`peak_elevation = v`、`parent` は自分の番号〈それまでの成分の数〉、ほかは既定の値）。`p` の成分の番号に入れる。
+   3. 根が 1 個: その根を `p` の成分の番号に入れる。
+   4. 根が 2 個以上（合流）: 根の中で `peak_elevation` がいちばん大きいもの（同じなら番号の小さいもの）を勝った根 `w` とする。`w` 以外の根 `l` のそれぞれに、`key_col = Pixel`、`col_pixel = p`、`col_elevation = v`、`key_col_resolved = !l.border`（合流の前の印。DEC61「`key_col_resolved` は合流の前の印で決める」）を入れ、`l.parent = w` にする。`w.border` を、集めた根のどれかの `border` が真なら真にする。`w` を `p` の成分の番号に入れる。
+   5. `p` が外周から 2 番目の行か列（px が 1 か W − 2、または py が 1 か H − 2）なら、`p` の成分の根（2 なら新しい成分、3 ならその根、4 なら `w`）の `border` を真にする（合流の後にだけ数える）。
+4. 成分ごとのデータを返す（画素ごとの成分の番号はここで捨てる）。
+
+- `_find` は経路の半減: `while (c[x].parent != x) { c[x].parent = c[c[x].parent].parent; x = c[x].parent; }`。根を残す成分は 4 の勝った根だけなので、根の番号が代表の成分の番号に等しい（[HLD 4.6.2](30_HLD.md#462-処理の流れ) の「成分ごとに足すもの」の代表の成分の番号を、根の番号で表す）。合流で勝った成分の根を残して負けた根をその下に付けると、「根の番号 = 代表の成分の番号」がいつも成り立つ（作ったときは自分が根で代表。合流で残すのは勝った成分の根で、帰納法で勝った成分自身）ので、代表の番号を成分ごとに別に持たずに済む（成分ごとに 4 バイト、最大の窓で約 4.3GiB）。経路の縮め方は経路の半減（path halving）だけにする。再帰の圧縮は、深い木でスタックを使い切るので使わない。大きさや高さで根を選ばないのは、根を勝った成分に決めるため。
+- 根を勝った成分に決めるので、DEC60「合流では最も高いピークの成分を残す」の却下の案（根の成分をそのまま残すピークにする）の前提（根の選び方がピークの高さと関係なく決まる）は起きず、根の番号が代表の成分の番号と同じになる。
+- 4 で負けた根は、合流の後は根でなくなり、その `border` は使わない。3 つ以上が同時に合流しても、勝つのは 1 つで、ほかのすべてが `p` を Key コルにする（HLD 4.6.2 の「合流のとき」の 2）。
+
+##### apply_sea_level_rule
+
+`std::vector<Component> apply_sea_level_rule(std::vector<Component> components)`
+
+1. 確かめる: どの成分も `parent` が成分の数より小さい（`apply_sea_level_rule: 成分の親が範囲の外: <番号>`）。`key_col` が `Undecided` の成分と、`parent` が自分の番号の成分（根）が一致する（`apply_sea_level_rule: 未決の成分と根が一致しない: <番号>`。`scan_peaks_and_cols` が返したものなら成り立つ）。
+2. `key_col` が `Undecided` の成分（根）のそれぞれについて、`border` が偽なら `key_col = Sea`、`col_elevation = 0.0f`、`key_col_resolved = true`。真なら `key_col_resolved = false`（`key_col` は `Undecided` のまま）。ほかの成分は変えない（HLD 4.6.2 の「走査の後（海面確定規則）」）。
+3. 直した成分ごとのデータを返す。
+
+- 根の `border` は、まとめた成分の全体の印（合流のたびに集めた根の印をまとめるため）。
+
+##### build_col_list
+
+`std::vector<PeakColRow> build_col_list(const std::vector<Component>& components, int width, int height, const GridRange& range)`
+
+1. 確かめる: `range.z14` が偽なら 1 タイルの画素の数 `s = 256`、真なら `s = 128` として、（`std::int64_t` で計算して）`width == s × (box.x_max − box.x_min + 1) + 2` かつ `height == s × (box.y_max − box.y_min + 1) + 2`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「解析範囲標高グリッドの生成」の 2、[4.14.2](30_HLD.md#4142-処理の流れ) の「Z14 のグリッドの生成」の 1。違えば `build_col_list: 幅か高さが解析対象メッシュ範囲情報と合わない: <W>×<H>`）。各成分の `peak_pixel` が 0 以上 W × H（`static_cast<std::int64_t>(width) * height`）未満（`build_col_list: ピークの画素の番号が範囲の外: <成分の番号>`）。`key_col` が `Undecided` の成分は、どれも `key_col_resolved` が偽で `border` が真（海面確定規則の後に `Undecided` で残るのは人工ボーダーに接触した根だけなので、`apply_sea_level_rule` を呼び忘れると `border` が偽の根で見つかる。違えば `build_col_list: 海面確定規則を当てていない成分がある: <成分の番号>`）。`key_col_resolved` が真で `key_col` が `Pixel` の成分の `col_pixel` が 0 以上 W × H 未満（`build_col_list: Key コルの画素の番号が範囲の外: <成分の番号>`）。
+2. 成分の番号の順に 1 行ずつ作る（並べ替えない。HLD 4.6.2 の「ピーク候補・コル情報リスト」）。`peak` は `{static_cast<int>(peak_pixel % W), static_cast<int>(peak_pixel / W)}`（1 で範囲を確かめた後なので `int` に入る。コルの画素も同じ）、`peak_elevation` は成分の値。
+   - `key_col_resolved` が偽: `col_lat`・`col_lon` は `0.0`、`col_elevation`・`prominence` は `0.0f`、`col_margin_px` は 1（HLD 4.6.2 の「合流のとき」の 3、「`col_margin_px`」）。
+   - 真で `Sea`: `col_lat`・`col_lon` は `0.0`、`col_elevation` は `0.0f`、`prominence` は `peak_elevation`、`col_margin_px` は −1。
+   - 真で `Pixel`: コルの画素 (px, py) = `{col_pixel % W, col_pixel / W}`。`col_elevation` は成分の値、`prominence` は `peak_elevation - col_elevation`（`float` で引く）。`col_margin_px` は `std::min({px, py, W - 1 - px, H - 1 - py})`。座標は、Z15（`range.z14` が偽）なら `z15_pixel_center_latlon({256 × box.x_min + px − 1, 256 × box.y_min + py − 1})`、Z14 なら `tile_to_latlon(static_cast<double>(128 × box.x_min + px − 1) + 0.5, static_cast<double>(128 × box.y_min + py − 1) + 0.5, 22)` の `lat`・`lon`（HLD 4.6.2 の「コルの座標」、DEC62「コルの座標はグリッドの画素の中心にする」。Z14 の 1 画素は z=22 の 1 タイル）。
+3. 行の並びを返す。
+
+- 地理的範囲フィルタと一次フィルタは当てない（6.7 の `filter_peak_rows`）。`range.meshes`・`range.picks`・`box.bbox` は使わない。
+
+#### 6.6.4 メッセージ文面
+
+なし（この群はメッセージを出さない。止まるのは、メモリの不足とシグナルだけで、どちらも 6.12 のメッセージで止まる〈[6.6.3](#663-関数の細部) の前置き〉）。
+
+#### 6.6.5 UT 候補
+
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_scan-NN`。共通の準備は 3 つ。
+
+- **同じプロセス**: [6.2.5](#625-ut-候補) の同じ名前の準備と同じ。
+- **小さいグリッド**: `ElevationGrid` の `width`・`height` をケースの W・H にし、`values` を W × H 個の `0.0f` で作ってから、ケースが挙げた画素 (px, py) の値を書く（`values[py * W + px]`）。挙げない画素は海面か人工ボーダー（0）。画素の番号は `py × W + px`。成分ごとのデータを確かめるときは、成分ごとに `peak_pixel`・`peak_elevation`・`parent`・`key_col`・`col_pixel`・`col_elevation`・`key_col_resolved` を比べ、`border` は根（`parent` が自分）だけを比べる。値は `EXPECT_EQ`（標高は表の整数の値の `float` か、ケースが書いた `float` の式に等しい）。
+- **子のプロセス**: [6.12.5](#6125-ut-候補) の同じ名前の準備と同じ。
+
+成分の書き方: `[番号] peak=<peak_pixel>/<peak_elevation> parent=<parent> <key_col>(<col_pixel>/<col_elevation>) res=<key_col_resolved> border=<border>`。`<key_col>` が `Undecided` か `Sea` なら括弧の中は `-1/0`。書かない項目は既定の値（`res=false`、`border=false`）。「…」は直前に書いた同じ番号の成分と同じ値。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_scan-01` | 走査の順と同じ標高 | 同じプロセス。小さいグリッド W=6・H=4: (1,1)=100、(2,1)=200、(3,1)=100、(1,2)=-9999、(2,2)=200、(3,2)=50、(4,2)=100（(4,1) は 0） | `make_scan_order` に (a) このグリッド、(b) 同じ大きさで (1,1)=-9999 だけのグリッド | (a) `{8, 14, 7, 9, 16, 15}`。(b) 空 |
+| `UT-analyze_terrain_scan-02` | キーの丸め（DEC58） | 同じプロセス。小さいグリッド W=7・H=3: (1,1)=`6553609 / 100.0f`、(2,1)=`6553610 / 100.0f`、(4,1)=`100.004f`、(5,1)=`100.0f` | `make_scan_order` | `{9, 8, 11, 12}`（`float` のまま 100 倍すると (1,1) のキーが 6553610 になり、`{8, 9, 11, 12}` になる） |
+| `UT-analyze_terrain_scan-03` | グリッドの呼ぶ側の誤り | 同じプロセス。UT 01 の (a) のグリッドを元にする | `make_scan_order` に (a) W=2・H=4 の 8 個の 0、(b) W=4・H=2 の 8 個の 0、(c) W=4・H=4 で値が 15 個、(d) 元の (0,1)=5、(e) 元の (1,1)=-1、(f) 元の (1,1)=NaN、(g) 元の (1,1)=`83886.08f`、(h) 元の (1,1)=+∞ | どれも `std::invalid_argument`。ほかに、元の (1,1) を `8388607 / 100.0f`・`-9999.0f`・`0.0f` にしたものは投げない |
+| `UT-analyze_terrain_scan-04` | 1 つのピークと海面確定 | 同じプロセス。小さいグリッド W=7・H=7: px と py が 2〜4 の 9 画素が 100、ただし (3,3)=300 | `make_scan_order`、`scan_peaks_and_cols`、`apply_sea_level_rule` の順 | 走査の順は `{24, 16, 17, 18, 23, 25, 30, 31, 32}`。走査の後は 1 つ: `[0] peak=24/300 parent=0 Undecided(-1/0) res=false border=false`。海面確定の後は `[0] … Sea(-1/0) res=true border=false` |
+| `UT-analyze_terrain_scan-05` | 2 つのピークの合流 | 同じプロセス。小さいグリッド W=9・H=5: (2,2)=300、(3,2)=200、(4,2)=150、(5,2)=250、(6,2)=100 | UT 04 と同じ順 | 走査の順は `{20, 23, 21, 22, 24}`。走査の後は `[0] peak=20/300 parent=0 Undecided(-1/0) res=false border=false`、`[1] peak=23/250 parent=0 Pixel(22/150) res=true`。海面確定の後は `[0]` が `Sea(-1/0) res=true`、`[1]` は変わらない |
+| `UT-analyze_terrain_scan-06` | 平らな頂上（HLD 4.5.2 の例） | 同じプロセス。小さいグリッド W=16・H=16: (10,10)=500、(12,10)=500、(11,11)=500 | UT 04 と同じ順 | 走査の順は `{170, 172, 187}`。走査の後は `[0] peak=170/500 parent=0 Undecided(-1/0) border=false`、`[1] peak=172/500 parent=0 Pixel(187/500) res=true`（同じ標高は番号の小さい `[0]` が勝ち、プロミネンスは 0 になる）。海面確定の後は `[0]` が `Sea(-1/0) res=true` |
+| `UT-analyze_terrain_scan-07` | 3 成分の同時の合流 | 同じプロセス。小さいグリッド W=11・H=11: (5,4)=300、(6,6)=300、(4,6)=200、(5,5)=50 | UT 04 と同じ順 | 走査の順は `{49, 72, 70, 60}`。走査の後は `[0] peak=49/300 parent=0 Undecided(-1/0) border=false`、`[1] peak=72/300 parent=0 Pixel(60/50) res=true`、`[2] peak=70/200 parent=0 Pixel(60/50) res=true` |
+| `UT-analyze_terrain_scan-08` | 人工ボーダーへの接触（DEC61） | 同じプロセス。小さいグリッド W=9・H=7 を 3 つ: (a) (3,2)=300、(5,2)=200、(4,1)=100、(b) (3,3)=300、(5,1)=200、(4,2)=100、(c) (5,1)=300、(3,3)=200、(4,2)=100 | それぞれ UT 04 と同じ順 | (a) 走査の順 `{21, 23, 13}`。走査の後 `[0] peak=21/300 parent=0 Undecided(-1/0) border=true`、`[1] peak=23/200 parent=0 Pixel(13/100) res=true`（合流の画素自身の接触は合流の後だけ）。海面確定の後 `[0]` は `Undecided(-1/0) res=false`。(b) 走査の順 `{30, 14, 22}`。走査の後 `[0] peak=30/300 parent=0 Undecided(-1/0) border=true`、`[1] peak=14/200 parent=0 Pixel(22/100) res=false`（負けた成分が合流の前に接触）。海面確定の後 `[0]` は `res=false`。(c) 走査の順 `{14, 30, 22}`。走査の後 `[0] peak=14/300 parent=0 Undecided(-1/0) border=true`、`[1] peak=30/200 parent=0 Pixel(22/100) res=true`（勝った成分の接触は負けた成分に響かない）。海面確定の後 `[0]` は `res=false` |
+| `UT-analyze_terrain_scan-09` | 海と NODATA で隔てた陸地 | 同じプロセス。小さいグリッド W=11・H=7: (2,3)=100、(3,3)=200、(5,3)=150、(6,3)=-9999、(7,3)=120、(8,3)=80（(4,3) は 0） | UT 04 と同じ順 | 走査の順は `{36, 38, 40, 35, 41}`。走査の後は 3 つで、`[0] peak=36/200 parent=0`、`[1] peak=38/150 parent=1`、`[2] peak=40/120 parent=2`、どれも `Undecided(-1/0) border=false`。海面確定の後はどれも `Sea(-1/0) res=true` |
+| `UT-analyze_terrain_scan-10` | 走査の順の確かめ | 同じプロセス。UT 01 の (a) のグリッド | `scan_peaks_and_cols` に走査の順 (a) `{14, 8, 7, 9, 16, 15}`、(b) `{8, 14, 7, 9, 16}`、(c) `{8, 14, 7, 9, 16, 15, 15}`、(d) `{8, 14, 7, 9, 10, 16, 15}`、(e) `{8, 14, 7, 9, 16, 24}`、(f) `{-1, 8, 14, 7, 9, 16, 15}`、(g) `{8, 14, 7, 9, 15, 16}`。ほかに (h) UT 03 の (d) のグリッドと `{8, 14, 7, 9, 16, 15}` | どれも `std::invalid_argument`。UT 01 の (a) のグリッドと `{8, 14, 7, 9, 16, 15}` は投げない |
+| `UT-analyze_terrain_scan-11` | 海面確定規則の呼ぶ側の誤り | 同じプロセス | `apply_sea_level_rule` に (a) `[0] parent=1 Undecided` だけ、(b) `[0] parent=0 Undecided` と `[1] parent=0 Undecided`、(c) `[0] parent=0 Pixel(5/10) res=true` だけ | どれも `std::invalid_argument`。空の並びは空を返す |
+| `UT-analyze_terrain_scan-12` | 行（Z15） | 同じプロセス。`range` は `meshes` が `{5235}`、`z14` が偽、`box` の `x_min`・`x_max`・`y_min`・`y_max` が 28700・28701・12980・12980（W=514、H=258）。成分は 4 つ: `[0] peak=515/500 parent=0 Sea(-1/0) res=true`、`[1] peak=10290/300 parent=0 Pixel(51907/120.5) res=true`、`[2] peak=2575/250 parent=0 Pixel(131840/90) res=false`、`[3] peak=1030/200 parent=3 Undecided(-1/0) res=false border=true` | `build_col_list(成分, 514, 258, range)` | 4 行がこの順。`[0]` は `peak` (1, 1)、`peak_elevation` 500、`col_lat`・`col_lon` 0.0、`col_elevation` 0、`prominence` 500、真、−1。`[1]` は (10, 20)、300、`col_lat`・`col_lon` が `tile_to_latlon(7347706.5, 3322979.5, 23)` と `==`（経度は `135.3293538093567`、緯度は `34.99050558441977` との差が `1e-12` 以下）、120.5、`179.5f`、真、6。`[2]` は (5, 5)、250、0.0・0.0、0、0、偽、1。`[3]` は (2, 2)、200、0.0・0.0、0、0、偽、1 |
+| `UT-analyze_terrain_scan-13` | 行（Z14） | 同じプロセス。`range` は UT 12 の `z14` を真にしたもの（W=258、H=130）。成分は 2 つ: `[0] peak=1035/400 parent=0 Pixel(2644/150.25) res=true`、`[1] peak=259/300 parent=1 Sea(-1/0) res=true` | `build_col_list(成分, 258, 130, range)` | 2 行。`[0]` は (3, 4)、400、`col_lat`・`col_lon` が `tile_to_latlon(3673663.5, 1661449.5, 22)` と `==`（経度は `135.31306743621826`、緯度は `34.99333577626061` との差が `1e-12` 以下）、150.25、`249.75f`、真、10。`[1]` は (1, 1)、300、0.0・0.0、0、300、真、−1 |
+| `UT-analyze_terrain_scan-14` | 行の呼ぶ側の誤り | 同じプロセス。UT 12 の `range` と成分 | `build_col_list` に (a) 幅 513、(b) 高さ 257、(c) `range.z14` を真にして幅 514・高さ 258、(d) `[0]` の `peak` を 132612（W × H）に、(e) `[1]` の `col_pixel` を −1 に、(f) `[3]` の `key_col_resolved` を真に、(g) `[3]` の `border` を偽に（海面確定規則を呼び忘れた形） | どれも `std::invalid_argument` |
+| `UT-analyze_terrain_scan-15` | シグナルで止まる | 子のプロセス。UT 01 の (a) のグリッドと走査の順、UT 12 の `range` と成分 | 子の中で `start_log` の後に `kill(getpid(), SIGTERM)` してから、(a) `make_scan_order`、(b) `scan_peaks_and_cols`（走査の順は `kill` の前に求めておく）、(c) `apply_sea_level_rule` に `[0] peak=0/100 parent=0 Undecided(-1/0)` だけ、(d) `build_col_list(UT 12 の成分, 514, 258, range)`（ケースごとに別の子） | どれも `ExitRequest` の `code` が 143、子の終了コードが 143 |
 
 ### 6.9 `analyze_terrain_record`
 
