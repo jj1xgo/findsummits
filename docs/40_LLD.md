@@ -2756,7 +2756,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
    - `grid.values.size()` が `width × height`（64 ビットで求める）と違う: `render_terrain: grid.values の個数が幅 × 高さと違う: <個数>`。
    - `analysis_id` が解析識別子の形でない（判定は 6.9.3 の `write_meshset` の 1 の 2 つ目と同じ）: `render_terrain: analysis_id が解析識別子の形でない: <値>`。
    - `range.meshes` が空: `render_terrain: range.meshes が空`。
-   - 手順 3 で求める出力の幅 `W'` か高さ `H'` が 2 未満: `render_terrain: 縮小後の幅か高さが 2 未満: <W'>x<H'>`（`np.gradient` は 2 画素ない軸を受けない。実際のグリッドは長辺が 6000 を超え、短辺も 2 未満にならない）。
+   - 手順 3 で求める出力の幅 `W'` か高さ `H'` が 2 未満（手順 3 の式を、手順 2 の前に、ここで求めて確かめる。`W'`・`H'` の値は手順 3 のとおり）: `render_terrain: 縮小後の幅か高さが 2 未満: <W'>x<H'>`（`np.gradient` は 2 画素ない軸を受けない。実際のグリッドは長辺が 6000 を超え、短辺も 2 未満にならない）。
 2. `vmax`: `grid.values` の最大を、`float` のまま比べて取り、`double` にする。`vmax <= 0.0` なら IM1 を出して止まる。
 3. 出力の大きさ `W'`・`H'`: `W = grid.width`、`H = grid.height`、`L = max(W, H)`。`L ≤ 6000` なら `W' = W`、`H' = H`。超えれば長辺を 6000 にし、短辺 `s` は `(2 × s × 6000 + L) / (2 × L)`（`std::int64_t` の整数の割り算。四捨五入で 0.5 は切り上げ）にする。`W = H` のときはどちらも 6000。
 4. 縮小と標高 `E`: 出力の画素 `(i, j)` には、グリッドの画素 `(((2 × i + 1) × W) / (2 × W'), ((2 × j + 1) × H) / (2 × H'))`（`std::int64_t` の整数の割り算。[DEC68](30_HLD.md#4154-設計判断) の ⌊(i + 0.5) × W / W'⌋ と同じ値）の標高を当てる。その値を `double` にし、0 以下なら 0.0 にしたものを `E` とする。白で塗る画素は `E` が 0.0 の画素とし、印を別に持たない（陸地の画素の標高は正なので 0.0 にならない）。
