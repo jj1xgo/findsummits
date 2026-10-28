@@ -3,13 +3,13 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-27 |
+| 最終更新日 | 2026-10-28 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -79,6 +79,12 @@
     - [6.4.3 関数の細部](#643-関数の細部)
     - [6.4.4 メッセージ文面](#644-メッセージ文面)
     - [6.4.5 UT 候補](#645-ut-候補)
+  - [6.5 `analyze_terrain_image`](#65-analyze_terrain_image)
+    - [6.5.1 ファイル割付](#651-ファイル割付)
+    - [6.5.2 型とデータ](#652-型とデータ)
+    - [6.5.3 関数の細部](#653-関数の細部)
+    - [6.5.4 メッセージ文面](#654-メッセージ文面)
+    - [6.5.5 UT 候補](#655-ut-候補)
   - [6.6 `analyze_terrain_scan`](#66-analyze_terrain_scan)
     - [6.6.1 ファイル割付](#661-ファイル割付)
     - [6.6.2 型とデータ](#662-型とデータ)
@@ -125,7 +131,7 @@
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`。C++ は宣言の形。例 `std::set<std::string>`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
-  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
+  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
   - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数と状態は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、定数は HLD の名前（`EXIT_OK` など）。
   - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
   - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。ただし、`start_log` の前に誤りのメッセージを画面に書けずに `std::system_error` が出たときは `EXIT_USAGE` を返す（[6.1](#61-analyze_terrain_launch) の `main`。`start_log` の前は終わりの行が無い）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
@@ -147,14 +153,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.6・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -524,7 +530,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.9・6.12 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.9・6.12 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -582,13 +588,14 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.9 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.9 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
 - 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
 - 標高タイルのキャッシュ: `data_dir` の `tiles/` の下の `<サービス名>/<z>/<x>/<y>.png`（[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 7「タイルを次の順に取得する」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.5）。サービス名とズームは、DEM5a が `dem5a_png`・DEM5b が `dem5b_png`・DEM5c が `dem5c_png` でズーム 15、DEM10b が `dem_png` でズーム 14（[4.1](#41-fetch_tiles) の `_KINDS` と同じ）。`<z>`・`<x>`・`<y>` は 10 進。書くのは 4.1 の `fetch_tiles` だけで、あるかを見るのは [6.3](#63-analyze_terrain_window) の `check_mesh_tiles`、読むのは [6.4](#64-analyze_terrain_grid) の `read_tile`（パスを組み立てるのは `build_tile_elevation`）。
 - 解析済みウィンドウメッシュ集合（`.meshset`）: `data_dir` の `results/csv/` の下の `<解析識別子>.meshset`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.13）。書くのは [6.9](#69-analyze_terrain_record) の `write_meshset` だけで、下の一時ファイルの決まりで `<解析識別子>.meshset.tmp` に書いてから置き換える。読むのは [6.3](#63-analyze_terrain_window) の `is_pattern_covered`（名前の一致で選ぶので、`.tmp` で終わる名前は読まない）と `read_meshset`。
-- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.9。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.9 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
+- 標高地形図: `data_dir` の `images/` の下の `<解析識別子>_terrain.png`（[SRS §6.2.3](20_SRS.md#623-標高地形図)）。書くのは [6.5](#65-analyze_terrain_image) の `write_terrain_png` だけで、下の一時ファイルの決まりで `<解析識別子>_terrain.png.tmp` に書いてから置き換える。読むプログラムは無い（利用者が開く）。
+- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.9。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.9 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
@@ -747,7 +754,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 [HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
-- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.6 は `build/test_scan`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.5 は `build/test_image`、6.6 は `build/test_scan`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
 - `main` の振る舞いを確かめるための試験用の実行ファイル `build/test_launch_main`: `src/analyze_terrain.cpp`・`src/launch.cpp`・`src/common.cpp` と `tests/src/stub_stage.cpp`（[6.1.5](#615-ut-候補) の段の進行のスタブ）をコンパイルしてリンクする（`gtest_main` はリンクしない。指定は CMP4 の実行ファイルと同じ）。`build/test_launch` が子のプロセスで起動する（6.1.5）。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
@@ -1946,7 +1953,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 ## 6. CMP4 地形解析エンジン
 
-この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1・6.2・6.3・6.4・6.6・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.5・6.7・6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1〜6.6・6.9・6.10・6.12 を書き、ほかの群の節は書くときに 6.7・6.8・6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
 
 ### 6.1 `analyze_terrain_launch`
 
@@ -2685,6 +2692,143 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 | `UT-analyze_terrain_grid-22` | グリッドの呼ぶ側の誤り | 同じプロセス | `build_grid_z15`・`build_grid_z14` のそれぞれに (a) `tiles_dir` が空、(b) 末尾が `/`、(c) `meshes` が空 | どれも `std::invalid_argument` |
 
 - UT 17〜21 は、UT 18 の (c) 以外はメッシュ 1 つの窓で、Z15 のグリッドは約 1.8GB（約 4.5 億画素の `float`）、Z14 は約 0.45GB を使う。UT 18 の (c) は `{5235, 5336}` の 2 メッシュの窓で、Z14 でも約 1.8GB を使う（メモリを多く使うので、実行する環境のメモリを確かめてから回す）。
+
+### 6.5 `analyze_terrain_image`
+
+- **ID**: LLD-analyze_terrain_image
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.15](30_HLD.md#415-fr-015-標高地形図出力)・[5.9](30_HLD.md#59-nfr-009-観測可能性中間成果物の可視化)
+- **ファイル**: `src/image.hpp`・`src/image.cpp`・`src/image_gist_earth.hpp`
+
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「標高地形図」の群（`render_terrain`・`write_terrain_png`）で、処理の正本は [HLD 4.15.2](30_HLD.md#4152-処理の流れ) の 1〜9、止まる場面は [4.15.3](30_HLD.md#4153-異常系)、計算の決まりは [4.15.4](30_HLD.md#4154-設計判断) の DEC65「色と陰影は `LightSource.shade()` と同じ」・DEC66「NODATA と海面は 0 にしてから色と陰影を求める」・DEC67「`vmax` は縮小の前のグリッド全体の最大標高にする」・DEC68「縮小は出力の画素の中心に当たる画素を採る」である。[HLD 4.15.1](30_HLD.md#4151-目的と範囲) の対象外の行が LLD に送った項目（表の引き方、勾配の端、引き伸ばせないときの扱い、精度、8 ビットの丸め、縮小の式を整数で数えるか、白の画素の印、表の版と作り方、参照実装と比べるテスト）は、6.5.1〜6.5.5 で決める。matplotlib をテストの依存に入れるかと版の固め方は、[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠) の最後の箇条で決めた。置き場の名前と一時ファイルの書き方は [2.3](#23-ファイルの名前と書き方) で決まっている。関数を呼ぶ順は 6.11 の `run_normal_mode`・`run_wide_mode`（`render_terrain` → `write_terrain_png` → `make_scan_order`。[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順）で、6.5 は渡されたグリッドと解析識別子とパスを受け取る。`check_signal` は呼ばない（[HLD 3.4.3](30_HLD.md#343-関数) の `check_signal` を呼ぶ群に「標高地形図」は入っていない。[6.9](#69-analyze_terrain_record) と同じ）。[HLD 5.9](30_HLD.md#59-nfr-009-観測可能性中間成果物の可視化) の表に標高地形図の行は無く、6.5 が 5.9 から足して受けるものは無い（標高地形図は [FR-015](20_SRS.md#fr-015-標高地形図出力) のとおり解析単位ごとに書き、段の始まりで消さない。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。この節は、それを C++ で書くための細部を足す。1.2 の C++ の規約に従う。
+
+#### 6.5.1 ファイル割付
+
+- 公開の宣言は `src/image.hpp`、定義と内部の関数は `src/image.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_image` を書き、ヘッダーは次の行を `#pragma once` にする。
+- 表のファイル `src/image_gist_earth.hpp`: gist_earth の 256 色の表を置く（1.2 の C++ の規約の「群ごとに 2 本」の例外で、6.5 だけ表のファイルを 1 本足す。拡張子を `.hpp` にするのは、`tools/lint_trace.py` が数えるコードの拡張子に `.inc` が無いため）。中身は、1 行目 `// trace: LLD-analyze_terrain_image`、2 行目 `#pragma once`、3 行目 `// matplotlib 3.11.2 の gist_earth の表（6.5.1 のコマンドで作った。手で直さない）`、4 行目 `inline constexpr double GIST_EARTH_LUT[256][3] = {`、続けて 256 行の `{赤, 緑, 青},`（matplotlib の `_lut` の 0〜255 行目の赤・緑・青。値は Python の `repr` の最短の 10 進表記で、倍精度で読めば元の値と同じになる）、最後の行 `};` である。`GIST_EARTH_LUT` は LLD が足す定数の名前で、`src/image.cpp` だけが読む。表を作るコマンドは次のとおり（matplotlib 3.11.2 と numpy 2.5.4 を入れた一時の仮想環境で動かす。実行にも CI にも、リポジトリの依存にも matplotlib を入れない。[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。出力の 256 行を、上の 4 行と最後の `};` ではさんでファイルにする。
+
+  ```text
+  python -I -c "import matplotlib; c = matplotlib.colormaps['gist_earth']; c._init(); print('\n'.join('{%r, %r, %r},' % tuple(float(v) for v in row[:3]) for row in c._lut[:256]))"
+  ```
+
+  表の 0 行目は `{0.0, 0.0, 0.0}`、255 行目は `{0.9922, 0.9843, 0.9843}` である。表の中身は UT 候補の 01〜03・05 の色で確かめる。
+- `src/image.hpp` は `"grid.hpp"`（`ElevationGrid`・`GridRange`）・`<cstdint>`・`<string>`・`<vector>` を読む。`src/image.cpp` は `"image.hpp"`・`"common.hpp"`・`"convert.hpp"`（`tile_to_latlon`）・`"image_gist_earth.hpp"`・`<opencv2/core.hpp>`・`<opencv2/imgcodecs.hpp>`・`<cerrno>`・`<cmath>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<numbers>`・`<stdexcept>`・`<string>`・`<unistd.h>`・`<vector>` を読む。
+- UT のコードは `tests/src/test_image.cpp` に置き、`build/test_image` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_image-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+
+#### 6.5.2 型とデータ
+
+`src/image.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <cstdint>
+#include <string>
+#include <vector>
+#include "grid.hpp"
+
+struct TerrainImage {
+    int width = 0;                  // W'
+    int height = 0;                 // H'
+    std::vector<std::uint8_t> rgb;  // 画素 (i, j) の赤・緑・青は rgb[(static_cast<std::int64_t>(j) * width + i) * 3 + 0〜2]
+};
+
+TerrainImage render_terrain(const ElevationGrid& grid, const GridRange& range,
+                            const std::string& analysis_id);
+void write_terrain_png(const TerrainImage& image, const std::string& analysis_id,
+                       const std::string& images_dir);
+```
+
+- 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`grid`・`range` は [6.4.2](#642-型とデータ) の `ElevationGrid`・`GridRange`（`range.meshes` は解析対象メッシュ、`range.z14` は Z14 のグリッドか、`range.box.y_min` は Z15 のタイル番号の範囲の北端）。`analysis_id` は解析識別子（[6.9.3](#693-関数の細部) の `write_meshset` と同じ形）。`images_dir` は `data_dir` の下の `images` の絶対パスで、末尾に `/` を付けない（6.11 が組み立てて渡す）。
+- `TerrainImage` は OpenCV の型を使わない（`render_terrain` を OpenCV なしで確かめられるようにし、青・緑・赤の並べ替えを `write_terrain_png` の中に閉じるため）。
+- 持つもの: `render_terrain` の中で持つのは、出力の画素ごとの標高（`std::vector<double>`）と明るさ（`std::vector<double>`）と、返す `rgb` である。6000 × 6000 で 288MB + 288MB + 108MB。色は明るさを求めた後に画素ごとに求めて `rgb` に書き、配列にしない。標高と明るさは戻る前に捨てる（関数の中の変数）。[HLD 4.15.2](30_HLD.md#4152-処理の流れ) の末尾の見積もり（倍精度で約 1.4GiB）に収まる。
+- 呼ぶ側の誤りは `std::invalid_argument` を投げる（グリッドと画像に触れる前に確かめる。文は 6.9 と同じ `<関数名>: …` の形）。確かめる順と文は 6.5.3 の各関数の 1 に書く。
+- 内部（`src/image.cpp` の無名の名前空間）は、`bool _write_all(int fd, const unsigned char* data, std::size_t size)` だけ（[6.12.3](#6123-関数の細部) の内部の `_write_all` と同じ形: `write` を、全部書くか `EINTR` のほかの失敗まで繰り返す。失敗したら `false` を返し、`errno` を残す）。6.12 の内部の関数はほかの `.cpp` から呼べないので、同じ形を置く。
+
+#### 6.5.3 関数の細部
+
+処理の正本は上の前置きのとおりで、この節は C++ で書くための細部を足す。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(EXIT_ERROR)` する（1.2 の C++ の規約）。通常のログと警告は出さない。計算は倍精度で、`-ffp-contract=off` の下で、書いた順に行う。
+
+`render_terrain` の計算は、matplotlib 3.11.2 の `LightSource(azdeg=180, altdeg=77.7).shade(E, cm.gist_earth, vmin=vmin, vmax=vmax, vert_exag=8, dx=dx, dy=dy)`（`blend_mode` は overlay、`fraction` は 1。`E` は縮小して 0 以下を 0 にした標高の倍精度の配列、`vmin`・`vmax`・`dx`・`dy` は Python の float）の計算と同じ順にする。対応する matplotlib の関数は、`colors.py` の `Normalize.__call__`・`Colormap._get_rgba_and_mask`・`LightSource.direction`・`hillshade`・`shade_normals`・`shade`・`shade_rgb`・`blend_overlay` と、`colorizer.py` の `_pass_image_data`（`bytes=True`）、numpy 2.5.4 の `gradient`（`edge_order=1`）である。C++ の和は左から足す。参照の側（numpy の `dot`）の和の順や `sin`・`cos` の違いは、UT 候補の許容差（各チャンネル ±1）で吸う。
+
+##### render_terrain
+
+1. 引数を次の順に確かめ、最初に当たったもので `std::invalid_argument` を投げる。
+   - `grid.width` か `grid.height` が 1 未満: `render_terrain: grid の幅か高さが 1 未満: <width>x<height>`。
+   - `grid.values.size()` が `width × height`（64 ビットで求める）と違う: `render_terrain: grid.values の個数が幅 × 高さと違う: <個数>`。
+   - `analysis_id` が解析識別子の形でない（判定は 6.9.3 の `write_meshset` の 1 の 2 つ目と同じ）: `render_terrain: analysis_id が解析識別子の形でない: <値>`。
+   - `range.meshes` が空: `render_terrain: range.meshes が空`。
+   - 手順 3 で求める出力の幅 `W'` か高さ `H'` が 2 未満: `render_terrain: 縮小後の幅か高さが 2 未満: <W'>x<H'>`（`np.gradient` は 2 画素ない軸を受けない。実際のグリッドは長辺が 6000 を超え、短辺も 2 未満にならない）。
+2. `vmax`: `grid.values` の最大を、`float` のまま比べて取り、`double` にする。`vmax <= 0.0` なら IM1 を出して止まる。
+3. 出力の大きさ `W'`・`H'`: `W = grid.width`、`H = grid.height`、`L = max(W, H)`。`L ≤ 6000` なら `W' = W`、`H' = H`。超えれば長辺を 6000 にし、短辺 `s` は `(2 × s × 6000 + L) / (2 × L)`（`std::int64_t` の整数の割り算。四捨五入で 0.5 は切り上げ）にする。`W = H` のときはどちらも 6000。
+4. 縮小と標高 `E`: 出力の画素 `(i, j)` には、グリッドの画素 `(((2 × i + 1) × W) / (2 × W'), ((2 × j + 1) × H) / (2 × H'))`（`std::int64_t` の整数の割り算。[DEC68](30_HLD.md#4154-設計判断) の ⌊(i + 0.5) × W / W'⌋ と同じ値）の標高を当てる。その値を `double` にし、0 以下なら 0.0 にしたものを `E` とする。白で塗る画素は `E` が 0.0 の画素とし、印を別に持たない（陸地の画素の標高は正なので 0.0 にならない）。
+5. 正規化と色: `vmin = (-0.25 * vmax) / 0.75`、`v = (E - vmin) / (vmax - vmin)`。色の添字 `k = static_cast<int>(v * 256.0)` で、`k` が 256 以上なら 255、0 未満なら 0 にする（`E` は 0 以上 `vmax` 以下なので 0 未満と 256 超は起きないが、matplotlib の範囲外の色〈下は 0 行目、上は 255 行目〉と同じにする）。色 `c` は `GIST_EARTH_LUT[k]` の赤・緑・青の 3 つの `double`。
+6. 緯度と画素の間隔: `row = (range.z14 ? 128.0 : 256.0) * range.box.y_min - 1.0 + H / 2.0`（`H` は縮小の前の高さ。`double`）、`z = range.z14 ? 22 : 23`、`phi = tile_to_latlon(0.0, row, z).lat`（[6.10](#610-analyze_terrain_convert)。経度は使わない）。`res = 2.0 * std::numbers::pi * 6378137.0 * std::cos(phi * (std::numbers::pi / 180.0)) / std::ldexp(1.0, z)`（度からラジアンへは numpy の `np.radians` と同じ `x * (π / 180)` の順）、`dx = res * (static_cast<double>(W) / W')`、`dy = res * (static_cast<double>(H) / H')`。
+7. 明るさ（`LightSource.hillshade(E, vert_exag=8, dx, dy)`）:
+   - `F = 8.0 × E`。
+   - 列の勾配 `ex`: 0 < i < W' − 1 は `(F[i+1] − F[i−1]) / (2.0 * dx)`、i = 0 は `(F[1] − F[0]) / dx`、i = W' − 1 は `(F[W'−1] − F[W'−2]) / dx`（行 j ごと）。行の勾配 `ey` は同じ式で、列を行に、`dx` を `h = -dy` に替える（北から数える行を上にするため符号を反転する。matplotlib の `dy = -dy`）。
+   - 法線は `nx = -ex`、`ny = -ey`、`m = std::sqrt(nx * nx + ny * ny + 1.0)`（左から足す）として、`(nx / m, ny / m, 1.0 / m)`。
+   - 光源の向き `d = (cos(az) × cos(alt), sin(az) × cos(alt), sin(alt))`、`az = (90.0 - 180.0) * (std::numbers::pi / 180.0)`、`alt = 77.7 * (std::numbers::pi / 180.0)`。
+   - 明るさ `I = nx/m × d0 + ny/m × d1 + (1.0/m) × d2`（左から足す）。
+   - 全画素の最小 `imin` と最大 `imax` を求め、`imax - imin > 1e-6` なら全画素を `(I - imin) / (imax - imin)` にする。それ以外は引き伸ばさない（平らな絵では `I` はどの画素も sin(alt) ≈ 0.977 になる）。最後に 0 未満を 0、1 を超えるものを 1 にする。
+8. 合成（`blend_overlay`）: チャンネルごとに、`c ≤ 0.5` なら `2.0 * I * c`、それ以外は `1.0 - 2.0 * (1.0 - I) * (1.0 - c)`。
+9. 白: `E` が 0.0 の画素は 3 チャンネルとも 1.0 にする。
+10. 8 ビット: 値 `x` を `static_cast<std::uint8_t>(x * 255.0)`（切り捨て。`x` は 0〜1）にする。`rgb` の順は赤・緑・青。
+
+- グリッドは書き換えない（`const`）。並列にしない（[HLD 2.9](30_HLD.md#29-並行性スレッド設計) は並列にしてよいとするが、LLD では逐次にする。最小と最大を確定してから引き伸ばす順だけを守る）。
+- 採用のサンプル（[ADR-SRS-047](decisions/ADR-SRS-047-terrain-color-scheme-gist-earth-hillshade.md)）は `imshow` と `savefig` を通っていて、表示のときに補間し直されているので、画素で比べる相手にしない（6.5.5 の前置き）。
+
+##### write_terrain_png
+
+1. 引数を次の順に確かめ、最初に当たったもので `std::invalid_argument` を投げる（ファイルに触れる前に確かめる）。
+   - `images_dir` が空か、最後のバイトが `/`: `write_terrain_png: images_dir が空か / で終わる: <値>`。
+   - `analysis_id` が解析識別子の形でない: `write_terrain_png: analysis_id が解析識別子の形でない: <値>`。
+   - `image.width` か `image.height` が 1 未満: `write_terrain_png: image の幅か高さが 1 未満: <width>x<height>`。
+   - `image.rgb.size()` が `width × height × 3`（64 ビットで求める）と違う: `write_terrain_png: image.rgb の個数が幅 × 高さ × 3 と違う: <個数>`。
+2. バイト列にする。`cv::Mat bgr(image.height, image.width, CV_8UC3)` に、画素ごとに青・緑・赤の順で写す。`std::vector<unsigned char> buf` に `cv::imencode(".png", bgr, buf)`（引数の指定なし。OpenCV の既定の圧縮）。偽を返すか `cv::Exception` が出たら IW1（`{reason}` は `PNG のバイト列に変換できない`）を出して止まる。
+3. パスを決め、書く。`path = images_dir + "/" + analysis_id + "_terrain.png"`、`tmp = path + ".tmp"`（[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まり）。2.3 の「書く（C++）」で `tmp` に `buf` を書く（`_write_all` を使う）。開く・書く・`fsync`・`close` のどれで失敗しても、2.3 のとおり後始末をしてから、IW1（`{reason}` は控えた `errno` の `std::strerror`）を出して止まる。
+4. 置き換える。2.3 の「置き換える（C++）」で `rename(tmp, path)` を呼ぶ。失敗したら、`errno` を控え、`unlink(tmp)`（失敗は無視する）してから、IW1 を出して止まる（置き換えに失敗したときに一時ファイルを消す。6.9 と同じ）。
+5. 戻る。`path` が書き終えた中身か、前の起動が書いた中身のどちらかになる。書けずに止まったときは、前の起動の標高地形図を消さない。
+
+- IW1 の `{path}` は、どの段で失敗しても `path`（一時ファイルでなく本来の名前）。
+- ディレクトリを作らない（`images/` を作るのは 6.11。`images_dir` が無ければ `open` が `ENOENT` で失敗して IW1 になる）。ディレクトリの `fsync` はしない（2.3 と同じ）。
+- `cv::imwrite` は使わない（拡張子で形式を決めるので `.png.tmp` に書けず、失敗の理由〈`errno`〉も返さない）。
+
+#### 6.5.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。
+
+`ERROR:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| IM1 | グリッドに陸地の画素が無い（`vmax` が 0 以下） | `解析範囲標高グリッドに陸地の画素が無い: {analysis_id}（解析対象メッシュ: {meshes}）` | `{meshes} の窓のタイルの中身が、すべて海面か NODATA になっていないかを確かめてから、{rerun}` | 1 |
+| IW1 | 標高地形図を書けない | `標高地形図を書けない: {path}: {reason}` | `{dir} の空きと権限を確かめてから、{rerun}` | 1 |
+
+- `{meshes}` は `range.meshes` を昇順に `、` でつないだもの（[6.3.4](#634-メッセージ文面) と同じ）。`{dir}` は `images_dir`。`{reason}` は控えた `errno` の `std::strerror`。`write_terrain_png` の手順 2 の変換の失敗では `PNG のバイト列に変換できない`。`{rerun}` は [6.9.4](#694-メッセージ文面) の `{rerun}` と同じ（`analysis_id` の先頭の 1 字で通常と広域を分ける）。
+- IM1 は `render_terrain` が、IW1 は `write_terrain_png` が出す（呼ぶ側の 6.11 は出さない）。
+
+#### 6.5.5 UT 候補
+
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_image-NN` を付ける。共通の準備は 2 つで、[6.9.5](#695-ut-候補) の「同じプロセス」と「子のプロセス（書けない）」と同じ（`csv_dir` を `images_dir` に読み替える）。`range` は、`meshes = {5339}`、`z14 = false`、`box.y_min = 12900`（ほかの欄は 0）を基本とし、ケースが替える欄だけを書く。`analysis_id` は書かなければ `3-5339`。グリッドは行ごとに北から、`values[py * W + px]` の並びで書く。
+
+**色の比べ方**: 期待の画素は `RRGGBB` の 16 進で書く。`FFFFFF` の画素は 3 チャンネルとも一致、ほかの画素は各チャンネルの差が 1 以下（`EXPECT_LE(std::abs(actual - expected), 1)`）にする。期待値は 2026-10-28 に、matplotlib 3.11.2・numpy 2.5.4 で、6.5.3 の前置きの呼び出し（`E` は手順 4 の値を倍精度の配列にしたもの、`vmin`・`vmax`・`dx`・`dy` は手順 5・6 の式を Python の float で計算したもの）の結果の赤・緑・青に、`E` が 0 の画素を 1.0 にしてから `(x * 255).astype(np.uint8)` を当てて求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)の箇条による。表の値は、同じ版の matplotlib の結果と許容差つきで比べる形で、[DEC65](30_HLD.md#4154-設計判断)「色と陰影は `LightSource.shade()` と同じ」の「参照実装の結果と許容差つきで比べるテスト」を満たす）。採用のサンプルは `imshow` と `savefig` を通っているので、画素の比べ先にしない。出来上がりの絵は、グラデーションに違和感が無く細部が見えるかを持ち主が目で見る（実装フェーズの段で行う）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_image-01` | 色と陰影、白（海面・NODATA・外周） | なし | W=6、H=5。行 0・4 は全部 0。行 1 `0 120 340 560 300 0`、行 2 `0 80 900 1200 450 0`、行 3 `0 0 650 -9999 200 0` | 幅 6・高さ 5。行 0・4 は全部 `FFFFFF`。行 1 `FFFFFF 0E2F1F 023902 1C5800 093D0A FFFFFF`、行 2 `FFFFFF 143831 A0661F FCF9F9 2B6D1F FFFFFF`、行 3 `FFFFFF FFFFFF 8D9C41 FFFFFF 2A6D46 FFFFFF`（`vmax` 1200、`vmin` −400、φ 35.71078556612323、`dx`=`dy`=3.87905337290483） |
+| `UT-analyze_terrain_image-02` | Z15 と Z14 の画素の間隔の違い | なし | W=6、H=5、全部陸地。行 0 `100 100 101 101 102 102`、行 1 `100 101 102 103 103 102`、行 2 `101 102 104 105 104 103`、行 3 `101 102 103 104 103 102`、行 4 `100 101 102 102 101 101`。(a) `z14 = false`、(b) `z14 = true`（`box.y_min` は同じ 12900） | (a) 行 0 `FFFFFF EBCECD EFD8D6 EBCECC F2E1E0 FFFFFF`、行 1 `EDD4D2 EED6D4 F0DCDB F4E5E4 F6EAEA F4E4E3`、行 2 `F1DCDB F3E1E0 FAF4F3 FDFBFB FBF7F6 F8F0EF`、行 3 `F4E5E4 F7EBEA F9F1F0 FBF8F8 F8F0EF F6EAEA`、行 4 `F1DEDD F4E4E3 F8EEEE F6E9E8 F3E2E1 F7ECEC`（`dx` 3.87905337290483）。(b) 行 0 `FFFFFF EFD8D6 F2DFDE EBCECC F5E7E6 FFFFFF`、行 1 `F1DEDC F0DBDA F1DDDC F4E5E4 F8EEEE F6EAEA`、行 2 `F4E4E3 F4E5E4 FAF5F5 FDFCFC FCF9F9 FAF4F4`、行 3 `F8EDED F9F1F1 FAF4F4 FCFAF9 F9F2F2 F8F0EF`、行 4 `F5E6E6 F7EBEA FBF5F5 F7ECEB F5E6E5 FBF5F5`（φ 35.710733296912096、`dx` 7.758111833517059。(a) と (b) の差は最大 10）。(a)・(b) の `FFFFFF` は陸地の画素で、白く塗ったのではなく、明るさが 1 で色が 0.5 を超えるため |
+| `UT-analyze_terrain_image-03` | 平らな絵（引き伸ばさない） | なし | W=4、H=3、全部 100 | 全画素 `FEFEFE`（明るさは sin(77.7°)、色は 255 行目） |
+| `UT-analyze_terrain_image-04` | 縮小の画素の選び方（DEC68） | なし | W=8000、H=4。行 0 と行 3 は、列 c を 4 で割った余りが 3 なら 500、ほかは 0。行 1・2 は全部 0 | 幅 6000・高さ 3。出力の画素 (i, j) は、`p = ((2i+1) × 8000) / 12000` を 4 で割った余りが 3（i を 3 で割った余りが 2 の列）で、かつ j が 0 か 2（採るグリッドの行が 0 と 3）のときだけ白でなく、ほかは `FFFFFF`。白でない画素は 4000 個（全画素で確かめる）。左上を採る式（⌊i × 8000 / 6000⌋ は 4 で割った余りが 0・1・2 だけ、⌊j × 4 / 3⌋ は行 0・1・2）なら白でない画素は 0 個になり、列だけ、行だけを誤っても数と位置が変わる |
+| `UT-analyze_terrain_image-05` | 縮小した絵の色（`dx`・`dy` に縮小率を掛ける） | なし | (a) W=6600、H=4。行 0・3 は全部 0。行 1・2 は、列 0 と 6599 が 0、ほかは `100 + (c % 50) × 7 + r × 3`（r は行の番号）。(b) W=4、H=6600。列 0・3 は全部 0。列 1・2 は、行 0 と 6599 が 0、ほかは `100 + (r % 50) × 7 + c × 3`（c は列の番号） | (a) 幅 6000・高さ 4。(i, j) が (0, 1) `FFFFFF`、(1, 1) `073808`、(2, 2) `317C36`、(2999, 1) `F8F1F1`、(3000, 2) `1F5D27`、(5998, 1) `F2E1E0`、(5999, 2) `FFFFFF`、(0, 0) `FFFFFF`（`dx` 4.266957777448575、`dy` 3.8790525249532504）。(b) 幅 4・高さ 6000。(1, 0) `FFFFFF`、(1, 1) `073909`、(2, 2) `165318`、(1, 2999) `FAF5F4`、(2, 3000) `2D7539`、(1, 5998) `F5E9E8`、(2, 5999) `FFFFFF`、(0, 1) `FFFFFF`（φ 35.59579766549123、`dx` 3.8846418265923717、`dy` 4.2731060092516095。行の採り方〈⌊(j + 0.5) × H / H'⌋〉と `dy` の縮小率、φ の H / 2 を確かめる） |
+| `UT-analyze_terrain_image-06` | 出力の大きさ | なし | 全部 1 のグリッドで、(a) 6000×3、(b) 6001×3、(c) 3×6001、(d) 8000×10、(e) 8000×6、(f) 12000×3 | 幅×高さが (a) 6000×3、(b) 6000×3、(c) 3×6000、(d) 6000×8（7.5 の切り上げ）、(e) 6000×5（4.5 の切り上げ）、(f) 6000×2 |
+| `UT-analyze_terrain_image-07` | 陸地が無い | 同じプロセス | (a) W=3、H=3、全部 0。(b) 同じで、中央が -9999。(c) (a) を `analysis_id = "4-5135-NW"`、`meshes = {5135, 5136, 5235, 5236}` で | `code` 1。標準エラー出力が IM1 の 2 行の全文（(a)(b) は `{rerun}` が通常、(c) は広域で `--n 4`、`{meshes}` は `5135、5136、5235、5236`） |
+| `UT-analyze_terrain_image-08` | 呼ぶ側の誤り（`render_terrain`） | 同じプロセス | (a) `values` が W × H より 1 少ない、(b) W = 0、(c) `analysis_id` が `3-533`、(d) `meshes` が空、(e) 12001×3（H' が 1） | どれも `std::invalid_argument`。標準エラー出力に何も出ない |
+| `UT-analyze_terrain_image-09` | グリッドを書き換えない | なし | UT-analyze_terrain_image-01 の入力 | 戻った後の `values` が呼ぶ前と同じ（-9999 も 0 も残る） |
+| `UT-analyze_terrain_image-10` | PNG を書く | 同じプロセス | `image` は 3×2、画素 (0,0) `FF0000`、(1,0) `00FF00`、(2,0) `0000FF`、(0,1) `010203`、(1,1) `FFFFFF`、(2,1) `000000` | `<images_dir>/3-5339_terrain.png` を `cv::imread(path, cv::IMREAD_UNCHANGED)` で読むと 3 チャンネルの 3×2 で、各画素の青・緑・赤が入力の赤・緑・青と逆の順で一致。`.tmp` が無い。標準エラー出力に何も出ない |
+| `UT-analyze_terrain_image-11` | 置き換える | 同じプロセス。`3-5339_terrain.png` に `old`、`3-5339_terrain.png.tmp` に 100 バイトの `x` を置く | UT-analyze_terrain_image-10 の画像 | UT-analyze_terrain_image-10 と同じ中身になる。`.tmp` が無い |
+| `UT-analyze_terrain_image-12` | 置き場が無い、案内の分け方 | 同じプロセス。`images_dir` は存在しないパス | (a) `analysis_id` が `3-5339`、(b) `5-5135-SE` | `code` 1 の IW1（`{reason}` は `No such file or directory`）。(a) は通常、(b) は広域の `--n 5` の `{rerun}` |
+| `UT-analyze_terrain_image-13` | 置き換えに失敗する | 同じプロセス。`3-5339_terrain.png` という名前の空のディレクトリ | UT-analyze_terrain_image-10 の画像 | `code` 1 の IW1（`Is a directory`）。`.tmp` が無い。ディレクトリは残る |
+| `UT-analyze_terrain_image-14` | 書く途中で失敗する | 子のプロセス（書けない）。親が `3-5339_terrain.png` に `old` を置く。上限は (a) 0、(b) 5（UT-analyze_terrain_image-10 の画像を書く。その PNG は 5 バイトより長いので、5 バイトだけ書けて残りで失敗する） | 子で UT-analyze_terrain_image-10 の画像を書く | (a)(b) とも、子の終了コード 1。標準エラー出力が IW1（`File too large`）。`3-5339_terrain.png` は `old` のまま、`.tmp` が無い |
+| `UT-analyze_terrain_image-15` | 呼ぶ側の誤り（`write_terrain_png`） | 同じプロセス | (a) `images_dir` が空、(b) 末尾が `/`、(c) `analysis_id` が `3-5339-NW`、(d) `rgb` が 1 バイト少ない、(e) 幅 0 | どれも `std::invalid_argument`。ファイルを作らない |
 
 ### 6.6 `analyze_terrain_scan`
 
