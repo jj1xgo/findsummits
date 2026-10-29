@@ -2763,7 +2763,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 5. 正規化と色: `vmin = (-0.25 * vmax) / 0.75`、`v = (E - vmin) / (vmax - vmin)`。色の添字 `k = static_cast<int>(v * 256.0)` で、`k` が 256 以上なら 255、0 未満なら 0 にする（`E` は 0 以上 `vmax` 以下なので 0 未満と 256 超は起きないが、matplotlib の範囲外の色〈下は 0 行目、上は 255 行目〉と同じにする）。色 `c` は `GIST_EARTH_LUT[k]` の赤・緑・青の 3 つの `double`。
 6. 緯度と画素の間隔: `row = (range.z14 ? 128.0 : 256.0) * range.box.y_min - 1.0 + H / 2.0`（`H` は縮小の前の高さ。`double`）、`z = range.z14 ? 22 : 23`、`phi = tile_to_latlon(0.0, row, z).lat`（[6.10](#610-analyze_terrain_convert)。経度は使わない）。`res = 2.0 * std::numbers::pi * 6378137.0 * std::cos(phi * (std::numbers::pi / 180.0)) / std::ldexp(1.0, z)`（度からラジアンへは numpy の `np.radians` と同じ `x * (π / 180)` の順）、`dx = res * (static_cast<double>(W) / W')`、`dy = res * (static_cast<double>(H) / H')`。
 7. 明るさ（`LightSource.hillshade(E, vert_exag=8, dx, dy)`）:
-   - `F = 8.0 × E`。
+   - `F = 8.0 × E`（`F`・`ex`・`ey`・法線・内積は、画素ごとに `E` から求めて配列にしない。配列に持つのは `E`・`I`・`rgb` だけで、6.5.2 の「持つもの」の見積もりに収める）。
    - 列の勾配 `ex`: 0 < i < W' − 1 は `(F[i+1] − F[i−1]) / (2.0 * dx)`、i = 0 は `(F[1] − F[0]) / dx`、i = W' − 1 は `(F[W'−1] − F[W'−2]) / dx`（行 j ごと）。行の勾配 `ey` は同じ式で、列を行に、`dx` を `h = -dy` に替える（北から数える行を上にするため符号を反転する。matplotlib の `dy = -dy`）。
    - 法線は `nx = -ex`、`ny = -ey`、`m = std::sqrt(nx * nx + ny * ny + 1.0)`（左から足す）として、`(nx / m, ny / m, 1.0 / m)`。
    - 光源の向き `d = (cos(az) × cos(alt), sin(az) × cos(alt), sin(alt))`、`az = (90.0 - 180.0) * (std::numbers::pi / 180.0)`、`alt = 77.7 * (std::numbers::pi / 180.0)`。
