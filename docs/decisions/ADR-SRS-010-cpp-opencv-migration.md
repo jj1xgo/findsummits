@@ -7,7 +7,7 @@
 | 調査資料 | [`research/cpp-opencv-migration-research.md`](research/cpp-opencv-migration-research.md) |
 | 調査資料 | [`research/rust-cpp-and-scalable-analysis-research.md`](research/rust-cpp-and-scalable-analysis-research.md) |
 
-> ※ 本 ADR の Decision 2 と Phase 4 が挙げる `cv::floodFill`・`cv::findContours` は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、使わないと改めた（2026-10-09）。ゾーンの塗りと輪郭は自前で行う。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の DEC71「輪郭は塗った画素の境界をたどる」で定めた。
+> ※ 本 ADR の Decision 2 と Phase 4 が挙げる `cv::floodFill`・`cv::findContours` は、[ADR-SRS-073](ADR-SRS-073-align-srs-wording-with-hld-decisions.md) で、使わないと改めた（2026-10-09）。ゾーンの塗りと輪郭は自前で行う。[HLD 4.16.4](../30_HLD.md#4164-設計判断) の DEC71「輪郭は塗った画素の境界をたどる」で定めた。同じく、Context の対応表と Decision 2 の機能の一覧が挙げる `cv::resize` と `cv::imwrite` も、標高地形図の縮小と PNG の書き出しでは使わないと改めた（2026-10-28）。縮小は画素を式で選び、PNG は `cv::imencode` でバイト列にして一時ファイルに書く。[HLD 4.15.4](../30_HLD.md#4154-設計判断) の DEC68「縮小は出力の画素の中心に当たる画素を採る」と [HLD 2.6.6](../30_HLD.md#266-設計判断) の DEC14「OpenCV は 2 モジュールだけを使う」で定めた。
 
 ---
 
