@@ -3071,7 +3071,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 処理の正本は 6.7 の前置きのとおりで、この節は C++ で書くための細部を足す。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(EXIT_ERROR)` する（1.2 の C++ の規約）。呼ぶ側の誤りは `std::invalid_argument` を投げる（6.2・6.9・6.10 と同じ。`main` は捕まえないので、6.12 の `_on_terminate` が G7 で止める）。文は `<関数名>:` と空白 1 つの後に内容を続ける形で、内容は書く人が決めてよい（UT は例外の型だけを確かめる）。通常のログと警告は出さない（段の始まりと早期終了のログは 6.11 が出す）。
 
-数を文字列にするのは `std::to_chars`、文字列を数にするのは `std::from_chars` だけを使う（`printf`・`std::ostream`・`std::stod` は、ロケールで小数点が変わりうるので使わない）。
+数を文字列にするのは `std::to_chars`、文字列を数にするのは `std::from_chars` だけを使う（`printf`・`std::ostream`・`std::stod` は、ロケールで小数点が変わりうるので使わない）。ただし整数の `col_margin_px` だけは `std::to_string` で書く（小数点が無く、ロケールで変わらない。下の `write_peak_csv` の 2）。
 
 **数の書き方（`_format_fixed`）**: `char buf[64]` に `std::to_chars(buf, buf + 64, value, std::chars_format::fixed, digits)` で書く。呼ぶ値は有限で、`float` の値か ±180 の内なので、64 バイトに収まり、結果の `ec` は `std::errc{}` になる（`ec` を確かめる分岐は置かない）。結果の文字列の先頭が `-` で、残りのバイトが `0` と `.` だけ（`-0.00`・`-0.00000000`）なら、先頭の `-` を除く。`std::to_chars` は値を正しく丸める（ちょうど半分の値は偶数に丸める。C ロケールの `printf` と同じ）ので、同じ値は CPython の `f'{x:.8f}'`・`f'{x:.2f}'` と同じ文字列になる。2 桁の列（`peak_elev`・`col_elev`・`prominence`）は、`float` の値を `double` にしてから渡す。
 
@@ -3100,7 +3100,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 `void write_peak_csv(const std::vector<PeakCsvRow>& rows, const std::string& analysis_id, const std::string& csv_dir)`
 
-1. 呼ぶ側の誤り（ファイルに触れる前に、次の順で確かめ、最初に当たったもので投げる。行の検査は `rows` の順に 1 行ずつ、行の中は書いた順）: `csv_dir` が空か最後のバイトが `/`、`analysis_id` の形（`_check_analysis_id`）、行の `lat_text`・`lon_text` のどちらかが `_parse_decimal` で読めない（空を含む）、行の `peak_elevation`・`col_lat`・`col_lon` と、`key_col_resolved` が真の行の `col_elevation`・`prominence` のどれかが有限でない（偽の行の `col_elevation`・`prominence` は読まないので見ない）。`col_lat`・`col_lon` が有限でも ±180 の外なら、2 の `format_coord` が `std::invalid_argument` を投げる（ファイルに触れる前なので、順は変わらない）。
+1. 呼ぶ側の誤り（ファイルに触れる前に、次の順で確かめ、最初に当たったもので投げる。行の検査は `rows` の順に 1 行ずつ、行の中は書いた順）: `csv_dir` が空か最後のバイトが `/`、`analysis_id` の形（`_check_analysis_id`）、行の `lat_text`・`lon_text` のどちらかが `_parse_decimal` で読めない（空を含む）、行の `peak_elevation`・`col_lat`・`col_lon` と、`key_col_resolved` が真の行の `col_elevation`・`prominence` のどれかが有限でない（偽の行の `col_elevation`・`prominence` は読まないので見ない）。`col_lat`・`col_lon` が有限でも ±180 の外なら、2 の `format_coord` が `std::invalid_argument` を投げる（ファイルに触れる前に投げることは同じ。行をまたぐと、ほかの行の上の検査より後に投げることになるが、どちらも `std::invalid_argument` で、UT は型だけを確かめる）。
 2. 中身を作る。`_header` と `\n`、続けて行ごとに次の 10 列を `,` でつないで `\n` を続ける（BOM・CR・引用符を書かない。最後の行も `\n` で終える）: `lat_text`、`lon_text`、`_format_fixed(peak_elevation, 2)`、`format_coord(col_lat)`、`format_coord(col_lon)`、`key_col_resolved` が真なら `_format_fixed(col_elevation, 2)`（偽なら空）、同じく `prominence`、`true` か `false`、`col_margin_px` の 10 進（`std::to_string`。負の値は `-1` のように `-` を付ける）、`analysis_id`。0 件なら見出しの行だけ（[HLD 4.7.3](30_HLD.md#473-異常系)）。
 3. パスを決め、書く。`path = csv_dir + "/" + analysis_id + ".csv"`、`tmp = path + ".tmp"`（[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まり）。書くのと置き換えるのは、[6.9.3](#693-関数の細部) の `write_meshset` の 4・5 と同じ（2.3 の「書く（C++）」「置き換える（C++）」、`_write_all`）。どの段で失敗しても、2.3 のとおり後始末をしてから CW1 を出して止まる（置き換えに失敗したときは `unlink(tmp)` してから CW1。`{reason}` は控えた `errno` の `std::strerror`）。CW1 の `{path}` は、どの段でも `path`（一時ファイルでなく本来の名前）。
 4. ディレクトリを作らない。`csv_dir` が無ければ、`open` が `ENOENT` で失敗して CW1 になる（`results/csv` を作るのは 6.11。[6.5.3](#653-関数の細部) の `images/` と同じ）。ディレクトリの `fsync` はしない。
@@ -3114,7 +3114,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 2. `_read_file(path, data, err)` で全部を読む。失敗したら RB1 を出して止まる（`{reason}` は `std::strerror(err)`）。
 3. `data` が空なら RB2（`{detail}` は `見出しの行が無い`）。空でなければ、末尾の `\n` を 1 つだけ除き、`\n` のバイトで行に分け、1 から番号を振る。BOM と `\r` は除かない（読むのは CMP4 が自分で書いたファイルだけで、壊れた形を読み飛ばさない。[2.3](#23-ファイルの名前と書き方) の取得完了の記録と同じ考え）。
 4. 1 行目がバイト列で `_header` と違えば RB2（`{detail}` は `見出しの行が per-mesh CSV の列の並びでない: {line}`）。
-5. 2 行目からの各行を `,` で分ける（無い列は空の文字列とみなす）。次の順に確かめ、ファイルの順で最初の誤りだけを出して止まる（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の「早期終了への受け渡し」が確かめるとした 3 つだけ）。
+5. 2 行目からの各行を `,` で分ける（無い列は空の文字列とみなす）。上の行から順に、1 行の中で次の順に確かめ、ファイルの順で最初の誤りだけを出して止まる（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の「早期終了への受け渡し」が確かめるとした 3 つだけ）。
    - 1 列目（`peak_lat`）か 2 列目（`peak_lon`）が `_parse_decimal` で読めない（空の行を含む）: RB2（`{detail}` は `{line_no} 行目の peak_lat か peak_lon が数として読めない: {line}`）。
    - 8 列目（`key_col_resolved`）が `true` でも `false` でもない: RB2（`{detail}` は `{line_no} 行目の key_col_resolved が true でも false でもない: {line}`）。
    - ほかの列（列の数を含む）と、緯度経度の範囲は確かめない（`col_elev`・`prominence` の空欄は、未確定の行の正しい値である）。
@@ -3152,7 +3152,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 | `UT-analyze_terrain_csv-01` | 8 桁の文字列（2.4 の表 7 から表 5・6 の入力） | 同じプロセス | `format_coord` に、2.4 の表 7 の 9 行の緯度と経度（18 個。倍精度の値は表の 10 進の表記のまま）を 1 つずつ | 表 5・6 の画素の中心の行の入力と同じ文字列。9 行の (緯度, 経度) の順に (`85.05112693`, `-179.99997854`)、(`36.00465613`, `139.99880075`)、(`34.99999777`, `134.99997854`)、(`34.99999777`, `135.00002146`)、(`26.50001531`, `126.99995756`)、(`26.50001531`, `127.00000048`)、(`21.33337317`, `136.49999857`)、(`21.33333320`, `136.49999857`)、(`46.00457835`, `148.99660349`) |
 | `UT-analyze_terrain_csv-02` | 8 桁の丸めと符号 | 同じプロセス | `format_coord` に (a) `0.0`、(b) `-0.0`、(c) `0.001953125`、(d) `-0.001953125`、(e) `180.0`、(f) `-180.0`、(g) `-1e-10` | (a)(b)(g) `0.00000000`、(c) `0.00195312`、(d) `-0.00195312`、(e) `180.00000000`、(f) `-180.00000000` |
 | `UT-analyze_terrain_csv-03` | `format_coord` の呼ぶ側の誤り | 同じプロセス | NaN、正の無限大、`180.0000001`、`-180.0000001` | どれも `std::invalid_argument` |
-| `UT-analyze_terrain_csv-04` | 通常: 一次フィルタと地理的範囲フィルタと順 | 同じプロセス。通常の範囲 | 閾値 130。行は順に (a) (257, 86) 真・`prominence` 130.0f、(b) (258, 86) 真・129.99f、(c) (259, 86) 真・129.996f、(d) (260, 86) 偽・0.0f、(e) (256, 86) 真・500.0f | 2 行で (a)・(d) の順。`lat_text` はどちらも `34.99999777`、`lon_text` は `135.00002146`・`135.00015020`。`row` は入力と同じ。(b) と (c) は一次フィルタで落ちる（(c) は CSV では `130.00` と書く値だが、6.6 の値 `129.99600219726562` は 130 未満）。(e) は地理的範囲フィルタ（`5234`）で落ちる |
+| `UT-analyze_terrain_csv-04` | 通常: 一次フィルタと地理的範囲フィルタと順 | 同じプロセス。通常の範囲 | 閾値 130。行は順に (a) (257, 86) 真・`prominence` 130.0f、(b) (258, 86) 真・129.99f、(c) (259, 86) 真・129.996f、(d) (260, 86) 偽・0.0f、(e) (256, 86) 真・500.0f | 2 行で (a)・(d) の順。`lat_text` はどちらも `34.99999777`、`lon_text` は `135.00002146`・`135.00015020`。`row` は入力の (a)・(d) の行と全欄（`peak`・`peak_elevation`・`col_lat`・`col_lon`・`col_elevation`・`prominence`・`key_col_resolved`・`col_margin_px`）が等しい。(b) と (c) は一次フィルタで落ちる（(c) は CSV では `130.00` と書く値だが、6.6 の値 `129.99600219726562` は 130 未満）。(e) は地理的範囲フィルタ（`5234`）で落ちる |
 | `UT-analyze_terrain_csv-05` | 広域: 一次フィルタを当てない、控えと照合 | 同じプロセス。広域の範囲 | 閾値 130。行は順に (a) (10, 10) 真・50.0f、(b) (11, 10) 真・999.0f、(c) (12, 10) 真・999.0f、(d) (10, 10) 偽・0.0f | 2 行で (a)・(d) の順、どちらも `36.00465613`・`139.99880075`。(b) は照合（画素 (7456514, 3293952) は対象でない）、(c) は控えが無くて落ちる |
 | `UT-analyze_terrain_csv-06` | 0 件 | 同じプロセス。通常の範囲 | `rows` が空 | 空の並び |
 | `UT-analyze_terrain_csv-07` | `filter_peak_rows` の呼ぶ側の誤り | 同じプロセス | 各ケースは、次の基本から、そのケースが替える 1 つだけを替える。通常は `analysis_id` `3-5235`・通常の範囲・空の `peaks`、広域は `4-5439-NW`・広域の範囲・`peaks` 1 件（`rows` は空）。(a) `analysis_id` が `3-533`、(b) 通常で `z14` が真、(c) 通常で `peaks` が 1 件、(d) 広域で `z14` が偽、(e) 広域で `peaks` が空、(f) `meshes` が空 | どれも `std::invalid_argument`。標準エラー出力に何も出ない |
