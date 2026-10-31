@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -115,6 +115,12 @@
     - [6.10.3 関数の細部](#6103-関数の細部)
     - [6.10.4 メッセージ文面](#6104-メッセージ文面)
     - [6.10.5 UT 候補](#6105-ut-候補)
+  - [6.11 `analyze_terrain_stage`](#611-analyze_terrain_stage)
+    - [6.11.1 ファイル割付](#6111-ファイル割付)
+    - [6.11.2 型とデータ](#6112-型とデータ)
+    - [6.11.3 関数の細部](#6113-関数の細部)
+    - [6.11.4 メッセージ文面](#6114-メッセージ文面)
+    - [6.11.5 UT 候補](#6115-ut-候補)
   - [6.12 `analyze_terrain_common`](#612-analyze_terrain_common)
     - [6.12.1 ファイル割付](#6121-ファイル割付)
     - [6.12.2 型とデータ](#6122-型とデータ)
@@ -143,7 +149,7 @@
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`。C++ は宣言の形。例 `std::set<std::string>`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
-  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
+  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。6.11 だけは、これに加えて、呼ぶ順などを確かめる `tests/src/flow_stage.cpp` とスタブの 2 本を持つ（[6.11.1](#6111-ファイル割付)）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
   - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数・状態・定数は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_zone_key`・`_nb_dy` のように。`k` で始めたり、大文字だけで書いたりしない。内部の型は、無名の名前空間に置き、`_` を付けずに下の `PascalCase` で書く。`_` と英大文字で始まる名前になるため。`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、ほかのモジュールから使う定数は HLD の名前（`EXIT_OK` など）。
   - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
   - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。ただし、`start_log` の前に誤りのメッセージを画面に書けずに `std::system_error` が出たときは `EXIT_USAGE` を返す（[6.1](#61-analyze_terrain_launch) の `main`。`start_log` の前は終わりの行が無い）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
@@ -165,14 +171,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -542,7 +548,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.12 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -600,15 +606,15 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9・6.11 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
 - 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
 - 標高タイルのキャッシュ: `data_dir` の `tiles/` の下の `<サービス名>/<z>/<x>/<y>.png`（[HLD 4.1.2](30_HLD.md#412-処理の流れ) の 7「タイルを次の順に取得する」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.5）。サービス名とズームは、DEM5a が `dem5a_png`・DEM5b が `dem5b_png`・DEM5c が `dem5c_png` でズーム 15、DEM10b が `dem_png` でズーム 14（[4.1](#41-fetch_tiles) の `_KINDS` と同じ）。`<z>`・`<x>`・`<y>` は 10 進。書くのは 4.1 の `fetch_tiles` だけで、あるかを見るのは [6.3](#63-analyze_terrain_window) の `check_mesh_tiles`、読むのは [6.4](#64-analyze_terrain_grid) の `read_tile`（パスを組み立てるのは `build_tile_elevation`）。
-- per-mesh CSV: `data_dir` の `results/csv/` の下の `<解析識別子>.csv`（[HLD 4.7.2](30_HLD.md#472-処理の流れ)、[SRS §8.1](20_SRS.md#81-内部データ一覧)）。書くのは [6.7](#67-analyze_terrain_csv) の `write_peak_csv` だけで、下の一時ファイルの決まりで `<解析識別子>.csv.tmp` に書いてから置き換える。読むのは、CMP5（統合・突合）の `merge_peaks`（[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 2「読むファイルを選ぶ」は、名前が `.csv` で終わるものだけを選ぶので、`.tmp` で終わる名前は読まない）と、広域モードの 6.7 の `read_back_peak_csv`。
+- per-mesh CSV: `data_dir` の `results/csv/` の下の `<解析識別子>.csv`（[HLD 4.7.2](30_HLD.md#472-処理の流れ)、[SRS §8.1](20_SRS.md#81-内部データ一覧)）。書くのは [6.7](#67-analyze_terrain_csv) の `write_peak_csv` だけで、下の一時ファイルの決まりで `<解析識別子>.csv.tmp` に書いてから置き換える。読むのは、CMP5（統合・突合）の `merge_peaks`（[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 2「読むファイルを選ぶ」は、名前が `.csv` で終わるものだけを選ぶので、`.tmp` で終わる名前は読まない）と、広域モードの 6.7 の `read_back_peak_csv`。置き場のディレクトリ（`results/csv`）を作るのは [6.11](#611-analyze_terrain_stage) の `run_normal_mode`・`run_wide_mode` で、書く側の関数は作らない（[6.11.3](#6113-関数の細部)）。
 - per-mesh ピーク候補 GeoJSON: `data_dir` の `results/csv/` の下の `<解析識別子>.geojson`（通常解析だけ。[HLD 4.16.2](30_HLD.md#4162-処理の流れ)の「書き出し」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.9、ADR-SRS-029）。書くのは [6.8](#68-analyze_terrain_zone) の `write_zone_geojson` だけで、下の一時ファイルの決まりで `<解析識別子>.geojson.tmp` に書いてから置き換える。読むのは CMP5（統合・突合）の `merge_zones`（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 1「読むファイルを選ぶ」は `3-<meshcode>.geojson` の名前だけを選ぶので、`.tmp` で終わる名前は読まない）。
 - 解析済みウィンドウメッシュ集合（`.meshset`）: `data_dir` の `results/csv/` の下の `<解析識別子>.meshset`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.13）。書くのは [6.9](#69-analyze_terrain_record) の `write_meshset` だけで、下の一時ファイルの決まりで `<解析識別子>.meshset.tmp` に書いてから置き換える。読むのは [6.3](#63-analyze_terrain_window) の `is_pattern_covered`（名前の一致で選ぶので、`.tmp` で終わる名前は読まない）と `read_meshset`。
-- 標高地形図: `data_dir` の `images/` の下の `<解析識別子>_terrain.png`（[SRS §6.2.3](20_SRS.md#623-標高地形図)）。書くのは [6.5](#65-analyze_terrain_image) の `write_terrain_png` だけで、下の一時ファイルの決まりで `<解析識別子>_terrain.png.tmp` に書いてから置き換える。読むプログラムは無い（利用者が開く）。
+- 標高地形図: `data_dir` の `images/` の下の `<解析識別子>_terrain.png`（[SRS §6.2.3](20_SRS.md#623-標高地形図)）。書くのは [6.5](#65-analyze_terrain_image) の `write_terrain_png` だけで、下の一時ファイルの決まりで `<解析識別子>_terrain.png.tmp` に書いてから置き換える。読むプログラムは無い（利用者が開く）。置き場のディレクトリ（`images`）を作るのは [6.11](#611-analyze_terrain_stage) の `run_normal_mode`・`run_wide_mode` で、書く側の関数は作らない（[6.11.3](#6113-関数の細部)）。
 - 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.7・6.8・6.9。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.5・6.7・6.8・6.9 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない。`open` が失敗したときは `close` するものが無いので呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する。`unlink` は `open` が失敗したときも含め、どの失敗でも呼ぶ。一時ファイルの名前に、先の無いシンボリックリンクなどが残っていることがあるため）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
@@ -768,10 +774,11 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 [HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
-- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.5 は `build/test_image`、6.6 は `build/test_scan`、6.7 は `build/test_csv`、6.8 は `build/test_zone`、6.9 は `build/test_record`、6.10 は `build/test_convert`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
+- テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.5 は `build/test_image`、6.6 は `build/test_scan`、6.7 は `build/test_csv`、6.8 は `build/test_zone`、6.9 は `build/test_record`、6.10 は `build/test_convert`、6.11 は `build/test_stage`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
 - `main` の振る舞いを確かめるための試験用の実行ファイル `build/test_launch_main`: `src/analyze_terrain.cpp`・`src/launch.cpp`・`src/common.cpp` と `tests/src/stub_stage.cpp`（[6.1.5](#615-ut-候補) の段の進行のスタブ）をコンパイルしてリンクする（`gtest_main` はリンクしない。指定は CMP4 の実行ファイルと同じ）。`build/test_launch` が子のプロセスで起動する（6.1.5）。
+- 呼ぶ順などを確かめる試験用の実行ファイル `build/flow_stage`（[6.11.1](#6111-ファイル割付)）: `tests/src/flow_stage.cpp`・`tests/src/stub_analysis.cpp` と、`src/stage.cpp`・`src/common.cpp`・`src/convert.cpp`・`src/target.cpp` をコンパイルし、GoogleTest の `gtest_main` とリンクする（指定はテスト用の実行ファイルと同じ）。`tests/src/test_<群の名前>.cpp` の形にしないのは、上の決まり（`main` を持たない `src/` の `.cpp` をすべてリンクする）を Makefile のパターンで当てたとき、スタブの定義が無く、本物をリンクした実行ファイルがリンクに失敗するのを避けるため（`build/test_launch_main` と同じ扱い）。この実行ファイルは `build/test_launch_main` と違い、それ自身がテストの実行ファイルなので、`make test` が実行する。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
-- `make test` は、`build/test_launch_main` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- `make test` は、`build/test_launch_main`・`build/flow_stage` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、`build/flow_stage` もテスト用の実行ファイルとして順に実行し、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 ## 3. CMP1 行政区域前処理
 
@@ -1967,7 +1974,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 ## 6. CMP4 地形解析エンジン
 
-この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。今は 6.1〜6.10・6.12 を書き、ほかの群の節は書くときに 6.11 の番号で足す（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決めた（6.11 を書くときは、その形で宣言する。変えるときは 6.1 も同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
+この章は、CMP4（地形解析エンジン）の `analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)の実行ファイル 1 本）を、[HLD 3.4.3](30_HLD.md#343-関数)の表の群ごとのモジュールに分けて置く（ADR-LLD-001 の Decision 3）。どのモジュールも 1.2 の C++ の規約に従う。6.1〜6.12 の 12 の群をすべて書いた（6.12 と 6.10 を先に書いたのは、ほかの群がその型と関数を使うため）。6.1 の `main` が呼ぶ `run_normal_mode`・`run_wide_mode` は 6.11 の関数で、その宣言の形は [6.1.2](#612-型とデータ) で決め、[6.11.2](#6112-型とデータ) も同じ形で宣言する（変えるときは 6.1 と 6.11 を同じ変更で直す）。CMP4 にコンポーネント内の共通部品は無い（[HLD 3.4.4](30_HLD.md#344-コンポーネント内の共通部品)）。
 
 ### 6.1 `analyze_terrain_launch`
 
@@ -3178,7 +3185,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 | `UT-analyze_terrain_csv-20` | `read_back_peak_csv` の呼ぶ側の誤り | 同じプロセス。UT-analyze_terrain_csv-15 のファイル | (a) `n` 3、(b) `n` 7、(c) `peaks` が空 | どれも `std::invalid_argument`。標準エラー出力に何も出ない |
 | `UT-analyze_terrain_csv-21` | 2 桁の符号 | 同じプロセス | UT-analyze_terrain_csv-08 の (1) の行の `peak_elevation` を (a) `-0.001f`、(b) `-5.5f` にして書く | 2 行目の 3 列目が (a) `0.00`、(b) `-5.50` |
 
-- パターンをまたいだ確定の積み上げと早期終了は 6.11 の UT 候補に置き、書いた per-mesh CSV を CMP5 の `merge_peaks` が読めることは結合テスト（IT）で確かめる（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2）。
+- パターンをまたいだ確定の積み上げと早期終了は 6.11 の UT 候補（`UT-analyze_terrain_stage-13`）に置き、書いた per-mesh CSV を CMP5 の `merge_peaks` が読めることは結合テスト（IT）で確かめる（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2）。
 
 ### 6.8 `analyze_terrain_zone`
 
@@ -3254,7 +3261,7 @@ void write_zone_geojson(const std::vector<PeakCsvRow>& rows, const std::vector<R
 
 - 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`row` は 6.7 の `filter_peak_rows` が返した行（`row.row.peak` はグリッドの画素のまま）。`kind` はゾーンの種類。設定の 2 つ（`activation_zone_drop_m`・`delete_zone_max_drop_m`）は 6.12 の `ConfigValue::integer`（`long long`）をそのまま受ける。`japan_meshes`・`excluded_meshes` は 6.11 が `read_mesh_list_file` で読んだ日本全土1次メッシュコードリストと北方領土除外メッシュリスト。`zones` は `rows` と同じ数で同じ順（行ごとのゾーン）。`csv_dir` は `data_dir` の下の `results/csv` の絶対パスで、末尾に `/` を付けない（6.7・6.9 と同じ。6.11 が組み立てて渡す）。
 - 座標の書き方（この節で使う）: グリッドの画素 (px, py) は、西から px 列目、北から py 行目（6.4 の `ElevationGrid`）。グリッドの角 (cx, cy) は画素の角の格子点で、画素 (px, py) の北西の角が (px, py)、南東の角が (px + 1, py + 1)（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の頂点の段落）。cy は南へ増える。
-- 訪問の印（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の「準備」）は `std::vector<std::uint64_t>`（画素 p のビットは `marks[p / 64]` の `p % 64` ビット目）。6.11 が解析単位の初めに `(W × H + 63) / 64` 個の 0 で 1 回だけ作り（最大の窓の約 46 億画素で約 0.54GiB）、行と種類ごとの `fill_zone` に同じものを渡す。`fill_zone` は塗った画素のビットを立て、返す前にそのビットだけを消す（正常に返るときは、いつもすべて 0 の状態で返る）。印を作る関数は足さない（1.2 の「LLD が足してよい名前」）。
+- 訪問の印（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の「準備」）は `std::vector<std::uint64_t>`（画素 p のビットは `marks[p / 64]` の `p % 64` ビット目）。6.11 が解析単位ごとに 1 回だけ、ゾーンの段の始まり（最初の `fill_zone` の前）に `(W × H + 63) / 64` 個の 0 で作り（最大の窓の約 46 億画素で約 0.54GiB）、行と種類ごとの `fill_zone` に同じものを渡す。`fill_zone` は塗った画素のビットを立て、返す前にそのビットだけを消す（正常に返るときは、いつもすべて 0 の状態で返る）。印を作る関数は足さない（1.2 の「LLD が足してよい名前」）。
 - 閾値の条件は `ZoneThreshold`。`fill_zone` が返し、6.11 が同じ行・同じ種類の `judge_area_complete` に渡す。
 - `trace_outline` の頂点は `ZoneVertex` の文字列（[HLD 3.4.3](30_HLD.md#343-関数) の「頂点は緯度経度の文字列」）。`ZonePolygon` の並びが 1 つのゾーンの形で、1 つなら GeoJSON の Polygon、2 つ以上なら MultiPolygon になる。
 - 画素の番号は `std::int64_t`（6.6.2 と同じ。番号を詰めるかは [#187](https://github.com/jj1xgo/findsummits/issues/187)「最大の窓で画素の番号を詰めるか」で決め、決まったらこの節の型も直す）。
@@ -3473,7 +3480,7 @@ UT 20 の期待（13 行。各行は `\n` で終わる）:
 ]}
 ```
 
-- 書いた GeoJSON を CMP5 の `merge_zones` が読むケースと、6.7 の `filter_peak_rows` から 6.8 の 4 関数をつなぐケース（通常モードの 1 メッシュで、CSV と GeoJSON のピークの文字列が同じこと）は、複数のモジュールの関数のつながりを確かめるので、6.11 の UT 候補と結合テスト（IT）に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2。6.11 を書くときに足し、6.8 からそのケースを指す）。ここでは、出力のバイト列（UT 20）で、`merge_zones` が受ける形を確かめる。
+- 6.7 の `filter_peak_rows` から 6.8 の 4 関数をつなぐケース（通常モードの 1 メッシュで、CSV と GeoJSON のピークの文字列が同じこと）は、複数のモジュールの関数のつながりを確かめるので、6.11 の UT 候補（`UT-analyze_terrain_stage-18`）に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2）。書いた GeoJSON を CMP5（統合・突合）の `merge_zones` が読むケースは、結合テスト（IT）の `IT-CMP5-EXT2-02` で確かめる。ここでは、出力のバイト列（UT 20）で、`merge_zones` が受ける形を確かめる。
 
 ### 6.9 `analyze_terrain_record`
 
@@ -3556,7 +3563,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 | `UT-analyze_terrain_record-07` | 書く途中で失敗する | 子のプロセス（書けない）。親が `<csv_dir>/3-5339.meshset` に `5339\n` を置く。上限は (a) 0、(b) 5（中身 `5238\n5339\n` の 10 バイトのうち 5 バイトだけ書けて、残りで失敗する） | 子で `write_meshset({5238, 5339}, "3-5339", csv_dir)` | (a)(b) とも、子の終了コード 1。標準エラー出力が MW1（`{reason}` は `File too large`）の 2 行。`3-5339.meshset` の中身は `5339\n` のまま。`.tmp` が無い（(b) は、`write` を 1 回だけ呼んで書いた数を見ない実装を落とす） |
 | `UT-analyze_terrain_record-08` | 呼ぶ側の誤り | 同じプロセス | (a) `meshes` が空、(b) `meshes` が `{5238, 5239, 5339, 53a9}`、(c) `meshes` が `{5238, 5239, 5339, 53390}`、(d) `analysis_id` が `3-533`、(e) `7-5135-NW`、(f) `4-5135`、(g) `3-5339-NW`、(h) `4-5135-nw`、(i) `csv_dir` が空、(j) `csv_dir` の末尾が `/`。ほかの引数は UT-analyze_terrain_record-01 と同じ | どれも `std::invalid_argument`。標準エラー出力に何も出ない。`csv_dir` の下にファイルができない（(i)(j) を除く） |
 
-- 書いた `.meshset` を 6.3 の `read_meshset` で読み戻して、同じ集合になることを確かめるケースは、2 つのモジュールの関数のつながりを確かめるので、6.11 の UT 候補に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2。6.11 を書くときに足し、6.9 からそのケースを指す）。ここでは、出力のバイト列（UT-analyze_terrain_record-01〜03）で、6.3 の `read_meshset` が受ける形を確かめる。
+- 書いた `.meshset` を 6.3 の `read_meshset` で読み戻して、同じ集合になることを確かめるケースは、2 つのモジュールの関数のつながりを確かめるので、6.11 の UT 候補（`UT-analyze_terrain_stage-17`）に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2）。ここでは、出力のバイト列（UT-analyze_terrain_record-01〜03）で、6.3 の `read_meshset` が受ける形を確かめる。
 
 ### 6.10 `analyze_terrain_convert`
 
@@ -3673,6 +3680,273 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 | `UT-analyze_terrain_convert-07` | 緯度経度 → Z15 の画素 | 同じプロセス | 2.4 の表 6 の 11 行 | `gx`・`gy` が期待の値と等しい |
 | `UT-analyze_terrain_convert-08` | Z15 の画素の中心 | 同じプロセス | 2.4 の表 7 の 9 行 | 経度は期待の値と `==`、緯度は差の絶対値が `1e-12` 以下 |
 | `UT-analyze_terrain_convert-09` | 画素の座標の比べ方 | 同じプロセス | `Z15Pixel{1, 2}` と `Z15Pixel{1, 2}`、`Z15Pixel{1, 3}` と `Z15Pixel{2, 0}`、`TileXY{5, 1}` と `TileXY{5, 2}` | 1 組目は `==` が真。2 組目は前が小さい（`<` が真。`gx` が先に比べられる）。3 組目は前が小さい。`std::set<Z15Pixel>` に `{1, 2}` を 2 回入れると大きさが 1 |
+
+### 6.11 `analyze_terrain_stage`
+
+- **ID**: LLD-analyze_terrain_stage
+- **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.4](30_HLD.md#44-fr-004-33メッシュ結合解析オーケストレーション)・[4.14](30_HLD.md#414-fr-014-広域結合解析オーケストレーション)・[5.5](30_HLD.md#55-nfr-005-処理時間目標)
+- **ファイル**: `src/stage.hpp`・`src/stage.cpp`
+
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「段の進行」の群（`run_normal_mode`・`run_wide_mode`）で、処理の正本は通常モードが [HLD 4.4.2](30_HLD.md#442-処理の流れ) の 2〜5、広域モードが [4.14.2](30_HLD.md#4142-処理の流れ) の 2〜5、止める場面は [4.4.3](30_HLD.md#443-異常系)・[4.14.3](30_HLD.md#4143-異常系)、途中経過と結果の要約は [HLD 5.7.2](30_HLD.md#572-処理の流れ) の 5「途中経過」・7「結果の要約」（その中身の表の `analyze_terrain` の 2 行）である。この 2 関数は、6.1 の `main` が `start_log` の後に呼び、ほかの群の関数を [HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順のとおりに呼んで取りまとめる。宣言の形は [6.1.2](#612-型とデータ) で決めてあり、6.11.2 も同じ形で宣言する。6.2〜6.9 の各節が「6.11 が…」と書いた呼び方（引数に渡す値、ディレクトリを作ること、メッセージを出すこと、解放の順）は、6.11.3 がすべて受ける。この節は、それを C++ で書くための細部と、段の始まり・途中経過・結果の要約・出力のディレクトリを作れないときのメッセージの文面を足す。1.2 の C++ の規約に従う。
+
+- [HLD 5.5](30_HLD.md#55-nfr-005-処理時間目標)（処理時間目標）は、メッシュごとの所要時間を、ST の手順で 1 メッシュ分の始まりから終わりまでを測る区間として測り、製品のログに内訳の行を足さない（[HLD 5.5.2](30_HLD.md#552-処理の流れ) の 4「内訳の測り方」）ことで受ける。6.11.4 の SL1・SL3 は [HLD 4.4.2](30_HLD.md#442-処理の流れ)・[4.14.2](30_HLD.md#4142-処理の流れ)・5.7.2 が求める行で、内訳の行ではない。
+- [HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ使用量）は ADR-LLD-001 の表で 6.11 の受け手ではないので、追跡の宣言には入れない。ただし、6.5・6.6・6.8 が決めた解放の順と、訪問の印を解析単位ごとに 1 回だけ作ることは、呼ぶ側として 6.11.3 の「メモリ」で守る。
+- [HLD 5.7](30_HLD.md#57-nfr-007-ログ出力)（ログ出力）の書き込みは 6.12 が受け持つ。6.11 は [2.2](#22-ログとメッセージの文面) の形で、途中経過と結果の要約の中身を決める。
+
+#### 6.11.1 ファイル割付
+
+- 公開の宣言は `src/stage.hpp`、定義と内部の関数は `src/stage.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_stage` を書き、ヘッダーは次の行を `#pragma once` にする。
+- `src/stage.hpp` は `"common.hpp"`（`Config`）・`<set>`・`<string>` を読む。`src/stage.cpp` は `"stage.hpp"`・`"common.hpp"`・`"target.hpp"`・`"window.hpp"`・`"grid.hpp"`・`"image.hpp"`・`"scan.hpp"`・`"csv.hpp"`・`"zone.hpp"`・`"record.hpp"` と、`<algorithm>`・`<cerrno>`・`<cstdint>`・`<cstring>`・`<set>`・`<string>`・`<sys/stat.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
+- UT のコードは 2 本の実行ファイルに分ける（理由は [6.11.5](#6115-ut-候補) の前置き）。各テストに `// trace: UT-analyze_terrain_stage-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+  - `tests/src/test_stage.cpp` → `build/test_stage`（[2.5](#25-ビルドとテストの名前)の決まりどおり、`main` を持たない `src/` の `.cpp` をすべてリンクする。2 つのモジュールの関数のつながりを確かめるケース）。
+  - `tests/src/flow_stage.cpp` と、スタブの `tests/src/stub_analysis.hpp`・`tests/src/stub_analysis.cpp` → `build/flow_stage`（呼ぶ順などを確かめるケース。[2.5](#25-ビルドとテストの名前)）。スタブの 2 本は、先頭のコメントにスタブを使うケースの ID を並べて書く（`// trace: UT-analyze_terrain_stage-01, …, UT-analyze_terrain_stage-16`。`tools/lint_trace.py` が `tests/src/` の下のファイルごとにテストケースの ID を求めるため。[6.1.1](#611-ファイル割付) の `stub_stage.cpp` と同じ）。
+  - 名前を `test_<群の名前>` の形にしないのは、[2.5](#25-ビルドとテストの名前)の「`tests/src/test_<群の名前>.cpp` ごとに 1 本、`main` を持たない `src/` の `.cpp` をすべてリンクする」を Makefile のパターンで当てたとき、本物をリンクした実行ファイルが別にできて、スタブの定義が無くリンクに失敗するのを避けるため（6.1 の `build/test_launch_main`・`tests/src/stub_stage.cpp` も形の外の名前）。
+
+#### 6.11.2 型とデータ
+
+`src/stage.hpp` の公開の宣言は次のとおり（名前空間に入れない。1.2 の C++ の規約）。
+
+```cpp
+#pragma once
+#include <set>
+#include <string>
+#include "common.hpp"
+
+void run_normal_mode(const std::string& japan_mesh_list, bool has_mesh,
+                     const std::set<std::string>& mesh_codes, const Config& config);
+void run_wide_mode(const std::string& japan_mesh_list, int n,
+                   const std::string& unresolved, const Config& config);
+```
+
+- 宣言の形は [6.1.2](#612-型とデータ) のとおり（引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順）。公開の型は足さない。`has_mesh` が偽なら `mesh_codes` は空で、HLD の「なし」に当たる。止まるときは `ExitRequest` を投げ、最後まで進んだら戻る。
+- 内部の定数（`src/stage.cpp` の無名の名前空間）:
+  - コーナーの並び `_corners`: `{"NW", "NE", "SW", "SE"}`（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の順）。
+  - 除外リストの案内 `_excluded_guidance`: [6.11.4](#6114-メッセージ文面) の文。
+  - 段の名前（SL1 の `{stage}`）: 通常は `標高地形図`・`ピーク候補とコル`・`per-mesh CSV`・`per-mesh ピーク候補 GeoJSON`・`.meshset`。広域は `解析範囲標高グリッド`・`標高地形図`・`ピーク候補とコル`・`per-mesh CSV`・`.meshset`。
+- 件数（関数の中の局所の変数。要約に使う。`std::size_t` で持ち、`std::to_string` で 10 進にする）:
+  - 通常: `targets`（対象メッシュの数）、`csv_meshes`（per-mesh CSV を書いたメッシュの数）、`rows_total`（書いたピークの行の数の合計）。
+  - 広域: `peaks`（対象ピークの数）、`meshes`（対象メッシュの数）、`analyzed`（解析したパターンの数）、`skipped`（省略したパターンの数）、`rows_total`。
+  - `targets`・`peaks`・`meshes` は、決まる前は「未定」で、要約には `-` と書く。未定は `bool` の印で持つ（1.2。`std::optional` を使わない）。
+- 「どこで止まったか」を示す文字列 `where`（SL6・SL9 の `{where}`。[6.11.4](#6114-メッセージ文面)）も局所の変数に持つ。モジュールの状態は持たない（2 関数とも、件数を自分の中だけで数えて自分で要約を出すので、ほかの関数に渡す必要が無い）。
+
+#### 6.11.3 関数の細部
+
+処理の正本は上の前置きのとおりで、この節は C++ で書くための細部を足す。
+
+前置き（2 関数に共通）:
+
+- **止まり方**: 1.2 の C++ の規約のとおり。6.11 自身が止める場面は SD1 だけで、ほかは呼んだ関数が出して `ExitRequest` を投げ、6.11 は捕まえずにそのまま上げる。呼ぶ側の誤り（`std::invalid_argument`）も同じ（6.11 が渡す値は、各節が決めた形に合わせて組み立てる）。
+- **要約の書き方**: 本体を 1.2 の「結果の要約」の `try`/`catch (...)` の形で書く。
+  - `catch (...)` の中で、途中で止まった要約（SL6・SL9）を `log_info` で出し、`throw;` で投げ直す。`try` は 1 つだけで、要約は `catch` の中で 1 回だけ出す。
+  - `ExitRequest` 以外の例外（`std::invalid_argument`、`std::bad_alloc` など）でも要約が出て、その後に 6.12 の `_on_terminate` が G7 で止める。
+  - 要約の `log_info` がログの書き込みの失敗で `ExitRequest` を投げたら、それがそのまま上がる（6.12 の `_emit`）。
+  - 正常に終えたとき（対象が 0 件のときを含む）は、`try` を抜けた後に SL4・SL5（広域は SL7・SL8）を出して戻る。
+- **件数を増やす時機**: 書き込みが成功した後にだけ増やす（[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 7「結果の要約」の「そこまでに終えた分」を正しく数えるため）。`csv_meshes` と `rows_total` は `write_peak_csv` が戻った後、`analyzed` は `read_back_peak_csv` が戻った後、`skipped` は WN1 を出した後。
+- **パス**: `data_dir` は `config.values.at("data_dir").text`（空でなく先頭が `/` とだけ決まっているので、末尾が `/` のことがある。6.12.2）。次のとおり、内部の `_join` で組み立てる。
+  - `_join(a, b)` は 6.12.3 の `_join` と同じ決まり（`a` が `/` で終われば `a + b`、そうでなければ `a + "/" + b`）。6.12 の内部の関数は `src/common.cpp` の外から呼べないので、同じ形を置く。
+  - `tiles_dir = _join(data_dir, "tiles")`、`csv_dir = _join(data_dir, "results/csv")`、`images_dir = _join(data_dir, "images")`、除外リストは `_join(data_dir, "boundaries/nt_excluded_meshes.txt")`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 2「入力を読む」。置き場の名前は [HLD 4.17.2](30_HLD.md#4172-処理の流れ)）。
+  - どれも末尾に `/` が付かない（6.3・6.4・6.9 が、末尾が `/` の `csv_dir`・`tiles_dir` を呼ぶ側の誤りにするため）。`data_dir` が `//` で終わる値のときは途中に `//` が残るが、末尾ではないので 6.3・6.4・6.9 の確かめに当たらず、OS も同じパスとして扱う。
+  - 広域の per-mesh CSV の読み戻しのパスは `csv_dir + "/" + analysis_id + ".csv"`（6.7）。
+- **ディレクトリを作る**: 内部の `_make_dirs`（6.12.3 の `_make_dirs` と同じ決まり。先頭からの各段に `mkdir(<段>, 0777)`。途中の段の `EEXIST` は次へ進み、最後の段の `EEXIST` は `stat` でディレクトリかを見る。同じ形を置く）で、`csv_dir`、`images_dir` の順に作る。
+  - 失敗したら、SD1（`{path}` は作れなかったディレクトリ〈`csv_dir` か `images_dir`〉、`{reason}` は失敗の `errno` の `std::strerror`）を出して `throw ExitRequest(EXIT_ERROR)`。
+  - 作る時機は、対象が 1 件以上と決まった後、最初の対象メッシュの前。0 件のときは作らない（[HLD 4.4.3](30_HLD.md#443-異常系)・[4.14.3](30_HLD.md#4143-異常系) の「何もせずに終わる」）。リストの読み込みなど、ここより前で止まるときも作らない。
+  - 広域でも作るのは、`results/csv` は通常解析が作っているのが普通でも、`images` が無いことがある（広域の段から起動したとき）ため。作れなければ、ほかの関数の `ENOENT` による失敗より先に分かる。
+- **シグナルの区切り**: 6.11 は次で `check_signal()` を呼ぶ。対象メッシュ 1 つの始まり、広域のパターン 1 つの始まり、SL1（段の始まり）を出す直前。
+  - 6.11 自身は区切りの間に時間のかかる処理を置かない（件数を数え、文字列を組み、集合を和にするだけ）。そのため、受けてから止まるまでの遅れの上限は、受けた時点から次の区切り（6.11 の区切りか、呼んだ関数の中の区切り）までに残る呼び出しの所要の合計になる。
+  - `check_signal` を呼ぶ群（グリッド・走査・ゾーン）の中では、その節が決めた上限。呼ばない群（標高地形図・CSV と早期終了・出力の記録・窓と省略・対象）は、区切りの間に続けて呼ぶ分の所要の合計（たとえば SL1 の「標高地形図」の直後に受けたときは、`render_terrain` と `write_terrain_png` の 2 つを終えてから、次の SL1 の前で止まる）。
+- **メモリ**: 6.5・6.6・6.8 が決めた解放の順を、次のとおり守る。
+  - 標高地形図の画像（`TerrainImage`）は、`write_terrain_png` の後、走査の前に捨てる。
+  - 走査の順は `scan_peaks_and_cols` の後、`build_col_list` の前に捨てる。
+  - 成分ごとのデータは `build_col_list` の後に捨てる。
+  - 捨てるのは、変数をブロックの中に置いてブロックを抜けるか、`std::vector<T>().swap(v)` で、`clear()` だけにしない（容量が残るため）。
+  - 通常モードの訪問の印は、メッシュ（解析単位）ごとに 1 回、ゾーンの段の始まり（最初の `fill_zone` の前）に作る（走査の後なので、成分ごとのデータと同時に持たない。6.8.2）。行が 0 行でも作る（作らない場合分けを足さない）。
+  - 広域モードのグリッドは、`build_col_list` の後に捨てる（後の段は `range` だけを使う）。通常モードのグリッドは、ゾーンが使うので、`write_meshset` までメッシュのブロックの中に置く。
+
+#### `run_normal_mode`
+
+1. `where = "入力の読み込み"`、`targets` は未定、`csv_meshes = 0`、`rows_total = 0` にして、ここから `try` に入る。
+2. 日本全土のリスト `japan = read_mesh_list_file(japan_mesh_list, "")`（案内は空で、既定の対処）、続けて北方領土除外メッシュのリスト `excluded = read_mesh_list_file(<除外リストのパス>, _excluded_guidance)` を読む（この順。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 2「入力を読む」）。
+3. `t = select_target_meshes(japan, excluded, has_mesh, mesh_codes)`。`t.skipped` を順に、`excluded` が真なら TM2、偽なら TM1 を `log_warning` で 1 件ずつ出す（`{list_path}` は `japan_mesh_list`。6.2.4）。続けて `t.not_targeted` を順に TM3 で `log_info` に 1 件ずつ出す。`targets = t.targets.size()` にする（未定でなくなる）。
+4. `t.targets` が空なら、`try` を抜けて SL5 を出し、戻る（終了コード 0。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 3「対象メッシュを決める」）。
+5. `where = "出力のディレクトリの用意"`。`csv_dir`・`images_dir` を作る（前置きの「ディレクトリを作る」）。
+6. `target_set` を `t.targets` の集合にする。`t.targets` を順に（昇順）、各 `code` について次を行う。
+   1. `check_signal()`。`id = "3-" + code`、`where = id + " の解析"`。
+   2. `window = normal_window(code, target_set)` → `check_mesh_tiles(window, tiles_dir, true)` → `GridResult g = build_grid_z15(window, tiles_dir)`。
+   3. 標高地形図: `check_signal()` と SL1（`標高地形図`）→ ブロックの中で `TerrainImage image = render_terrain(g.grid, g.range, id)` → `write_terrain_png(image, id, images_dir)`。ブロックを抜けて画像を捨てる。
+   4. ピーク候補とコル: `check_signal()` と SL1（`ピーク候補とコル`）→ `order = make_scan_order(g.grid)` → `components = scan_peaks_and_cols(g.grid, order)` → `order` を捨てる → `components = apply_sea_level_rule(std::move(components))` → `col_rows = build_col_list(components, g.grid.width, g.grid.height, g.range)` → `components` を捨てる。
+   5. per-mesh CSV: `check_signal()` と SL1（`per-mesh CSV`）→ `rows = filter_peak_rows(col_rows, g.range, id, config.values.at("prominence_primary_m").integer, {})` → `col_rows` を捨てる → `write_peak_csv(rows, id, csv_dir)` → `csv_meshes += 1`、`rows_total += rows.size()`。
+   6. ゾーン: `check_signal()` と SL1（`per-mesh ピーク候補 GeoJSON`）→ 訪問の印 `marks` を `(static_cast<std::int64_t>(g.grid.width) * g.grid.height + 63) / 64` 個の 0 の `std::vector<std::uint64_t>` で作る。
+      - `rows` の各行について、アクティベーションゾーン（`ZoneKind::Activation`）、delete判定ゾーン（`ZoneKind::Delete`）の順に、`f = fill_zone(row, kind, g.grid, g.range, <activation_zone_drop_m>, <delete_zone_max_drop_m>, marks)` → `complete = judge_area_complete(f.pixels, f.threshold, g.grid, g.range, japan, excluded)` → `polygons = trace_outline(f.pixels, g.range)` を行う。
+      - 設定の 2 つ（`activation_zone_drop_m`・`delete_zone_max_drop_m`）は `config.values.at(...).integer` をそのまま渡す。`japan`・`excluded` は 2 で読んだ集合を、そのまま渡す。
+      - 結果を、その行の `RowZones` の `activation_zone`・`activation_complete`（または `delete_zone`・`delete_complete`）に入れる。`RowZones` を行の順に `zones` に足す（`rows` と同じ数・同じ順）。
+      - 続けて `write_zone_geojson(rows, zones, id, csv_dir)`。
+   7. `.meshset`: `check_signal()` と SL1（`.meshset`）→ `write_meshset(window, id, csv_dir)`。6 で止まったときは呼ばれない（例外で抜けるため。[HLD 4.16.3](30_HLD.md#4163-異常系)）。
+   8. SL3 の途中経過を出す（`{done}` は終えたメッシュの数、`{total}` は `targets`。2.2 の途中経過の形で、前に出した割合の整数部より増えたときだけ出す）。
+7. `try` を抜けて SL4 を出し、戻る。
+
+#### `run_wide_mode`
+
+1. `where = "入力の読み込み"`、`peaks`・`meshes` は未定、`analyzed = skipped = rows_total = 0` にして、ここから `try` に入る。
+2. `japan`・`excluded` を `run_normal_mode` の 2 と同じに読む。`peak_list = read_unresolved_peaks(unresolved, n)`、`peaks = peak_list.size()` にする（未定でなくなる）。
+3. `peak_list` が空なら、`try` を抜けて SL8 を出し、戻る（終了コード 0。[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の 2「入力を読む」）。
+4. `where = "対象メッシュの決定"`。`groups = group_peaks_by_mesh(peak_list, japan, excluded)`、`meshes = groups.size()` にする（未定でなくなる）。存在メッシュ `existing` を、`japan` から `excluded` を除いた集合にする（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の前置き）。
+5. `where = "出力のディレクトリの用意"`。ディレクトリを作る（前置きの「ディレクトリを作る」）。
+6. `groups` の鍵の順（昇順）に、各 `target` と組 `group` について次を行う。
+   1. `check_signal()`。`where = target + " の 3×3 の検査"`。`check_mesh_tiles(normal_window(target, existing), tiles_dir, false)`。
+   2. 確定済みの集合 `confirmed`（`std::set<Z15Pixel>`）を空にする（対象メッシュごとに作り直す）。
+   3. `_corners` を順に、各 `corner` について次を行う。
+      1. `check_signal()`。`id = std::to_string(n) + "-" + target + "-" + corner`、`where = id + " の解析"`。
+      2. `window = pattern_window(target, n, corner, existing)` → `cover = is_pattern_covered(csv_dir, target, window, n)`。`cover.covered` が真なら、WN1（`{meshset}` は `cover.meshset_path`）を `log_info` で出し、`skipped += 1` にして、次のコーナーへ進む。
+      3. `check_mesh_tiles(window, tiles_dir, true)`。
+      4. グリッド: `check_signal()` と SL1（`解析範囲標高グリッド`）→ `GridResult g = build_grid_z14(window, group, tiles_dir)`。
+      5. 標高地形図とピーク候補とコル: `run_normal_mode` の 6 の 3・4 と同じ。ただし `build_col_list` の後に `g.grid` も捨てる。
+      6. per-mesh CSV: `check_signal()` と SL1（`per-mesh CSV`）→ `rows = filter_peak_rows(col_rows, g.range, id, config.values.at("prominence_primary_m").integer, group)`（広域では読まれない値。6.7.2）→ `write_peak_csv(rows, id, csv_dir)` → `rows_total += rows.size()`。
+      7. `.meshset`: `check_signal()` と SL1（`.meshset`）→ `write_meshset(window, id, csv_dir)`。
+      8. 早期終了の判定: `got = read_back_peak_csv(csv_dir + "/" + id + ".csv", group, n)` → `analyzed += 1` → `confirmed` に `got` を足す（パターンをまたいだ和）。`group` のすべての `TargetPeak` の `pixel` が `confirmed` にあり、まだ行っていないコーナーがあれば、SL2 を `log_info` で出して、コーナーの繰り返しを抜ける（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10「早期終了を判定する」）。最後のコーナー（`SE`）で確定したときは、打ち切るパターンが無いので SL2 を出さない。
+   4. SL3 の途中経過を出す（`{done}` は終えた対象メッシュの数、`{total}` は `meshes`）。
+7. `try` を抜けて SL7 を出し、戻る。
+
+ほかの内部の関数: `_join`・`_make_dirs`（前置き）と、要約の文を組む関数（名前は実装者が決める）。どれも無名の名前空間に置き、名前を `_` で始める（1.2）。
+
+#### 6.11.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。TM1〜TM3 は [6.2.4](#624-メッセージ文面)、WN1 は [6.3.4](#634-メッセージ文面)、R1〜R3 は [2.1.4](#214-メッセージ文面) の文面のまま。日本全土1次メッシュコードリストの R1〜R3 の案内は空（既定の対処）。北方領土除外メッシュリストの案内 `_excluded_guidance` は、次の文にする。
+
+`venv/bin/python3 scripts/preprocess_boundaries.py を起動して北方領土除外メッシュリストを作ってから、止まったコマンドを同じ引数で起動し直す（設定ファイルを指定して起動したときは、どちらにも同じ --config を付ける）`
+
+6.11 は起動のしかたを知らないので、[5.1.4](#514-メッセージ文面) の除外リストの案内にある `{config_opt}` の代わりに、括弧で書く。ほかの関数が出すもの（MS1〜MS3・TT1・TT2・TR1・IM1・IW1・CW1・RB1・RB2・ZW1・MW1・UP1〜UP3）は、6.11 は出さない。
+
+`ERROR:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| SD1 | 出力のディレクトリを作れない | `出力のディレクトリを作れない: {path}: {reason}` | 通常: `{path} とその上のディレクトリの権限を確かめてから、止まったコマンドを同じ引数で起動し直す`。広域: `{path} とその上のディレクトリの権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n {n} を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` | 1 |
+
+- `{path}` は作れなかったディレクトリ（`csv_dir` か `images_dir`）、`{reason}` は失敗の `errno` の `std::strerror`、`{n}` は `--n` の値。SD1 は 6.11 が出す（ほかの関数は出さない）。
+
+通常のログ（`log_info`）:
+
+| 記号 | 行 | 文面 |
+|---|---|---|
+| SL1 | 段の始まり | `段の始まり: {stage}（{analysis_id}）`（`{stage}` は 6.11.2 の段の名前。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 4 の 5〜9 と [4.14.2](30_HLD.md#4142-処理の流れ) の 4 の 2 の 5〜9 の各段の始まり。`ST-FR-004-01` が出力の生成の順をこの行で確かめる） |
+| SL2 | 早期終了でパターンを打ち切った | `残りのパターンを行わない（組の対象ピーク {k} 件がすべて確定した）: {target}（最後に解析したパターン {analysis_id}）` |
+| SL3 | 途中経過 | 2.2 の途中経過の形。`{what}` は通常が `通常解析のメッシュ（{code} まで）`、広域が `広域解析のメッシュ（{code} まで）`（`{code}` はいま終えた対象メッシュのコード。[HLD 5.7.2](30_HLD.md#572-処理の流れ) の 5「途中経過」の 2「行にはメッシュコードも書く」）。割合の整数部が増えたときだけ出す（2.2）ので、出ないメッシュもある（175 件なら約 75 件は出ない） |
+| SL4 | 結果の要約（通常・終えた） | `結果の要約: 通常解析を終えた。対象メッシュ {targets}、per-mesh CSV を書いたメッシュ {csv_meshes}、ピークの行 {rows}` |
+| SL5 | 結果の要約（通常・0 件） | `結果の要約: 対象メッシュが 0 件なので解析しなかった。対象メッシュ 0、per-mesh CSV を書いたメッシュ 0、ピークの行 0` |
+| SL6 | 結果の要約（通常・止まった） | `結果の要約: 途中で止まった（{where}）。対象メッシュ {targets}、per-mesh CSV を書いたメッシュ {csv_meshes}、ピークの行 {rows}`（`{targets}` は未定なら `-`） |
+| SL7 | 結果の要約（広域・終えた） | `結果の要約: 広域解析（N={n}）を終えた。対象ピーク {peaks}、対象メッシュ {meshes}、解析したパターン {analyzed}、省略したパターン {skipped}、ピークの行 {rows}` |
+| SL8 | 結果の要約（広域・0 件） | `結果の要約: 対象ピークが 0 件なので解析しなかった（N={n}）。対象ピーク 0、対象メッシュ 0、解析したパターン 0、省略したパターン 0、ピークの行 0` |
+| SL9 | 結果の要約（広域・止まった） | `結果の要約: 途中で止まった（{where}）。対象ピーク {peaks}、対象メッシュ {meshes}、解析したパターン {analyzed}、省略したパターン {skipped}、ピークの行 {rows}`（未定の数は `-`） |
+
+- `{where}` は 6.11.3 の `where`: `入力の読み込み`・`対象メッシュの決定`（広域）・`出力のディレクトリの用意`・`<対象メッシュ> の 3×3 の検査`（広域）・`<解析識別子> の解析`。`{rows}` は `rows_total`。数は 10 進（先頭の `0` なし）。
+- 要約の中身は [HLD 5.7.2](30_HLD.md#572-処理の流れ) の「結果の要約の中身」の `analyze_terrain` の 2 行だけにする（項目を足さない）。早期終了で行わなかったパターンは、解析にも省略にも数えない（省略は WN1 を出したパターンだけ）。
+- SL1〜SL9 は、ログファイルに時刻付きで書き、標準出力にも時刻なしで同じ文面を出す（`log_info`）。
+
+#### 6.11.5 UT 候補
+
+すべて自動。ID の列の `01` などは `UT-analyze_terrain_stage-01` のことである。
+
+- **実行ファイルを 2 本に分ける理由**: 2 関数はほかの 9 群をすべて呼ぶ。本物をつなぐと、1 メッシュでもグリッドが数億画素になり（[6.4.5](#645-ut-候補) の UT 17 は 23554 × 19202）、呼ぶ順・止まり方・要約を確かめるには重すぎる。そこで、呼ぶ順などのケース（01〜16）は、窓と省略・グリッド・標高地形図・走査・CSV と早期終了・ゾーン・出力の記録の 7 群をスタブに替えた `build/flow_stage` で確かめる。共通部品・変換・対象の 3 群は本物をリンクする（リストの読み込みと要約の出力を本物で見るため）。2 つのモジュールの関数のつながりのケース（17・18。[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2 で 6.11 に置く）は、本物をリンクする `build/test_stage` で確かめる。
+
+共通の準備:
+
+- **同じプロセス**: [6.12.5](#6125-ut-候補) の同じ名前の準備と同じ。設定は、一時のディレクトリ `<tmp>` に `[paths]` の `data_dir = <tmp>/data` だけの設定ファイルを書き、`load_config(<パス>, <6.1.2 の _load_keys の 6 キー>, {"data_dir"})` で作る（デフォルトで `prominence_primary_m` が 130、`activation_zone_drop_m` が 25、`delete_zone_max_drop_m` が 250）。`<tmp>/data/boundaries/nt_excluded_meshes.txt` と日本全土のリスト `<tmp>/japan.txt` をケースの中身で書く（ケースが書かなければ、日本全土は `5235\n5236\n6848\n`、除外は `6848\n`）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる。
+- **子のプロセス**: 6.12.5 の同じ名前の準備と同じ形（`fork` の前の `std::fflush(nullptr)`、記述子 1・2 をパイプに付け替えること、`main` の形の `try`/`catch` と `std::exit`）で、値は次のとおりに替える。設定ファイルは「同じプロセス」と同じ中身に `log_dir = <tmp>/logs` を足したもの、`load_config` の `keys` は 6.1.2 の `_load_keys` の 6 キー（`required` は `data_dir`）、`start_log` のプログラムの名前は `flow_stage`、引数は空の並び。ログファイルは `<tmp>/logs` の下の `flow_stage_*_<子の PID>.log`。入力の列の関数は `start_log` の後に呼ぶ。
+- **スタブ**（`tests/src/stub_analysis.hpp`・`.cpp`）: 7 群の、6.11 が呼ぶ関数だけを、各群のヘッダーの宣言のまま定義する。どれも最初に `log_info("stub: " + <下の表の行>)` を出す。その後、台本 `stub_script` を見て、次のどれかをしてから下の表の値を返す。
+  - `fail` が `<関数名>#<k>`（その関数の k 回目の呼び出し。k は 1 から）なら、`log_error("stub", "stub")` の後に `throw ExitRequest(EXIT_ERROR)`。
+  - `runtime` が同じ形で当たれば、`throw std::runtime_error("stub runtime")`。
+  - `signal` が当たれば、`raise(SIGTERM)` の後に普通に返す。
+  - `stub_reset()` は、台本と呼び出しの回数を初期の値に戻す（各ケースの始めに呼ぶ）。
+  - 台本の項目は `fail`・`runtime`・`signal`（既定は空）、`rows`（`build_col_list` が返す行の数。既定は 2）、`cover`（`is_pattern_covered` の k 回目が `covered` を返すかの並び。足りなければ偽）、`confirm`（`read_back_peak_csv` の k 回目に返す `peaks` の添字の並びの並び。足りなければ空）。
+  - 集合は昇順に `,` でつなぐ。空の集合と空の並びは `-`。真偽は `1`・`0`。
+
+  | 関数 | 出す行（`stub:` と空白 1 つの後） | 返す値 |
+  |---|---|---|
+  | `normal_window` | `normal_window {center} {meshes}` | `{center}` だけの集合 |
+  | `pattern_window` | `pattern_window {target} {n} {corner} {existing}` | `{target}` だけの集合 |
+  | `is_pattern_covered` | `is_pattern_covered {csv_dir} {target} {window} {n}` | `covered` は `cover` の k 番目、真なら `meshset_path` は `/m/{k}.meshset` |
+  | `check_mesh_tiles` | `check_mesh_tiles {meshes} {tiles_dir} {check_dem10b}` | なし |
+  | `build_grid_z15` | `build_grid_z15 {meshes} {tiles_dir}` | グリッドは W = 4・H = 3、`values` は 12 個の `0.0f`。`range.meshes` は `meshes`、`z14` は偽 |
+  | `build_grid_z14` | `build_grid_z14 {meshes} {peaks の数} {tiles_dir}` | 同じで `z14` は真 |
+  | `render_terrain` | `render_terrain {W}x{H} {analysis_id}` | 1 × 1 の画像 |
+  | `write_terrain_png` | `write_terrain_png {analysis_id} {images_dir}` | なし |
+  | `make_scan_order` | `make_scan_order {W}x{H}` | `{0}` |
+  | `scan_peaks_and_cols` | `scan_peaks_and_cols {order の数}` | 既定の `Component` 1 つ |
+  | `apply_sea_level_rule` | `apply_sea_level_rule {数}` | 受けたまま |
+  | `build_col_list` | `build_col_list {components の数} {width} {height}` | 既定の `PeakColRow` を `rows` 個 |
+  | `filter_peak_rows` | `filter_peak_rows {rows の数} {analysis_id} {prominence_primary_m} {peaks の数}` | `rows` と同じ数の `PeakCsvRow`。i 番目（0 から）の `lat_text` は `r{i}`、ほかは既定の値 |
+  | `write_peak_csv` | `write_peak_csv {rows の数} {analysis_id} {csv_dir}` | なし |
+  | `read_back_peak_csv` | `read_back_peak_csv {path} {peaks の数} {n}` | `confirm` の k 番目の添字の `peaks[i].pixel` の集合 |
+  | `fill_zone` | `fill_zone {A か D} {row.lat_text} {activation_zone_drop_m} {delete_zone_max_drop_m} {marks の数}` | `pixels` は `{0}`、`threshold.exclusive` は D なら真 |
+  | `judge_area_complete` | `judge_area_complete {pixels の数} {japan_meshes} {excluded_meshes}` | `threshold.exclusive` |
+  | `trace_outline` | `trace_outline {pixels の数}` | 既定の `ZonePolygon` 1 つ |
+  | `write_zone_geojson` | `write_zone_geojson {rows の数} {zones の数} {行ごとの印} {analysis_id} {csv_dir}` | なし |
+  | `write_meshset` | `write_meshset {meshes} {analysis_id} {csv_dir}` | なし |
+
+  `write_zone_geojson` の `{行ごとの印}` は、`zones` の各要素を `A` と `activation_complete`（`1`・`0`）、`D` と `delete_complete` を続けた 4 字（`A0D1` など）にして、順に `,` でつないだもの（`zones` が空なら `-`）。
+
+- **期待の書き方**: 「標準出力」は時刻の無い行の並び。`<tiles>`・`<csv>`・`<images>` は `<tmp>/data/tiles`・`<tmp>/data/results/csv`・`<tmp>/data/images`。「1 メッシュの並び（`{id}`、`{w}`）」は次の行の並びのこと（`{j}`・`{x}` は日本全土と除外のリストの集合で、既定のリストなら `5235,5236,6848`・`6848`）。
+  1. `stub: normal_window {code} {w}`
+  2. `stub: check_mesh_tiles {code} <tiles> 1`
+  3. `stub: build_grid_z15 {code} <tiles>`
+  4. SL1（`標高地形図`）
+  5. `stub: render_terrain 4x3 {id}`
+  6. `stub: write_terrain_png {id} <images>`
+  7. SL1（`ピーク候補とコル`）
+  8. `stub: make_scan_order 4x3`・`stub: scan_peaks_and_cols 1`・`stub: apply_sea_level_rule 1`・`stub: build_col_list 1 4 3`
+  9. SL1（`per-mesh CSV`）
+  10. `stub: filter_peak_rows 2 {id} 130 0`・`stub: write_peak_csv 2 {id} <csv>`
+  11. SL1（`per-mesh ピーク候補 GeoJSON`）
+  12. 行 `r0`・`r1` の順に、行ごとに `stub: fill_zone A r{i} 25 250 1`・`stub: judge_area_complete 1 {j} {x}`・`stub: trace_outline 1`・`stub: fill_zone D r{i} 25 250 1`・`stub: judge_area_complete 1 {j} {x}`・`stub: trace_outline 1`（2 行分）
+  13. `stub: write_zone_geojson 2 2 A0D1,A0D1 {id} <csv>`
+  14. SL1（`.meshset`）
+  15. `stub: write_meshset {code} {id} <csv>`
+
+  広域の「1 パターンの並び（`{id}`、`{corner}`、`{k}` 件のピーク）」は次の行の並びのこと。
+  1. `stub: pattern_window 5235 4 {corner} 5235,5236`
+  2. `stub: is_pattern_covered <csv> 5235 5235 4`
+  3. `stub: check_mesh_tiles 5235 <tiles> 1`
+  4. SL1（`解析範囲標高グリッド`）
+  5. `stub: build_grid_z14 5235 {k} <tiles>`
+  6. 通常の 4〜8 と同じ行
+  7. SL1（`per-mesh CSV`）
+  8. `stub: filter_peak_rows 1 {id} 130 {k}`・`stub: write_peak_csv 1 {id} <csv>`
+  9. SL1（`.meshset`）
+  10. `stub: write_meshset 5235 {id} <csv>`
+  11. `stub: read_back_peak_csv <csv>/{id}.csv {k} 4`
+
+  広域のケースは、台本の `rows` を 1 にする。
+
+ケース（`build/flow_stage`。準備は「同じプロセス」とスタブ。10 だけ「子のプロセス」）:
+
+| ID | 確かめること | 準備（ケースに固有のもの） | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_stage-01` | 通常の呼ぶ順と引数 | (a) なし。(b) 台本の `rows` を 0 | `run_normal_mode("<tmp>/japan.txt", true, {"5235"}, config)` | 戻る。(a) 標準出力は TM3（`6848`）、1 メッシュの並び（`3-5235`、`5235`）、SL3（`途中経過: 通常解析のメッシュ（5235 まで） 1/1（100%）`）、SL4（`対象メッシュ 1、per-mesh CSV を書いたメッシュ 1、ピークの行 2`）の順で、ほかの行は無い。(b) 1 メッシュの並びの 8 の `build_col_list` の行のほかは (a) と同じで、10 は `stub: filter_peak_rows 0 3-5235 130 0`・`stub: write_peak_csv 0 3-5235 <csv>`、12 の行が無く、13 は `stub: write_zone_geojson 0 0 - 3-5235 <csv>`、SL4 は `ピークの行 0`。どちらも標準エラー出力は空。`<csv>` と `<images>` がディレクトリとしてある |
+| `UT-analyze_terrain_stage-02` | 飛ばしたコードの警告の順 | なし | `mesh_codes` を `{"5235", "6848", "9999"}` | 標準エラー出力は TM2（`6848`）の 2 行、TM1（`9999`、`{list_path}` は `<tmp>/japan.txt`）の 2 行の順。標準出力の最初の行は TM3（`6848`）で、その後は 01 と同じ |
+| `UT-analyze_terrain_stage-03` | 対象が 0 件 | なし | `mesh_codes` を `{"9999"}` | 戻る。標準エラー出力は TM1（`9999`）の 2 行だけ。標準出力は TM3、SL5 だけ（`stub:` の行が無い）。`<tmp>/data/results` と `<tmp>/data/images` が無い |
+| `UT-analyze_terrain_stage-04` | `--mesh` なしと途中経過 | (a) 既定のリスト。(b) 日本全土を `5000`〜`5149` の 150 件（1 行 1 件）、除外を空のファイル | `run_normal_mode(..., false, {}, config)` | (a) 1 メッシュの並びが `3-5235`（`{w}` は `5235,5236`）、`3-5236`（`{w}` は `5235,5236`）の順。SL3 は `（5235 まで） 1/2（50%）` と `（5236 まで） 2/2（100%）`。SL4 は `対象メッシュ 2、per-mesh CSV を書いたメッシュ 2、ピークの行 4`。(b) SL3 の行は 100 行で、最初は `（5001 まで） 2/150（1%）`、最後は `（5149 まで） 150/150（100%）`（`done` が 1 のときは 0% なので出ない） |
+| `UT-analyze_terrain_stage-05` | リストの誤り | (a) 日本全土のリストを置かない。(b) 除外リストを置かない。(c) 除外リストを `68x1\n` にする | 01 と同じ | どれも `code` が 1。(a) R1 で対処は既定（`ファイル <tmp>/japan.txt があり、読み取れることを確かめる`）。(b) R1 で対処は除外リストの案内。(c) R3 で対処は除外リストの案内。どれも標準出力の最後は SL6（`途中で止まった（入力の読み込み）。対象メッシュ -、per-mesh CSV を書いたメッシュ 0、ピークの行 0`）で、`stub:` の行が無い |
+| `UT-analyze_terrain_stage-06` | 途中のメッシュで止まる | 台本の `fail` を `write_zone_geojson#2` | 04 の (a) と同じ | `code` が 1。標準出力に `3-5235` の 1 メッシュの並びと SL3（`1/2（50%）`）があり、`3-5236` の並びは `stub: write_zone_geojson` の行まで（SL1 の `.meshset` と `stub: write_meshset … 3-5236 …` が無い）。標準エラー出力は `ERROR: stub` と `対処: stub`。最後は SL6（`途中で止まった（3-5236 の解析）。対象メッシュ 2、per-mesh CSV を書いたメッシュ 2、ピークの行 4`） |
+| `UT-analyze_terrain_stage-07` | ディレクトリを作れない | (a) `<tmp>/data/results` を通常のファイルにする。(b) `<tmp>/data/images` を通常のファイルにする | 01 と同じ | どちらも `code` が 1、`stub:` の行が無い。(a) SD1（通常の対処。`{path}` は `<tmp>/data/results/csv`、`{reason}` は `Not a directory`）。(b) SD1（`{path}` は `<tmp>/data/images`、`{reason}` は `File exists`。`<csv>` はできている）。どちらも最後は SL6（`途中で止まった（出力のディレクトリの用意）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`） |
+| `UT-analyze_terrain_stage-08` | `data_dir` の末尾の `/` | 設定ファイルの `data_dir` を `<tmp>/data/` にする | 01 と同じ | 01 と同じ行（`<tiles>` などに `//` が無い） |
+| `UT-analyze_terrain_stage-09` | 捕まらない例外でも要約 | 台本の `runtime` を `render_terrain#1` | 01 と同じ | `std::runtime_error` が上がる。標準出力の最後は SL6（`途中で止まった（3-5235 の解析）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`） |
+| `UT-analyze_terrain_stage-10` | シグナルで止まる | 子のプロセス。台本の `signal` を `build_grid_z15#1` | 01 と同じ | 子の終了コードが 143。標準出力に `stub: build_grid_z15 5235 <tiles>` はあり、`段の始まり: 標高地形図（3-5235）` と `stub: render_terrain` は無い。ログファイルの最後の 2 行は SL6（`途中で止まった（3-5235 の解析）。…0、…0`）と、`SIGTERM` を受けて止まった形の L3 |
+| `UT-analyze_terrain_stage-11` | 広域の呼ぶ順と引数 | 日本全土を `5235\n5236\n`、除外を空のファイル、`<tmp>/u.csv` を `peak_lat,peak_lon\n35.1,135.1\n`（所属メッシュ `5235`）。(b) は、さらに `<tmp>/u.csv` に `35.1,136.1`（所属メッシュ `5236`）の行を足す | `run_wide_mode("<tmp>/japan.txt", 4, "<tmp>/u.csv", config)` | (b) は、(a) の `5235` の行（SL3 は `（5235 まで） 1/2（50%）`）の後に、`5236` について同じ形の行（`stub: normal_window 5236 5235,5236`・`stub: check_mesh_tiles 5236 <tiles> 0`、1 パターンの並びの対象メッシュの欄〈`pattern_window`・`is_pattern_covered`・`check_mesh_tiles`・`build_grid_z14`・`write_meshset` の行の最初の `5235` と、`is_pattern_covered` の窓の `5235`、解析識別子の `5235`〉を `5236` にしたもの〈存在メッシュの `5235,5236` はそのまま〉を 4 回、SL3 は `（5236 まで） 2/2（100%）`）が続き、SL7 は `対象ピーク 2、対象メッシュ 2、解析したパターン 8、省略したパターン 0、ピークの行 8`。(a) は次のとおり。戻る。標準出力は `stub: normal_window 5235 5235,5236`、`stub: check_mesh_tiles 5235 <tiles> 0`、1 パターンの並びを `4-5235-NW`・`-NE`・`-SW`・`-SE` の順に 4 回（`{k}` は 1）、SL3（`途中経過: 広域解析のメッシュ（5235 まで） 1/1（100%）`）、SL7（`広域解析（N=4）を終えた。対象ピーク 1、対象メッシュ 1、解析したパターン 4、省略したパターン 0、ピークの行 4`）の順。`stub: fill_zone`・`stub: write_zone_geojson` の行が無い。`<csv>` と `<images>` がある |
+| `UT-analyze_terrain_stage-12` | 省略したパターン | 11 の準備で、台本の `cover` を `{false, true}` | 11 と同じ | NE は `stub: is_pattern_covered …` の次が WN1（`パターンを省略した（解析対象メッシュが /m/2.meshset に含まれる）: 4-5235-NE`）で、次の行が SW の `stub: pattern_window`。SL7 は `解析したパターン 3、省略したパターン 1、ピークの行 3` |
+| `UT-analyze_terrain_stage-13` | 確定の積み上げと早期終了 | 11 の準備で、`<tmp>/u.csv` に 2 行目 `35.2,135.2`（同じく `5235`）を足す。台本の `confirm` を (a) `{{0}, {1}}`、(b) `{{0}, {}, {}, {1}}`、(c) `{{0, 1}}` | 11 と同じ | (a) NE の `stub: read_back_peak_csv` の次が SL2（`残りのパターンを行わない（組の対象ピーク 2 件がすべて確定した）: 5235（最後に解析したパターン 4-5235-NE）`）で、SW・SE の行が無い。SL7 は `対象ピーク 2、…、解析したパターン 2、省略したパターン 0、ピークの行 2`。(b) 4 パターンとも行い、SL2 が無い（SE で確定した）。(c) NW の後に SL2（`… 4-5235-NW`）。どれも `{k}` は 2 |
+| `UT-analyze_terrain_stage-14` | 対象ピークが 0 件 | 11 の準備で、`<tmp>/u.csv` を `peak_lat,peak_lon\n` だけにする | 11 と同じ | 戻る。標準出力は SL8（`（N=4）`）だけ。`<tmp>/data/results` と `<tmp>/data/images` が無い |
+| `UT-analyze_terrain_stage-15` | 広域で止まる | (a) 11 の準備で、日本全土を `5235\n5236\n6848\n`、除外を `6848\n`、`<tmp>/u.csv` に `45.4,148.5`（所属メッシュ `6848`）の行を足す。(b) 11 の準備で、台本の `fail` を `check_mesh_tiles#1`。(c) 11 の準備で、`fail` を `write_meshset#2` | 11 と同じ | どれも `code` が 1。(a) UP3（6.2.4）の後、最後は SL9（`途中で止まった（対象メッシュの決定）。対象ピーク 2、対象メッシュ -、解析したパターン 0、省略したパターン 0、ピークの行 0`）で、`stub:` の行が無い。(b) SL9（`途中で止まった（5235 の 3×3 の検査）。対象ピーク 1、対象メッシュ 1、解析したパターン 0、省略したパターン 0、ピークの行 0`）。(c) NE の `stub: read_back_peak_csv` が無く、SL9（`途中で止まった（4-5235-NE の解析）。…、解析したパターン 1、省略したパターン 0、ピークの行 2`） |
+| `UT-analyze_terrain_stage-16` | 広域のディレクトリの誤り | 11 の準備で、`<tmp>/data/results` を通常のファイルにする | 11 と同じ | `code` が 1。SD1 の 2 行目が広域の対処で `--n 4`。最後は SL9（`途中で止まった（出力のディレクトリの用意）。対象ピーク 1、対象メッシュ 1、…0、…0、…0`） |
+
+ケース（`build/test_stage`。本物をリンクする。準備は「同じプロセス」）:
+
+| ID | 確かめること | 準備（ケースに固有のもの） | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-analyze_terrain_stage-17` | `.meshset` の書き戻しと省略の判定（6.9・6.3） | `<tmp>/csv` を作る | `write_meshset({"5235", "5236", "5335"}, "3-5235", "<tmp>/csv")` の後に、(a) `read_meshset("<tmp>/csv/3-5235.meshset", 4)`、(b) `is_pattern_covered("<tmp>/csv", "5235", {"5235", "5236"}, 4)`、(c) 同じく `{"5235", "5237"}` | (a) `{5235, 5236, 5335}`。(b) `covered` が真、`meshset_path` が `<tmp>/csv/3-5235.meshset`。(c) `covered` が偽 |
+| `UT-analyze_terrain_stage-18` | フィルタの後のリストから CSV と GeoJSON まで（6.7・6.8） | [6.8.5](#685-ut-候補) の「基本の範囲」と「小さいグリッド」。画素 (300, 100) を 200m にする。`PeakColRow` を 1 行（`peak` が (300, 100)、`peak_elevation` 200、`key_col_resolved` 真、`col_elevation` 0、`prominence` 200）。`<tmp>/csv` を作る | `filter_peak_rows({<その行>}, <範囲>, "3-5235", 100, {})` → `write_peak_csv(rows, "3-5235", "<tmp>/csv")` → 行ごとに [6.11.3](#6113-関数の細部) の `run_normal_mode` の手順 6 の 6（ゾーン）の順で 6.8 の 3 関数（2 つのリストは `{5235}` と空）→ `write_zone_geojson(rows, zones, "3-5235", "<tmp>/csv")` | `rows` は 1 行。`<tmp>/csv/3-5235.csv` のデータの行は 1 行。`<tmp>/csv/3-5235.geojson` の各 Feature の `properties` の `peak_lat`・`peak_lon` の数の字句（6.8.3 の書き方で `"peak_lat":` の後から次の `,` か `}` の前まで）が、CSV のその行の `peak_lat`・`peak_lon` の文字列と同じ。Feature は 3 つ（`delete_zone`・`activation_zone`・`peak` の順。`col_lat`・`col_lon` が 0.0 なので、[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の「Feature」の 3・4 の線とコルは無い） |
+
+- 書いた GeoJSON を CMP5（統合・突合）の `merge_zones` が読むことは、結合テスト（IT）の `IT-CMP5-EXT2-02`（`CMP5-EXT2`）で確かめ、6.11 の UT には置かない（CMP5 は Python で、6.11 の UT から呼べない）。書いた per-mesh CSV を `merge_peaks` が読むことは `CMP5-EXT1` の IT で確かめる。
+- 解放の順（6.11.3 の「メモリ」）は UT で確かめない（スタブでは容量を見られない）。試し書きの読み合わせと、実装のレビューで見る。
 
 ### 6.12 `analyze_terrain_common`
 
