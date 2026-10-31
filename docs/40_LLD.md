@@ -3727,6 +3727,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
   - 通常: `targets`（対象メッシュの数）、`csv_meshes`（per-mesh CSV を書いたメッシュの数）、`rows_total`（書いたピークの行の数の合計）。
   - 広域: `peaks`（対象ピークの数）、`meshes`（対象メッシュの数）、`analyzed`（解析したパターンの数）、`skipped`（省略したパターンの数）、`rows_total`。
   - `targets`・`peaks`・`meshes` は、決まる前は「未定」で、要約には `-` と書く。未定は `bool` の印で持つ（1.2。`std::optional` を使わない）。
+  - 途中経過（SL3）のために、終えた対象メッシュの数 `done`（`std::size_t`、初めは 0）と、前に出した割合の整数部 `last_pct`（`std::size_t`、初めは 0）も局所の変数に持つ。対象メッシュを 1 つ終えるたびに `done` を 1 増やし、`done * 100 / total` が `last_pct` より大きいときだけ SL3 を出して `last_pct` を替える（2.2）。
 - 「どこで止まったか」を示す文字列 `where`（SL6・SL9 の `{where}`。[6.11.4](#6114-メッセージ文面)）も局所の変数に持つ。モジュールの状態は持たない（2 関数とも、件数を自分の中だけで数えて自分で要約を出すので、ほかの関数に渡す必要が無い）。
 
 #### 6.11.3 関数の細部
@@ -3751,7 +3752,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
   - 失敗したら、SD1（`{path}` は作れなかったディレクトリ〈`csv_dir` か `images_dir`〉、`{reason}` は失敗の `errno` の `std::strerror`）を出して `throw ExitRequest(EXIT_ERROR)`。
   - 作る時機は、対象が 1 件以上と決まった後、最初の対象メッシュの前。0 件のときは作らない（[HLD 4.4.3](30_HLD.md#443-異常系)・[4.14.3](30_HLD.md#4143-異常系) の「何もせずに終わる」）。リストの読み込みなど、ここより前で止まるときも作らない。
   - 広域でも作るのは、`results/csv` は通常解析が作っているのが普通でも、`images` が無いことがある（広域の段から起動したとき）ため。作れなければ、ほかの関数の `ENOENT` による失敗より先に分かる。
-- **シグナルの区切り**: 6.11 は次で `check_signal()` を呼ぶ。対象メッシュ 1 つの始まり、広域のパターン 1 つの始まり、SL1（段の始まり）を出す直前。
+- **シグナルの区切り**: 6.11 は次で `check_signal()` を呼ぶ。対象メッシュ 1 つの始まり、広域のパターン 1 つの始まり、SL1（段の始まり）を出す直前。対象メッシュとパターンの始まりでは、その繰り返しの識別子（`id`）と `where` を決めてから呼ぶ（始まりで止まったときの要約の `{where}` が、まだ始めていない繰り返しを指し、前の繰り返しを指さないため）。
   - 6.11 自身は区切りの間に時間のかかる処理を置かない（件数を数え、文字列を組み、集合を和にするだけ）。そのため、受けてから止まるまでの遅れの上限は、受けた時点から次の区切り（6.11 の区切りか、呼んだ関数の中の区切り）までに残る呼び出しの所要の合計になる。
   - `check_signal` を呼ぶ群（グリッド・走査・ゾーン）の中では、その節が決めた上限。呼ばない群（標高地形図・CSV と早期終了・出力の記録・窓と省略・対象）は、区切りの間に続けて呼ぶ分の所要の合計（たとえば SL1 の「標高地形図」の直後に受けたときは、`render_terrain` と `write_terrain_png` の 2 つを終えてから、次の SL1 の前で止まる）。
 - **メモリ**: 6.5・6.6・6.8 が決めた解放の順を、次のとおり守る。
@@ -3770,7 +3771,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 4. `t.targets` が空なら、`try` を抜けて SL5 を出し、戻る（終了コード 0。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 3「対象メッシュを決める」）。
 5. `where = "出力のディレクトリの用意"`。`csv_dir`・`images_dir` を作る（前置きの「ディレクトリを作る」）。
 6. `target_set` を `t.targets` の集合にする。`t.targets` を順に（昇順）、各 `code` について次を行う。
-   1. `check_signal()`。`id = "3-" + code`、`where = id + " の解析"`。
+   1. `id = "3-" + code`、`where = id + " の解析"` にしてから、`check_signal()`。
    2. `window = normal_window(code, target_set)` → `check_mesh_tiles(window, tiles_dir, true)` → `GridResult g = build_grid_z15(window, tiles_dir)`。
    3. 標高地形図: `check_signal()` と SL1（`標高地形図`）→ ブロックの中で `TerrainImage image = render_terrain(g.grid, g.range, id)` → `write_terrain_png(image, id, images_dir)`。ブロックを抜けて画像を捨てる。
    4. ピーク候補とコル: `check_signal()` と SL1（`ピーク候補とコル`）→ `order = make_scan_order(g.grid)` → `components = scan_peaks_and_cols(g.grid, order)` → `order` を捨てる → `components = apply_sea_level_rule(std::move(components))` → `col_rows = build_col_list(components, g.grid.width, g.grid.height, g.range)` → `components` を捨てる。
@@ -3792,15 +3793,15 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 4. `where = "対象メッシュの決定"`。`groups = group_peaks_by_mesh(peak_list, japan, excluded)`、`meshes = groups.size()` にする（未定でなくなる）。存在メッシュ `existing` を、`japan` から `excluded` を除いた集合にする（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の前置き）。
 5. `where = "出力のディレクトリの用意"`。ディレクトリを作る（前置きの「ディレクトリを作る」）。
 6. `groups` の鍵の順（昇順）に、各 `target` と組 `group` について次を行う。
-   1. `check_signal()`。`where = target + " の 3×3 の検査"`。`check_mesh_tiles(normal_window(target, existing), tiles_dir, false)`。
+   1. `where = target + " の 3×3 の検査"` にしてから、`check_signal()`。続けて `check_mesh_tiles(normal_window(target, existing), tiles_dir, false)`。
    2. 確定済みの集合 `confirmed`（`std::set<Z15Pixel>`）を空にする（対象メッシュごとに作り直す）。
    3. `_corners` を順に、各 `corner` について次を行う。
-      1. `check_signal()`。`id = std::to_string(n) + "-" + target + "-" + corner`、`where = id + " の解析"`。
+      1. `id = std::to_string(n) + "-" + target + "-" + corner`、`where = id + " の解析"` にしてから、`check_signal()`。
       2. `window = pattern_window(target, n, corner, existing)` → `cover = is_pattern_covered(csv_dir, target, window, n)`。`cover.covered` が真なら、WN1（`{meshset}` は `cover.meshset_path`）を `log_info` で出し、`skipped += 1` にして、次のコーナーへ進む。
       3. `check_mesh_tiles(window, tiles_dir, true)`。
       4. グリッド: `check_signal()` と SL1（`解析範囲標高グリッド`）→ `GridResult g = build_grid_z14(window, group, tiles_dir)`。
       5. 標高地形図とピーク候補とコル: `run_normal_mode` の 6 の 3・4 と同じ。ただし `build_col_list` の後に `g.grid` も捨てる。
-      6. per-mesh CSV: `check_signal()` と SL1（`per-mesh CSV`）→ `rows = filter_peak_rows(col_rows, g.range, id, config.values.at("prominence_primary_m").integer, group)`（広域では読まれない値。6.7.2）→ `col_rows` を捨てる（`run_normal_mode` の 5 と同じ）→ `write_peak_csv(rows, id, csv_dir)` → `rows_total += rows.size()`。
+      6. per-mesh CSV: `check_signal()` と SL1（`per-mesh CSV`）→ `rows = filter_peak_rows(col_rows, g.range, id, config.values.at("prominence_primary_m").integer, group)`（広域では読まれない値。6.7.2）→ `col_rows` を捨てる（`run_normal_mode` の 6 の 5 と同じ）→ `write_peak_csv(rows, id, csv_dir)` → `rows_total += rows.size()`。
       7. `.meshset`: `check_signal()` と SL1（`.meshset`）→ `write_meshset(window, id, csv_dir)`。
       8. 早期終了の判定: `got = read_back_peak_csv(csv_dir + "/" + id + ".csv", group, n)` → `analyzed += 1` → `confirmed` に `got` を足す（パターンをまたいだ和）。`group` のすべての `TargetPeak` の `pixel` が `confirmed` にあり、まだ行っていないコーナーがあれば、SL2 を `log_info` で出して、コーナーの繰り返しを抜ける（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10「早期終了を判定する」）。最後のコーナー（`SE`）で確定したときは、打ち切るパターンが無いので SL2 を出さない。後ろのコーナーが 1 つでも残っていれば、それが `is_pattern_covered` で省略されるものでも SL2 を出す（省略かどうかは、そのコーナーの番になるまで分からないため）。
    4. SL3 の途中経過を出す（`{done}` は終えた対象メッシュの数、`{total}` は `meshes`）。
@@ -3857,13 +3858,13 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
   - `runtime` が同じ形で当たれば、`throw std::runtime_error("stub runtime")`。
   - `signal` が当たれば、`raise(SIGTERM)` の後に普通に返す。
   - `stub_reset()` は、台本と呼び出しの回数を初期の値に戻す（各ケースの始めに呼ぶ）。
-  - 台本の項目は `fail`・`runtime`・`signal`（既定は空）、`rows`（`build_col_list` が返す行の数。既定は 2）、`cover`（`is_pattern_covered` の k 回目が `covered` を返すかの並び。足りなければ偽）、`confirm`（`read_back_peak_csv` の k 回目に返す `peaks` の添字の並びの並び。足りなければ空）。
+  - 台本の項目は `fail`・`runtime`・`signal`（既定は空）、`rows`（`build_col_list` が返す行の数。既定は 2）、`cover`（`is_pattern_covered` の k 回目が `covered` を返すかの並び。足りなければ偽）、`confirm`（`read_back_peak_csv` の k 回目に返す `peaks` の添字の並びの並び。足りなければ空）、`normal_window_set`・`pattern_window_set`（`normal_window`・`pattern_window` が返す集合を、`,` でつないだメッシュコードで書いた字句。既定は空で、空のときは下の表の中心／対象メッシュだけの集合を返す。返した集合が後ろの関数に渡ることを確かめるケースだけが決める）。
   - 集合は昇順に `,` でつなぐ。空の集合と空の並びは `-`。真偽は `1`・`0`。
 
   | 関数 | 出す行（`stub:` と空白 1 つの後） | 返す値 |
   |---|---|---|
-  | `normal_window` | `normal_window {center} {meshes}` | `{center}` だけの集合 |
-  | `pattern_window` | `pattern_window {target} {n} {corner} {existing}` | `{target}` だけの集合 |
+  | `normal_window` | `normal_window {center} {meshes}` | `normal_window_set` が空でなければその集合、空なら `{center}` だけの集合 |
+  | `pattern_window` | `pattern_window {target} {n} {corner} {existing}` | `pattern_window_set` が空でなければその集合、空なら `{target}` だけの集合 |
   | `is_pattern_covered` | `is_pattern_covered {csv_dir} {target} {window} {n}` | `covered` は `cover` の k 番目、真なら `meshset_path` は `/m/{k}.meshset` |
   | `check_mesh_tiles` | `check_mesh_tiles {meshes} {tiles_dir} {check_dem10b}` | なし |
   | `build_grid_z15` | `build_grid_z15 {meshes} {tiles_dir}` | グリッドは W = 4・H = 3、`values` は 12 個の `0.0f`。`range.meshes` は `meshes`、`z14` は偽 |
@@ -3921,7 +3922,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 
 | ID | 確かめること | 準備（ケースに固有のもの） | 入力 | 期待 |
 |---|---|---|---|---|
-| `UT-analyze_terrain_stage-01` | 通常の呼ぶ順と引数 | (a) なし。(b) 台本の `rows` を 0 | `run_normal_mode("<tmp>/japan.txt", true, {"5235"}, config)` | 戻る。(a) 標準出力は TM3（`6848`）、1 メッシュの並び（`3-5235`、`5235`）、SL3（`途中経過: 通常解析のメッシュ（5235 まで） 1/1（100%）`）、SL4（`対象メッシュ 1、per-mesh CSV を書いたメッシュ 1、ピークの行 2`）の順で、ほかの行は無い。(b) 1 メッシュの並びの 8 の `build_col_list` の行（`stub: build_col_list 1 4 3`。台本の `rows` によらない）を含め、(a) と同じ行のうち、10 は `stub: filter_peak_rows 0 3-5235 130 0`・`stub: write_peak_csv 0 3-5235 <csv>`、12 の行が無く、13 は `stub: write_zone_geojson 0 0 - 3-5235 <csv>`、SL4 は `ピークの行 0`。どちらも標準エラー出力は空。`<csv>` と `<images>` がディレクトリとしてある |
+| `UT-analyze_terrain_stage-01` | 通常の呼ぶ順と引数 | (a) なし。(b) 台本の `rows` を 0。(c) 台本の `normal_window_set` を `5235,5236` | `run_normal_mode("<tmp>/japan.txt", true, {"5235"}, config)` | 戻る。(a) 標準出力は TM3（`6848`）、1 メッシュの並び（`3-5235`、`5235`）、SL3（`途中経過: 通常解析のメッシュ（5235 まで） 1/1（100%）`）、SL4（`対象メッシュ 1、per-mesh CSV を書いたメッシュ 1、ピークの行 2`）の順で、ほかの行は無い。(b) 1 メッシュの並びの 8 の `build_col_list` の行（`stub: build_col_list 1 4 3`。台本の `rows` によらない）を含め、(a) と同じ行のうち、10 は `stub: filter_peak_rows 0 3-5235 130 0`・`stub: write_peak_csv 0 3-5235 <csv>`、12 の行が無く、13 は `stub: write_zone_geojson 0 0 - 3-5235 <csv>`、SL4 は `ピークの行 0`。(c) は (a) と同じ行のうち、1 メッシュの並びの 2 が `stub: check_mesh_tiles 5235,5236 <tiles> 1`、3 が `stub: build_grid_z15 5235,5236 <tiles>`、15 が `stub: write_meshset 5235,5236 3-5235 <csv>`（`normal_window` が返した集合が後ろの関数に渡る）。どれも標準エラー出力は空。`<csv>` と `<images>` がディレクトリとしてある |
 | `UT-analyze_terrain_stage-02` | 飛ばしたコードの警告の順 | なし | `mesh_codes` を `{"5235", "6848", "9999"}` | 標準エラー出力は TM2（`6848`）の 2 行、TM1（`9999`、`{list_path}` は `<tmp>/japan.txt`）の 2 行の順。標準出力の最初の行は TM3（`6848`）で、その後は 01 と同じ |
 | `UT-analyze_terrain_stage-03` | 対象が 0 件 | なし | `mesh_codes` を `{"9999"}` | 戻る。標準エラー出力は TM1（`9999`）の 2 行だけ。標準出力は TM3、SL5 だけ（`stub:` の行が無い）。`<tmp>/data/results` と `<tmp>/data/images` が無い |
 | `UT-analyze_terrain_stage-04` | `--mesh` なしと途中経過 | (a) 既定のリスト。(b) 日本全土を `5000`〜`5149` の 150 件（1 行 1 件）、除外を空のファイル | `run_normal_mode(..., false, {}, config)` | (a) 標準出力は、最初に TM3（`6848`。`--mesh` なしでも出る）、続けて 1 メッシュの並びが `3-5235`（`{w}` は `5235,5236`）、`3-5236`（`{w}` は `5235,5236`）の順。SL3 は `（5235 まで） 1/2（50%）` と `（5236 まで） 2/2（100%）`。SL4 は `対象メッシュ 2、per-mesh CSV を書いたメッシュ 2、ピークの行 4`。(b) SL3 の行は 100 行で、最初は `（5001 まで） 2/150（1%）`、最後は `（5149 まで） 150/150（100%）`（`done` が 1 のときは 0% なので出ない） |
@@ -3930,8 +3931,8 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 | `UT-analyze_terrain_stage-07` | ディレクトリを作れない | (a) `<tmp>/data/results` を通常のファイルにする。(b) `<tmp>/data/images` を通常のファイルにする | 01 と同じ | どちらも `code` が 1、`stub:` の行が無い。(a) SD1（通常の対処。`{path}` は `<tmp>/data/results/csv`、`{reason}` は `Not a directory`）。(b) SD1（`{path}` は `<tmp>/data/images`、`{reason}` は `File exists`。`<csv>` はできている）。どちらも最後は SL6（`途中で止まった（出力のディレクトリの用意）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`） |
 | `UT-analyze_terrain_stage-08` | `data_dir` の末尾の `/` | 設定ファイルの `data_dir` を `<tmp>/data/` にする | 01 と同じ | 01 と同じ行（`<tiles>` などに `//` が無い） |
 | `UT-analyze_terrain_stage-09` | 捕まらない例外でも要約 | 台本の `runtime` を `render_terrain#1` | 01 と同じ | `std::runtime_error` が上がる。標準出力の最後は SL6（`途中で止まった（3-5235 の解析）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`） |
-| `UT-analyze_terrain_stage-10` | シグナルで止まる | 子のプロセス。台本の `signal` を `build_grid_z15#1` | 01 と同じ | 子の終了コードが 143。標準出力に `stub: build_grid_z15 5235 <tiles>` はあり、`段の始まり: 標高地形図（3-5235）` と `stub: render_terrain` は無い。ログファイルの最後の 2 行は SL6（`途中で止まった（3-5235 の解析）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`）と、`SIGTERM` を受けて止まった形の L3 |
-| `UT-analyze_terrain_stage-11` | 広域の呼ぶ順と引数 | 台本の `rows` を 1 にする（11〜16 のすべてで同じ。12〜16 は「11 の準備で」と書いたものを引く）。日本全土を `5235\n5236\n`、除外を空のファイル、`<tmp>/u.csv` を `peak_lat,peak_lon\n35.1,135.1\n`（所属メッシュ `5235`）。(b) は、さらに `<tmp>/u.csv` に `35.1,136.1`（所属メッシュ `5236`）の行を足す | `run_wide_mode("<tmp>/japan.txt", 4, "<tmp>/u.csv", config)` | (b) は、(a) の `5235` の行（SL3 は `（5235 まで） 1/2（50%）`）の後に、`5236` について同じ形の行（`stub: normal_window 5236 5235,5236`・`stub: check_mesh_tiles 5236 <tiles> 0`、1 パターンの並びの対象メッシュの欄〈`pattern_window`・`is_pattern_covered`・`check_mesh_tiles`・`build_grid_z14`・`write_meshset` の行の最初の `5235` と、`is_pattern_covered` の窓の `5235`、解析識別子の `5235`〉を `5236` にしたもの〈存在メッシュの `5235,5236` はそのまま〉を 4 回、SL3 は `（5236 まで） 2/2（100%）`）が続き、SL7 は `対象ピーク 2、対象メッシュ 2、解析したパターン 8、省略したパターン 0、ピークの行 8`。(a) は次のとおり。戻る。標準出力は `stub: normal_window 5235 5235,5236`、`stub: check_mesh_tiles 5235 <tiles> 0`、1 パターンの並びを `4-5235-NW`・`-NE`・`-SW`・`-SE` の順に 4 回（`{k}` は 1）、SL3（`途中経過: 広域解析のメッシュ（5235 まで） 1/1（100%）`）、SL7（`広域解析（N=4）を終えた。対象ピーク 1、対象メッシュ 1、解析したパターン 4、省略したパターン 0、ピークの行 4`）の順。`stub: fill_zone`・`stub: write_zone_geojson` の行が無い。`<csv>` と `<images>` がある |
+| `UT-analyze_terrain_stage-10` | シグナルで止まる | 子のプロセス。(a) 台本の `signal` を `build_grid_z15#1`。(b) 台本の `signal` を `write_meshset#1` | (a) 01 と同じ。(b) 04 の (a) と同じ | (a) 子の終了コードが 143。標準出力に `stub: build_grid_z15 5235 <tiles>` はあり、`段の始まり: 標高地形図（3-5235）` と `stub: render_terrain` は無い。ログファイルの最後の 2 行は SL6（`途中で止まった（3-5235 の解析）。対象メッシュ 1、per-mesh CSV を書いたメッシュ 0、ピークの行 0`）と、`SIGTERM` を受けて止まった形の L3。(b) 子の終了コードが 143。標準出力に `stub: write_meshset 5235 3-5235 <csv>` と SL3（`（5235 まで） 1/2（50%）`）はあり、`stub: normal_window 5236 5235,5236` は無い。ログファイルの最後の 2 行は SL6（`途中で止まった（3-5236 の解析）。対象メッシュ 2、per-mesh CSV を書いたメッシュ 1、ピークの行 2`。2 つ目のメッシュの始まりの `check_signal()` で止まる）と、`SIGTERM` を受けて止まった形の L3 |
+| `UT-analyze_terrain_stage-11` | 広域の呼ぶ順と引数 | 台本の `rows` を 1 にする（11〜16 のすべてで同じ。12〜16 は「11 の準備で」と書いたものを引く）。日本全土を `5235\n5236\n`、除外を空のファイル、`<tmp>/u.csv` を `peak_lat,peak_lon\n35.1,135.1\n`（所属メッシュ `5235`）。(b) は、さらに `<tmp>/u.csv` に `35.1,136.1`（所属メッシュ `5236`）の行を足す。(c) は、台本の `normal_window_set` を `5235,5335`、`pattern_window_set` を `5235,5236` にする（(c) だけ。12〜16 は引かない） | `run_wide_mode("<tmp>/japan.txt", 4, "<tmp>/u.csv", config)` | (b) は、(a) の `5235` の行（SL3 は `（5235 まで） 1/2（50%）`）の後に、`5236` について同じ形の行（`stub: normal_window 5236 5235,5236`・`stub: check_mesh_tiles 5236 <tiles> 0`、1 パターンの並びの対象メッシュの欄〈`pattern_window`・`is_pattern_covered`・`check_mesh_tiles`・`build_grid_z14`・`write_meshset` の行の最初の `5235` と、`is_pattern_covered` の窓の `5235`、解析識別子の `5235`〉を `5236` にしたもの〈存在メッシュの `5235,5236` はそのまま〉を 4 回、SL3 は `（5236 まで） 2/2（100%）`）が続き、SL7 は `対象ピーク 2、対象メッシュ 2、解析したパターン 8、省略したパターン 0、ピークの行 8`。(a) は次のとおり。戻る。標準出力は `stub: normal_window 5235 5235,5236`、`stub: check_mesh_tiles 5235 <tiles> 0`、1 パターンの並びを `4-5235-NW`・`-NE`・`-SW`・`-SE` の順に 4 回（`{k}` は 1）、SL3（`途中経過: 広域解析のメッシュ（5235 まで） 1/1（100%）`）、SL7（`広域解析（N=4）を終えた。対象ピーク 1、対象メッシュ 1、解析したパターン 4、省略したパターン 0、ピークの行 4`）の順。`stub: fill_zone`・`stub: write_zone_geojson` の行が無い。`<csv>` と `<images>` がある。(c) は (a) と同じ行のうち、3×3 の検査の行が `stub: check_mesh_tiles 5235,5335 <tiles> 0`、1 パターンの並びの 2 の窓が `5235,5236`（`stub: is_pattern_covered <csv> 5235 5235,5236 4`）、3 が `stub: check_mesh_tiles 5235,5236 <tiles> 1`、5 が `stub: build_grid_z14 5235,5236 1 <tiles>`、10 が `stub: write_meshset 5235,5236 {id} <csv>`（3×3 の窓とパターンの窓を取り違えず、それぞれの戻りが渡る） |
 | `UT-analyze_terrain_stage-12` | 省略したパターン | 11 の準備で、台本の `cover` を `{false, true}` | 11 と同じ | NE は `stub: is_pattern_covered …` の次が WN1（`パターンを省略した（解析対象メッシュが /m/2.meshset に含まれる）: 4-5235-NE`）で、次の行が SW の `stub: pattern_window`。SL7 は `解析したパターン 3、省略したパターン 1、ピークの行 3` |
 | `UT-analyze_terrain_stage-13` | 確定の積み上げと早期終了 | 11 の準備で、`<tmp>/u.csv` に 2 行目 `35.2,135.2`（同じく `5235`）を足す。台本の `confirm` を (a) `{{0}, {1}}`、(b) `{{0}, {}, {}, {1}}`、(c) `{{0, 1}}` | 11 と同じ | (a) NE の `stub: read_back_peak_csv` の次が SL2（`残りのパターンを行わない（組の対象ピーク 2 件がすべて確定した）: 5235（最後に解析したパターン 4-5235-NE）`）で、SW・SE の行が無い。SL7 は `対象ピーク 2、対象メッシュ 1、解析したパターン 2、省略したパターン 0、ピークの行 2`。(b) 4 パターンとも行い、SL2 が無い（SE で確定した）。(c) NW の後に SL2（`残りのパターンを行わない（組の対象ピーク 2 件がすべて確定した）: 5235（最後に解析したパターン 4-5235-NW）`）。どれも `{k}` は 2 |
 | `UT-analyze_terrain_stage-14` | 対象ピークが 0 件 | 11 の準備で、`<tmp>/u.csv` を `peak_lat,peak_lon\n` だけにする | 11 と同じ | 戻る。標準出力は SL8（`（N=4）`）だけ。`<tmp>/data/results` と `<tmp>/data/images` が無い |
