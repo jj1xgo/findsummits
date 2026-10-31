@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-10-30 |
+| 最終更新日 | 2026-10-31 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -144,7 +144,7 @@
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
   - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
-  - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数・状態・定数は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（内部の型は下の `PascalCase` のままでよい。`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、ほかのモジュールから使う定数は HLD の名前（`EXIT_OK` など）。
+  - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数・状態・定数は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_zone_key`・`_nb_dy` のように。`k` で始めたり、大文字だけで書いたりしない。内部の型は、無名の名前空間に置き、`_` を付けずに下の `PascalCase` で書く。`_` と英大文字で始まる名前になるため。`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、ほかのモジュールから使う定数は HLD の名前（`EXIT_OK` など）。
   - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
   - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。ただし、`start_log` の前に誤りのメッセージを画面に書けずに `std::system_error` が出たときは `EXIT_USAGE` を返す（[6.1](#61-analyze_terrain_launch) の `main`。`start_log` の前は終わりの行が無い）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
   - 結果の要約（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 7「結果の要約」）: 要約を出す関数は、次の形で書く（中身は各モジュールの節で決める）。
