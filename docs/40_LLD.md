@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -146,6 +146,12 @@
     - [7.3.3 関数の細部](#733-関数の細部)
     - [7.3.4 メッセージ文面](#734-メッセージ文面)
     - [7.3.5 UT 候補](#735-ut-候補)
+  - [7.4 `check_cols`](#74-check_cols)
+    - [7.4.1 ファイル割付](#741-ファイル割付)
+    - [7.4.2 型とデータ](#742-型とデータ)
+    - [7.4.3 関数の細部](#743-関数の細部)
+    - [7.4.4 メッセージ文面](#744-メッセージ文面)
+    - [7.4.5 UT 候補](#745-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -190,14 +196,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -567,7 +573,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3・7.4 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -625,7 +631,7 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9・6.11・7.1・7.2・7.3 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9・6.11・7.1・7.2・7.3・7.4 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
 - 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
@@ -634,9 +640,10 @@ def main() -> None:
 - per-mesh ピーク候補 GeoJSON: `data_dir` の `results/csv/` の下の `<解析識別子>.geojson`（通常解析だけ。[HLD 4.16.2](30_HLD.md#4162-処理の流れ)の「書き出し」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.9、ADR-SRS-029）。書くのは [6.8](#68-analyze_terrain_zone) の `write_zone_geojson` だけで、下の一時ファイルの決まりで `<解析識別子>.geojson.tmp` に書いてから置き換える。読むのは CMP5（統合・突合）の `merge_zones`（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 1「読むファイルを選ぶ」は `3-<meshcode>.geojson` の名前だけを選ぶので、`.tmp` で終わる名前は読まない。名前の読み分けは [7.1.3](#713-関数の細部)の `parse_analysis_id`、読み込みと書式の確かめは同じく `read_zone_features`）。
 - 統合ピーク候補 work CSV: `data_dir` の `results/` の直下の `merged_peak.csv`（[HLD 4.8.2](30_HLD.md#482-処理の流れ)の 7「書き出す」、[SRS §8.1](20_SRS.md#81-内部データ一覧)）。書くのは [7.2](#72-merge_peaks) の `write_merged_peak` だけで、下の一時ファイルの決まりで `merged_peak.csv.tmp` に書いてから置き換える。読むのは CMP5 の `merge_zones`・`check_cols`・`match_summits`（[7.1.3](#713-関数の細部)の `read_merged_peak`）と、CMP3（パイプライン制御）の起動前提条件の検査（有無だけ）。消すのは CMP3 のフェーズ2 の段の始まりだけ（フェーズ3 の段の始まりでは消さず、その段の統合が書き直す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
 - 統合ピーク候補 GeoJSON: `data_dir` の `results/` の直下の `merged_peak.geojson`（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 5「書き出す」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.11）。書くのは [7.3](#73-merge_zones) の `write_merged_peak_geojson` だけで、下の一時ファイルの決まりで `merged_peak.geojson.tmp` に書いてから置き換える。読むのは CMP5 の `match_summits`（[7.1.3](#713-関数の細部)の `read_zone_features`）と、CMP3 の起動前提条件の検査（有無だけ）。消すのは CMP3 で、フェーズ2 では段の始まり、フェーズ3 の段ではその段の統合で `merge_peaks` を起動する直前（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)。[DEC79](30_HLD.md#2104-設計判断)「フェーズ3 ではピーク候補 GeoJSON を統合直前に消す」）。
+- コル未確定ピーク座標リスト: `data_dir` の `results/` の直下の `key_col_unresolved_peaks-<N>.csv`（`<N>` は 3〜6。[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 4「未確定のリストを書く」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.7）。書くのは [7.4](#74-check_cols) の `write_unresolved_list` だけで、未確定のピークが 1 件以上のときだけ、下の一時ファイルの決まりで `key_col_unresolved_peaks-<N>.csv.tmp` に書いてから置き換える。有無を見るのは CMP3 の起動前提条件の検査と段の進め方（[5.1](#51-run_pipeline)）、中身を読むのは CMP4 の広域モードの [6.2](#62-analyze_terrain_target) の `read_unresolved_peaks`（N の段が `key_col_unresolved_peaks-<N−1>.csv` を読む。N は 4〜6）。消すのは CMP3 の段の始まり（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
 - 解析済みウィンドウメッシュ集合（`.meshset`）: `data_dir` の `results/csv/` の下の `<解析識別子>.meshset`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.13）。書くのは [6.9](#69-analyze_terrain_record) の `write_meshset` だけで、下の一時ファイルの決まりで `<解析識別子>.meshset.tmp` に書いてから置き換える。読むのは [6.3](#63-analyze_terrain_window) の `is_pattern_covered`（名前の一致で選ぶので、`.tmp` で終わる名前は読まない）と `read_meshset`。
 - 標高地形図: `data_dir` の `images/` の下の `<解析識別子>_terrain.png`（[SRS §6.2.3](20_SRS.md#623-標高地形図)）。書くのは [6.5](#65-analyze_terrain_image) の `write_terrain_png` だけで、下の一時ファイルの決まりで `<解析識別子>_terrain.png.tmp` に書いてから置き換える。読むプログラムは無い（利用者が開く）。置き場のディレクトリ（`images`）を作るのは [6.11](#611-analyze_terrain_stage) の `run_normal_mode`・`run_wide_mode` で、書く側の関数は作らない（[6.11.3](#6113-関数の細部)）。
-- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.7・6.8・6.9・7.2・7.3。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.5・6.7・6.8・6.9・7.2・7.3 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない。`open` が失敗したときは `close` するものが無いので呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する。`unlink` は `open` が失敗したときも含め、どの失敗でも呼ぶ。一時ファイルの名前に、先の無いシンボリックリンクなどが残っていることがあるため）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
+- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.7・6.8・6.9・7.2・7.3・7.4。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.5・6.7・6.8・6.9・7.2・7.3・7.4 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない。`open` が失敗したときは `close` するものが無いので呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する。`unlink` は `open` が失敗したときも含め、どの失敗でも呼ぶ。一時ファイルの名前に、先の無いシンボリックリンクなどが残っていることがあるため）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
@@ -4229,7 +4236,7 @@ Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパ�
 
 ## 7. CMP5 統合・突合
 
-この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.3 を書き、7.4・7.5 は書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
+この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.4 を書き、7.5 は書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
 
 ### 7.1 `cmp5_common`
 
@@ -5046,3 +5053,159 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 - 画素・中心の緯度経度は、[7.2.5](#725-ut-候補)の求め方と同じ、[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まりのとおりに、2026-10-31 に CPython 3.14.8 で求めた（G0 (7426886, 3312429)、E10 (7426896, 3312429)、E1000 (7427886, 3312429)、E2000 (7428886, 3312429)。ST の共通の前提と同じ）。
 - UT 09 の (a) のバイト列は、`json.dumps('é"')` が `"\u00e9\""` になること（16 進は小文字）を CPython 3.14.8 で確かめた。
+
+### 7.4 `check_cols`
+
+- **ID**: LLD-check_cols
+- **対応 HLD**: [3.5](30_HLD.md#35-cmp5-統合突合)・[4.22](30_HLD.md#422-fr-022-コル充足判定)
+- **ファイル**: `scripts/check_cols.py`
+
+関数の名前と役割と呼ぶ順は [HLD 3.5.3](30_HLD.md#353-関数) の `check_cols` の関数の表のとおりで、処理の正本は [HLD 4.22.2](30_HLD.md#4222-処理の流れ)・[4.22.3](30_HLD.md#4223-異常系) である。この節は、それを Python で書くための細部（引数の読み方、型、止まり方、リストの書き方、メッセージの文面、UT 候補）だけを足す。`check_cols` は CMP3（パイプライン制御）が起動する内部の起動口で、`--config <絶対パス>` と `--n <3|4|5|6>` を受け取る（[HLD 2.4.5](30_HLD.md#245-内部引数)）。処理の目的は [FR-022](20_SRS.md#fr-022-コル充足判定) のコル充足判定で、`merged_peak.csv` の未確定のピークを `key_col_unresolved_peaks-<N>.csv` に書き、未確定の有無を終了コード（0 か 3）で返す。
+
+- メモリ（[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の「メモリ」）は、`read_merged_peak` が 1 行ずつ渡し、`collect_unresolved` が未確定の組の文字列だけを持つことで受ける。リストの中身は一時ファイルを開く前に組み立てるので、書き出す間はその全文も持つ（未確定の組と同じ大きさ）。
+- リストの字句と順（HLD の [DEC107](30_HLD.md#4224-設計判断)「未確定のリストは `merged_peak.csv` のまま書く」）は、`collect_unresolved` が文字列を直さず、並べ替えも重なりの除去もしないことで受ける。
+- 件数のログと、警告を出さないこと（HLD の [DEC105](30_HLD.md#4224-設計判断)「未確定の件数は CMP5 が、警告と案内は CMP3 が出す」）は、結果の要約（KL1〜KL3）を通常のログに出し、`WARNING:` を出さないことで受ける。
+- 結合のつなぎ目は、`CMP5-INT2`（`merge_peaks` → `check_cols`。[7.1](#71-cmp5_common) の `read_merged_peak` が 3 列を読む）、`CMP5-EXT6`（引数と終了コード 0・1・2・3）、`CMP3-EXT4`（CMP3 がリストの有無を見る。[HLD 3.3.5](30_HLD.md#335-結合のつなぎ目)）、`CMP4-EXT4`（リストの中身を [6.2](#62-analyze_terrain_target) の `read_unresolved_peaks` が読む。7.4 が書く見出しと、CMP4（地形解析エンジン）が書いた座標の字句は、その読み方に収まる。7.1 が受けても 6.2 が読まない極小の値の差は 7.1.3 の「10 進の数の決まり」に書いてあり、7.4 は字句を直さない。[HLD 3.4.5](30_HLD.md#345-結合のつなぎ目)）である（[HLD 3.5.5](30_HLD.md#355-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP5-INT2-01`・`02`、`IT-CMP3-EXT4-01`・`02`、`IT-CMP4-EXT4-01` ほか。
+
+#### 7.4.1 ファイル割付
+
+- 関数はすべて `scripts/check_cols.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/check_cols.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.read_merged_peak(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)と同じ形）。ほかに読むのは、標準の `os`・`shlex`・`sys` と、`dataclasses` の `dataclass`、`typing` の `Iterable`・`Iterator`・`Sequence` である。
+- ファイルの先頭のコメントに `# trace: LLD-check_cols` を書く。起動の部分は `if __name__ == '__main__': main()`。
+- UT のコードは `tests/scripts/test_check_cols.py` に置く。各テストに `# trace: UT-check_cols-NN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+
+#### 7.4.2 型とデータ
+
+- 内部の定数（モジュールの最上位。名前は `_` で始める）:
+  - `_CONFIG_KEYS_USED = ('data_dir', 'log_dir')`（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の表で CMP5 の [FR-022](20_SRS.md#fr-022-コル充足判定) が使うキー。`load_config` に渡す）。必須は `('data_dir',)`。
+  - `_N_VALUES = ('3', '4', '5', '6')`（`--n` の値として受ける文字列。HLD 2.4.5 の `--n <3|4|5|6>`。`03`・`+3`・前後の空白は受けない）。
+  - `_LIST_HEADER = 'peak_lat,peak_lon'`（[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 4「未確定のリストを書く」の見出しの行）。
+- 内部の状態（モジュールの最上位）: `_config_opt: str = ''`（`main` の 5 が入れる、[7.4.4](#744-メッセージ文面)の `{config_opt}` の値。`main` を通らない同じプロセスの UT は空のまま使う。[7.2.2](#722-型とデータ)・[7.3.2](#732-型とデータ)と同じ）。
+- `@dataclass(frozen=True) class _Args`（内部）: `config: str`（`--config` の値のまま）、`n: int`（`--n` の値を `int` にしたもの。3〜6）。
+- `@dataclass class _Counter`（内部。`frozen` にしない）: `peaks: int = 0`（`read_merged_peak` が渡した行の数）、`unresolved: int = 0`（そのうち `key_col_resolved` が `false` の行の数）。
+- 未確定の組の並び: `list[tuple[str, str]]`（`(peak_lat, peak_lon)` の文字列。`merged_peak.csv` の字句のまま、行の順）。
+- リストの名前は `f'key_col_unresolved_peaks-{n}.csv'`（`n` は `_Args.n`。[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 4「未確定のリストを書く」。[5.1](#51-run_pipeline) の `run_pipeline` が見る名前と同じ）。
+- `slots=True` は付けない（[7.1](#71-cmp5_common)〜[7.3](#73-merge_zones)と同じく、メモリの実測〈HLD 5.2.2 の「実測の計画」の 3〉の後に決める）。
+
+#### 7.4.3 関数の細部
+
+関数ごとに `#####` の見出し（関数の名前だけ。ほかの節に同じ名前の見出しがあるものは `（check_cols）` を添える）を立てて書く。内部の関数は、使う関数の見出しの下に書く。
+
+**止まり方**: 7.4 の関数は、誤りを見つけたら、[7.4.4](#744-メッセージ文面)のメッセージを `common.log_error` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（`start_log` の前の引数と設定の誤りは `common.EXIT_USAGE`）。7.1 の部品の `InputError` は、`main` が [7.1.3](#713-関数の細部)の前置きの型で捕まえ、`common.log_error(e.what, _redo(args.n, e.symbol))` を出して `sys.exit(common.EXIT_ERROR)` で止まる（[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 1 行目）。`InputError` を捕まえる `try` は、`collect_unresolved` を呼ぶところの 1 つだけにする（`read_merged_peak` の生成器は、`collect_unresolved` が回す間に `InputError` を上げる）。
+
+**{reason}**: [2.1.4](#214-メッセージ文面)と同じ。`{path}` は `os.path.abspath` したパス。
+
+**終了コード 3**: [2.1.3](#213-関数の細部)の前置きの型のとおり、`try` の中で `code = common.EXIT_UNRESOLVED` を入れて `completed = True` にし、`try`/`finally` の後の `sys.exit(code)` で終える（`try` の中で `sys.exit(3)` を呼ぶと `completed` が偽のままになり、終えた実行に途中で止まった要約が出るため）。
+
+**メモリ**: 7.4 の前置きに書いた。
+
+##### main（check_cols）
+
+`main() -> None`（起動の部分）。[2.1.3](#213-関数の細部)の前置きの呼ぶ側の書き方の型に従い、次の順に行う。
+
+1. `start = common.StartTime.now()`。
+2. `args = _parse_args(sys.argv[1:])`。
+3. `config = common.load_config(args.config, _CONFIG_KEYS_USED, ('data_dir',))`。`data_dir`・`log_dir` を取り出す。
+4. `common.start_log(log_dir, config, 'check_cols', sys.argv[1:], start)`。ロックは掛けない（内部の起動口は CMP3 のロックの下で動く。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。
+5. `_config_opt` に [7.4.4](#744-メッセージ文面)の `{config_opt}` の値を入れる。決め方は [7.2.3](#723-関数の細部)の `main` の 5 と同じ（`config.path == common.DEFAULT_CONFIG_PATH` なら空の文字列、それ以外は `' --config ' + shlex.quote(config.path)`）。
+6. `try` の前に `completed = False`、`code = common.EXIT_OK`、`counter = _Counter()`、`list_path = ''` を置く。`try` の中で次を行う。
+   1. `results_dir = os.path.join(data_dir, 'results')`、`merged_path = os.path.join(results_dir, 'merged_peak.csv')`。
+   2. `try:` で `pairs = collect_unresolved(_count_rows(cmp5_common.read_merged_peak(merged_path, cmp5_common.MERGED_PEAK_UNRESOLVED_COLUMNS), counter))`、`except cmp5_common.InputError as e:` で `common.log_error(e.what, _redo(args.n, e.symbol))` と `sys.exit(common.EXIT_ERROR)`。
+   3. `pairs` が空でなければ（`if` で分ける。`return` を使わない）、`write_unresolved_list(pairs, args.n, results_dir)`、`list_path = os.path.join(os.path.abspath(results_dir), <リストの名前>)`、`code = common.EXIT_UNRESOLVED`。空なら何も書かない（前からあるリストを消さない。消すのは CMP3 の段の始まり。[HLD 4.22.1](30_HLD.md#4221-目的と範囲)の「決定済みで参照だけするもの」の段の始まりの削除）。
+   4. `completed = True`。
+7. `finally` で結果の要約を `common.log_info` で出す（`completed` が偽なら KL3、真で `code` が `common.EXIT_OK` なら KL1、`common.EXIT_UNRESOLVED` なら KL2）。`WARNING:` のメッセージは出さない（HLD の [DEC105](30_HLD.md#4224-設計判断)「未確定の件数は CMP5 が、警告と案内は CMP3 が出す」）。
+8. `sys.exit(code)`。
+
+`start_log` の前に止まる誤り（`_parse_args`・`load_config`）は、標準エラー出力だけに出て、ログファイルと `log_dir` を作らない（[HLD 3.5.3](30_HLD.md#353-関数)の「ここまでの誤りは、ログファイルを作らずに終了コード 2」）。`--n` の誤りを `merged_peak.csv` を読む前に止めるのは、[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の「処理を始める前に終了コード 2 で止まる」のため。
+
+`_count_rows(rows: Iterable[cmp5_common.MergedPeakRow], counter: _Counter) -> Iterator[cmp5_common.MergedPeakRow]`（内部の生成関数）: `rows` の行ごとに `counter.peaks` を 1 増やし、`row.values['key_col_resolved'] == 'false'` なら `counter.unresolved` も 1 増やしてから、その行を渡す。途中で `InputError` が出たときは、その時点までに渡した行の数が残る（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 7「結果の要約」の「そこまでに終えた分の件数」）。ピークの数と未確定の数は HLD の表の `collect_unresolved` の返すものに無いので、`main` がこの関数で数える。
+
+`_redo(n: int, symbol: str) -> str`（内部）: [7.4.4](#744-メッセージ文面)の `{redo}` の文を返す。`n` が 3 なら `{redo_phase2}`、`n` が 4〜6 で `symbol` が `'MP1'` なら `{redo_missing}`、ほか（`'MP2'`・`'MP3'`・`'KW1'`・`'KW2'`）なら `{redo_stage}`（3 つの文は 7.4.4）。`_config_opt` を読む。
+
+##### _parse_args（check_cols）
+
+`_parse_args(argv: Sequence[str]) -> _Args`（内部）。[7.3.3](#733-関数の細部)の `_parse_args` の受け方で、受ける名前を `--config`・`--n` にしたもの。最初に見つけた誤り 1 つで、[7.4.4](#744-メッセージ文面)のメッセージを `common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。
+
+1. `argv` を左から読む。`--config`・`--n` なら、その名前がすでに出ていれば KA3（値を見る前に判定する）、最後の引数なら KA2、そうでなければ次の引数を値にして 2 つ進む（値は `-` で始まっていてもそのまま値にする）。ほかの引数（位置引数、知らない名前〈`--mesh` を含む〉、`=` の付いた形、`--help`、`--` だけ、空の引数）は KA1。
+2. `--config` が無ければ KA4。
+3. `--config` の値が `os.path.isabs` で偽なら（空を含む）KA5。値は正規化しない。
+4. `--n` が無ければ KA6。
+5. `--n` の値が `_N_VALUES` のどれとも `==` でなければ KA7（空を含む）。
+6. `_Args(config, int(n))` を返す。
+
+##### collect_unresolved
+
+`collect_unresolved(rows: Iterable[cmp5_common.MergedPeakRow]) -> list[tuple[str, str]]`
+
+`rows` の順に、`row.values['key_col_resolved'] == 'false'` の行の `(row.values['peak_lat'], row.values['peak_lon'])` を並びの末尾に足し、全部を見た後に並びを返す（[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 2「未確定のピークを拾う」）。文字列は直さない。並べ替えも、同じ組の重なりの除去もしない（HLD の [DEC107](30_HLD.md#4224-設計判断)「未確定のリストは `merged_peak.csv` のまま書く」）。持つのは未確定の組だけ（HLD 4.22.2 の「メモリ」）。`rows` が `read_merged_peak` の生成器なら、その `InputError` はそのまま伝わる（並びを返さずに抜ける。リストを書く前に全部を読み終えるので、読み途中で止まってもリストを書かない）。
+
+##### write_unresolved_list
+
+`write_unresolved_list(pairs: list[tuple[str, str]], n: int, out_dir: str) -> None`
+
+1. `path = os.path.join(os.path.abspath(out_dir), f'key_col_unresolved_peaks-{n}.csv')`、`tmp = path + '.tmp'`。中身は、`_LIST_HEADER` と LF、続けて組ごとに `peak_lat`・`,`・`peak_lon`・LF（BOM・CR・引用符を書かない。値に `,`・`"`・改行は入らない〈`read_merged_peak` が `is_valid_coord` で確かめた字句〉ので引用しない）。中身は一時ファイルを開く前に組み立て終える。`pairs` が空なら見出しの行だけ（`main` は空のとき呼ばないが、関数としてはそう書く）。
+2. [2.3](#23-ファイルの名前と書き方)の一時ファイルの決まりで `tmp` に書く（`open(tmp, 'w', encoding='utf-8', newline='\n')`、書く、`flush`、`os.fsync`、閉じる）。どれかで `OSError` になったら、下の「止まり方」へ。
+3. `os.replace(tmp, path)`。`OSError` なら、下の「止まり方」へ。
+4. ディレクトリ（`results/`）は作らない（`merged_peak.csv` と同じ置き場で、`merge_peaks` が先に書いている）。同じ名前のリストがあれば置き換える（[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 4「未確定のリストを書く」）。
+
+止まり方（2・3 の `OSError` を `e` とする）: `os.remove(tmp)` で一時ファイルを消す。消せたら KW1。`os.remove` が `OSError`（`r`）になったときは、`os.path.lexists(tmp)` が偽（一時ファイルが無い。開く前に失敗したときや、`results` がディレクトリでなく `NotADirectoryError` になったとき）なら KW1、真なら KW2（`{tmp}` は `tmp`、`{remove_reason}` は `r` の 2.1.4 の `{reason}`）。どちらも `{path}` は `path`、`{reason}` は `e` の `{reason}`、`{dir}` は `os.path.abspath(out_dir)`、2 行目の案内は `_redo(n, 'KW1')`（KW2 も同じ文）。出してから `sys.exit(common.EXIT_ERROR)`。2.3 の「消せないときの `OSError` は無視する」と違い KW2 で知らせるのは、[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 2 行目が、消せなかった書きかけのリストのパスを必ず含めると決めているため。
+
+- `SIGINT`・`SIGTERM` で書く途中に止まったとき（2.1 の `SignalStop`）は、一時ファイルが残りうるが、正規の名前ではないので CMP3 も CMP4 も読まない（2.3 の「読む側は正規の名前しか読まない」）。次の起動が同じリストを書くときに上書きする。`SignalStop` を捕まえない（[1.2](#12-lld-の規約)）。
+
+#### 7.4.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。設定の誤り（CF1〜CF7）は [2.1.4](#214-メッセージ文面)、ログの場面（G1〜G7）は 2.2、L1〜L3 は 2.2（`{program}` は `check_cols`）。7.1 の部品の誤り（MP1〜MP3）の 1 行目は [7.1.4](#714-メッセージ文面)の `what` のまま、2 行目は `{redo}`。
+
+- `{path}`・`{reason}` は [7.4.3](#743-関数の細部)の前置きのとおり。`{arg}`・`{value}`・`{option}` は受け取った値を、2.2 の引用の決まり（`shlex.quote`）で書いたもの。
+- `{config_opt}` は `main` の 5 で決めた値。`{n}` は `--n` の値（10 進）。
+- `{redo}` は `_redo` が返す次の 3 つの文のどれか（[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 1 行目）。`check_cols` は起動の形（通しか単独起動か、`--mesh` の有無）を受け取らないので、起動の形ごとの手順を並べる。
+  - `{redo_phase2}`（N が 3。MP1〜MP3、KW1・KW2）: `止まったときと同じ起動の形で scripts/run_pipeline.sh{config_opt} を起動し直し、フェーズ2 からやり直す（通しで止まったなら --phase なし、--phase 2 で止まったなら --phase 2。--mesh を付けていたなら同じ値を付ける）`
+  - `{redo_stage}`（N が 4〜6。MP2・MP3、KW1・KW2）: `scripts/run_pipeline.sh --phase 3 --n {n}{config_opt} を起動し直し、その後はその段の結果の案内（未確定あり・未確定なし）に従って続ける。通しの実行に --mesh を付けていたときは、代わりに scripts/run_pipeline.sh{config_opt} を同じ --mesh で --phase なしで起動し、フェーズ2 から通しでやり直す`
+  - `{redo_missing}`（N が 4〜6。MP1）: `merged_peak.csv が無いので --phase 3 は起動前提条件で止まる。フェーズ2 からやり直す。通しで止まったなら同じ通し（--mesh を付けていたなら同じ値）で、--phase 3 で止まったなら --phase 2（--mesh なし）か通しで、scripts/run_pipeline.sh{config_opt} を起動する`
+
+| 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
+|---|---|---|---|---|
+| KA1 | 受け付けない引数 | `check_cols の知らない引数: {arg}` | `check_cols は run_pipeline が起動する内部の起動口。使える名前は --config・--n（値は次の引数で渡す）` | 2 |
+| KA2 | 値が無い | `{option} の値が無い` | `{option} の後に値を渡す` | 2 |
+| KA3 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` | 2 |
+| KA4 | `--config` が無い | `--config が無い` | `--config と設定ファイルの絶対パスを渡す` | 2 |
+| KA5 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
+| KA6 | `--n` が無い | `--n が無い` | `--n と生成段階タグ（3・4・5・6 のどれか）を渡す` | 2 |
+| KA7 | `--n` の値が違う | `--n の値が 3・4・5・6 のどれでもない: {value}` | `--n に 3・4・5・6 のどれかを渡す` | 2 |
+| KW1 | リストを書けない（書きかけは消した） | `key_col_unresolved_peaks-{n}.csv を書けない: {path}: {reason}` | `{dir} の空きと権限を確かめてから、{redo}` | 1 |
+| KW2 | リストを書けず、書きかけも消せない | `key_col_unresolved_peaks-{n}.csv を書けない: {path}: {reason}。書きかけのリストも消せなかった: {tmp}: {remove_reason}` | `{tmp} を消し、{dir} の空きと権限を確かめてから、{redo}` | 1 |
+
+- KW2 は、[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 2 行目の「消せなかった書きかけのリストのパスと、それを消してから止まった段をやり直す案内」を含める。残るのは `.tmp` で終わる一時ファイルで、次の段は読まないので、「広域解析が進みうる」の類の警告は書かない。
+
+通常のログ（[HLD 4.22.2](30_HLD.md#4222-処理の流れ)の 4 の後の段落と [HLD 5.7.2](30_HLD.md#572-処理の流れ)の表の `check_cols` の行。2.2 の結果の要約の形）:
+
+| 記号 | 行 | 文面 |
+|---|---|---|
+| KL1 | 結果の要約（未確定なし） | `結果の要約: N={n}、ピーク {peaks}、未確定のピーク 0。key_col_unresolved_peaks-{n}.csv は書いていない` |
+| KL2 | 結果の要約（未確定あり） | `結果の要約: N={n}、ピーク {peaks}、未確定のピーク {unresolved}、書いたリスト {list_path}` |
+| KL3 | 結果の要約（途中で止まった） | `結果の要約: 途中で止まった（N={n}、読んだピーク {peaks}、そのうち未確定 {unresolved}）。key_col_unresolved_peaks-{n}.csv は書いていない` |
+
+- `{peaks}`・`{unresolved}` は `_Counter` の値、`{list_path}` は `main` の 6 の 3 の値。KL3 の数は止まった時点までのもの（HLD 5.7.2 の 7「結果の要約」）。
+
+#### 7.4.5 UT 候補
+
+すべて自動（合否をテストのコードが判定できる）。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.4.4](#744-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.1.4](#214-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。ログファイルの行の期待は、先頭の時刻と空白を除いた文面。共通の準備は次の 3 つ。
+
+- **同じプロセス**: [7.2.5](#725-ut-候補)の同じ名前の準備と同じ（`merge_peaks` を `check_cols` に読み替える）。`check_cols._config_opt` は空の文字列にしておく。
+- **子のプロセス**: [7.3.5](#735-ut-候補)の同じ名前の準備と同じ（`merge_zones` を `check_cols` に読み替え、`<tmp>/src/scripts/` に写すものを `check_cols.py`・`common.py`・`cmp5_common.py` にする。`<tmp>/data/results/` を作り、`merged_peak.csv` などはケースが置く。回ごとに `<tmp>/data/results/` と `<tmp>/logs/` を空にしてから、その回の「準備」の列に書いたファイルだけを置く）。起動は `subprocess.run([sys.executable, '<tmp>/src/scripts/check_cols.py', '--config', '<tmp>/c.ini', *<引数>], cwd='<tmp>/work', capture_output=True)`。`<tmp>/c.ini` は既定のパスでないので、メッセージの `{config_opt}` は空白 1 つと `--config <tmp>/c.ini`（パスは `shlex.quote` した形）になる。
+- **merged_peak.csv の行**（13 列。見出しは `cmp5_common.MERGED_PEAK_ALL_COLUMNS` を `,` でつないだもの。システムテスト仕様書（ST）の `ST-FR-022-05` の R1〜R5。`<lat>,<lon>` の後の列は、`false` の行は `1500.00,0.00000000,0.00000000,,,false,1,3-5338,1,9,unstable`、`true` の行は `1500.00,35.34308245,138.74884844,1000.00,500.00,true,20,3-5338,1,9,unstable`）:
+  - R1: `35.36058364,138.73168230` で `false`。R2: `35.36058364,138.72739077` で `true`。R3: `35.32557747,138.72739077` で `false`。R4: R1 と同じ行。R5: `35.40000000,138.80000000` で `false`、`peak_elev`（3 列目）を `abc` にしたもの。
+  - 同じプロセスのケースは、`cmp5_common.MergedPeakRow(<path>, <line_no>, {'peak_lat': …, 'peak_lon': …, 'key_col_resolved': …})` を直接作ってよい。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-check_cols-01` | 引数の正しい形 | 同じプロセス | `_parse_args` に (a) `['--config', '/a.ini', '--n', '3']`、(b) `['--n', '6', '--config', '/a.ini']` | (a) `_Args('/a.ini', 3)`、(b) `_Args('/a.ini', 6)` |
+| `UT-check_cols-02` | 引数の誤り | 同じプロセス | `_parse_args` に (a) `[]`、(b) `['--config', '/a', '--n']`、(c) `['--config', 'a.ini', '--n', '3']`、(d) `['--config', '/a', '--n', '3', '--n', '4']`、(e) `['--config', '/a', '--n', '3', '--mesh', '5338']`、(f) `['--config', '/a', '--n=3']`、(g) `['--config', '/a']`、(h) `['--config', '/a', '--n', <v>]` を `<v>` が `'2'`・`'7'`・`'03'`・`'+3'`・`' 3'`・`''` のそれぞれで、(i) `['--n', 'x', '--config', 'a.ini']`、(j) `['--n', '--config', '--config', '/a']`（`--n` の値が `-` で始まる） | どれも終了コード 2。(a) KA4、(b) KA2（`--n`）、(c) KA5（`a.ini`）、(d) KA3（`--n`）、(e) KA1（`--mesh`）、(f) KA1（`--n=3`）、(g) KA6、(h) KA7（`{value}` は `2`・`7`・`03`・`+3`・`' 3'`・`''`）、(i) KA5（`--n` の値より `--config` の確かめが先）、(j) KA7（`--config` を `--n` の値として読み、`{value}` は `--config`） |
+| `UT-check_cols-03` | 未確定を拾う | 同じプロセス | `collect_unresolved` に (a) R1〜R5 の 3 列の行の並び（R5 の `peak_elev` は 3 列に入らない）、(b) 空の並び | (a) `[('35.36058364', '138.73168230'), ('35.32557747', '138.72739077'), ('35.36058364', '138.73168230'), ('35.40000000', '138.80000000')]`（R2 を除き、行の順のまま、R4 の重なりを残し、末尾の 0 を落とさない）、(b) `[]` |
+| `UT-check_cols-04` | 書き出しのバイト列 | 同じプロセス。`<tmp>/results/` を作り、前のリスト `key_col_unresolved_peaks-4.csv`（`peak_lat,peak_lon\n35.00000000,139.00000000\n`）と前の起動の残りの `key_col_unresolved_peaks-4.csv.tmp`（中身 `x`）を置く | `write_unresolved_list` に (a) `[('35.36058364', '138.73168230'), ('+35.1', '035.10')]` と 4 と `<tmp>/results`、(b) `[]` と 5 と `<tmp>/results` | (a) `key_col_unresolved_peaks-4.csv` のバイト列が `peak_lat,peak_lon\n35.36058364,138.73168230\n+35.1,035.10\n`（前の行は残らない）。`.tmp` は残らない。(b) `key_col_unresolved_peaks-5.csv` が `peak_lat,peak_lon\n` |
+| `UT-check_cols-05` | 書けない | 同じプロセス。`check_cols._config_opt` は空。(a) `<tmp>/results/` を作らない、(b) `<tmp>/results/key_col_unresolved_peaks-4.csv` をディレクトリにする、(c) `<tmp>/results/` を作り、`unittest.mock.patch('os.fsync', side_effect=OSError(28, 'No space left on device'))`（書いた後の失敗）、(d) (c) に加えて `unittest.mock.patch('os.remove', side_effect=OSError(13, 'Permission denied'))` | `write_unresolved_list([('35.36058364', '138.73168230')], 4, <tmp>/results)`、(e) は (c) を `n` が 3 で | どれも終了コード 1。(a) KW1（`{reason}` は `FileNotFoundError` の `strerror`）、(b) KW1（`IsADirectoryError` の `strerror`）。(c) KW1（`No space left on device`）で、`key_col_unresolved_peaks-4.csv` も `.tmp` も無い（`ST-FR-022-10` の (a)）。(a)〜(c) の `{path}` は `<tmp>/results/key_col_unresolved_peaks-4.csv`、`{dir}` は `<tmp>/results`、2 行目は `<tmp>/results の空きと権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n 4 を起動し直し、その後はその段の結果の案内（未確定あり・未確定なし）に従って続ける。通しの実行に --mesh を付けていたときは、代わりに scripts/run_pipeline.sh を同じ --mesh で --phase なしで起動し、フェーズ2 から通しでやり直す`（`{redo_stage}` を `n` 4・`{config_opt}` 空で展開した全文）。(d) KW2 で、1 行目の後半が `書きかけのリストも消せなかった: <tmp>/results/key_col_unresolved_peaks-4.csv.tmp: Permission denied`、2 行目が `<tmp>/results/key_col_unresolved_peaks-4.csv.tmp を消し、<tmp>/results の空きと権限を確かめてから、` と `{redo_stage}`。`.tmp` が残り、`key_col_unresolved_peaks-4.csv` は無い（`ST-FR-022-10` の (b)）。(e) KW1 で、2 行目の案内が `{redo_phase2}` |
+| `UT-check_cols-06` | 未確定ありの全体 | 子のプロセス。`merged_peak.csv` に見出しと R1〜R5。`key_col_unresolved_peaks-4.csv` に `peak_lat,peak_lon\n35.00000000,139.00000000\n` を置く（`ST-FR-022-05`） | `--n 4` | 終了コード 3。`key_col_unresolved_peaks-4.csv` のバイト列が `peak_lat,peak_lon\n35.36058364,138.73168230\n35.32557747,138.72739077\n35.36058364,138.73168230\n35.40000000,138.80000000\n`。ログファイルの最後から 2 行目が KL2（`N=4、ピーク 5、未確定のピーク 4、書いたリスト <tmp>/data/results/key_col_unresolved_peaks-4.csv`）、最後が L3。標準出力・標準エラー出力・ログファイルに `WARNING:` で始まる行が無い（`ST-FR-022-09`） |
+| `UT-check_cols-07` | 未確定なしと 0 行 | 子のプロセス。(a) `merged_peak.csv` に見出しと R2、(b) 見出しだけ | `--n 4` | どちらも終了コード 0 で、`key_col_unresolved_peaks-4.csv` を書かない。ログファイルの最後から 2 行目が KL1 で、(a) `結果の要約: N=4、ピーク 1、未確定のピーク 0。key_col_unresolved_peaks-4.csv は書いていない`、(b) `結果の要約: N=4、ピーク 0、未確定のピーク 0。key_col_unresolved_peaks-4.csv は書いていない`、最後が L3（`ST-FR-022-02`・`03`・`09`）。`WARNING:` で始まる行が無い |
+| `UT-check_cols-08` | 読めないときの案内 | 子のプロセス。(a) `merged_peak.csv` を置かない、(b) `merged_peak.csv` の見出しから `key_col_resolved` を除き、R1・R3 から同じ列を除いた 2 行、(c) 0 バイトのファイル、(d) 見出しと R1・R3 で、R3 の `key_col_resolved` を `TRUE` にしたもの、(e) 見出しと R1・R3 で、R3 の `peak_lat` を `abc` にしたもの、(f) `merged_peak.csv` をディレクトリにする | (a)〜(f) を `--n 3` と `--n 5` のそれぞれで | どれも終了コード 1 で、リスト（`-3.csv`・`-5.csv`）も `.tmp` も無い。1 行目は 7.1.4 の (a) MP1、(b) MP3（`見出しに列 key_col_resolved が無い`）、(c) MP3（`見出しの行が無い`）、(d) MP3（`3 行目の key_col_resolved が true か false でない: TRUE`）、(e) MP3（`3 行目の peak_lat が 座標として読めない: abc`）、(f) MP2（`{reason}` は `IsADirectoryError` の `strerror`）。2 行目は、`--n 3` はどれも `{redo_phase2}`、`--n 5` は (a) が `{redo_missing}`、(b)〜(f) が `{redo_stage}`（`--n 5`）。どれも `{config_opt}` は空白 1 つと `--config <tmp>/c.ini`（期待の文は 7.4.4 の文を展開した全文で書く）。ログファイルの終わりの 4 行は、標準エラー出力と同じ 2 行、KL3、L3 の順で、KL3 は (a)〜(c)・(f) が `結果の要約: 途中で止まった（N=<n>、読んだピーク 0、そのうち未確定 0）。key_col_unresolved_peaks-<n>.csv は書いていない`、(d)(e) が `読んだピーク 1、そのうち未確定 1` の同じ形（`<n>` は 3 か 5。`ST-FR-022-04`・`06`・`08`） |
+| `UT-check_cols-09` | `start_log` の前の誤り | 子のプロセス。`merged_peak.csv` を置かない | (a) `--n 2`、(b) `--n 7` | どちらも終了コード 2 で KA7。`<tmp>/logs` を作らない（`merged_peak.csv` を読む前に止まる。`ST-FR-022-07`） |
+
+- `ST-FR-022-01` は UT 06、`ST-FR-022-10` は UT 05 の (c)(d) が受ける（`ST-FR-022-10` の (b) は、一時ファイルの書き方に合わせて直した字句。[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 2 行目と同じ）。
