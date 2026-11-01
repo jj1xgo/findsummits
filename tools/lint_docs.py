@@ -74,6 +74,8 @@ D_TITLE_MAX = 30
 
 # 検査H: 1 文字の記号の残り（ADR-HLD-007）。調査資料は対象外
 OLD_JOINT_RE = re.compile(r'(?<![A-Za-z0-9_])C(\d+)-([EI])(\d+)(?![0-9A-Za-z])')
+# 半分だけ直した結合 ID（`CMP5-I1`・`CMP5-E2`。接頭辞だけ CMP にして、EXT・INT にしていない形）
+HALF_JOINT_RE = re.compile(r'(?<![A-Za-z0-9_])CMP(\d+)-([EI])(\d+)(?![0-9A-Za-z])')
 OLD_SYMBOL_RE = re.compile(r'(?<![A-Za-z0-9_./#-])(C[1-8]|D\d+|K[1-6])(?![0-9A-Za-z_/]|\.[0-9A-Za-z])')
 OLD_URL_RE = re.compile(r'https?://[^\s)>]+')
 OLD_PREFIX = {'C': 'CMP', 'D': 'DEC', 'K': 'PRE'}
@@ -311,7 +313,7 @@ def check_hld_decisions(filepath, lines):
                 violations.append(f"{where}: HLD-DEC-UNKNOWN: {d} の定義がありません")
                 continue
             title, place = defs[d]
-            form = f"[{d}](#{place})「{title}」"
+            form = f"[{d}](#{place})「{title}」" if place is not None else f"{d}「{title}」（定義が設計判断の小節の外）"
             if place is not None and unquote(r.group(2)) != place:
                 violations.append(f"{where}: HLD-DEC-ANCHOR: {d} のリンク先が定義の小節と違います（{form}）")
             rest = line[r.end():]
@@ -330,15 +332,18 @@ def check_hld_decisions(filepath, lines):
                 violations.append(f"{where}: HLD-DEC-UNKNOWN: {d} の定義がありません")
             else:
                 title, place = defs[d]
-                violations.append(
-                    f"{where}: HLD-DEC-BARE: {d} は定義の小節へのリンクにしてください（[{d}](#{place})「{title}」）"
-                )
+                if place is not None:
+                    hint = f"[{d}](#{place})「{title}」"
+                else:
+                    hint = f"{d}「{title}」。先に定義を設計判断の小節へ移す"
+                violations.append(f"{where}: HLD-DEC-BARE: {d} は定義の小節へのリンクにしてください（{hint}）")
     return violations
 
 
 def check_old_symbols(filepath, lines):
     """検査H: 1 文字の記号（C・D・K と結合のつなぎ目の E・I）を止める。
-    つなぎ目の ID はコード表記の中も見る。ほかの記号はコード表記と URL の中を見ない"""
+    つなぎ目の ID はコード表記（バッククォートで囲んだ短い記述）の中も見る。ほかの記号はコード表記と URL の中を見ない。
+    フェンスのコードブロックは、記号もつなぎ目の ID も見る（コード表記に数えない）"""
     violations = []
     for i, raw in enumerate(lines):
         line = raw.rstrip('\n')
@@ -348,6 +353,11 @@ def check_old_symbols(filepath, lines):
             new = f"CMP{m.group(1)}-{'EXT' if m.group(2) == 'E' else 'INT'}{m.group(3)}"
             violations.append(
                 f"{where}: OLD-JOINT: 結合のつなぎ目の ID「{m.group()}」は {new} にしてください（ADR-HLD-007）"
+            )
+        for m in HALF_JOINT_RE.finditer(scan):
+            fixed = f"CMP{m.group(1)}-{'EXT' if m.group(2) == 'E' else 'INT'}{m.group(3)}"
+            violations.append(
+                f"{where}: OLD-JOINT: 結合のつなぎ目の ID「{m.group()}」は {fixed} にしてください（ADR-HLD-007）"
             )
         masked = OLD_JOINT_RE.sub(lambda x: '\0' * len(x.group()), scan)
         masked = OLD_SKIP_RE.sub(lambda x: '\0' * len(x.group()), masked)

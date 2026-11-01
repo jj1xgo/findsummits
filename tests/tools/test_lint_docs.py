@@ -95,6 +95,24 @@ class CheckHldDecisionsTest(unittest.TestCase):
     def test_other_files_not_checked(self):
         self.assertEqual(self.lint('DEC1「x」\n', name='20_SRS.md'), [])
 
+    def test_file_name_ending_like_hld_is_not_checked(self):
+        # 節ごとの記録の名前（30_HLD-§2.7.md）は、末尾が 30_HLD.md と一致しないので HLD として検査しない
+        self.assertEqual(self.lint('DEC1「x」\n', name='30_HLD-§2.7.md'), [])
+
+    def test_reference_in_code_block_ignored(self):
+        self.assertEqual(self.lint(HLD + '\n```\nDEC1「甲は乙にする」\n```\n'), [])
+
+    def test_message_for_definition_outside_decision_section_has_no_none(self):
+        text = HLD + '\n## 3. 他\n\n- DEC4（外）: 本文。\n\n参照は DEC4「外」。と [DEC4](#214-設計判断)「外」。\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'docs' / '30_HLD.md'
+            path.parent.mkdir(parents=True)
+            path.write_text(text, encoding='utf-8')
+            messages = ld.check_file(str(path))
+        self.assertTrue(any('HLD-DEC-BARE' in m for m in messages), messages)
+        for m in messages:
+            self.assertNotIn('None', m)
+
 
 class CheckOldSymbolsTest(unittest.TestCase):
     def test_old_symbols(self):
@@ -108,6 +126,11 @@ class CheckOldSymbolsTest(unittest.TestCase):
 
     def test_joint_even_in_code(self):
         self.assertEqual(lint_at('`C4-E1` と C5-I2。\n', 'docs/30_HLD.md'), ['OLD-JOINT', 'OLD-JOINT'])
+
+    def test_half_renamed_joint(self):
+        # 接頭辞だけ CMP にして EXT・INT にしていない形は、コード表記の中も止める
+        self.assertEqual(lint_at('CMP5-I1 と `CMP4-E2`。\n', 'docs/30_HLD.md'), ['OLD-JOINT', 'OLD-JOINT'])
+        self.assertEqual(lint_at('CMP5-INT1・CMP4-EXT2・`CMP6-INT3`。\n', 'docs/30_HLD.md'), [])
 
     def test_fenced_block_checked(self):
         self.assertEqual(lint_at('```text\nC1 ─→ C2\n```\n', 'docs/30_HLD.md'), ['OLD-SYMBOL', 'OLD-SYMBOL'])
