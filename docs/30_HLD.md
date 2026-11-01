@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-28 |
-| 最終更新日 | 2026-10-30 |
+| 最終更新日 | 2026-11-01 |
 | ステータス | 確定 |
 | 参照 SRS | [`20_SRS.md`](20_SRS.md) |
 
@@ -2225,7 +2225,7 @@ CMP4（地形解析エンジン。C++）と、CMP7（申請書生成 UI）・CMP
 | `acquire_lock` | `data_dir` の直下のロックファイルに排他ロックを掛ける。掛けられないか、ロックファイルを開けなければ、終了コード 1 で止まる | `data_dir` | なし（ロックはプログラムが終わるまで持つ） | `preprocess_boundaries`、`fetch_tiles`（CMP3 の `run_pipeline` は bash で別に実装する。[3.3.3](#333-関数)） | [2.9.3](#293-同時起動の排他) |
 | `fetch_record_path` | 取得完了の記録のパスを組み立てる | `data_dir` | 記録のパス | `preprocess_boundaries` の `replace_outputs`、`fetch_tiles`（CMP3 の `run_pipeline` は bash で別に実装する。[3.3.3](#333-関数)） | [4.1.2](#412-処理の流れ) の「取得完了の記録」（ファイル名は LLD。[4.1.1](#411-目的と範囲) の対象外の行） |
 | `mesh_to_latlon` | メッシュコードから南西端と北東端の緯度経度を求める | メッシュコード | 緯度経度 2 組 | `list_excluded_meshes`（CMP1）、`mesh_tile_range`（CMP2）（CMP4 の `analyze_terrain` は C++ で、CMP7・CMP8 の `index.html` は JavaScript で別に実装する。[DEC6](#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」。[3.4.3](#343-関数)・[3.7.3](#373-関数)） | 用語集の [メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon) |
-| `latlon_to_tile` | 緯度経度からタイル番号を求める | 緯度、経度、ズームレベル | タイル番号 (x, y) | `list_excluded_tiles`（CMP1）、`mesh_tile_range`（CMP2）（CMP4 の `analyze_terrain` は C++ で、CMP7・CMP8 の `index.html` は JavaScript で別に実装する。[DEC6](#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」。[3.4.3](#343-関数)・[3.7.3](#373-関数)） | 用語集の [緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile) |
+| `latlon_to_tile` | 緯度経度からタイル番号を求める | 緯度、経度、ズームレベル | タイル番号 (x, y) | `list_excluded_tiles`（CMP1）、`mesh_tile_range`（CMP2）、`latlon_to_z15_pixel`・`is_valid_coord`（CMP5。[3.5.4](#354-コンポーネント内の共通部品)）（CMP4 の `analyze_terrain` は C++ で、CMP7・CMP8 の `index.html` は JavaScript で別に実装する。[DEC6](#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」。[3.4.3](#343-関数)・[3.7.3](#373-関数)） | 用語集の [緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile) |
 
 `load_config` に渡すキーの一覧は、呼ぶ側が [2.3.3](#233-検証と記録) のとおりに決める。各バッチは、自分が使うキー（[2.3.2](#232-設定ファイル) の表の「使うコンポーネント」に自分が入っているキー。CMP5 は、プログラムの FR が添えられたキーと、FR の添えが無いキー）と、そのうち必須のものを渡す。CMP3 の `resolve_config` は、表のすべてのキーと、2.3.3 が設定解決に求める必須のキーを渡す。2.3.3 の相互制約と、2.3.2 のパスに改行を含む設定の拒否は `load_config` では確かめず、2.3.3・2.3.2 が定める起動口が自分で確かめる（CMP5 は `merge_peaks`。[3.5.3](#353-関数)。CMP3 は `resolve_config`。[3.3.3](#333-関数)。CMP4 は、C++ で別に実装した `load_config` を使い、相互制約を `analyze_terrain` が確かめる。[3.4.3](#343-関数)）。
 
