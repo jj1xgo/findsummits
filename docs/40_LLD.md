@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合。読み込みの群の関数まで）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合。照合と採番の群の関数まで）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -202,14 +202,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・表を読めず列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1 である（この回は読み込みの関数の分。後の回で足す）。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・表を読めず列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき AO1、確定していないピークの AZ の重なり AO2、仮サミットコードの連番上限を超えるエリアがあるとき PN1・PN2、地域か市区町村のどれにも入らない点 RG1、`unmatched` のサミット UM1 である（この回は読み込みと突き合わせ・照合と採番の関数の分。後の回で足す）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4・7.5（読み込みの群まで）が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4・7.5（照合と採番の群まで）が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -579,7 +579,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3・7.4・7.5（読み込みの群まで）が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3・7.4・7.5（照合と採番の群まで）が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -4242,7 +4242,7 @@ Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパ�
 
 ## 7. CMP5 統合・突合
 
-この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.4 と 7.5 の読み込みの群を書き、7.5 の残りは書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
+この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.4 と 7.5 の読み込みの群・突き合わせの群・照合と採番の群を書き、7.5 の残りは書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
 
 ### 7.1 `cmp5_common`
 
@@ -5224,15 +5224,15 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 関数の名前と役割と呼ぶ順は [HLD 3.5.3](30_HLD.md#353-関数) の `match_summits` の関数の表のとおりで、処理の正本は [HLD 4.9.2](30_HLD.md#492-処理の流れ)・[4.9.3](30_HLD.md#493-異常系)（`merged_summit.xlsx` の規則は [4.12.2](30_HLD.md#4122-処理の流れ)）である。この節は、それを Python で書くための細部（型、止まり方、読み方の細部、メッセージの文面、UT 候補）だけを足す。`match_summits` は CMP3（パイプライン制御）がフェーズ4 で起動する内部の起動口で、`--config <絶対パス>` だけを受け取る（[HLD 2.4.5](30_HLD.md#245-内部引数)）。処理の目的は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の突合で、`merged_peak.csv` と `merged_peak.geojson` と SOTA サミットリスト CSV と山岳データ登録変更リストから、`merged_summit.geojson` と `merged_summit.xlsx` を作る。
 
-**この節は 3 回に分けて書いている**（関数が 21 あり、元になる HLD の文が 7.2 の 3.5〜4 倍あるため。2026-11-01 に持ち主が決めた）。今書いてあるのは、HLD 3.5.3 の表の「群」の列が「読み込み」の 6 関数（`match_zones_to_peaks`・`read_summits_list`・`find_updatelist`・`read_updatelist`・`read_boundaries`・`build_spatial_indexes`）と、それが使う型・文面・UT 候補だけである。突き合わせ・照合と採番の群、組み立ての群、書き出しの群、起動の部分（`main`・`_parse_args`）、起動の直後の確かめ、結果の要約、書き込みの失敗の扱いは、書くときに足す。そのため、[HLD 4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)（Z15 の画素の変換）と [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）の受け方、結合のつなぎ目（`CMP5-INT3`・`CMP5-EXT4`〜`7`）は、全部を書いてからまとめて書く。
+**この節は 3 回に分けて書いている**（関数が 21 あり、元になる HLD の文が 7.2 の 3.5〜4 倍あるため。2026-11-01 に持ち主が決めた）。今書いてあるのは、HLD 3.5.3 の表の「群」の列が「読み込み」の 6 関数（`match_zones_to_peaks`・`read_summits_list`・`find_updatelist`・`read_updatelist`・`read_boundaries`・`build_spatial_indexes`）と「突き合わせ」の 4 関数（`is_in_zone`・`z15_pixel_center_latlon`・`match_activation_zones`・`match_delete_zones`）と「照合と採番」の 2 関数（`locate_regions`・`assign_provisional_codes`）の 12 関数と、それが使う型・文面・UT 候補だけである。組み立ての群、書き出しの群、起動の部分（`main`・`_parse_args`）、起動の直後の確かめ、結果の要約、書き込みの失敗の扱いは、書くときに足す。そのため、[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）の受け方と結合のつなぎ目（`CMP5-INT3`・`CMP5-EXT4`〜`7`）は、全部を書いてからまとめて書く。[HLD 4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)（Z15 の画素の変換）は、`z15_pixel_center_latlon` の式を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まりと表 7 で CMP4（地形解析エンジン）とそろえることで受ける（[7.1](#71-cmp5_common)の `latlon_to_z15_pixel` と同じ形）。
 
 - [5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、この回で書く部分は `build_spatial_indexes` の細部に置いた（ゾーンのジオメトリを持ち続けたまま索引用の形を作るので、2 つの形で持つ）。
-- 読み込みの関数は警告を出さず、`Boundaries.warnings`・`UpdateList.notices` に並べて返す。警告を出すのは `main` である（後の回）。登録変更リストの知らせる行を出す順は [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」が決め、地域と市区町村に入らない点の警告は 7「地域と市区町村を照合する」が `assign_provisional_codes` の後と決めている。地域と市区町村の GeoJSON が無いときの警告（BN1・BN2）を出す時機は HLD に定めが無い（4「地域と市区町村の GeoJSON を読み、索引を作る」が、7 の点ごとの警告をこの警告 1 つにまとめると決めるだけ）ので、後の回の `main` を書くときに決める。読み込みの関数の中で出すと、これらの順を後の回が決められなくなるため、この回の関数は出さない。
+- 読み込みの関数は警告を出さず、`Boundaries.warnings`・`UpdateList.notices` に並べて返す。警告を出すのは `main` である（後の回）。登録変更リストの知らせる行を出す順は [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」が決め、地域と市区町村に入らない点の警告は 7「地域と市区町村を照合する」が `assign_provisional_codes` の後と決めている。地域と市区町村の GeoJSON が無いときの警告（BN1・BN2）を出す時機は HLD に定めが無い（4「地域と市区町村の GeoJSON を読み、索引を作る」が、7 の点ごとの警告をこの警告 1 つにまとめると決めるだけ）ので、後の回の `main` を書くときに決める。読み込みの関数の中で出すと、これらの順を後の回が決められなくなるため、この回の読み込みの関数は出さない。突き合わせと照合・採番の関数も同じ理由で警告を出さず、警告の材料を返り値に並べて返す（`ActivationMatch.overlaps`・`DeleteMatch.unmatched`・`RegionMatch.outside`）。ただし、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき（AO1）と、仮サミットコードの連番上限を超えるエリアがあるとき（PN1・PN2）は入力の誤りで止まる場面なので、`match_activation_zones` と `assign_provisional_codes` が [7.5.4](#754-メッセージ文面)のメッセージを出して止まる。
 
 #### 7.5.1 ファイル割付
 
 - 関数はすべて `scripts/match_summits.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/match_summits.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.is_valid_coord(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)・[7.4.1](#741-ファイル割付)と同じ形）。
-- この回の関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`math`・`os`・`re`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass` である（`typing` の `Iterable`・`Sequence` は、この回の関数の宣言が使わないので読まない。使う回の節で足す）。ほかに `shapely`（`import shapely`・`import shapely.errors`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す）。後の回で使う `openpyxl`・`subprocess` などは、その回の節を書くときに足す。
+- この回の関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`math`・`os`・`re`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass` である（`typing` の `Iterable`・`Sequence` は、この回の関数の宣言が使わないので読まない。使う回の節で足す）。ほかに `shapely`（`import shapely`・`import shapely.errors`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す。突き合わせと照合の関数が使う `shapely.Point`・`shapely.contains_xy`・`shapely.covers` と `STRtree` の `geometries` は、`import shapely` で使える）。後の回で使う `openpyxl`・`subprocess` などは、その回の節を書くときに足す。
 - ファイルの先頭のコメントに `# trace: LLD-match_summits` を書く。起動の部分（`if __name__ == '__main__': main()`）は後の回で足すので、この回の関数だけでは単独で起動できない。
 - UT のコードは `tests/scripts/test_match_summits.py` に置く。各テストに `# trace: UT-match_summits-NN` のコメントを付ける。ID は 01 から通しで付け、後の回は続きの番号から付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
@@ -5243,6 +5243,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - 登録変更リスト: `_UPDATELIST_RE = re.compile(r'sota_updatelist_([0-9]{4})\.xhtml')`（ファイル名の全体。[DEC188](30_HLD.md#494-設計判断)「登録変更リストのファイル名は ASCII の年だけ」）。`_TITLE_YEAR_RE = re.compile(r'([0-9]{4})年')`・`_TITLE_FULL_RE = re.compile(r'([0-9]{4})年 ?山岳データ登録変更リスト')`・`_TITLE_TEXT = '山岳データ登録変更リスト'`（題の行）。`_UPDATE_DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')`（Update の日付）。`_APPLIED_RE = re.compile(r'(?<![0-9/])([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})(?![0-9/])')`（申請日。前後が数字や `/` に隣り合うものは日付としない）。`_SPAN_RE = re.compile(r'[1-9][0-9]*')`（`rowspan`・`colspan`）。`_SPAN_MAX = 100`（`rowspan`・`colspan` の上限。[7.5.3](#753-関数の細部)の `read_updatelist` の 4）。`_SUMMIT_ID_RE = re.compile(r'[A-Z0-9]+/[A-Z0-9]+-[0-9]+')`（山岳 ID）。`_ELEV_RE = re.compile(r'[0-9]+(\.[0-9]+)?')`（変更後の標高）。`_ACTIONS = {'追加': 'add', '変更': 'change', '削除': 'delete'}`。
   - 見出しの文字（空白をすべて除いた後の形。列を引くのに使う）: アクション `アクション`、山岳 ID か県名 `既存山岳IDもしくは県名`、変更後 `変更後` と標高 `標高m`、新規追加詳細 `新規追加詳細` と位置 `位置`、申請者・申請日 `申請者・申請日`。UX4 のメッセージの `{name}` は、比べるための空白を除いた形でなく、ページの見出しの書き方のまま `既存山岳ID もしくは 県名` と書く（[7.5.3](#753-関数の細部)の `read_updatelist` の 5）。
   - 知らせる行の `reason`: [7.5.4](#754-メッセージ文面)の表の 6 つの文を定数にする（`_REASON_ACTION`・`_REASON_POSITION`・`_REASON_ID`・`_REASON_ELEV`・`_REASON_DATE`・`_REASON_UPDATE`）。
+  - 照合と採番: `_ZZ = 'ZZ'`（地域に入らないピークのアソシエーションとエリアの両方の値。コードは `ZZ/ZZ-A00` の形になる）、`_CODE_PER_PREFIX = 100`（仮サミットコードの接頭の文字 1 つが受け持つ連番の数。`00`〜`99`）。
 - 内部の状態（モジュールの最上位）: `_config_opt: str = ''`（後の回の `main` が入れる、[7.5.4](#754-メッセージ文面)の `{config_opt}` の値。`main` を通らない同じプロセスの UT は空のまま使う。[7.2.2](#722-型とデータ)・[7.3.2](#732-型とデータ)・[7.4.2](#742-型とデータ)と同じ）。
 - 数の字句は文字列のまま持ち、比べるときに `decimal.Decimal` にする（[7.1.3](#713-関数の細部)の「10 進の数の決まり」、[DEC92](30_HLD.md#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」）。
 - 型はどれも `@dataclass(frozen=True)` で、項目はこの順に並べる（UT が位置引数で作るため）:
@@ -5257,6 +5258,16 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - `Boundaries(regions, municipalities, warnings)`: `regions: list[RegionFeature] | None`・`municipalities: list[MunicipalityFeature] | None`（`None` はファイルが無い印）、`warnings: list[tuple[str, str]]`（無いファイルの警告の記号〈`'BN1'`・`'BN2'`〉と 1 行目の文の組。2 行目は記号で [7.5.4](#754-メッセージ文面)の文を選んで足す。出すのは後の回の `main`）。
   - `SpatialIndex(tree, keys)`: `tree` は `shapely.STRtree`、`keys` は `tree` の位置 `i` のジオメトリの持ち主を指す `list`（ゾーンの索引は Z15 の画素 `tuple[int, int]`、地域と市区町村の索引は `regions`・`municipalities` の並びの位置 `int`）。
   - `SpatialIndexes(activation, delete, regions, municipalities)`: `activation`・`delete` は `SpatialIndex`、`regions`・`municipalities` は `SpatialIndex | None`（地域か市区町村が `None` なら、その索引も `None`）。
+  - 突き合わせの結果（Z15 の画素は `tuple[int, int]`）:
+    - `AzOverlap(summit, pixels, chosen)`: `summit` は `Summit`、`pixels` は `tuple[tuple[int, int], ...]`（そのサミットを含む AZ のピークの画素。`peak_zones` の鍵の順）、`chosen` は `tuple[int, int]`（AZ に含めたピークの画素）。2 つ以上のピークの AZ に含まれるサミットの 1 件で、警告 AO2 の材料。
+    - `ActivationMatch(summit_peak, peak_summits, peak_status, overlaps)`: `summit_peak` は `dict[str, tuple[int, int]]`（AZ に含まれるサミットの `code` → 含めた AZ のピークの画素。サミットの順）、`peak_summits` は `dict[tuple[int, int], list[Summit]]`（AZ にサミットがあるピークだけ。鍵は `peak_zones` の鍵の順、値はサミットの順）、`peak_status` は `dict[tuple[int, int], str]`（`peak_summits` と同じ鍵で、値は `'matched'`・`'ambiguous'`）、`overlaps` は `list[AzOverlap]`（サミットの順）。`match_activation_zones` が返す。
+    - `DominantPeak(pixel, dist_m)`: `pixel` は `tuple[int, int]`（主ピークの画素）、`dist_m` は `float`（`cmp5_common.great_circle_m` の値のまま。丸めは書き出しの回で決める）。
+    - `DeleteMatch(summit_status, dominant, peak_status, unmatched)`: `summit_status` は `dict[str, str]`（受け取ったサミットの `code` → `'delete'`・`'unmatched'`。受け取った順）、`dominant` は `dict[str, DominantPeak]`（`'delete'` のサミットだけ）、`peak_status` は `dict[tuple[int, int], str]`（AZ にサミットが無いピーク → `'dominant'`・`'new'`。鍵は `peak_zones` の鍵の順）、`unmatched` は `list[Summit]`（`'unmatched'` のサミット。受け取った順。警告 UM1 の材料）。`match_delete_zones` が返す。
+  - 照合の結果:
+    - `LocatePoint(kind, key, lat, lon)`: `kind` は `str`（`'peak'`・`'col'`・`'summit'`）、`key` は親のピークの画素 `tuple[int, int]`（`'peak'`・`'col'`）かサミットの `code` `str`（`'summit'`）、`lat`・`lon` は `str`（元の字句。ピークは `peak_lat`・`peak_lon`、コルは `col_lat`・`col_lon`、サミットは `Latitude`・`Longitude`）。
+    - `Location(region, municipality)`: `region` は `RegionFeature | None`（どの地域にも入らないか、地域の GeoJSON が無いとき `None`）、`municipality` は `str`（入らないか、市区町村の GeoJSON が無いとき空文字）。
+    - `OutsidePoint(point, layers)`: `point` は `LocatePoint`、`layers` は `tuple[str, ...]`（入らなかった層の名前。`'地域'`・`'市区町村'` のこの順の部分列）。警告 RG1 の材料。
+    - `RegionMatch(locations, outside)`: `locations` は `dict[tuple[str, object], Location]`（鍵は `(point.kind, point.key)`。点の順）、`outside` は `list[OutsidePoint]`（点の順）。`locate_regions` が返す。
 - `slots=True` は付けない（[7.1](#71-cmp5_common)〜[7.4](#74-check_cols)と同じく、メモリの実測〈HLD 5.2.2 の「実測の計画」の 4〉の後に決める）。
 
 #### 7.5.3 関数の細部
@@ -5378,9 +5389,160 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 4. `SpatialIndexes(activation, delete, regions, municipalities)` を返す。
 5. メモリ（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「メモリ」。実測は [HLD 5.2.2](30_HLD.md#522-処理の流れ)の「実測の計画」の 4「CMP5 の突合」）: 後の回の書き出しのために `ZoneFeature.geometry`（`JsonNumber` の `dict`）も持ち続けるので、ゾーンのジオメトリは、`dict` と `shapely` の形の 2 つの形で持つ。
 
+##### is_in_zone
+
+`is_in_zone(lat: float, lon: float, zone: shapely.Geometry) -> bool`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「ゾーンの内外」である（[DEC86](30_HLD.md#494-設計判断)「ゾーンの内外は Z15 の画素の中心で判定する」）。`lat`・`lon` は、呼ぶ側が `cmp5_common.is_valid_coord` を通した字句を `float` にした値（範囲の中なので `cmp5_common.latlon_to_z15_pixel` を安全に呼べる）。`zone` は `build_spatial_indexes` が作った `shapely` の形（Polygon か MultiPolygon）。
+
+1. `pixel = cmp5_common.latlon_to_z15_pixel(lat, lon)`（点が入る全球の Z15 の画素 (gx, gy)）。
+2. `center_lat, center_lon = z15_pixel_center_latlon(pixel)`（その画素の中心）。
+3. `shapely.contains_xy(zone, center_lon, center_lat)` を返す（`x` が経度、`y` が緯度。引数の順に注意）。元の `lat`・`lon` を形に当てない。
+
+- 画素の中心は画素の内側にあって輪郭の線の上に乗らない（ゾーンは塗った画素の境界をたどる形で、画素の境目は輪郭の線の上にしか無い）ので、輪郭の上を外とする `contains` と内とする `covers` は同じ結果になる。ここでは `contains_xy` を使う。
+- 元の点がゾーンの輪郭の線の上にあっても、見るのは画素の中心なので、結果はその画素が塗られているかだけで決まる。経度が画素の西端にちょうど乗る点は、東の画素（画素の座標が 1 大きい方）に入る（[2.4](#24-言語ごとに別に実装する式のテストベクトル)の `latlon_to_tile` の `floor`。画素の経度の境目は `gx / 2²³ × 360 − 180` で丸めが無い）。
+
+##### z15_pixel_center_latlon（match_summits）
+
+`z15_pixel_center_latlon(pixel: tuple[int, int]) -> tuple[float, float]`
+
+[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まりの `z15_pixel_center_latlon` のとおり、式を書いた順に左から計算する（[7.2.3](#723-関数の細部)の `latlon_to_mesh` と同じ形で、7.5 の中に式を写す。`tile_to_latlon` は [3.1](#31-preprocess_boundaries) の関数で、[1.2](#12-lld-の規約)により 7.5 からは呼べない）。返すのは（緯度, 経度）の順。
+
+```python
+gx, gy = pixel
+n = float(2 ** 23)
+x = gx + 0.5
+y = gy + 0.5
+lon = ((x / n) * 360) - 180
+lat = (math.atan(math.sinh(math.pi * (1 - (2 * y) / n))) * 180) / math.pi
+return (lat, lon)
+```
+
+引数を確かめない。呼ぶのは `is_in_zone` だけで、渡すのは `cmp5_common.latlon_to_z15_pixel` が返した画素である。期待値は [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 7 で、経度は `==`、緯度は差の絶対値が `1e-12` 度以下で比べる。
+
+##### match_activation_zones
+
+`match_activation_zones(summits: list[Summit], peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], index: SpatialIndex) -> ActivationMatch`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 5「AZ と突き合わせる」である。`index` は `SpatialIndexes.activation`（AZ のジオメトリは `index.tree.geometries`）。HLD 3.5.3 の表の「AZ とその索引」を、索引がジオメトリを持つのでこの 1 つで受ける（`PeakZones` の `geometry` は `dict` で、内外の判定は `shapely` の形が要るため）。
+
+内部の関数 `_zones_containing(lat: float, lon: float, index: SpatialIndex, rank: dict[tuple[int, int], int]) -> list[tuple[int, int]]`: 点を含むゾーンの持ち主（Z15 の画素）を、`peaks` の鍵の順に並べて返す。`match_delete_zones` も使う。
+
+1. `center_lat, center_lon = z15_pixel_center_latlon(cmp5_common.latlon_to_z15_pixel(lat, lon))`。`positions = index.tree.query(shapely.Point(center_lon, center_lat))`（画素の中心の点の外接矩形に合うゾーンの添字の配列）。
+2. `positions` のうち `is_in_zone(lat, lon, index.tree.geometries[i])` が真の `i` の `index.keys[i]` を集め、`rank`（`peaks` の鍵 → `peaks` の中の順番〈0 から〉）の昇順に並べて返す。
+
+並びは `peaks` の鍵の順（`merged_peak.csv` の行の順）で、`STRtree.query` が返す順にも、索引を作った並び（`build_spatial_indexes` が `peak_zones` の鍵の順に作る）にも頼らない。`STRtree.query` の順は `shapely` の版や木の作りで変わりうるので、決定論的な出力（[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)）のために並べ直す。
+
+手順:
+
+1. `rank = {key: i for i, key in enumerate(peaks)}`（この関数で 1 回だけ作る）。
+2. サミットを順に見て、`candidates = _zones_containing(float(s.lat), float(s.lon), index, rank)`。
+   - 0 件: AZ の外。何も控えず、次へ（`match_delete_zones` が受け持つ）。
+   - 1 件: そのピークを含めたピークとする。
+   - 2 件以上: 候補のうち `peaks[p].values['key_col_resolved'] == 'true'`（確定）のものを数える。
+     - 確定が 2 つ以上: AO1 の材料に `(s, candidates)` を控える（この場では止めない）。
+     - 確定が 1 つ: そのピークを含めたピークとする。
+     - 確定が 0: 候補のうち次の key が最小のピークを含めたピークとする（`peak_elev` の降順、`peak_lat` の降順、`peak_lon` の昇順。HLD 4.9.2 の 5）。
+     - 確定が 1 つ以下のときは、`AzOverlap(s, tuple(candidates), <含めたピーク>)` を `overlaps` に足す（確定が 1 つでも足す。HLD 4.9.2 の 5 が「どちらの場合も重なりを警告に並べて続ける」と決めている）。
+   - 含めたピークを `summit_peak[s.code]` に入れる。
+3. 全サミットを見た後、AO1 の材料があれば、すべてを挙げて AO1 で止まる（[DEC93](30_HLD.md#494-設計判断)「入力の誤りは書かずに止め、不備ゲートは書いて止める」の (2)。1 つ目で止まらない）。
+4. `peak_summits` は、`summit_peak` の値ごとにサミットを集めた後で、`peaks` の鍵の順に回して作る（サミットの順に回して足すと、辞書の鍵の順がサミットの順になるため）。値のサミットの並びはサミットの順。AZ にサミットがあるピークだけを入れる。
+5. `peak_status` は、`peak_summits` と同じ鍵の順で、サミットが 1 つなら `'matched'`、2 つ以上なら `'ambiguous'`（[ADR-SRS-048](decisions/ADR-SRS-048-multiple-summits-in-one-az.md)）。`SummitCode` は SS5 で重ならないことが分かっているので、サミットの数が `SummitCode` の数である。
+6. `ActivationMatch(summit_peak, peak_summits, peak_status, overlaps)` を返す。`summits` が空、または `peaks` が空で索引が空（`shapely.STRtree([])`）なら、どのサミットも AZ の外になり、すべて空の辞書とリストを持つ `ActivationMatch` を返す。
+
+確定が 0 のときの key は次のとおり（比べるのは `decimal.Decimal` にした値で、浮動小数にしない。[DEC92](30_HLD.md#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」）。降順は `copy_negate()` で作る（単項の `-` は既定の精度 28 桁で丸めるので、`1000.0000000000000000000000001` と `1000.0000000000000000000000002` のような 28 桁を超える差が同じ鍵になる。[7.2.3](#723-関数の細部)の代表採用の鍵と同じ決まり）:
+
+```python
+def key(p):
+    v = peaks[p].values
+    return (decimal.Decimal(v['peak_elev']).copy_negate(),
+            decimal.Decimal(v['peak_lat']).copy_negate(),
+            decimal.Decimal(v['peak_lon']))
+chosen = min(candidates, key=key)
+```
+
+この関数は警告を出さない（AO2 の材料を `overlaps` に並べて返し、出すのは後の回の `main`）。
+
+##### match_delete_zones
+
+`match_delete_zones(summits: list[Summit], peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], activation: ActivationMatch, index: SpatialIndex) -> DeleteMatch`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 6「delete判定ゾーンと突き合わせ、主ピークを選ぶ」である。`summits` は AZ に含まれないサミットで、呼ぶ側が `activation.summit_peak` に無いものをサミットの順で渡す。`index` は `SpatialIndexes.delete`。
+
+1. `rank` を `match_activation_zones` と同じ作り方で作る。
+2. サミットを順に見て、`candidates = _zones_containing(float(s.lat), float(s.lon), index, rank)`（`matched`・`ambiguous` のピークも候補になる。[ADR-SRS-043](decisions/ADR-SRS-043-matched-peak-as-delete-reference.md)）。
+   - 0 件: `summit_status[s.code] = 'unmatched'`、`unmatched` に `s` を足す。
+   - 1 件以上: `summit_status[s.code] = 'delete'`。候補のうち次の key が最小のピークを主ピークとし（`prominence` の最小。`key_col_resolved` が確定でないピークは最大として扱う。同じなら `peak_lat` の降順、`peak_lon` の昇順。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)の主ピーク特定）、`dominant[s.code] = DominantPeak(<主ピークの画素>, cmp5_common.great_circle_m(float(peak_lat), float(peak_lon), float(s.lat), float(s.lon)))`（主ピークからサミットへ。`peak_lat`・`peak_lon` は主ピークの行の字句）。
+3. `peak_status`: `peaks` の鍵の順に、`activation.peak_summits` に無い（AZ にサミットが無い）ピークだけを入れる。`dominant` のどれかに主ピークとして 1 回以上選ばれたピークは `'dominant'`、選ばれなかったピークは `'new'`（[DEC95](30_HLD.md#494-設計判断)「`dominant` は削除の候補の主ピークとする」）。
+4. `DeleteMatch(summit_status, dominant, peak_status, unmatched)` を返す。`summits` が空なら `summit_status`・`dominant`・`unmatched` は空で、`peak_status` はすべて `'new'`。`peaks` が空で索引が空なら、すべてのサミットが `'unmatched'`、`peak_status` は空。
+
+主ピークの key は次のとおり。確定していない行の `prominence` は空欄なので `Decimal` にしない（key の 3 つ目の `0` は使わない値の詰め物）。この形にするのは、字句を読み直さずに、確定は小さい順（最小の `prominence`）、確定していないものは最大として扱う（先頭の `0` と `1` が確定と未確定を分ける）ためである。採番の順（`assign_provisional_codes`）では未確定が末尾（最小として扱う）で、主ピークと扱いが逆になる。
+
+```python
+def key(p):
+    v = peaks[p].values
+    lat = decimal.Decimal(v['peak_lat']).copy_negate()
+    lon = decimal.Decimal(v['peak_lon'])
+    if v['key_col_resolved'] == 'true':
+        return (0, decimal.Decimal(v['prominence']), lat, lon)
+    return (1, decimal.Decimal(0), lat, lon)
+dominant_peak = min(candidates, key=key)
+```
+
+##### locate_regions
+
+`locate_regions(points: list[LocatePoint], boundaries: Boundaries, indexes: SpatialIndexes) -> RegionMatch`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 7「地域と市区町村を照合する」である（[DEC91](30_HLD.md#494-設計判断)「地域と市区町村は境界の上を内とし、並びの最初のものを採る」）。点を作るのは内部の関数 `_region_points`（後の回の `main` が呼ぶ）。
+
+内部の関数 `_region_points(peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], summits: list[Summit]) -> list[LocatePoint]`: 照合する点の並びを作る。
+
+1. すべてのピーク（`peaks` の鍵の順）。`LocatePoint('peak', <画素>, peak_lat, peak_lon)`。
+2. 続けて陸のコル。`key_col_resolved` が `'true'` で、`decimal.Decimal(col_lat)` と `decimal.Decimal(col_lon)` が**どちらも** 0 でないピークのコルだけ（ピークの順）。`LocatePoint('col', <親のピークの画素>, col_lat, col_lon)`。海面確定のコルは位置を持たず、緯度経度が 0 になる。片方だけ 0 のコルは入れない。値で比べるので、`'0'`・`'0.0'`・`'0.00000000'` は同じ 0 として扱う。
+3. 続けてすべてのサミット（サミットの順）。`LocatePoint('summit', s.code, s.lat, s.lon)`。
+
+陸のコルの条件は [7.3.3](#733-関数の細部)の `build_peak_features` と [6.8.3](#683-関数の細部)の `write_zone_geojson` の「`col_lat`・`col_lon` がどちらも 0 でない行だけ」と同じにする。HLD の同じ字句「`col_lat`・`col_lon` が 0.0 でない」を LLD がそう読んでいて、後の回のコルの点の条件ともそろうので、照合したコルと出力するコルの点が食い違わない。並べ方（ピーク → コル → サミット）は HLD 4.9.2 の 7 の列挙の順で、警告 RG1 の順になる。
+
+`locate_regions` の手順:
+
+1. 点を順に見て、`Location` を作る。地域と市区町村を、それぞれ次の手順で照合する。
+   - `boundaries` のその層（`regions`・`municipalities`）が `None`（ファイルが無い）なら照合しない。`region` は `None`、`municipality` は空文字にし、`outside` に入れない（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 4「地域と市区町村の GeoJSON を読み、索引を作る」が、無いファイルについて 7 の点ごとの警告を出さないと決めている）。
+   - ある層は、元の緯度経度の点 `shapely.Point(float(point.lon), float(point.lat))`（画素の中心ではない）で `index.tree.query(point)` を引き、得た添字を昇順に並べて、`shapely.covers(index.tree.geometries[i], point)` が最初に真になる `i` を採る（境界の上を内とし、ファイルの順の最初を採る。添字の昇順がファイルの順）。採った `i` で `boundaries.regions[index.keys[i]]`（`RegionFeature`）か `boundaries.municipalities[index.keys[i]].municipality`（`str`）を得る。どれも真にならなければ、入らなかった。
+   - ファイルがあって Feature が 0 件（空の `list`）の層は、どの点も入らない。
+2. 入らなかった層の名前（`'地域'`・`'市区町村'` の順）を `layers` に集め、空でなければ `OutsidePoint(point, tuple(layers))` を `outside` に足す。
+3. `locations[(point.kind, point.key)]` に `Location(region, municipality)` を入れる。`RegionMatch(locations, outside)` を返す。`points` が空なら、空の `RegionMatch` を返す。
+
+この関数は警告を出さない（RG1 の材料を `outside` に並べて返す。RG1 を出すのは後の回の `main` で、`assign_provisional_codes` の後）。
+
+##### assign_provisional_codes
+
+`assign_provisional_codes(peak_status: dict[tuple[int, int], str], peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], locations: dict[tuple[str, object], Location], max_prefix: str, regions_missing: bool) -> dict[tuple[int, int], str]`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 8「仮サミットコードを付ける」である。HLD 3.5.3 の表の「`new`・`dominant` のピークとその地域」は、`peak_status`（`DeleteMatch.peak_status`）と `locations`（`RegionMatch.locations`）で渡す。`max_prefix` は設定の `provisional_code_max_prefix`（大文字 1 字）、`regions_missing` は `boundaries.regions is None`。
+
+1. 対象は `peak_status` のすべてのピーク（`'new'` と `'dominant'` を区別しない。[FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)の採番順序）。ピークの地域は `locations[('peak', pixel)].region`。エリアは `(region.assoc, region.area_code)`、`None` なら `(_ZZ, _ZZ)`。
+2. エリアごとにピークを集め、次の key の昇順に並べる（`peak_elev` の降順、`prominence` の降順で `key_col_resolved` が確定でないものは最後、`peak_lat` の降順、`peak_lon` の昇順。降順は `copy_negate()`）。
+
+   ```python
+   def key(p):
+       v = peaks[p].values
+       elev = decimal.Decimal(v['peak_elev']).copy_negate()
+       lat = decimal.Decimal(v['peak_lat']).copy_negate()
+       lon = decimal.Decimal(v['peak_lon'])
+       if v['key_col_resolved'] == 'true':
+           return (elev, 0, decimal.Decimal(v['prominence']).copy_negate(), lat, lon)
+       return (elev, 1, decimal.Decimal(0), lat, lon)
+   ```
+
+3. エリアの `i` 番目（0 から）のピークに `f'{assoc}/{area_code}-{chr(ord("A") + i // _CODE_PER_PREFIX)}{i % _CODE_PER_PREFIX:02d}'` を付ける（`A00`〜`A99`、その次は `B00`）。
+4. エリアごとの上限は `(ord(max_prefix) - ord('A') + 1) * _CODE_PER_PREFIX` 件（`max_prefix` が `'A'` なら 100 件、`'B'` なら 200 件）。件数が上限を超えるエリアが 1 つでもあれば、すべてのエリアを数え終えてから、超えたエリアをすべて挙げて止まる（[ADR-SRS-031](decisions/ADR-SRS-031-provisional-code-limit-configurable.md)、[DEC93](30_HLD.md#494-設計判断)の (2)）。並びはエリアの `f'{assoc}/{area_code}'` の文字列の昇順。`regions_missing` が真なら PN2、偽なら PN1（地域の GeoJSON が無いと全ピークが `ZZ` に入るので、超えるのは `ZZ` のエリアだけになる）。
+5. 返す辞書は `peak_status` の鍵の順（鍵はピークの画素、値は仮サミットコード）。`peak_status` が空なら空の辞書。
+
+`peak_status` の鍵が `peaks` と `locations` に無いのは呼ぶ側の誤りで、例外のまま伝える。
+
 #### 7.5.4 メッセージ文面
 
-書き方は [2.2](#22-ログとメッセージの文面)。この回に書くのは、読み込みの関数が出すメッセージだけである。引数と設定の誤り（`_parse_args`・`load_config`）、ログの場面（G1〜G7・L1〜L3）、突き合わせから後の関数のメッセージ、結果の要約は、後の回で足す。7.1 の部品の誤り（MP1〜MP3・ZF1〜ZF4）の 1 行目は [7.1.4](#714-メッセージ文面)の `what` のまま、2 行目は `{redo}`（`_input_error_advice`）。
+書き方は [2.2](#22-ログとメッセージの文面)。この回に書くのは、読み込みの関数と、突き合わせ・照合と採番の関数の材料が出すメッセージである。引数と設定の誤り（`_parse_args`・`load_config`）、ログの場面（G1〜G7・L1〜L3）、組み立てと書き出しの関数のメッセージ、結果の要約は、後の回で足す。7.1 の部品の誤り（MP1〜MP3・ZF1〜ZF4）の 1 行目は [7.1.4](#714-メッセージ文面)の `what` のまま、2 行目は `{redo}`（`_input_error_advice`）。
 
 - `{path}`・`{reason}` は [7.5.3](#753-関数の細部)の前置きのとおり。`{dir}` は、`find_updatelist` では探した `$DATA_DIR/ref/` の絶対パス、`read_updatelist` では `{path}` の置き場のディレクトリの絶対パス。`{detail}`・`{list}`・`{target}` は、メッセージごとに下に書いた文。
 - `{config_opt}` は後の回の `main` が決める値（[7.2.3](#723-関数の細部)の `main` の 5 と同じ。既定の設定ファイルなら空の文字列、そうでなければ、空白 1 つに続けて `--config <パス>`）。
@@ -5390,6 +5552,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - `{cmp1_rebuild}` は `venv/bin/python3 scripts/preprocess_boundaries.py --rebuild{config_opt} で地域と市区町村の GeoJSON を作り直し、venv/bin/python3 scripts/fetch_tiles.py{config_opt} を起動して取得完了の記録を作り直してから、{redo}`（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)の「フェーズ1」の CMP1 の作り直しの手順と、「フェーズ1 をやり直したら、フェーズ2 から通しでやり直す」の決まり〈除外リストやタイルが変わると、前回のフェーズ2 以降の結果は新しい入力と合わないため〉。[7.2.4](#724-メッセージ文面)の R1〜R3 の案内と同じ形。CMP1 が取得完了の記録も消すので、CMP2 の起動を添える）。
   - `{summits_advice}` は `SOTA サミットリスト CSV を提供元から落とし直して {path} に置いてから、{rerun4}`。
   - `{update_advice}` は `登録変更リストのページを元のまま保存し直して {dir} に置く（ブラウザの保存の種類によっては、HTML に作り直されて XHTML として読めなくなる）。直してから、{rerun4}`。
+  - `{report_analysis}` は `AZ が互いに素であるという前提に反する、解析の欠陥の可能性がある。このメッセージを添えて解析の欠陥として起票し、原因を調べる`（[HLD 4.9.3](30_HLD.md#493-異常系)の AZ の重なりの行。確定したピークの AZ は互いに素であると [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)が前提にするため、利用者が直せる入力の誤りではない）。
 
 | 記号 | 場面 | 1 行目（`ERROR:` か `WARNING:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
 |---|---|---|---|---|
@@ -5408,7 +5571,14 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 | BN1 | 地域の GeoJSON が無い（`WARNING:`） | `地域の GeoJSON が無い: {path}。仮サミットコードのエリアがすべて ZZ になり、region_name が空文字になる（全国の実行では仮サミットコードの連番上限で止まりうる）` | `{cmp1_rebuild}` | 0 |
 | BN2 | 市区町村の GeoJSON が無い（`WARNING:`） | `市区町村の GeoJSON が無い: {path}。municipality が空文字になる` | `{cmp1_rebuild}` | 0 |
 | UN1 | 登録変更リストに知らせる行がある（`WARNING:`。知らせる行 1 件ごとに 1 組） | `登録変更リストの知らせる行: {kind}: {reason}: {where}、アクション {action}、山岳 ID か県名 {target}、申請者 {applicant}、申請日 {applied_on}、問題の値 {value}（全体で {total} 件）` | `止まらずに続ける。ページの元の行を確かめて、直すか放置するかを決める` | 0 |
+| AO1 | 2 つ以上の確定したピークの AZ に含まれるサミットがある | `2 つ以上の確定したピークの AZ に含まれるサミットがある: {list}`（`{list}` は、当たったサミットすべてをサミットの順に、`{code}（{lat},{lon}）: {peaks}` として `；` でつなぐ。`{peaks}` は、そのサミットを含む AZ のピークすべて〈確定していないピークも含む〉を `peaks` の鍵の順に、`{peak_lat},{peak_lon}（key_col_resolved={値}）` として `、` でつなぐ。緯度経度は入力の字句のまま） | `{report_analysis}` | 1 |
+| PN1 | 仮サミットコードの連番が上限を超えるエリアがある（地域の GeoJSON はある） | `仮サミットコードの連番が上限を超えるエリアがある（provisional_code_max_prefix={prefix}、1 エリアの上限 {limit} 件）: {list}`（`{prefix}` は今の設定の値、`{limit}` は `(ord(prefix) - ord('A') + 1) * 100`。`{list}` は、超えたエリアすべてをエリアの `{assoc}/{area_code}` の文字列の昇順に、`{assoc}/{area_code}（{count} 件、上限を {over} 件超える）` として `、` でつなぐ。`{count}` はそのエリアのピークの件数、`{over}` は `{count}` から `{limit}` を引いた件数） | `provisional_code_max_prefix を上げてから、{rerun4}` | 1 |
+| PN2 | 地域の GeoJSON が無く、全ピークが `ZZ` のエリアに入って連番が上限を超える | `地域の GeoJSON が無いため、すべてのピークが ZZ のエリアに入り、仮サミットコードの連番が上限を超える（provisional_code_max_prefix={prefix}、1 エリアの上限 {limit} 件）: {list}`（`{prefix}`・`{limit}`・`{list}` は PN1 と同じ。`{path}` は入れない。`assign_provisional_codes` が受け取るのは地域の GeoJSON の有無だけで、無いファイルのパスは同じ実行の BN1 が出すため） | `{cmp1_rebuild}` | 1 |
+| AO2 | 確定していないピークの AZ が重なり、2 つ以上の AZ に含まれるサミットがある（`WARNING:`。サミット 1 件ごとに 1 組） | `確定していないピークの AZ が重なる: {code}（{lat},{lon}）: {peaks}、含めた AZ のピーク {peak_lat},{peak_lon}`（`{peaks}` は AO1 と同じ形。`AzOverlap` の項目から作る） | `key_col_resolved=false のピークがあるので、続く不備ゲートで止まる。AZ に含めたピークのまま続ける` | 0 |
+| RG1 | 地域か市区町村のどれにも入らない点がある（`WARNING:`。点 1 つごとに 1 組） | `地域か市区町村のどれにも入らない点: {kind} {lat},{lon}: 入らなかった層 {layers}: {what}`（`{kind}` は `ピーク`・`コル`・`サミット`。`{layers}` は `OutsidePoint.layers` を `・` でつなぐ。`{what}` は、サミットなら `サミット {code}`、コルなら `親のピーク {peak_lat},{peak_lon}`、ピークなら `match_status {status}、{codes}`。`{status}` は `peak.match_status`、`{codes}` は `new`・`dominant` なら `仮サミットコード <コード>`、`matched`・`ambiguous` なら `AZ の中のサミット <コードすべて を、でつなぐ>`。`{status}`・`{codes}` は後の回の `main` が渡す値） | `止まらずに続ける。点が海上や境界の外にあるか、地域と市区町村の GeoJSON が古いかを確かめる` | 0 |
+| UM1 | `unmatched` のサミットがある（`WARNING:`。1 組） | `unmatched のサミットがある（{count} 件）: {list}`（`{list}` は、`DeleteMatch.unmatched` のサミットすべてをその順に、`{code}（{name}、{lat},{lon}）` として `、` でつなぐ。`{count}` は件数） | `止まらずに続ける。件数が unmatched_summit_threshold を超えると、続く不備ゲートで止まる。出力のそれぞれのサミットを確かめる` | 0 |
 
+- AO2・RG1・UM1 の警告を出すのは後の回の `main` で、この回は文面と材料（`ActivationMatch.overlaps`・`RegionMatch.outside`・`DeleteMatch.unmatched`）だけを決める（BN1・BN2 と同じ形）。AO2 は `overlaps` の順、RG1 は `outside` の順（ピーク → コル → サミット）、UM1 は 1 組。RG1 は `assign_provisional_codes` の後に出す。AO1・PN1・PN2 は、`match_activation_zones` と `assign_provisional_codes` が出して止まる。
 - BN1・BN2 の 2 行目は、`read_boundaries` が返す `warnings` の組の記号を、後の回の `main` が見て足す（`warnings` が持つのは 1 行目だけ）。
 - UN1 の項目は `Notice` の項目で、`{kind}` は `Notice.kind` の英語の名前のまま、`{where}` は `{year} 年の表の {row} 行目`（`row` が `None` の `unreadable_update` は `{year} 年の表`）、`{total}` は `UpdateList.notices` の件数。空の値は `（空）` と書く。UN1 を出すのは後の回の `main` で、この回は文面だけを決める（出す順は `UpdateList.notices` の順。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」）。
 - 知らせる行の `reason` の文（`Notice.reason`。UN1 の `{reason}` にもなる）:
@@ -5424,7 +5594,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 #### 7.5.5 UT 候補
 
-すべて自動（合否をテストのコードが判定できる）。この回の関数は `main` を通らないので、子のプロセスは使わず、同じプロセスで関数を直接呼ぶ。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.5.4](#754-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。`{path}` は渡した絶対パス。共通の準備は次の 5 つ。
+すべて自動（合否をテストのコードが判定できる）。この回の関数は `main` を通らないので、子のプロセスは使わず、同じプロセスで関数を直接呼ぶ。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.5.4](#754-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。`{path}` は渡した絶対パス。共通の準備は次の 6 つ。
 
 - **同じプロセス**: [7.2.5](#725-ut-候補)の同じ名前の準備と同じ（`merge_peaks` を `match_summits` に読み替える）。`match_summits._config_opt` は空の文字列にしておく（このとき `{rerun4}` は `scripts/run_pipeline.sh --phase 4 を起動し直す`、`{redo}` は `scripts/run_pipeline.sh を --phase なしで起動して、フェーズ2 から通しでやり直す`）。ファイルはケースごとに一時のディレクトリ `<tmp>` に書く。
 - **SOTA サミットリスト CSV**: 1 行目 `SOTA Summits List (Date=18/10/2026)`、2 行目（見出しの 17 列）`SummitCode,AssociationName,RegionName,SummitName,AltM,AltFt,GridRef1,GridRef2,Longitude,Latitude,Points,BonusPoints,ValidFrom,ValidTo,ActivationCount,ActivationDate,ActivationCall`。データの行は `row(code, name, alt, lon, lat, valid_to)` で書く: `{code},A,R,{name},{alt},0,0,0,{lon},{lat},1,0,01/01/2020,{valid_to},0,,`（17 欄。使う列は 0・3・4・8・9・13 欄目）。改行は LF。記録の番号は、1 行目が 1、見出しが 2、最初のデータの行が 3。
@@ -5434,6 +5604,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - `app(action, target, elev, who, pos, note='')`: 16 個の `<td>` を、0 列目 `action`、1 列目 `target`、7 列目 `elev`、8 列目 `note`、9 列目 `who`、10 列目 `pos` にし、ほかを空にしたもの。
 - **ピークとゾーン**: `cmp5_common.MergedPeakRow(<path>, <n>, {'peak_lat': …, 'peak_lon': …})` を直接作る（鍵は使う 2 つだけでよい）。ゾーンは `cmp5_common.ZoneFeature(index, kind, pixel, area_complete, geometry, properties)` を直接作る。`properties` は `{'peak_lat': JsonNumber(…), 'peak_lon': JsonNumber(…)}` を持つ `dict`、`geometry` は `{'type': 'Polygon', 'coordinates': [[[x, 0], [x + 1, 0], [x + 1, 1], [x, 1], [x, 0]]]}`（x を左端とする一辺 1 の四角。数は `JsonNumber`）。ピークは P1（画素 (1, 1)、`35.10000000`・`138.10000000`）と P2（画素 (2, 2)、`35.20000000`・`138.20000000`）、画素 (9, 9) の `36.00000000`・`139.00000000` は表に無いピーク。
 - **地域と市区町村の GeoJSON**: `{"type":"FeatureCollection","features":[…]}`。地域の Feature は `{"type":"Feature","properties":{"assoc":"JA","area_code":"HS","region_name":"広島県"},"geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}}`、市区町村の Feature は `properties` が `{"municipality":"廿日市市","code":"34210"}` で `geometry` が `MultiPolygon`（`"coordinates":[[[[0,0],[1,0],[1,1],[0,0]]]]`）。
+- **突き合わせ以降の入力**（`UT-match_summits-21` から）: 索引は `match_summits.SpatialIndex(shapely.STRtree(<shapely の形の並び>), <keys>)` をケースの中で直接作る（1 回目の関数〈`build_spatial_indexes` など〉を呼ばない）。形の座標は（経度, 緯度）の順で、四角は `shapely.box(<西の経度>, <南の緯度>, <東の経度>, <北の緯度>)`。ピークの鍵は Z15 の画素の形の `K1 = (1, 1)`・`K2 = (2, 2)`・`K3 = (3, 3)`（実際の画素と合っていなくてよい。鍵は同一性にだけ使う）。ピークの行は `cmp5_common.MergedPeakRow(<path>, <n>, {...})` に使う列だけを入れる: `peak_lat`・`peak_lon`・`peak_elev`・`prominence`・`key_col_resolved`（`'true'`・`'false'`）・`col_lat`・`col_lon`（陸のコルが無いものは `0.00000000`）。サミットは `match_summits.Summit(<code>, 'n', '100', <lat>, <lon>, <line_no>)`。四角は `AZ_1 = box(138.0, 35.0, 138.2, 35.2)`、`AZ_2 = box(138.1, 35.1, 138.3, 35.3)`（`AZ_1` と重なる部分は経度 138.1〜138.2、緯度 35.1〜35.2）、`AZ_3 = box(139.0, 36.0, 139.2, 36.2)`、`DZ = box(138.0, 35.0, 138.5, 35.5)`。サミットの点は四角の境目から画素 1 つの大きさ（約 4.3×10⁻⁵ 度）より十分に離す。止まるケースの期待は、標準エラー出力の 2 行（2 行目は [7.5.4](#754-メッセージ文面)の案内の文）と `SystemExit` の `code`。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -5457,3 +5628,19 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 | `UT-match_summits-18` | 空間索引 | 同じプロセス。`peak_zones` は、鍵 (1, 1)（AZ が x も y も 0〜1 の四角、delete判定ゾーンが 0〜2 の四角）と鍵 (2, 2)（AZ が 10〜11、delete判定ゾーンが 10〜12 の四角）。座標の数は `JsonNumber`。`boundaries` は地域が 2 つの四角（x も y も 0〜1 と 10〜11）で、市区町村が `None` | `build_spatial_indexes(<peak_zones>, <boundaries>)` | `activation.keys` が `[(1, 1), (2, 2)]`、`activation.tree.query(shapely.Point(0.5, 0.5), predicate='intersects')` が添字 `[0]`、`Point(10.5, 10.5)` が `[1]`、`Point(5, 5)` が空。`delete.tree.query(shapely.Point(1.5, 1.5), predicate='intersects')` が `[0]`。`regions.keys` が `[0, 1]`、`municipalities` が `None` |
 | `UT-match_summits-19` | 7.1 の誤りの案内の文 | 同じプロセス | `_input_error_advice` に (a) `'MP1'`・`'MP2'`・`'MP3'`・`'ZF1'`〜`'ZF4'` のそれぞれ（`_config_opt` は空）、(b) (a) の `'MP3'` を `_config_opt` が空白 1 つに続けて `--config /a.ini` のとき、(c) `'XX'` | (a) どれも `scripts/run_pipeline.sh を --phase なしで起動して、フェーズ2 から通しでやり直す`。(b) `scripts/run_pipeline.sh --config /a.ini を --phase なしで起動して、フェーズ2 から通しでやり直す`。(c) `ValueError` |
 | `UT-match_summits-20` | 格子の上限の境目と前書き、ゾーンの座標の有限性 | 同じプロセス。(a) 表の先頭（最初の題の行より前）に `<tr><td rowspan="101">前書き</td><td>x</td></tr>` を置き、続けて `title(2026)`・`upd('2026-10-14')`・`head()`・`app('追加', '県', '', 'A 2026/1/1', '35.1,138.2')`。(b) 表の先頭に `<tr><td>x</td><td rowspan="2">a</td></tr><tr><td colspan="3">b</td></tr>`（2 行目の `colspan` が 1 行目から延びる `rowspan` の列を覆う）を置き、続けて (a) と同じ 4 行。(c) UT-13 (a) の `head()` の 1 行目の `<td rowspan="2">アクション</td>` を `<td rowspan="100">アクション</td>` にしたもの。(d) `build_spatial_indexes` に、AZ のジオメトリの座標の 1 つが `cmp5_common.JsonNumber('1e999')` のゾーンを持つ `peak_zones`（鍵 (1, 1) の 1 件。ほかの座標は UT-18 と同じ）と、`regions`・`municipalities` が `None` の `Boundaries` | (a)〜(c) は `read_updatelist`、(d) は `build_spatial_indexes` | (a)(b) 止まらず、`applications` が `[Application('add', None, '35.1', '138.2', None, 'A', '2026-01-01', (2026,), (2026, 1), '追加', '県')]`、`updates` が `[YearUpdate(2026, '2026-10-14')]`、`notices` が空、`row_count` が 1（前書きは格子に展開せず、`rowspan` の上限も重なりも見ない）。(c) 止まらず（上限は 100 を超えるときだけ。100 は通る）、`applications` が空、`updates` が `[YearUpdate(2026, '2026-10-14')]`、`row_count` が 0。(d) 終了コード 1 にせず、`ValueError`（`座標が有限の数でない`）が上がる（例外のまま伝える） |
+| `UT-match_summits-21` | `z15_pixel_center_latlon` の表 7 | 同じプロセス | `z15_pixel_center_latlon((gx, gy))` に [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 7 の 9 行の (gx, gy) | 戻り値が（緯度, 経度）で、経度は表 7 の値と `==`、緯度は差の絶対値が `1e-12` 以下（[7.2.5](#725-ut-候補)の `UT-merge_peaks-01` の形）。(0, 0) → (85.05112692872285, -179.99997854232788)、(7456512, 3293952) → (36.004656128107385, 139.99880075454712)、(7340031, 3322709) → (34.99999776698518, 134.99997854232788)、(7340032, 3322709) → (34.99999776698518, 135.00002145767212)、(7153617, 3553537) → (26.50001530614219, 126.99995756149292)、(7153618, 3553537) → (26.50001530614219, 127.00000047683716)、(7374984, 3685299) → (21.333373174657144, 136.49999856948853)、(7374984, 3685300) → (21.333333199888905, 136.49999856948853)、(7666176, 2984192) → (46.004578351228716, 148.99660348892212) |
+| `UT-match_summits-22` | 点がゾーンの中にあるか | 同じプロセス。`AZ_1`（共通の準備）。穴のある Polygon `P_hole` は外側が `AZ_1` と同じ四角、穴が `box(138.08, 35.08, 138.12, 35.12)`。`M` は `MultiPolygon` で、1 つ目が `box(138.0, 35.0, 138.1, 35.1)`、2 つ目が `box(139.0, 36.0, 139.1, 36.1)` | `is_in_zone(lat, lon, zone)` に、(a) `35.05`・`138.05`・`AZ_1`、(b) `37.0`・`140.0`・`AZ_1`、(c) `35.1`・`138.1`・`P_hole`、(d) `35.02`・`138.02`・`P_hole`、(e) `36.05`・`139.05`・`M`、(f) `35.05`・`138.05`・`M`、(g) `36.5`・`139.5`・`M` | (a) 真、(b) 偽、(c) 偽（穴の中）、(d) 真、(e) 真（2 つ目の多角形の中）、(f) 真、(g) 偽 |
+| `UT-match_summits-23` | 輪郭の線の上の点は画素の中心で見る（DEC86） | 同じプロセス。画素 (7340032, 3322709)（表 7 の 4 行目）の中心の緯度 `34.99999776698518` を `lat_c` とする。ゾーンは `box(135.0, lat_c - 0.0001, 135.00004291534424, lat_c + 0.0001)`（経度が画素の西端 `7340032 / 2²³ × 360 − 180 = 135.0` から東端 `7340033 / 2²³ × 360 − 180 = 135.00004291534424` まで。緯度は画素の中心の緯度の ±0.0001 度で、画素の北端と南端の外まで少し広いが、点の緯度を画素の中心にするので結果に響かない） | (a) `is_in_zone(lat_c, 135.0, <ゾーン>)`、(b) `is_in_zone(lat_c, 135.00004291534424, <ゾーン>)`、(c) `shapely.contains_xy(<ゾーン>, 135.0, lat_c)` | (a) 真（点はゾーンの西の辺の上。経度の画素の境目の点は、`floor` で東の画素、つまり画素 (7340032, 3322709) に入り、その中心はゾーンの中）、(b) 偽（経度が東端ちょうどの点は東隣の画素 (7340033, 3322709) に入り、その中心はゾーンの外）、(c) 偽（元の点を形に当てると輪郭の上で `contains` が偽。(a) が画素の中心で見ていることの確かめ） |
+| `UT-match_summits-24` | AZ とサミットの突き合わせ（`matched`・`ambiguous`・AZ の外と順） | 同じプロセス。ピークの表は、`K1`（行 2、`35.10000000`・`138.10000000`・標高 `1000`・`prominence` `300`・`true`）、`K2`（行 3、`36.10000000`・`139.10000000`・標高 `900`・`prominence` `200`・`true`）の順。索引は `[(K1, AZ_1), (K2, AZ_3)]`。サミットはこの順: `JA/HS-002`（`36.05`・`139.05`、行 4）、`JA/HS-001`（`35.05`・`138.05`、行 3）、`JA/HS-003`（`36.15`・`139.15`、行 5）、`JA/HS-004`（`37.0`・`140.0`、行 6） | `match_activation_zones(<サミット>, <ピークの表>, <索引>)` | `summit_peak` が `{'JA/HS-002': K2, 'JA/HS-001': K1, 'JA/HS-003': K2}`（鍵の順はサミットの順）、`peak_summits` が `{K1: [JA/HS-001], K2: [JA/HS-002, JA/HS-003]}`（鍵の順は `K1`・`K2` のピークの順で、サミットの順でない。値はサミットの順）、`peak_status` が `{K1: 'matched', K2: 'ambiguous'}`（鍵の順は同じ）、`overlaps` が空。`JA/HS-004` はどこにも入らず、`summit_peak` に無い |
+| `UT-match_summits-25` | 確定した 2 つ以上のピークの AZ に含まれるサミット（AO1。全サミットを挙げて止まる） | 同じプロセス。ピークの表は `K1`（`35.10000000`・`138.10000000`・標高 `1000`・`prominence` `300`・`true`）、`K2`（`35.20000000`・`138.20000000`・標高 `900`・`prominence` `200`・`true`）。索引は `[(K1, AZ_1), (K2, AZ_2)]`。サミットはこの順: `JA/HS-001`（`35.15`・`138.15`。`AZ_1` と `AZ_2` の重なりの中）、`JA/HS-002`（`35.05`・`138.05`。`AZ_1` だけ）、`JA/HS-003`（`35.12`・`138.12`。重なりの中） | `match_activation_zones` に | 終了コード 1 で AO1。1 行目は `2 つ以上の確定したピークの AZ に含まれるサミットがある: JA/HS-001（35.15,138.15）: 35.10000000,138.10000000（key_col_resolved=true）、35.20000000,138.20000000（key_col_resolved=true）；JA/HS-003（35.12,138.12）: 35.10000000,138.10000000（key_col_resolved=true）、35.20000000,138.20000000（key_col_resolved=true）`（`JA/HS-001` で止まらず `JA/HS-003` も挙げる。`JA/HS-002` は挙げない）。2 行目は `{report_analysis}` |
+| `UT-match_summits-26` | 確定していないピークの AZ の重なり | 同じプロセス。サミットは `JA/HS-001`（`35.15`・`138.15`。重なりの中）の 1 件。索引は `[(K1, AZ_1), (K2, AZ_2)]` と、並びを入れ替えた `[(K2, AZ_2), (K1, AZ_1)]` の 2 つで試す。ピークの表は `K1`・`K2` の順で、ピークごとの `peak_lat`・`peak_lon`・`peak_elev`・`key_col_resolved` を次のようにする（`prominence` は `K1` が `300`、`K2` が `200`）。(a) `K1` が `35.10000000`・`138.10000000`・`1000`・`false`、`K2` が `35.20000000`・`138.20000000`・`1001`・`false`。(b) (a) の `K2` の標高を `1000` に替える。(c) `K1` が `35.10000000`・`138.20000000`・`1000`・`false`、`K2` が `35.10000000`・`138.10000000`・`1000`・`false`。(d) `K1` が `35.10000000`・`138.10000000`・`1000`・`true`、`K2` が `35.20000000`・`138.20000000`・`1001`・`false`。(e) `K1` が `35.10000000`・`138.10000000`・`1001`・`false`、`K2` が `35.20000000`・`138.20000000`・`1000`・`true`。(f) `K1` が `35.20000000`・`138.20000000`・`1000.0000000000000000000000001`・`false`、`K2` が `35.10000000`・`138.10000000`・`1000.0000000000000000000000002`・`false` | `match_activation_zones` に (a)〜(f) を、2 つの索引それぞれで | どれも止まらず、2 つの索引で戻り値が等しい。含めたピークは (a) `K2`（標高が高い）、(b) `K2`（標高が同じで緯度が高い）、(c) `K2`（標高と緯度が同じで経度が小さい）、(d) `K1`（確定が 1 つなので、標高が低くても確定した方）、(e) `K2`（同じ）、(f) `K2`（標高の差が 28 桁を超えて小さいが、降順の鍵を `copy_negate()` で作るので、`K2` が先。単項の `-` なら差が潰れて緯度の高い `K1` になる）。どれも `summit_peak` が `{'JA/HS-001': <含めたピーク>}`、`peak_summits` が `{<含めたピーク>: [JA/HS-001]}`、`peak_status` が `{<含めたピーク>: 'matched'}`、`overlaps` が `[AzOverlap(<サミット>, (K1, K2), <含めたピーク>)]`（含む AZ のピークは `peaks` の鍵の順の `(K1, K2)`。確定が 1 つの (d)(e) も入る） |
+| `UT-match_summits-27` | 索引の並びによらない順と、空の入力 | 同じプロセス。(a) UT-24 の入力で、索引を `[(K2, AZ_3), (K1, AZ_1)]`（`STRtree` に渡す形の並びと `keys` を一緒に入れ替えたもの）にしたもの。(b) ピークが `{}`、索引が `shapely.STRtree([])`（`keys` は `[]`）、サミットが `JA/HS-001`（`35.05`・`138.05`）の 1 件。(c) ピークが `K1` だけ、索引が `[(K1, AZ_1)]`、サミットが 0 件 | `match_activation_zones` に | (a) UT-24 の戻り値と `==`（`peak_summits`・`peak_status` の鍵の順も同じ）。(b)(c) 止まらず、`ActivationMatch({}, {}, {}, [])` |
+| `UT-match_summits-28` | delete判定ゾーンとの突き合わせ（`delete`・`unmatched`・`dominant`・`new`） | 同じプロセス。ピークの表は `K1`（`35.10000000`・`138.10000000`・標高 `1000`・`prominence` `10.5`・`true`）、`K2`（`35.20000000`・`138.20000000`・標高 `900`・`prominence` `9.75`・`true`）、`K3`（`36.10000000`・`139.10000000`・標高 `800`・`prominence` `5`・`true`）の順。索引は `[(K1, DZ), (K2, DZ), (K3, AZ_3)]`。`activation` は `ActivationMatch({}, {K3: [Summit('JA/HS-009', 'n', '100', '36.15', '139.15', 9)]}, {K3: 'matched'}, [])`。サミットはこの順: `JA/HS-001`（`35.30`・`138.30`、行 3。`DZ` の中で `K1`・`K2` の両方に含まれる）、`JA/HS-002`（`37.0`・`140.0`、行 4。どこにも入らない） | `match_delete_zones(<サミット>, <ピークの表>, <activation>, <索引>)` | `summit_status` が `{'JA/HS-001': 'delete', 'JA/HS-002': 'unmatched'}`。`dominant` が `{'JA/HS-001': DominantPeak(K2, cmp5_common.great_circle_m(35.2, 138.2, 35.3, 138.3))}`（`prominence` を `Decimal` で比べて `9.75` の `K2` が主ピーク。字句の順なら `10.5` の `K1`）で、`dist_m` が `great_circle_m(35.2, 138.2, 35.3, 138.3)` の値と `==`（主ピークからサミットへ）。`peak_status` が `{K1: 'new', K2: 'dominant'}`（`K3` は `activation.peak_summits` にあるので入らない。鍵の順は `K1`・`K2`）。`unmatched` が `[Summit('JA/HS-002', 'n', '100', '37.0', '140.0', 4)]` |
+| `UT-match_summits-29` | 主ピークの選び方（key） | 同じプロセス。サミットは `JA/HS-001`（`35.30`・`138.30`）の 1 件。索引は `[(K1, DZ), (K2, DZ)]`、`activation` は `ActivationMatch({}, {}, {}, [])`（(d)(e) だけ下のとおり）。ピークは `K1`・`K2` の順で、各ケースの列は次のとおり（記載のない列は `peak_elev` が `1000`・`900`、`col_lat`・`col_lon` が `0.00000000`）。(a) `K1` が `prominence` 空・`key_col_resolved` `false`、`K2` が `prominence` `9999`・`true`。(b) `K1` が `10.5`・`peak_lat` `35.10000000`、`K2` が `10.50`・`35.20000000`（どちらも `true`、`peak_lon` は `138.10000000`・`138.20000000`）。(c) `K1` が `10.5`・`peak_lat` `35.10`・`peak_lon` `138.2`、`K2` が `10.5`・`35.1`・`138.1`（どちらも `true`）。(d) `K1` が `prominence` `5`・`true`、`K2` が `6`・`true`。`activation` は `ActivationMatch({}, {K1: [<サミット 1 件>], K2: [<サミット 2 件>]}, {K1: 'matched', K2: 'ambiguous'}, [])`。(e) (d) の `prominence` を `K1` が `6`、`K2` が `5` に替えたもの | `match_delete_zones` に (a)〜(e) を | 主ピークは (a) `K2`（確定していないピークは最大として扱う。`peak_status` は `{K1: 'new', K2: 'dominant'}`）、(b) `K2`（`10.5` と `10.50` は同じ値で、`peak_lat` の降順）、(c) `K2`（`peak_lat` の `35.10` と `35.1` は同じ値で、`peak_lon` の昇順。字句の順なら `K1`）、(d) `K1`（`matched` のピークも候補で、主ピークに選ばれる）、(e) `K2`（`ambiguous` のピークも同じ）。(d)(e) の `peak_status` は空の辞書（どちらのピークも AZ にサミットがある） |
+| `UT-match_summits-30` | 空の入力（delete判定ゾーン） | 同じプロセス。(a) ピークが `{}`、索引が `shapely.STRtree([])`（`keys` は `[]`）、サミットが `JA/HS-001`（`35.30`・`138.30`、行 3）の 1 件。(b) ピークが `K1`（`35.1`・`138.1`・標高 `1`・`prominence` `1`・`true`）だけ、索引が `[(K1, DZ)]`、サミットが 0 件 | `match_delete_zones` に（`activation` は `ActivationMatch({}, {}, {}, [])`） | (a) 止まらず、`summit_status` が `{'JA/HS-001': 'unmatched'}`、`dominant` が空、`peak_status` が空、`unmatched` が 1 件。(b) 止まらず、`summit_status`・`dominant`・`unmatched` が空、`peak_status` が `{K1: 'new'}` |
+| `UT-match_summits-31` | 照合する点の並びと陸のコル | 同じプロセス。ピークの表は次の順。`K1`（`35.1`・`138.1`、標高 `1000`、`prominence` `10`、`true`、`col_lat` `35.0`・`col_lon` `138.0`）、`K2`（`35.2`・`138.2`、`900`、`9`、`true`、コルは `0.0`・`0.0`）、`K3`（`35.3`・`138.3`、`800`、`8`、`true`、コルは `0`・`0.00000000`）、`(4, 4)`（`35.4`・`138.4`、`700`、`prominence` 空、`false`、コルは `35.1`・`138.1`）、`(5, 5)`（`35.5`・`138.5`、`600`、`7`、`true`、コルは `0`・`138.0`）、`(6, 6)`（`35.6`・`138.6`、`500`、`6`、`true`、コルは `35.0`・`0.00`）。サミットは `JA/HS-001`（`35.05`・`138.05`）、`JA/HS-002`（`36`・`139`） | `_region_points(<ピークの表>, <サミット>)` | `LocatePoint` を `(kind, key, lat, lon)` で書くと、`('peak', K1, '35.1', '138.1')`・`('peak', K2, '35.2', '138.2')`・`('peak', K3, '35.3', '138.3')`・`('peak', (4, 4), '35.4', '138.4')`・`('peak', (5, 5), '35.5', '138.5')`・`('peak', (6, 6), '35.6', '138.6')`・`('col', K1, '35.0', '138.0')`・`('summit', 'JA/HS-001', '35.05', '138.05')`・`('summit', 'JA/HS-002', '36', '139')` のこの順（ピーク → コル → サミット）。コルは `K1` だけ（`K2` は両方 0、`K3` は値で両方 0、`(4, 4)` は確定していない、`(5, 5)` と `(6, 6)` は片方だけ 0 なので入らない） |
+| `UT-match_summits-32` | 地域と市区町村への照合 | 同じプロセス。`R1 = RegionFeature('JA', 'HS', '広島県', {})`、`R2 = RegionFeature('JA', 'YN', '山梨県', {})`、`M1 = MunicipalityFeature('廿日市市', '34210', {})`。`boundaries` は `Boundaries([R1, R2], [M1], [])`。索引は `SpatialIndexes(None, None, <地域の索引>, <市区町村の索引>)`（`activation`・`delete` は使わない）で、地域の索引は `[(0, box(0, 0, 10, 10)), (1, box(5, 5, 15, 15))]`、市区町村の索引は `[(0, box(0, 0, 8, 8))]`。点はこの順: `LocatePoint('peak', K1, '5', '10')`（`R1` の東の辺の上で、`R2` の南の辺の上でもある）、`LocatePoint('peak', K2, '12', '12')`、`LocatePoint('summit', 'JA/HS-001', '20', '20')`、`LocatePoint('col', K1, '9', '12')`、`LocatePoint('peak', K3, '3', '3')` | `locate_regions(<点>, <boundaries>, <索引>)` | `locations` の鍵が点の順に `('peak', K1)`・`('peak', K2)`・`('summit', 'JA/HS-001')`・`('col', K1)`・`('peak', K3)`。値は順に `Location(R1, '')`（辺の上は内で、`R1` と `R2` の両方に当たるが、ファイルの順の最初の `R1`）、`Location(R2, '')`、`Location(None, '')`、`Location(R2, '')`、`Location(R1, '廿日市市')`。`outside` は順に `OutsidePoint(<K1 のピークの点>, ('市区町村',))`、`OutsidePoint(<K2 のピークの点>, ('市区町村',))`、`OutsidePoint(<サミットの点>, ('地域', '市区町村'))`、`OutsidePoint(<コルの点>, ('市区町村',))`（`K3` は両方に入るので入らない） |
+| `UT-match_summits-33` | 無いファイルと空の入力（照合） | 同じプロセス。UT-32 の点・`R1`・`box(0, 0, 10, 10)` を使う。(a) `Boundaries(None, None, [])` と `SpatialIndexes(None, None, None, None)`。(b) `Boundaries([R1], None, [])` と、地域の索引が `[(0, box(0, 0, 10, 10))]`、市区町村の索引が `None` の `SpatialIndexes`。点は UT-32 の先頭の 3 つ。(c) UT-32 の `boundaries` と索引で、点が空の並び。(d) `Boundaries([], [], [])` と、どちらの索引も `shapely.STRtree([])`（`keys` は `[]`）の `SpatialIndexes`。点は `LocatePoint('peak', K1, '5', '10')` の 1 つ | `locate_regions` に | (a) すべての点が `Location(None, '')`、`outside` が空（ファイルが無い層は照合せず、警告の材料にも入れない）。(b) `Location(R1, '')`（`K1`）・`Location(None, '')`（`K2`）・`Location(None, '')`（サミット）、`outside` が `K2` のピークの点とサミットの点の 2 件でどちらも `('地域',)`（市区町村は無いので `layers` に入らない）。(c) `RegionMatch({}, [])`。(d) `Location(None, '')`、`outside` が `OutsidePoint(<ピークの点>, ('地域', '市区町村'))`（ファイルがあって Feature が 0 件の層は、どの点も入らない） |
+| `UT-match_summits-34` | 仮サミットコードの採番の順 | 同じプロセス。`RH = RegionFeature('JA', 'HS', '広島県', {})`。ピークの表（`peak_lat`・`peak_lon`・標高・`prominence`・`key_col_resolved`、`peak_status` の値）は、`K1`（`35.10000000`・`138.10000000`・`1000`・`50`・`true`・`new`）、`K2`（`35.20000000`・`138.20000000`・`1000`・`60`・`true`・`dominant`）、`K3`（`35.30000000`・`138.30000000`・`1000`・空・`false`・`new`）、`(4, 4)`（`35.40000000`・`138.40000000`・`1100`・`10`・`true`・`new`）、`(5, 5)`（`35.20000000`・`138.10000000`・`1000`・`60`・`true`・`new`）。`max_prefix` は `'A'`。(a) `locations`（鍵は `('peak', <画素>)`）のすべてが `Location(RH, '')`。(b) (a) の `K3` と `(5, 5)` を `Location(None, '')` に替える。(c) `peak_status` が空 | `assign_provisional_codes(<peak_status>, <ピークの表>, <locations>, 'A', False)` に (a)(b)(c) を | (a) `{K1: 'JA/HS-A03', K2: 'JA/HS-A02', K3: 'JA/HS-A04', (4, 4): 'JA/HS-A00', (5, 5): 'JA/HS-A01'}`（標高の降順で `(4, 4)` が先。標高が同じ中では `prominence` の降順で、`prominence` が `60` の `K2` と `(5, 5)` は `peak_lat` も同じなので `peak_lon` の昇順で `(5, 5)` が先、`50` の `K1` が続き、確定していない `K3` が末尾。`new` と `dominant` は区別しない）。鍵の順は `peak_status` の順。(b) `{K1: 'JA/HS-A02', K2: 'JA/HS-A01', K3: 'ZZ/ZZ-A01', (4, 4): 'JA/HS-A00', (5, 5): 'ZZ/ZZ-A00'}`（地域に入らないピークは `ZZ/ZZ` のエリアに入り、エリアごとに `A00` から）。(c) 空の辞書 |
+| `UT-match_summits-35` | 連番の上限（100 件までは止まらず、超えたエリアをすべて挙げて止まる） | 同じプロセス。`RH`（UT-34）と `RY = RegionFeature('JA', 'YN', '山梨県', {})`。ピークは鍵 `(i, i)`（`i` は 0 から）、`peak_lat` `35.10000000`・`peak_lon` `138.10000000`・`peak_elev` `str(5000 - i)`・`prominence` `1`・`true`、`peak_status` は `'new'` | (a) 100 件すべて `RH`、`max_prefix` `'A'`。(b) 101 件すべて `RH`、`'B'`。(c) 101 件すべて `RH`、`'A'`。(d) 203 件で、`i` が 0〜100 の 101 件が `RH`、101〜202 の 102 件が `RY`、`'A'`。(e) 101 件すべて `Location(None, '')`、`'A'`、`regions_missing` が真（(a)〜(d) は偽）。いずれも `assign_provisional_codes` に | (a) 止まらず、`(0, 0)` が `JA/HS-A00`、`(99, 99)` が `JA/HS-A99`。(b) 止まらず、`(99, 99)` が `JA/HS-A99`、`(100, 100)` が `JA/HS-B00`。(c) 終了コード 1 で PN1。1 行目は `仮サミットコードの連番が上限を超えるエリアがある（provisional_code_max_prefix=A、1 エリアの上限 100 件）: JA/HS（101 件、上限を 1 件超える）`、2 行目は `provisional_code_max_prefix を上げてから、{rerun4}`。(d) 終了コード 1 で PN1。1 行目の `{list}` が `JA/HS（101 件、上限を 1 件超える）、JA/YN（102 件、上限を 2 件超える）`（2 つとも挙げ、エリアの文字列の順）。(e) 終了コード 1 で PN2。1 行目は `地域の GeoJSON が無いため、すべてのピークが ZZ のエリアに入り、仮サミットコードの連番が上限を超える（provisional_code_max_prefix=A、1 エリアの上限 100 件）: ZZ/ZZ（101 件、上限を 1 件超える）`、2 行目は `{cmp1_rebuild}` |
+| `UT-match_summits-36` | 採番の順で 28 桁を超える標高の差を潰さない | 同じプロセス。`RH`（UT-34）。ピークの表は `K1`（`35.20000000`・`138.20000000`・標高 `1000.0000000000000000000000001`・`prominence` `1`・`true`）、`K2`（`35.10000000`・`138.10000000`・標高 `1000.0000000000000000000000002`・`1`・`true`）。`peak_status` は `{K1: 'new', K2: 'dominant'}`、`locations` はどちらも `Location(RH, '')` | `assign_provisional_codes(<peak_status>, <ピークの表>, <locations>, 'A', False)` | `{K1: 'JA/HS-A01', K2: 'JA/HS-A00'}`（標高が高い `K2` が先。降順の鍵を `copy_negate()` で作るので差が潰れない。単項の `-` なら差が潰れて `peak_lat` の高い `K1` が先になる） |
