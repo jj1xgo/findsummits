@@ -140,6 +140,12 @@
     - [7.2.3 関数の細部](#723-関数の細部)
     - [7.2.4 メッセージ文面](#724-メッセージ文面)
     - [7.2.5 UT 候補](#725-ut-候補)
+  - [7.3 `merge_zones`](#73-merge_zones)
+    - [7.3.1 ファイル割付](#731-ファイル割付)
+    - [7.3.2 型とデータ](#732-型とデータ)
+    - [7.3.3 関数の細部](#733-関数の細部)
+    - [7.3.4 メッセージ文面](#734-メッセージ文面)
+    - [7.3.5 UT 候補](#735-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -184,14 +190,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。コード表記の中は検査しない）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -561,7 +567,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3 が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -619,7 +625,7 @@ def main() -> None:
 
 ### 2.3 ファイルの名前と書き方
 
-置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9・6.11・7.1・7.2 が使う分だけを書いてある。
+置き場の正本は HLD（[2.6.4](30_HLD.md#264-ディレクトリ構成)、[2.9.3](30_HLD.md#293-同時起動の排他)、[4.1.2](30_HLD.md#412-処理の流れ)）で、ここは HLD が LLD に送った名前を決める。今は 2.1・3.1・4.1・5.1・6.3・6.4・6.5・6.7・6.8・6.9・6.11・7.1・7.2・7.3 が使う分だけを書いてある。
 
 - ロックファイル: `data_dir` の直下の `findsummits.lock`。中身は空のまま使い、消さない（HLD 2.9.3）。Python は `acquire_lock`、bash は `run_pipeline` の `acquire_lock` が同じ名前を使う。
 - 取得完了の記録: `data_dir` の `tiles/` の直下の `fetch_complete.txt`（HLD 4.1.2 の「取得完了の記録」）。中身は、取得を終えた 1 次メッシュのコードを 1 行 1 件で、ASCII の数字 4 字に改行（LF）を付けて書く（BOM・空白・CR・空行・`#` の行を書かない。昇順に並べる）。0 件なら空のファイル。読む側（CMP2 の `fetch_tiles` の `read_fetch_record`〈[HLD 3.2.3](30_HLD.md#323-関数)〉と、bash の `run_pipeline` の `check_fetch_record`〈[5.1](#51-run_pipeline)〉。どちらもこの読み方にする）は、空のファイルを行の無い記録（0 件）とし、そのほかは最後の LF を 1 つ除いてから LF で行に分け、どの行も ASCII の数字 4 字ちょうどでなければ書式が違うとする（最後の行の後の LF は無くてもよい。同じコードの重なりは 1 件とする）。読む側が `--mesh` のファイルの読み方（空白・`#` の行を許す）にしないのは、記録がツールだけが書くファイルで、[HLD 4.1.2](30_HLD.md#412-処理の流れ)が「4 桁の数字でない行があれば」止まると決めているため（壊れた記録を読み飛ばさない）。書き方は、下の一時ファイルの決まりに従う（[4.1.3](#413-関数の細部) の `write_fetch_record`）。Python は `fetch_record_path`、bash は `run_pipeline` の `fetch_record_path` が同じ名前を使う。
@@ -627,9 +633,10 @@ def main() -> None:
 - per-mesh CSV: `data_dir` の `results/csv/` の下の `<解析識別子>.csv`（[HLD 4.7.2](30_HLD.md#472-処理の流れ)、[SRS §8.1](20_SRS.md#81-内部データ一覧)）。書くのは [6.7](#67-analyze_terrain_csv) の `write_peak_csv` だけで、下の一時ファイルの決まりで `<解析識別子>.csv.tmp` に書いてから置き換える。読むのは、CMP5（統合・突合）の `merge_peaks`（[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 2「読むファイルを選ぶ」は、名前が `.csv` で終わるものだけを選ぶので、`.tmp` で終わる名前は読まない。名前の読み分けは [7.1.3](#713-関数の細部)の `parse_analysis_id`）と、広域モードの 6.7 の `read_back_peak_csv`。置き場のディレクトリ（`results/csv`）を作るのは [6.11](#611-analyze_terrain_stage) の `run_normal_mode`・`run_wide_mode` で、書く側の関数は作らない（[6.11.3](#6113-関数の細部)）。
 - per-mesh ピーク候補 GeoJSON: `data_dir` の `results/csv/` の下の `<解析識別子>.geojson`（通常解析だけ。[HLD 4.16.2](30_HLD.md#4162-処理の流れ)の「書き出し」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.9、ADR-SRS-029）。書くのは [6.8](#68-analyze_terrain_zone) の `write_zone_geojson` だけで、下の一時ファイルの決まりで `<解析識別子>.geojson.tmp` に書いてから置き換える。読むのは CMP5（統合・突合）の `merge_zones`（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 1「読むファイルを選ぶ」は `3-<meshcode>.geojson` の名前だけを選ぶので、`.tmp` で終わる名前は読まない。名前の読み分けは [7.1.3](#713-関数の細部)の `parse_analysis_id`、読み込みと書式の確かめは同じく `read_zone_features`）。
 - 統合ピーク候補 work CSV: `data_dir` の `results/` の直下の `merged_peak.csv`（[HLD 4.8.2](30_HLD.md#482-処理の流れ)の 7「書き出す」、[SRS §8.1](20_SRS.md#81-内部データ一覧)）。書くのは [7.2](#72-merge_peaks) の `write_merged_peak` だけで、下の一時ファイルの決まりで `merged_peak.csv.tmp` に書いてから置き換える。読むのは CMP5 の `merge_zones`・`check_cols`・`match_summits`（[7.1.3](#713-関数の細部)の `read_merged_peak`）と、CMP3（パイプライン制御）の起動前提条件の検査（有無だけ）。消すのは CMP3 のフェーズ2 の段の始まりだけ（フェーズ3 の段の始まりでは消さず、その段の統合が書き直す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+- 統合ピーク候補 GeoJSON: `data_dir` の `results/` の直下の `merged_peak.geojson`（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 5「書き出す」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.11）。書くのは [7.3](#73-merge_zones) の `write_merged_peak_geojson` だけで、下の一時ファイルの決まりで `merged_peak.geojson.tmp` に書いてから置き換える。読むのは CMP5 の `match_summits`（[7.1.3](#713-関数の細部)の `read_zone_features`）と、CMP3 の起動前提条件の検査（有無だけ）。消すのは CMP3 で、フェーズ2 では段の始まり、フェーズ3 の段ではその段の統合で `merge_peaks` を起動する直前（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)。[DEC79](30_HLD.md#2104-設計判断)「フェーズ3 ではピーク候補 GeoJSON を統合直前に消す」）。
 - 解析済みウィンドウメッシュ集合（`.meshset`）: `data_dir` の `results/csv/` の下の `<解析識別子>.meshset`（[HLD 4.4.2](30_HLD.md#442-処理の流れ) の「`.meshset` の形式」、[SRS §8.1](20_SRS.md#81-内部データ一覧) の No.13）。書くのは [6.9](#69-analyze_terrain_record) の `write_meshset` だけで、下の一時ファイルの決まりで `<解析識別子>.meshset.tmp` に書いてから置き換える。読むのは [6.3](#63-analyze_terrain_window) の `is_pattern_covered`（名前の一致で選ぶので、`.tmp` で終わる名前は読まない）と `read_meshset`。
 - 標高地形図: `data_dir` の `images/` の下の `<解析識別子>_terrain.png`（[SRS §6.2.3](20_SRS.md#623-標高地形図)）。書くのは [6.5](#65-analyze_terrain_image) の `write_terrain_png` だけで、下の一時ファイルの決まりで `<解析識別子>_terrain.png.tmp` に書いてから置き換える。読むプログラムは無い（利用者が開く）。置き場のディレクトリ（`images`）を作るのは [6.11](#611-analyze_terrain_stage) の `run_normal_mode`・`run_wide_mode` で、書く側の関数は作らない（[6.11.3](#6113-関数の細部)）。
-- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.7・6.8・6.9・7.2。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.5・6.7・6.8・6.9・7.2 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない。`open` が失敗したときは `close` するものが無いので呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する。`unlink` は `open` が失敗したときも含め、どの失敗でも呼ぶ。一時ファイルの名前に、先の無いシンボリックリンクなどが残っていることがあるため）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
+- 一時ファイル: 出力を一時ファイルに書いてから置き換えるモジュール（今は 3.1・4.1・6.5・6.7・6.8・6.9・7.2・7.3。CMP4〜CMP6 の節も、書くときにこれに従う）は、出力と同じディレクトリに、出力のファイル名の後に `.tmp` を付けた名前（`regions.geojson` なら `regions.geojson.tmp`）で一時ファイルを書く。名前は固定にする（同じ `data_dir` で動く利用者向けのコマンドは 1 つだけで〈[HLD 2.9.3](30_HLD.md#293-同時起動の排他)〉、内部の起動口は CMP3 のロックの下で動くので、名前が重ならない。プロセスの番号を入れると、強制終了のたびに一時ファイルが増え、消す決まりが別に要る）。前の起動が強制終了で残した一時ファイルは、次の起動が同じ出力を書くときに、開いて中身を捨てて上書きする。同じ出力をもう書かなければ（CMP2 で、止まった後に取らなくなったタイルなど）一時ファイルは残るが、読む側は正規の名前しか読まないので害は無く（CMP2 のタイルの一時ファイルは `.png` で終わらない。[HLD 4.1.2](30_HLD.md#412-処理の流れ) の表の後の段落）、消す決まりは置かない。手順は「書く」と「置き換える」の 2 段に分け、2 段の間に何をするか（いくつの一時ファイルを書き終えてから、どの順で置き換えるか）と、置き換えに失敗したときに一時ファイルを消すか残すか（3.1 は残し、4.1・6.5・6.7・6.8・6.9・7.2・7.3 は消す）は、そのモジュールの節で決める。書く（Python）: `open(<一時ファイル>, 'wb')`（テキストは `open(<一時ファイル>, 'w', encoding='utf-8', newline='\n')`）で開き、書き、`flush()`、`os.fsync(f.fileno())`、閉じる（`fsync` は、置き換えた後に電源が落ちて中身の無いファイルが残るのを防ぐため）。開く・書く・flush・fsync・閉じるのどれかで `OSError` になったら、その一時ファイルを `os.remove` で消してから（消せないときの `OSError` は無視する）、そのモジュールのメッセージで止まる（同じ処理で先に書き終えたほかの一時ファイルも消すかは、モジュールの節で決める）。置き換える（Python）: `os.replace(<一時ファイル>, <出力>)`。書く（C++）: `open(<一時ファイル>, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666)` で開き、`write` を全部書くか `EINTR` のほかの失敗まで繰り返し（[6.12.3](#6123-関数の細部) の `_write_all` と同じ形）、`fsync`、`close`（`fsync` の理由と、前の起動の残りを開いて中身を捨てて上書きすることは Python と同じ）。どれかが失敗したら、`errno` を控え、開くことに成功していて、まだ `close` を呼んでいなければ `close` し（結果は見ない。`close` が失敗したときはもう一度呼ばない。`open` が失敗したときは `close` するものが無いので呼ばない）、一時ファイルを `unlink` で消してから（消せないときは無視する。`unlink` は `open` が失敗したときも含め、どの失敗でも呼ぶ。一時ファイルの名前に、先の無いシンボリックリンクなどが残っていることがあるため）、そのモジュールのメッセージで止まる（`{reason}` は控えた `errno` の文。1.2 の C++ の規約）。置き換える（C++）: `rename(<一時ファイル>, <出力>)`。
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
@@ -4222,7 +4229,7 @@ Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパ�
 
 ## 7. CMP5 統合・突合
 
-この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1・7.2 を書き、7.3〜7.5 は書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
+この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.3 を書き、7.4・7.5 は書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
 
 ### 7.1 `cmp5_common`
 
@@ -4838,3 +4845,204 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 - UT 12 (f) と UT 07 (k) の `csv.Error` の文は CPython 3.14.8 のもの（[7.1.5](#715-ut-候補)の UT 14 (d) と同じ文の見込み）。
 - UT 22 の行の数え方: 読んだ行は 5（`3-5338.csv` の 4 行と `4-5338-NW.csv` の 1 行）、ピークは 5（画素がどれも違う）、海面確定は行 U と行 Q の 2、最終フィルタで落とすのは行 Q と広域の行（`prominence` 140.00）の 2 で、書くのは 3 行。行 Q と行 S の距離は約 3.9km、行 Q とほかの行も 30m より遠い。行 U の `stability` は代表採用の時点の `unstable`（通常の行に未確定がある）のまま。
 - UT 15 の `targets` の数は、5338 の 3×3 の 9 つから 5438 を除いた 8 つ（子のプロセスの共通の準備の日本全土のリストと除外のリストから求まる集合と同じ）。
+
+### 7.3 `merge_zones`
+
+- **ID**: LLD-merge_zones
+- **対応 HLD**: [3.5](30_HLD.md#35-cmp5-統合突合)・[4.18](30_HLD.md#418-fr-018-per-mesh-ピーク候補-geojson-統合)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)・[5.9](30_HLD.md#59-nfr-009-観測可能性中間成果物の可視化)
+- **ファイル**: `scripts/merge_zones.py`
+
+関数の名前と役割と呼ぶ順は [HLD 3.5.3](30_HLD.md#353-関数) の `merge_zones` の関数の表のとおりで、処理の正本は [HLD 4.18.2](30_HLD.md#4182-処理の流れ)・[4.18.3](30_HLD.md#4183-異常系) である。この節は、それを Python で書くための細部（引数の読み方、型、止まり方、JSON の書き方、メッセージの文面、UT 候補）だけを足す。`merge_zones` は CMP3（パイプライン制御）が起動する内部の起動口で、`--config <絶対パス>` を必ず受け取る（[HLD 2.4.5](30_HLD.md#245-内部引数)）。
+
+- [5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）は、`read_merged_peak` が 1 行ずつ渡すこと、`read_zone_features` が 1 回に 1 つのファイルだけを読み、その並びを `pick_zones` の後に `del` で手放すこと、候補の表がピークと種類ごとに 1 つだけを持つことで受ける（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の「メモリ」）。メモリのピークは、実装の後に HLD 5.2.2 の「実測の計画」の 3「CMP5 の統合」で測る。
+- [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、ゾーンの選び方が全順序であること（`_zone_rank`）、Feature の順が `merged_peak.csv` の行の順であること、ゾーンの数を読んだ字句のまま書き、文字列と空白の書き方を 1 つに決めたこと（`_encode`）で受ける（HLD 5.3.2 の「同じ GeoJSON になる」の行）。
+- [5.9](30_HLD.md#59-nfr-009-観測可能性中間成果物の可視化)（観測可能性）は、統合のたびに `merged_peak.geojson` を書き直すことと、未確定のピークの点の色（HLD の [DEC77](30_HLD.md#4184-設計判断)「コル未確定のピークの点は色を変える」）で受ける。消す時機は CMP3 にある（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+- 結合のつなぎ目は、`CMP5-INT1`（`merge_peaks` → `merge_zones`。[7.1](#71-cmp5_common) の `read_merged_peak` が 6 列を読む）、`CMP5-EXT2`（CMP4（地形解析エンジン） → `merge_zones`。[6.8](#68-analyze_terrain_zone) が書く GeoJSON を `read_zone_features` が読み、`write_merged_peak_geojson` が数の字句を変えずに写す）、`CMP5-INT3`（`merge_zones` → `match_summits`。`merged_peak.geojson` を 7.1 の `read_zone_features` が読む）、`CMP5-EXT6`（引数と終了コード）、`CMP3-EXT3`（CMP3 の起動前提条件の検査が `merged_peak.geojson` の有無を見る）である（[HLD 3.5.5](30_HLD.md#355-結合のつなぎ目)・[3.3.5](30_HLD.md#335-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP5-INT1-01`・`02`、`IT-CMP5-EXT2-01`・`02`、`IT-CMP5-INT3-01`〜`03` ほか。
+
+#### 7.3.1 ファイル割付
+
+- 関数はすべて `scripts/merge_zones.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/merge_zones.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.read_zone_features(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)と同じ形にそろえる）。ほかに読むのは、標準の `decimal`・`json`・`os`・`re`・`shlex`・`sys` と、`dataclasses` の `dataclass`、`typing` の `Sequence` である。
+- ファイルの先頭のコメントに `# trace: LLD-merge_zones` を書く。起動の部分は `if __name__ == '__main__': main()`。
+- UT のコードは `tests/scripts/test_merge_zones.py` に置く。各テストに `# trace: UT-merge_zones-NN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+
+#### 7.3.2 型とデータ
+
+- 内部の定数（モジュールの最上位。名前は `_` で始める）:
+  - `_CONFIG_KEYS_USED = ('data_dir', 'log_dir')`（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の表で CMP5 の [FR-018](20_SRS.md#fr-018-per-mesh-ピーク候補-geojson-統合) が使うキー。`load_config` に渡す）。必須は `('data_dir',)`。
+  - `_JSON_NUMBER_RE = re.compile(r'-?(0|[1-9][0-9]*)(\.[0-9]+)?')`（`fullmatch` で使う。RFC 8259 の数の字句のうち、指数の無い形。`merged_peak.csv` の座標を JSON に書けるかの確かめ。`_check_peak_lexemes`）。
+  - `_STYLES: dict[str, tuple[tuple[str, object], ...]]`: `feature_type` から、[HLD 4.16.2](30_HLD.md#4162-処理の流れ)の表のスタイルの属性の (名前, 値) の組を表の順に並べたもの。値は、色と `CircleMarker` は `str`、数は `cmp5_common.JsonNumber`（表の字句どおり `JsonNumber('2')`・`JsonNumber('1')`・`JsonNumber('0.3')`・`JsonNumber('5')`・`JsonNumber('6')`）、`_fill` は `False`。キーは `peak_col_link`・`key_col`・`peak` の 3 つだけ（ゾーンのスタイルは per-mesh GeoJSON の `properties` のまま写すので持たない）。
+  - `_UNRESOLVED_FILL = '#7b1fa2'`（HLD の [DEC77](30_HLD.md#4184-設計判断)「コル未確定のピークの点は色を変える」。`peak` の `_fillColor` だけを置き換える）。
+  - 種類の並び `_ZONE_KINDS = (cmp5_common.ACTIVATION_ZONE, cmp5_common.DELETE_ZONE)`（欠けのメッセージと要約の種類の順。HLD 4.18.2 の 4 の「アクティベーションゾーンと delete判定ゾーン」の順）。
+- 内部の状態（モジュールの最上位）: `_config_opt: str = ''`（`main` の 5 が入れる、[7.3.4](#734-メッセージ文面)の `{config_opt}` の値。`main` を通らない同じプロセスの UT は空のまま使う。[7.2.2](#722-型とデータ)と同じ）。
+- `@dataclass(frozen=True) class _Args`（内部）: `config: str`（`--config` の値のまま）、`mesh_codes: set[str] | None`（`--mesh` を `common.read_mesh_arg` で読んだ集合。無ければ `None`）。
+- `@dataclass(frozen=True) class ZoneFile`: `path: str`（絶対パス）、`analysis_id: str`（ファイル名から `.geojson` を除いたもの）。
+- `@dataclass(frozen=True) class ZoneChoice`: `zone: cmp5_common.ZoneFeature`、`analysis_id: str`（そのゾーンを読んだファイルの解析識別子）。フィールドはこの順に並べる。
+- ピークの表: `dict[tuple[int, int], cmp5_common.MergedPeakRow]`（`index_peaks_by_pixel` が返すもの。順は `merged_peak.csv` の行の順）。
+- ゾーンの候補の表: `dict[tuple[tuple[int, int], str], ZoneChoice]`（鍵は (画素, 種類)。種類は `ACTIVATION_ZONE` か `DELETE_ZONE`）。
+- Feature: `dict`（キーは `type`・`properties`・`geometry` の順。数は `JsonNumber`）。
+- `slots=True` は付けない（[7.1](#71-cmp5_common)・[7.2](#72-merge_peaks)と同じく、メモリの実測〈HLD 5.2.2 の「実測の計画」の 3〉の後に決める）。
+
+#### 7.3.3 関数の細部
+
+関数ごとに `#####` の見出し（関数の名前だけ。ほかの節に同じ名前の見出しがあるものは `（merge_zones）` を添える）を立てて書く。内部の関数は、使う関数の見出しの下に書く。
+
+**止まり方**: 7.3 の関数は、誤りを見つけたら、[7.3.4](#734-メッセージ文面)のメッセージを `common.log_error` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（`start_log` の前の引数と設定の誤りは `common.EXIT_USAGE`）。7.1 の部品の `InputError` は、`main` が [7.1.3](#713-関数の細部)の前置きの型で捕まえ、`common.log_error(e.what, '対処の文')` の 2 行目に 7.3.4 の `{redo}` を入れて `sys.exit(common.EXIT_ERROR)` で止まる（[HLD 4.18.3](30_HLD.md#4183-異常系)の「どの場面でも案内はフェーズ2 から通しでやり直す」）。`InputError` を捕まえる `try` は、`read_merged_peak`・`index_peaks_by_pixel` を回すところと、`read_zone_features` を呼ぶところの 2 つだけにする（ほかの誤りを捕まえないため）。
+
+**{reason}**: [2.1.4](#214-メッセージ文面)と同じ。`{path}` は `os.path.abspath` したパス。
+
+**5.2・5.3・5.9 の受け方**: 7.3 の前置きに書いた。
+
+##### main（merge_zones）
+
+`main() -> None`（起動の部分）。[2.1.3](#213-関数の細部)の前置きの呼ぶ側の書き方の型に従い、次の順に行う。
+
+1. `start = common.StartTime.now()`。
+2. `args = _parse_args(sys.argv[1:])`。
+3. `config = common.load_config(args.config, _CONFIG_KEYS_USED, ('data_dir',))`。`data_dir`・`log_dir` を取り出す。
+4. `common.start_log(log_dir, config, 'merge_zones', sys.argv[1:], start)`。ロックは掛けない（内部の起動口は CMP3 のロックの下で動く。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。
+5. `_config_opt` に [7.3.4](#734-メッセージ文面)の `{config_opt}` の値を入れる。決め方は [7.2.3](#723-関数の細部)の `main` の 5 と同じ（`config.path == common.DEFAULT_CONFIG_PATH` なら空の文字列、それ以外は `' --config ' + shlex.quote(config.path)`）。
+6. `try` の前に `completed = False`、`code = common.EXIT_OK`、要約の数（`files_read`・`peaks`・`az_false`・`dz_false` をどれも 0、`counts` を `feature_type` ごとの 0 の `dict`）を置く。`try` の中で次を行う。
+   1. `csv_dir = os.path.join(data_dir, 'results', 'csv')`。`files = select_zone_geojson_files(csv_dir, args.mesh_codes)`。空なら ZG1 を出して `sys.exit(common.EXIT_ERROR)`。
+   2. `merged_path = os.path.join(data_dir, 'results', 'merged_peak.csv')`。`try:` で `table = cmp5_common.index_peaks_by_pixel(cmp5_common.read_merged_peak(merged_path, cmp5_common.MERGED_PEAK_ZONE_COLUMNS))`、`except cmp5_common.InputError as e:` で `common.log_error(e.what, '対処の文')`（2 行目は `{redo}`）と `sys.exit(common.EXIT_ERROR)`。`peaks = len(table)`。
+   3. `table` が空でなければ（`if`/`else` で分ける。`return` を使わない）:
+      1. `_check_peak_lexemes(table)`。
+      2. `candidates = {}`。`files` の順に、`try:` で `zones = cmp5_common.read_zone_features(f.path)`（`except cmp5_common.InputError` は 2 と同じ形で止まる）、`files_read` を 1 増やし、`pick_zones(table, candidates, zones, f.analysis_id)`、続けて `del zones`（次のファイルを読む間に前のファイルの並びを持たない。Python のループの変数は、次の `read_zone_features` の右辺を評価する間も前の値を指したままなので、名前を消して参照を手放す。HLD 4.18.2 の「メモリ」の「読んでいる 1 ファイルの中身」）。
+      3. `check_zones_complete(table, candidates)`。
+      4. `az_false`・`dz_false` は、`candidates` の値のうち、種類がそれぞれ `ACTIVATION_ZONE`・`DELETE_ZONE` で `zone.area_complete` が偽のものの数。
+      5. `features = build_peak_features(table, candidates)`。
+   4. `table` が空なら `features = []`（per-mesh ピーク候補 GeoJSON を読まない。HLD 4.18.2 の 2「`merged_peak.csv` を読む」）。
+   5. `counts` は、`features` の `properties` の `feature_type` ごとの数。`write_merged_peak_geojson(features, os.path.join(data_dir, 'results', 'merged_peak.geojson'))`。`completed = True`。
+7. `finally` で結果の要約を `common.log_info` で出す（`completed` が真なら ZL1、偽なら ZL2）。
+8. `sys.exit(code)`。
+
+`start_log` の前に止まる誤り（`_parse_args`・`load_config`）は、標準エラー出力だけに出て、ログファイルと `log_dir` を作らない（[HLD 3.5.3](30_HLD.md#353-関数)の「ここまでの誤りは、ログファイルを作らずに終了コード 2」）。
+
+##### _parse_args（merge_zones）
+
+`_parse_args(argv: Sequence[str]) -> _Args`（内部）。[7.2.3](#723-関数の細部)の `_parse_args` から `--check-land-peaks` を除いた受け方（[6.1.3](#613-関数の細部)の `parse_args` と同じ）で、最初に見つけた誤り 1 つで、[7.3.4](#734-メッセージ文面)のメッセージを `common.log_error` で出して `sys.exit(common.EXIT_USAGE)`。
+
+1. `argv` を左から読む。`--config`・`--mesh` なら、その名前がすでに出ていれば ZA3（値を見る前に判定する）、最後の引数なら ZA2、そうでなければ次の引数を値にして 2 つ進む（値は `-` で始まっていてもそのまま値にする）。ほかの引数（位置引数、知らない名前〈`--check-land-peaks` を含む〉、`=` の付いた形、`--help`、`--` だけ、空の引数）は ZA1。
+2. `--config` が無ければ ZA4。
+3. `--config` の値が `os.path.isabs` で偽なら（空を含む）ZA5。値は正規化しない。
+4. `--mesh` があれば `common.read_mesh_arg(<値>)`（誤りは A1〜A5）。引数の形の誤りより後にする。
+5. `_Args(config, mesh_codes)` を返す。
+
+##### select_zone_geojson_files
+
+`select_zone_geojson_files(csv_dir: str, mesh_codes: set[str] | None) -> list[ZoneFile]`
+
+1. `abspath = os.path.abspath(csv_dir)`。`names = os.listdir(abspath)`。`FileNotFoundError` なら空のリストを返す（`main` が ZG1 で止まる）。ほかの `OSError`（ディレクトリでない、権限が無い）は ZG2（`{path}` は `abspath`）。
+2. 名前を `sorted(names)` の順に見る。`.geojson` で終わらない名前（`.GEOJSON`・`.geojson.tmp` を含む）は見ない。`.geojson` で終わる名前は `stem, kind = cmp5_common.parse_analysis_id(name)`。`kind` が `ANALYSIS_NORMAL` で、`mesh_codes` が `None` か `stem[2:6]` が `mesh_codes` にあれば、`ZoneFile(os.path.join(abspath, name), stem)` を足す。ほか（広域の形、規則に合わない名前）は警告せずに読まない（HLD 4.18.2 の 1「読むファイルを選ぶ」の「`3-` で始まる名前のほかは対象にならない」。`merge_peaks` の PW1 に当たる警告は HLD 4.18 に無いので出さない。広域解析は GeoJSON を書かず、規則に合わない `.geojson` は `merge_peaks` が同じ名前の `.csv` で警告する）。ファイルの種類は見ない（ディレクトリなら `read_zone_features` が ZF2）。
+3. 並びを返す（名前の昇順。通常の解析識別子は `3-` と 4 桁の数字なので、名前の昇順と解析識別子の昇順は同じ）。
+
+##### _check_peak_lexemes
+
+`_check_peak_lexemes(table: dict[tuple[int, int], cmp5_common.MergedPeakRow]) -> None`（内部。`main` の 6 の 3 の 1 が呼ぶ）。
+
+表の順に、各行の `peak_lat`・`peak_lon` と、点と線を出す行（`key_col_resolved` が `true` で、`col_lat`・`col_lon` がどちらも数として 0 でない行。`build_peak_features` の条件と同じ）の `col_lat`・`col_lon` を、この順に `_JSON_NUMBER_RE.fullmatch` で見る。最初に合わない値で ZN1 を出して `sys.exit(common.EXIT_ERROR)`。`{path}`・`{line_no}` は行の `path`・`line_no`、`{column}` は合わなかった列の名前（`peak_lat`・`peak_lon`・`col_lat`・`col_lon` のどれか）、`{value}` はその列の文字列（[7.3.4](#734-メッセージ文面)の前置きの引用の決まりで書く）。数として 0 かの判定は `decimal.Decimal(v) == 0`（[7.1.3](#713-関数の細部)の前置きの「数として 0」。`read_merged_peak` が `true` の行の `col_lat`・`col_lon` を有限の 10 進の数と確かめてあるので失敗しない）。
+
+- 理由: [HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 5「書き出す」は点と線の座標と `peak_lat`・`peak_lon` に `merged_peak.csv` の文字列を数として書くことを求め、`read_merged_peak` の座標の確かめ（`is_valid_coord`）は `+35.1`・`035.1` のような JSON の数でない字句を通す。字句を直して書くと「文字列を数として書く」から外れ、そのまま書くと壊れた JSON になるので、ゾーンを読む前に止める。CMP4 が書く座標（[6.7](#67-analyze_terrain_csv)の `format_coord`）はこの形に合うので、止まるのは手で書き換えたファイルだけ。HLD 4.18.3 の書式の列挙に無い確かめを足すのは、7.1.3 の `read_zone_features` の形の確かめと同じく、壊れた出力を次のプログラムに運ばないため。
+
+##### pick_zones
+
+`pick_zones(peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], candidates: dict[tuple[tuple[int, int], str], ZoneChoice], zones: list[cmp5_common.ZoneFeature], analysis_id: str) -> dict[tuple[tuple[int, int], str], ZoneChoice]`
+
+1. `zones` の順に、`z.pixel` が `peaks` に無ければ捨てる（ADR-SRS-024 の最終ピーク集合への絞り込み）。
+2. あれば、`key = (z.pixel, z.kind)`、`new = ZoneChoice(z, analysis_id)`、`rep_id = peaks[z.pixel].values['analysis_id']`。`key` が `candidates` に無いか、`_zone_rank(new, rep_id) < _zone_rank(candidates[key], rep_id)` なら `candidates[key] = new`。
+3. `candidates` を返す（同じオブジェクト）。
+
+`_zone_rank(choice: ZoneChoice, rep_id: str) -> tuple[int, int, str]`（内部）: `(0 if choice.zone.area_complete else 1, 0 if choice.analysis_id == rep_id else 1, choice.analysis_id)`（HLD の [DEC75](30_HLD.md#4184-設計判断)「同じピークのゾーンは代表行の窓のものを優先して採る」。1 つのファイルに同じ (画素, 種類) のゾーンは 2 つ無い〈7.1.3 の ZF4〉ので、鍵はどの 2 つの候補でも違い、ファイルを渡す順によらず同じものが残る。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)）。
+
+##### check_zones_complete
+
+`check_zones_complete(peaks, candidates) -> None`（型は `pick_zones` と同じ）
+
+表の順に、各ピークについて `_ZONE_KINDS` の順に `(pixel, kind)` が `candidates` に無い種類を集める。1 つ以上のピークに欠けがあれば、欠けたピークのすべてを ZM1 で出して `sys.exit(common.EXIT_ERROR)`（最初の 1 つで止めない。HLD の [DEC78](30_HLD.md#4184-設計判断)「ゾーンの欠けたピークがあれば止める」と 4.18.3）。
+
+##### build_peak_features
+
+`build_peak_features(peaks, candidates) -> list[dict]`（型は `pick_zones` と同じ）
+
+[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 5「書き出す」の順に並べる。同じ種類の中は `peaks` の順（`merged_peak.csv` の行の順）。`r = row.values` とする。
+
+- delete判定ゾーン（1 番目）とアクティベーションゾーン（2 番目）: 各ピークの候補の `zone` から `{'type': 'Feature', 'properties': zone.properties, 'geometry': zone.geometry}`（7.1 の `ZoneFeature` が持つ `properties` と `geometry` をそのまま使う。読んだ Feature のほかのメンバー〈`id`・`bbox` など〉は書かない。HLD 4.18.2 の 5 の「ジオメトリと `properties` ごと、そのまま写す」）。
+- 接続線（3 番目）とコル（4 番目）: `r['key_col_resolved'] == 'true'` で、`col_lat`・`col_lon` がどちらも数として 0 でない行だけ（HLD 4.16.2 の 3・4、[6.8.3](#683-関数の細部)の `write_zone_geojson` の 2 と同じ条件）。
+  - 接続線: `properties` は `peak_lat`・`peak_lon`（`JsonNumber(r['peak_lat'])` など）、`feature_type` `'peak_col_link'`、`_STYLES['peak_col_link']` の順。`geometry` は `{'type': 'LineString', 'coordinates': [[JsonNumber(peak_lon), JsonNumber(peak_lat)], [JsonNumber(col_lon), JsonNumber(col_lat)]]}`。
+  - コル: `properties` はピークの `peak_lat`・`peak_lon`、`feature_type` `'key_col'`、`_STYLES['key_col']`。`geometry` は `{'type': 'Point', 'coordinates': [JsonNumber(col_lon), JsonNumber(col_lat)]}`。
+- ピーク（5 番目）: すべての行。`properties` は `peak_lat`・`peak_lon`、`feature_type` `'peak'`、`_STYLES['peak']`（`r['key_col_resolved'] == 'false'` なら `_fillColor` の値だけを `_UNRESOLVED_FILL` にする）。`geometry` は `{'type': 'Point', 'coordinates': [JsonNumber(peak_lon), JsonNumber(peak_lat)]}`。
+
+`peaks` が空なら空のリスト（`main` は空の表のとき呼ばないが、関数としては空を返す）。
+
+##### write_merged_peak_geojson
+
+`write_merged_peak_geojson(features: list[dict], out_path: str) -> None`
+
+1. 中身（全部の行の文字列を、一時ファイルを開く前に組み立て終える。`_encode` の `TypeError` で止まるときに、一時ファイルも前の `merged_peak.geojson` も触らないため。[HLD 4.18.1](30_HLD.md#4181-目的と範囲)の対象外の行の「JSON の数と空白の書き方」。行の形は 6.8.3 の `write_zone_geojson` の「GeoJSON の書き方」と同じ）: 1 行目 `{"type":"FeatureCollection","features":[`、続けて Feature を 1 行に 1 つ（最後のほかは行末に `,`）、最後の行 `]}`。どの行も LF で終える。Feature が 0 なら 1 行目と最後の行の 2 行だけ。BOM・CR・`crs` を書かない。各 Feature は内部の関数 `_encode` で 1 行の文字列にする。
+2. `_encode(value: object) -> str`（内部）: `dict` は `{` と、キーの順に `json.dumps(key)`・`:`・値の `_encode` を `,` でつないだものと `}`。`list` は `[`・要素の `_encode` を `,` でつないだもの・`]`。`cmp5_common.JsonNumber` は `text` をそのまま（HLD の [DEC76](30_HLD.md#4184-設計判断)「ピークは Z15 の画素で突き合わせ、ゾーンは写す」。`1E5`・`35.10`・`-0` も読んだ字句のまま）。`str` は `json.dumps(value)`（既定の `ensure_ascii=True` で、ASCII の外の字は `\uXXXX`〈16 進は小文字〉になり、出力はいつも ASCII だけになる）。`True`・`False`・`None` は `true`・`false`・`null`（`bool` は `int` より先に見る）。ほかの型（`int`・`float` を含む）は `TypeError`（プログラムの誤り。数はどれも `JsonNumber` で持つ）。空白を書かない。
+3. [2.3](#23-ファイルの名前と書き方)の一時ファイルの決まりで `out_path + '.tmp'` に書いて（テキスト。`open(tmp, 'w', encoding='utf-8', newline='\n')`、`flush`、`os.fsync`、閉じる）、`os.replace(tmp, out_path)` で置き換える。書く段の `OSError` は 2.3 のとおり一時ファイルを消してから ZO1、置き換えの `OSError` も一時ファイルを `os.remove` で消して（消せないときは無視）から ZO1 で止まる。ZO1 の `{path}` はどの段でも `out_path` の絶対パス、`{dir}` は `os.path.dirname(os.path.abspath(out_path))`。ディレクトリ（`results/`）は作らない。止まったときは前の `merged_peak.geojson` を消さない（CMP3 が統合の前に消している。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。
+
+#### 7.3.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。設定の誤り（CF1〜CF7）と `--mesh` の誤り（A1〜A5）は [2.1.4](#214-メッセージ文面)、ログの場面（G1〜G7）は 2.2、L1〜L3 は 2.2（`{program}` は `merge_zones`）。7.1 の部品の誤り（MP1〜MP3・ZF1〜ZF4）の 1 行目は [7.1.4](#714-メッセージ文面)の `what` のまま、2 行目は `{redo}`。
+
+- `{path}`・`{reason}` は [7.3.3](#733-関数の細部)の前置きのとおり。
+- `{arg}`・`{value}` は受け取った値を、2.2 の引用の決まり（`shlex.quote`）で書いたもの。
+- `{config_opt}` は `main` の 5 で決めた値。
+- `{redo}` は `scripts/run_pipeline.sh{config_opt} を --phase なしで起動して、フェーズ2 から通しでやり直す`（[7.2.4](#724-メッセージ文面)と同じ文。[HLD 4.18.3](30_HLD.md#4183-異常系)の「フェーズ2 から通しでやり直す」）。
+
+| 記号 | 場面 | 1 行目（`ERROR:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
+|---|---|---|---|---|
+| ZA1 | 受け付けない引数 | `merge_zones の知らない引数: {arg}` | `merge_zones は run_pipeline が起動する内部の起動口。使える名前は --config・--mesh（値は次の引数で渡す）` | 2 |
+| ZA2 | 値が無い | `{option} の値が無い` | `{option} の後に値を渡す` | 2 |
+| ZA3 | 同じ名前を 2 回 | `{option} を 2 回渡した` | `{option} は 1 回だけ渡す` | 2 |
+| ZA4 | `--config` が無い | `--config が無い` | `--config と設定ファイルの絶対パスを渡す` | 2 |
+| ZA5 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
+| ZG1 | 対象の per-mesh ピーク候補 GeoJSON が 1 つも無い | `統合する per-mesh ピーク候補 GeoJSON が 1 つも無い: {path}`（`{path}` は `results/csv/` の絶対パス） | `{redo}` | 1 |
+| ZG2 | `results/csv/` を読めない | `per-mesh ピーク候補 GeoJSON の置き場を読めない: {path}: {reason}` | `{path} の権限を確かめてから、{redo}` | 1 |
+| ZN1 | `merged_peak.csv` の座標が JSON の数の書き方でない | `merged_peak.csv の書式が違う: {path}: {line_no} 行目の {column} が JSON の数の書き方でない: {value}` | `{redo}` | 1 |
+| ZM1 | ゾーンの欠けたピークがある | `ゾーンの欠けたピークがある: {list}`（`{list}` は欠けたピークごとに `{peak_lat},{peak_lon} の {kinds}（代表行の analysis_id {analysis_id}）` を表の順に `、` でつないだもの。`{peak_lat}`・`{peak_lon}`・`{analysis_id}` は `merged_peak.csv` の字句、`{kinds}` は欠けた種類の `feature_type` の値を `_ZONE_KINDS` の順に `・` でつないだもの） | `{redo}` | 1 |
+| ZO1 | `merged_peak.geojson` を書けない | `merged_peak.geojson を書けない: {path}: {reason}` | `{dir} の空きと権限を確かめてから、{redo}`（`{dir}` は `results/` の絶対パス。HLD 4.18.3 の「どの場面でも案内はフェーズ2 から通しでやり直す」は、同じ節の表の書き込みの失敗の行も含む。[6.8](#68-analyze_terrain_zone)の ZW1・7.2 の MF1 の `{rerun}` とは違う） | 1 |
+
+通常のログ（[HLD 4.18.2](30_HLD.md#4182-処理の流れ)の 5「書き出す」と [HLD 5.7.2](30_HLD.md#572-処理の流れ)の表の `merge_zones` の行。2.2 の結果の要約の形）:
+
+| 記号 | 行 | 文面 |
+|---|---|---|
+| ZL1 | 結果の要約 | `結果の要約: 読んだ per-mesh ピーク候補 GeoJSON {files_read} 件、ピーク {peaks}、area_complete=false のゾーンしか無かったピーク activation_zone {az_false}・delete_zone {dz_false}、merged_peak.geojson に書いたフィーチャ delete_zone {n_delete}・activation_zone {n_activation}・peak_col_link {n_link}・key_col {n_col}・peak {n_peak}` |
+| ZL2 | 結果の要約（途中で止まった） | `結果の要約: 途中で止まった（読んだ per-mesh ピーク候補 GeoJSON {files_read} 件、ピーク {peaks}）。merged_peak.geojson は書き換えていない` |
+
+- ZL1 の `area_complete=false のゾーンしか無かったピーク` は、採ったゾーンの `area_complete` が偽の数（`true` の候補があれば `true` を採るので、同じ数になる）。
+- ZL2 の数は、止まった時点までのもの（HLD 5.7.2 の 7「結果の要約」の「そこまでに終えた分の件数」）。`{peaks}` は `index_peaks_by_pixel` を終える前に止まれば 0。
+
+#### 7.3.5 UT 候補
+
+すべて自動（合否をテストのコードが判定できる）。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.3.4](#734-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.1.4](#214-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。ログファイルの行の期待は、先頭の時刻と空白を除いた文面。共通の準備は次の 4 つ。
+
+- **同じプロセス**: [7.2.5](#725-ut-候補)の同じ名前の準備と同じ（`merge_peaks` を `merge_zones` に読み替える）。`merge_zones._config_opt` は空の文字列にしておく。
+- **子のプロセス**: 7.2.5 の同じ名前の準備から、`params/` の 2 つのファイルと `<tmp>/data/boundaries/` を除き、`<tmp>/src/scripts/` に写すものを `merge_zones.py`・`common.py`・`cmp5_common.py` にしたもの。`<tmp>/data/results/merged_peak.csv` と `<tmp>/data/results/csv/` の GeoJSON はケースが置く。起動は `subprocess.run([sys.executable, '<tmp>/src/scripts/merge_zones.py', '--config', '<tmp>/c.ini', *<引数>], cwd='<tmp>/work', capture_output=True)`。`<tmp>/c.ini` は既定のパスでないので、メッセージの `{config_opt}` は空白 1 つと `--config <tmp>/c.ini`（パスは `shlex.quote` した形）になる。
+- **merged_peak.csv の行**（13 列。見出しは `cmp5_common.MERGED_PEAK_ALL_COLUMNS` を `,` でつないだもの。システムテスト仕様書（ST）の `ST-FR-018-06`〜`13` の共通の前提の点）:
+  - 行 U（G0 の未確定。画素 (7426886, 3312429)）: `35.36058364,138.72739077,1500.00,0.00000000,0.00000000,,,false,1,3-5338,1,9,unstable`
+  - 行 S（E1000 の海面確定。画素 (7427886, 3312429)）: `35.36058364,138.77030611,800.00,0.00000000,0.00000000,0.00,800.00,true,-1,3-5338,1,9,unstable`
+  - 行 L（E2000 の陸のコルで確定。画素 (7428886, 3312429)）: `35.36058364,138.81322145,1500.00,35.34308245,138.74884844,1000.00,500.00,true,20,3-5338,1,9,unstable`
+  - 行 P（G0 の陸のコルで確定）: 行 L の座標を `35.36058364,138.72739077` にしたもの。`analysis_id` を替えるときは 10 列目だけを替える。
+- **ゾーン**: per-mesh ピーク候補 GeoJSON のゾーンの Feature は、`{"type":"Feature","properties":{"peak_lat":<lat>,"peak_lon":<lon>,"feature_type":"<種類>","area_complete":<true|false>,<HLD 4.16.2 の表のその種類のスタイル>},"geometry":R(n)}` の形で書く（6.8.3 の書き方）。`R(n)` は `{"type":"Polygon","coordinates":[[[n,0],[n,1],[n,2],[n,0]]]}`（`n` は 1 から数える整数の字句。どのファイルのどの Feature かを見分けるため、ケースの中で `n` を重ねない）。同じプロセスのケースは、`cmp5_common.ZoneFeature(index, kind, pixel, area_complete, geometry, properties)` を直接作ってよい（`geometry` と `properties` は上の形を `JsonNumber` で持つ `dict`）。ピークの表は `cmp5_common.MergedPeakRow(<path>, <line_no>, <6 列の dict>)` を直接作るか、`<tmp>/merged_peak.csv` を書いて `index_peaks_by_pixel(read_merged_peak(...))` で作る。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-merge_zones-01` | 引数の正しい形 | 同じプロセス。`<tmp>/m.txt` に `5338\n5339\n` | `_parse_args` に (a) `['--config', '/a.ini']`、(b) `['--mesh', '5338', '--config', '/a.ini']`、(c) `['--config', '/a.ini', '--mesh', '<tmp>/m.txt']` | (a) `_Args('/a.ini', None)`、(b) `_Args('/a.ini', {'5338'})`、(c) `_Args('/a.ini', {'5338', '5339'})` |
+| `UT-merge_zones-02` | 引数の誤り | 同じプロセス | `_parse_args` に (a) `[]`、(b) `['--config']`、(c) `['--config', 'a.ini']`、(d) `['--config', '/a', '--config', '/b']`、(e) `['--config', '/a', '--check-land-peaks']`、(f) `['--config=/a']`、(g) `['--config', '/a', '--mesh', '']`、(h) `['--config', '']`、(i) `['--mesh', '5338', '--mesh', '5339', '--config', '/a']`、(j) `['--mesh', '--x', '--config', '/a.ini']`（値が `-` で始まる） | どれも終了コード 2。(j) は `--x` を `--mesh` の値として `read_mesh_arg` に渡し、`<作業ディレクトリ>/--x` が無いので A2（名前として読まない。7.2.5 の UT 03 (e) と同じ）。(a) ZA4、(b) ZA2（`--config`）、(c) ZA5（`a.ini`）、(d) ZA3（`--config`）、(e) ZA1（`--check-land-peaks`）、(f) ZA1（`--config=/a`）、(g) A1、(h) ZA5（`''`）、(i) ZA3（`--mesh`） |
+| `UT-merge_zones-03` | 読むファイルを選ぶ | 同じプロセス。`<tmp>/csv/` に、中身が `x` の `3-5338.geojson`・`3-5339.geojson`・`4-5338-NW.geojson`・`5338.geojson`・`3-5338-old.geojson`・`3-5338.GEOJSON`・`3-5338.csv`・`3-5340.geojson.tmp` | `select_zone_geojson_files` に (a) `None`、(b) `{'5338', '5340'}`、(c) 無いディレクトリ `<tmp>/none` と `None`、(d) ファイル `<tmp>/csv/3-5338.csv` と `None` | (a) `[ZoneFile(<tmp>/csv/3-5338.geojson, '3-5338'), ZoneFile(<tmp>/csv/3-5339.geojson, '3-5339')]`（パスは絶対パス）。警告は出ない。(b) `3-5338.geojson` だけ。(c) 空のリスト。(d) 終了コード 1 で ZG2（`{path}` は `<tmp>/csv/3-5338.csv`、`{reason}` は `NotADirectoryError` の `strerror`） |
+| `UT-merge_zones-04` | 座標の字句 | 同じプロセス。ピークの表を、1 行ずつ次の値で作る（どれも `path` `<tmp>/merged_peak.csv`、`line_no` 2）: (a) 行 P、(b) 行 P の `peak_lat` を `+35.36058364`、(c) 行 P の `peak_lon` を `0138.72739077`、(d) 行 P の `col_lon` を `+138.74884844`、(e) 行 U の `col_lat` を `+0`（`false` の行）、(f) 行 S の `col_lat`・`col_lon` を `-0.0`・`+0.00000000`（`true` で両方 0）、(g) 行 P の `col_lat` を `0.0`（片方だけ 0） | `_check_peak_lexemes` | (a)(e)(f)(g) は戻る（(e)〜(g) はコルを書かない行）。(b)(c)(d) は終了コード 1 で ZN1（`{column}`・`{value}` は (b) `peak_lat`・`+35.36058364`、(c) `peak_lon`・`0138.72739077`、(d) `col_lon`・`+138.74884844`） |
+| `UT-merge_zones-05` | ゾーンを選ぶ（優先の順） | 同じプロセス。ピークの表は行 P の 1 行で、`analysis_id` を (a)〜(d) `3-5339`、(e) `4-5338-NW` にしたもの。`3-5338`・`3-5339`・`3-5438` の 3 つのファイルのゾーンの並びを、P の両ゾーン（`area_complete` は下）で作る | `pick_zones` を、空の候補の表に 3 つのファイルを `3-5338`・`3-5339`・`3-5438` の順に渡し、別の回にその逆の順に渡す。`area_complete`（3 つのファイルの順）は (a) 両ゾーンとも true・true・true、(b) true・false・true、(c) false・false・false、(d) AZ は false・false・true、DZ は true・false・true、(e) 両ゾーンとも false・true・true | どちらの順でも、採る `analysis_id` は (a) 両方 `3-5339`、(b) 両方 `3-5338`、(c) 両方 `3-5339`、(d) AZ は `3-5438`、DZ は `3-5338`、(e) 両方 `3-5339`（`ST-FR-018-06`・`07` と同じ）。候補の `zone` は、採ったファイルの Feature と同じオブジェクト |
+| `UT-merge_zones-06` | 表に無いピークのゾーン | 同じプロセス。ピークの表は行 P だけ。1 つのファイルのゾーンの並びに、P の AZ と、E10（画素 (7426896, 3312429)、`35.36058364,138.72781992`）の AZ・DZ | `pick_zones(table, {}, zones, '3-5338')` | 候補の表は `((7426886, 3312429), 'activation_zone')` の 1 つだけ |
+| `UT-merge_zones-07` | 欠けを確かめる | 同じプロセス。ピークの表は、行 L の座標を G0（M1）・E1000（M2）・E2000（M3）にした 3 行（この順、どれも `3-5338`）。候補の表は M1 の AZ と M3 の両ゾーンだけ。(b) は M1・M2・M3 の両ゾーンがそろったもの | `check_zones_complete` | (a) 終了コード 1 で ZM1。1 行目は `ゾーンの欠けたピークがある: 35.36058364,138.72739077 の delete_zone（代表行の analysis_id 3-5338）、35.36058364,138.77030611 の activation_zone・delete_zone（代表行の analysis_id 3-5338）`、2 行目は `{redo}`（`{config_opt}` は空）。(b) 戻る |
+| `UT-merge_zones-08` | 並べ方とスタイル | 同じプロセス。ピークの表は行 U・S・L の順。候補の表は 3 つのピークの両ゾーン（どれも `area_complete` 真。`R(1)`〜`R(6)`） | `build_peak_features` | 11 個。`feature_type` は `delete_zone`（U・S・L）、`activation_zone`（U・S・L）、`peak_col_link`（L）、`key_col`（L）、`peak`（U・S・L）の順（`ST-FR-018-09`）。ゾーンの `properties` と `geometry` は候補の `zone` のものと同じオブジェクト。`peak` の `_fillColor` は U が `#7b1fa2`、S・L が `#d32f2f` で、ほかのスタイルは 3 つとも HLD 4.16.2 の表のとおり。L の `peak_col_link` の `coordinates` の字句は `[['138.81322145', '35.36058364'], ['138.74884844', '35.34308245']]`（`JsonNumber` の `text`） |
+| `UT-merge_zones-09` | 書き出しのバイト列 | 同じプロセス。`<tmp>/results/` を作り、前回の `merged_peak.geojson`（中身 `old`）と前の起動の残りの `merged_peak.geojson.tmp`（中身 `x`）を置く。Feature の並びは (a) 次の 2 つ: F1 = `{'type': 'Feature', 'properties': {'peak_lat': JsonNumber('35.10'), 's': 'é"', 'n': None, 'b': False, 'a': [JsonNumber('1E5'), JsonNumber('-0')]}, 'geometry': {'type': 'Point', 'coordinates': [JsonNumber('138.7274766'), JsonNumber('35.10')]}}`、F2 = F1 の `b` を `True` にしたもの。(b) 空の並び。(c) F1 の `peak_lat` を `1.5`（`float`） | `write_merged_peak_geojson(features, <tmp>/results/merged_peak.geojson)` | (a) バイト列は `{"type":"FeatureCollection","features":[\n{"type":"Feature","properties":{"peak_lat":35.10,"s":"\u00e9\"","n":null,"b":false,"a":[1E5,-0]},"geometry":{"type":"Point","coordinates":[138.7274766,35.10]}},\n` と同じ形の F2（`"b":true`、行末に `,` なし）と `\n]}\n`。`merged_peak.geojson.tmp` は残らない。(b) `{"type":"FeatureCollection","features":[\n]}\n`。(c) `TypeError` で、`merged_peak.geojson` は `old`、`merged_peak.geojson.tmp` は `x` のまま（一時ファイルを開く前に止まる） |
+| `UT-merge_zones-10` | 書けない | 同じプロセス。(a) `<tmp>/results/` を作らない、(b) `<tmp>/results/merged_peak.geojson` をディレクトリにする | UT 09 の (a) の並び | どちらも終了コード 1 で ZO1（`{path}` は `<tmp>/results/merged_peak.geojson`、`{dir}` は `<tmp>/results`）。(b) は `merged_peak.geojson.tmp` が残らない |
+| `UT-merge_zones-11` | 統合の全体 | 子のプロセス。`merged_peak.csv` に見出しと行 U・S・L。`3-5338.geojson` に、DZ（L・U・S の順。`R(1)`〜`R(3)`）、AZ（L・U・S。アクティベーションゾーンの U だけ頂点の書き方を `[[[1.50,0],[1.50,1],[1.50,2],[1.50,0]]]` にする）、3 つのピークの `peak` の点、L の `key_col` の点と `peak_col_link` の線（どれも `area_complete` 真、6.8.3 の書き方）。`3-5339.geojson` に、L の両ゾーン（`area_complete` 偽）と、E10 の両ゾーン | 引数なし（`--config` だけ） | 終了コード 0。`merged_peak.geojson` は 13 行（1 行目、11 個の Feature、最後の行）。ゾーンの 6 行は `3-5338.geojson` の該当の Feature の行と同じ文字列（行末の `,` を除く。`1.50` も同じ字句）で、DZ・AZ とも U・S・L の順。接続線・コル・ピークの行は、`{"type":"Feature","properties":{"peak_lat":35.36058364,"peak_lon":138.81322145,"feature_type":"peak_col_link","_color":"#616161","_weight":2,"_opacity":1},"geometry":{"type":"LineString","coordinates":[[138.81322145,35.36058364],[138.74884844,35.34308245]]}}` の形（コル・ピークも HLD 4.16.2 の表の順のスタイル。U のピークの `_fillColor` は `#7b1fa2`）。ログファイルの最後から 2 行目が ZL1（`読んだ per-mesh ピーク候補 GeoJSON 2 件、ピーク 3、area_complete=false のゾーンしか無かったピーク activation_zone 0・delete_zone 0、merged_peak.geojson に書いたフィーチャ delete_zone 3・activation_zone 3・peak_col_link 1・key_col 1・peak 3`）、最後が L3 |
+| `UT-merge_zones-12` | 0 行と対象なし | 子のプロセス。(a) `merged_peak.csv` は見出しだけ、`3-5338.geojson` の中身は `x`。(b) (a) の `merged_peak.csv` で、`results/csv/` は空 | 引数なし | (a) 終了コード 0。`merged_peak.geojson` は `{"type":"FeatureCollection","features":[\n]}\n`、ZL1 の数はどれも 0（`読んだ … 0 件`）（`ST-FR-018-11`）。(b) 終了コード 1 で ZG1（`{path}` は `<tmp>/data/results/csv`）と ZL2（`0 件、ピーク 0`）。`merged_peak.geojson` は書かれない |
+| `UT-merge_zones-13` | `start_log` の後の誤り | 子のプロセス。どの回も `<tmp>/data/results/merged_peak.geojson` に `old` を置く。(a) `merged_peak.csv` を置かず、`3-5338.geojson` に行 P の両ゾーン。(b) `merged_peak.csv` に見出しと行 P、`3-5338.geojson` の中身は `x`、`3-5339.geojson` に P の両ゾーン（`ST-FR-018-13`）。(c) `merged_peak.csv` に見出しと M1・M2・M3（UT 07 の 3 行）、`3-5338.geojson` に M1 の AZ と M3 の両ゾーン（`ST-FR-018-10`）。(d) `merged_peak.csv` に見出しと、行 P の `peak_lat` を `+35.36058364` にした行、`3-5338.geojson` の中身は `x` | 引数なし | どれも終了コード 1 で、`merged_peak.geojson` は `old` のまま、ログファイルに同じ 2 行と ZL2。(a) 1 行目は 7.1.4 の MP1（`{path}` は `<tmp>/data/results/merged_peak.csv`）、2 行目は `{redo}`（`scripts/run_pipeline.sh --config <tmp>/c.ini を --phase なしで起動して、フェーズ2 から通しでやり直す`）。ZL2 は `0 件、ピーク 0`。(b) ZF3（`{path}` は `<tmp>/data/results/csv/3-5338.geojson`）。ZL2 は `0 件、ピーク 1`。(c) ZM1（UT 07 の (a) の 1 行目）。ZL2 は `1 件、ピーク 3`。(d) ZF3 でなく ZN1（`2 行目の peak_lat が JSON の数の書き方でない: +35.36058364`。ゾーンを読む前に止まる）。ZL2 は `0 件、ピーク 1` |
+| `UT-merge_zones-14` | `start_log` の前の誤り | 子のプロセス。`--config` の値を `c.ini`（相対パス）にする（共通の準備の値でなく、この値で渡す） | なし | 終了コード 2 で ZA5。`<tmp>/logs` を作らない |
+| `UT-merge_zones-15` | `--mesh` の範囲 | 子のプロセス。`merged_peak.csv` に見出しと行 P（`analysis_id` `3-5339`）。`3-5338.geojson` に P の両ゾーン（`area_complete` 真、`R(1)`・`R(2)`）、`3-5339.geojson` に P の両ゾーン（`area_complete` 偽、`R(3)`・`R(4)`） | (a) 引数なし、(b) `--mesh 5339` | どちらも終了コード 0。(a) ゾーンは `3-5338.geojson` のもの（`true` が先）、ZL1 は `2 件` で `activation_zone 0・delete_zone 0`。(b) ゾーンは `3-5339.geojson` のもの（`3-5338.geojson` を読まない）、ZL1 は `1 件` で `activation_zone 1・delete_zone 1` |
+
+- 画素・中心の緯度経度は、[7.2.5](#725-ut-候補)の求め方と同じ、[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まりのとおりに、2026-10-31 に CPython 3.14.8 で求めた（G0 (7426886, 3312429)、E10 (7426896, 3312429)、E1000 (7427886, 3312429)、E2000 (7428886, 3312429)。ST の共通の前提と同じ）。
+- UT 09 の (a) のバイト列は、`json.dumps('é"')` が `"\u00e9\""` になること（16 進は小文字）を CPython 3.14.8 で確かめた。
