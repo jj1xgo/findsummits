@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合。読み込みの群の関数まで）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -152,6 +152,12 @@
     - [7.4.3 関数の細部](#743-関数の細部)
     - [7.4.4 メッセージ文面](#744-メッセージ文面)
     - [7.4.5 UT 候補](#745-ut-候補)
+  - [7.5 `match_summits`](#75-match_summits)
+    - [7.5.1 ファイル割付](#751-ファイル割付)
+    - [7.5.2 型とデータ](#752-型とデータ)
+    - [7.5.3 関数の細部](#753-関数の細部)
+    - [7.5.4 メッセージ文面](#754-メッセージ文面)
+    - [7.5.5 UT 候補](#755-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -196,14 +202,14 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1 である（この回は読み込みの関数の分。後の回で足す）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4・7.5（読み込みの群まで）が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -573,7 +579,7 @@ def main() -> None:
 
 ### 2.2 ログとメッセージの文面
 
-書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3・7.4 が使う分だけを書いてある。
+書式と出し先の正本は[HLD 2.5.3](30_HLD.md#253-利用者向けのメッセージ)と[HLD 5.7.2](30_HLD.md#572-処理の流れ)で、ここは文面と行の形を決める。CMP4（地形解析エンジン）の C++ の `start_log` など、同じ決まりを別の言語で実装するモジュール（[6.12](#612-analyze_terrain_common)）も、ここの文面と行の形にする。今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.7・6.8・6.9・6.11・6.12・7.1・7.2・7.3・7.4・7.5（読み込みの群まで）が使う分だけを書いてある。
 
 書き方の決まり:
 
@@ -4236,7 +4242,7 @@ Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパ�
 
 ## 7. CMP5 統合・突合
 
-この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.4 を書き、7.5 は書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
+この章は、CMP5（統合・突合）の 4 本のプログラム（[HLD 3.5.1](30_HLD.md#351-プログラム)の `merge_peaks`・`merge_zones`・`check_cols`・`match_summits`）のモジュールと、コンポーネント内の共通部品（[HLD 3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）のモジュールを置く（ADR-LLD-001 の Decision 3・4）。どのモジュールも Python で、1.2 の Python の決まりと [2.1](#21-共通部品) の共通部品に従う。今は 7.1〜7.4 と 7.5 の読み込みの群を書き、7.5 の残りは書くときに足す（共通部品を先に書くのは、ほかのモジュールがその型と関数を使うため）。
 
 ### 7.1 `cmp5_common`
 
@@ -5209,3 +5215,242 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 | `UT-check_cols-09` | `start_log` の前の誤り | 子のプロセス。`merged_peak.csv` を置かない | (a) `--n 2`、(b) `--n 7` | どちらも終了コード 2 で KA7。`<tmp>/logs` を作らない（`merged_peak.csv` を読む前に止まる。`ST-FR-022-07`） |
 
 - `ST-FR-022-01` は UT 06、`ST-FR-022-10` は UT 05 の (c)(d) が受ける（`ST-FR-022-10` の (b) は、一時ファイルの書き方に合わせて直した字句。[HLD 4.22.3](30_HLD.md#4223-異常系)の 2 つ目の表の 2 行目と同じ）。
+
+### 7.5 `match_summits`
+
+- **ID**: LLD-match_summits
+- **対応 HLD**: [3.5](30_HLD.md#35-cmp5-統合突合)・[4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)・[4.9](30_HLD.md#49-fr-009-sotaリスト突合match_status-判定)・[4.12](30_HLD.md#412-fr-012-サミット一覧申請内容反映版生成)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
+- **ファイル**: `scripts/match_summits.py`
+
+関数の名前と役割と呼ぶ順は [HLD 3.5.3](30_HLD.md#353-関数) の `match_summits` の関数の表のとおりで、処理の正本は [HLD 4.9.2](30_HLD.md#492-処理の流れ)・[4.9.3](30_HLD.md#493-異常系)（`merged_summit.xlsx` の規則は [4.12.2](30_HLD.md#4122-処理の流れ)）である。この節は、それを Python で書くための細部（型、止まり方、読み方の細部、メッセージの文面、UT 候補）だけを足す。`match_summits` は CMP3（パイプライン制御）がフェーズ4 で起動する内部の起動口で、`--config <絶対パス>` だけを受け取る（[HLD 2.4.5](30_HLD.md#245-内部引数)）。処理の目的は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の突合で、`merged_peak.csv` と `merged_peak.geojson` と SOTA サミットリスト CSV と山岳データ登録変更リストから、`merged_summit.geojson` と `merged_summit.xlsx` を作る。
+
+**この節は 3 回に分けて書いている**（関数が 21 あり、元になる HLD の文が 7.2 の 3.5〜4 倍あるため。2026-11-01 に持ち主が決めた）。今書いてあるのは、HLD 3.5.3 の表の「群」の列が「読み込み」の 6 関数（`match_zones_to_peaks`・`read_summits_list`・`find_updatelist`・`read_updatelist`・`read_boundaries`・`build_spatial_indexes`）と、それが使う型・文面・UT 候補だけである。突き合わせ・照合と採番の群、組み立ての群、書き出しの群、起動の部分（`main`・`_parse_args`）、起動の直後の確かめ、結果の要約、書き込みの失敗の扱いは、書くときに足す。そのため、[HLD 4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)（Z15 の画素の変換）と [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）の受け方、結合のつなぎ目（`CMP5-INT3`・`CMP5-EXT4`〜`7`）は、全部を書いてからまとめて書く。
+
+- [5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、この回で書く部分は `build_spatial_indexes` の細部に置いた（ゾーンのジオメトリを持ち続けたまま索引用の形を作るので、2 つの形で持つ）。
+- 読み込みの関数は警告を出さず、`Boundaries.warnings`・`UpdateList.notices` に並べて返す。警告をいつ出すかは [HLD 4.9.2](30_HLD.md#492-処理の流れ)の 7「地域と市区町村を照合する」と「申請済みの判定」の 7「知らせる行をまとめる」が決めていて、出すのは `main` である（後の回）。読み込みの関数の中で出すと、`assign_provisional_codes` の後に出すという HLD の順（警告の並び）を守れないため。
+
+#### 7.5.1 ファイル割付
+
+- 関数はすべて `scripts/match_summits.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/match_summits.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.is_valid_coord(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)・[7.4.1](#741-ファイル割付)と同じ形）。
+- この回の関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`os`・`re`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass`、`typing` の `Iterable`・`Sequence` である。ほかに `shapely`（`import shapely`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す）。後の回で使う `openpyxl`・`subprocess` などは、その回の節を書くときに足す。
+- ファイルの先頭のコメントに `# trace: LLD-match_summits` を書く。起動の部分（`if __name__ == '__main__': main()`）は後の回で足すので、この回の関数だけでは単独で起動できない。
+- UT のコードは `tests/scripts/test_match_summits.py` に置く。各テストに `# trace: UT-match_summits-NN` のコメントを付ける。ID は 01 から通しで付け、後の回は続きの番号から付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+
+#### 7.5.2 型とデータ
+
+- 内部の定数（モジュールの最上位。名前は `_` で始める）。どれも `fullmatch` で使う。数字は `[0-9]` で書く（`\d` は全角の数字にも合うため）:
+  - SOTA サミットリスト CSV: `_SUMMITS_COLUMNS = ('SummitCode', 'SummitName', 'AltM', 'Latitude', 'Longitude', 'ValidTo')`（[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)の使用カラム）。`_SUMMITS_DATE_RE = re.compile(r'SOTA Summits List \(Date=([0-9]{2})/([0-9]{2})/([0-9]{4})\)')`（1 行目の基準日）。`_DMY_RE = re.compile(r'([0-9]{2})/([0-9]{2})/([0-9]{4})')`（`ValidTo`）。`_INTEGER_RE = re.compile(r'[+-]?[0-9]+')`（`AltM`。[7.1.3](#713-関数の細部)の「整数」と同じ字句）。`_SUMMIT_CODE_RE = re.compile(r'([^/]+)/([^-]+)-.+')`（アソシエーションと地域コードを切り出す。1 つ目の組がアソシエーション、2 つ目の組が地域コード）。
+  - 登録変更リスト: `_UPDATELIST_RE = re.compile(r'sota_updatelist_([0-9]{4})\.xhtml')`（ファイル名の全体。[DEC188](30_HLD.md#494-設計判断)「登録変更リストのファイル名は ASCII の年だけ」）。`_TITLE_YEAR_RE = re.compile(r'([0-9]{4})年')`・`_TITLE_FULL_RE = re.compile(r'([0-9]{4})年 ?山岳データ登録変更リスト')`・`_TITLE_TEXT = '山岳データ登録変更リスト'`（題の行）。`_UPDATE_DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')`（Update の日付）。`_APPLIED_RE = re.compile(r'(?<![0-9/])([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})(?![0-9/])')`（申請日。前後が数字や `/` に隣り合うものは日付としない）。`_SPAN_RE = re.compile(r'[1-9][0-9]*')`（`rowspan`・`colspan`）。`_SUMMIT_ID_RE = re.compile(r'[A-Z0-9]+/[A-Z0-9]+-[0-9]+')`（山岳 ID）。`_ELEV_RE = re.compile(r'[0-9]+(\.[0-9]+)?')`（変更後の標高）。`_ACTIONS = {'追加': 'add', '変更': 'change', '削除': 'delete'}`。
+  - 見出しの文字（空白をすべて除いた後の形。列を引くのに使う）: アクション `アクション`、山岳 ID か県名 `既存山岳IDもしくは県名`、変更後 `変更後` と標高 `標高m`、新規追加詳細 `新規追加詳細` と位置 `位置`、申請者・申請日 `申請者・申請日`。
+  - 知らせる行の `reason`: [7.5.4](#754-メッセージ文面)の表の 6 つの文を定数にする（`_REASON_ACTION`・`_REASON_POSITION`・`_REASON_ID`・`_REASON_ELEV`・`_REASON_DATE`・`_REASON_UPDATE`）。
+- 内部の状態（モジュールの最上位）: `_config_opt: str = ''`（後の回の `main` が入れる、[7.5.4](#754-メッセージ文面)の `{config_opt}` の値。`main` を通らない同じプロセスの UT は空のまま使う。[7.2.2](#722-型とデータ)・[7.3.2](#732-型とデータ)・[7.4.2](#742-型とデータ)と同じ）。
+- 数の字句は文字列のまま持ち、比べるときに `decimal.Decimal` にする（[7.1.3](#713-関数の細部)の「10 進の数の決まり」、[DEC92](30_HLD.md#494-設計判断)「採番と主ピークの比べ方は 10 進の値で行う」）。
+- 型はどれも `@dataclass(frozen=True)` で、項目はこの順に並べる（UT が位置引数で作るため）:
+  - `PeakZones(activation, delete)`: どちらも `cmp5_common.ZoneFeature`。1 つのピークの AZ と delete判定ゾーン。
+  - `Summit(code, name, alt_m, lat, lon, line_no)`: すべて `str`、`line_no` は `int`。現役のサミット 1 件。`name` は `SummitName`、`alt_m` は `AltM`、`lat`・`lon` は `Latitude`・`Longitude` の字句のまま。`line_no` は CSV の記録の番号（1 行目の基準日の記録を 1 とする。[7.1.3](#713-関数の細部)の `read_merged_peak` の 2 と同じ数え方）。
+  - `SummitsList(ref_date, summits, retired_count, retired_codes, region_assocs)`: `ref_date` は `datetime.date`、`summits` は `list[Summit]`（現役。ファイルの順）、`retired_count` は `int`（廃止済みとして除いた `JA` の行の数）、`retired_codes` は `frozenset[str]`（廃止済みの `SummitCode`）、`region_assocs` は `dict[str, frozenset[str]]`（地域コード → その地域コードを持つアソシエーションの集合。`JA` で始まる全行〈廃止済みを含む〉から作る。`_SUMMIT_CODE_RE` に合わない `SummitCode` は入れない）。
+  - `Application(action, summit_id, lat, lon, new_elev, applicant, applied_on, years, first_seen, action_text, target_text)`: 登録変更リストの申請 1 件。`action` は `'add'`・`'change'`・`'delete'`。`summit_id` は変更・削除の山岳 ID（追加は `None`）。`lat`・`lon` は追加の位置（変更・削除は `None`）。`new_elev` は変更後の標高から末尾の `m` を除いた字句（変更だけ。ほかは `None`）。`applicant`（空文字がありうる）・`applied_on`（`YYYY-MM-DD`）。`years` は載っている年の表の年の `tuple[int, ...]`（ファイルに現れる順）。`first_seen` は最初に現れた年の表の年と、その表の中の申請の行の通し番号の `tuple[int, int]`。`action_text`・`target_text` は最初に現れた行のアクションの欄と「既存山岳ID もしくは 県名」の欄の、揃えた後の文字列（後の回の知らせる行に使う）。座標・標高・日付の字句は、最初に現れた行のものを残す。
+  - `YearUpdate(year, update)`: `year` は `int`、`update` は `YYYY-MM-DD` か空文字。
+  - `Notice(kind, reason, year, row, action, target, applicant, applied_on, value)`: 登録変更リストの知らせる行 1 件。`kind` は `'unreadable_row'`・`'unknown_id'`・`'ambiguous_region'`・`'unmatched_add'`・`'unreadable_update'`（この回の関数が作るのは `'unreadable_row'` と `'unreadable_update'` だけ。残りは後の回）。`row` は年の表の中の申請の行の通し番号（`'unreadable_update'` は `None`）。項目の名前と並びは [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「出力の組み立て」の 3「metadata を作る」の `updatelist_notices` と同じ（後の回がそのまま JSON に書く）。
+  - `UpdateList(file_name, applications, updates, notices, row_count)`: `file_name` はパスを含まないファイル名、`applications` は `list[Application]`（同じ申請を重ね合わせた後。最初に現れた順）、`updates` は `list[YearUpdate]`（年の表がファイルに現れる順）、`notices` は `list[Notice]`（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」の並び）、`row_count` は `int`（アクションの欄が `追加`・`変更`・`削除` の行の数。重ね合わせの前で、読めない欄のある行も数える。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「行の分け方と揃え方」が、この 3 つのアクションの行を申請の行と呼ぶのに合わせ、後の回の結果の要約の「申請の行の数」に使う。通し番号の最大とは違う）。
+  - `RegionFeature(assoc, area_code, region_name, geometry)`・`MunicipalityFeature(municipality, code, geometry)`: 項目は `str`、`geometry` は GeoJSON の `geometry` のオブジェクトの `dict`（`json.load` が返した数のまま）。地域は (`assoc`, `area_code`) の順、市区町村は `code` の順に並ぶファイルを、読んだ順のまま持つ（[HLD 4.17.2](30_HLD.md#4172-処理の流れ)）。
+  - `Boundaries(regions, municipalities, warnings)`: `regions: list[RegionFeature] | None`・`municipalities: list[MunicipalityFeature] | None`（`None` はファイルが無い印）、`warnings: list[tuple[str, str]]`（無いファイルの警告の記号〈`'BN1'`・`'BN2'`〉と 1 行目の文の組。2 行目は記号で [7.5.4](#754-メッセージ文面)の文を選んで足す。出すのは後の回の `main`）。
+  - `SpatialIndex(tree, keys)`: `tree` は `shapely.STRtree`、`keys` は `tree` の位置 `i` のジオメトリの持ち主を指す `list`（ゾーンの索引は Z15 の画素 `tuple[int, int]`、地域と市区町村の索引は `regions`・`municipalities` の並びの位置 `int`）。
+  - `SpatialIndexes(activation, delete, regions, municipalities)`: `activation`・`delete` は `SpatialIndex`、`regions`・`municipalities` は `SpatialIndex | None`（地域か市区町村が `None` なら、その索引も `None`）。
+- `slots=True` は付けない（[7.1](#71-cmp5_common)〜[7.4](#74-check_cols)と同じく、メモリの実測〈HLD 5.2.2 の「実測の計画」の 4〉の後に決める）。
+
+#### 7.5.3 関数の細部
+
+関数ごとに `#####` の見出し（関数の名前だけ）を立てて書く。内部の関数は、使う関数の見出しの下に書く。HLD 3.5.3 の表の「呼ぶ順」で並べる。
+
+**止まり方**: 7.5 の関数は、誤りを見つけたら、[7.5.4](#754-メッセージ文面)のメッセージを `common.log_error(<1 行目>, <2 行目>)` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（[7.2.3](#723-関数の細部)の「止まり方」と同じ）。この回の 6 関数は、`InputError` を上げる 7.1 の部品を呼ばない（`is_valid_coord` は上げない）ので、`cmp5_common.InputError` を捕まえない。`read_merged_peak`・`index_peaks_by_pixel`・`read_zone_features` を呼び、その `InputError` を捕まえて止まるのは `main` で、後の回で書く（案内の文を選ぶ内部の関数 `_input_error_advice` はこの回で書く）。
+
+**{reason}・{path}**: [2.1.4](#214-メッセージ文面)と同じ（`OSError` の `strerror`、無ければ `str(e)`。`UnicodeDecodeError` なら `UTF-8 として読めない`）。`{path}` は `os.path.abspath` したパス。
+
+**10 進の数と整数**: [7.1.3](#713-関数の細部)の「10 進の数の決まり」の判定を、7.1 の内部の関数に頼らず、7.5 の内部の関数で持つ（7.1 の内部の関数はほかのモジュールから呼べない〈[1.2](#12-lld-の規約)〉）。座標が読めるかは `cmp5_common.is_valid_coord` で確かめる。`AltM` の整数は `_INTEGER_RE.fullmatch(s)` が合うこと。
+
+##### match_zones_to_peaks
+
+`match_zones_to_peaks(peaks: dict[tuple[int, int], cmp5_common.MergedPeakRow], zones: list[cmp5_common.ZoneFeature], path: str) -> dict[tuple[int, int], PeakZones]`
+
+`path` は `merged_peak.geojson` の絶対パスで、MZ1 の `{path}` にだけ使う（[HLD 3.5.3](30_HLD.md#353-関数)の表の受け取るものに無いが、止まるときのメッセージに要る。処理は変えない）。`peaks` は `index_peaks_by_pixel` の返すピークの表、`zones` は `read_zone_features` の返すゾーンである（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 2「`merged_peak.geojson` を読む」）。
+
+1. `zones` を順に見て、`(zone.pixel, zone.kind)` を鍵に、AZ（`cmp5_common.ACTIVATION_ZONE`）と delete判定ゾーン（`cmp5_common.DELETE_ZONE`）を入れる表を作る。同じ画素の同じ種類が 2 つ以上来ることは、`read_zone_features` が ZF4 で止めているので、ここでは確かめない（1 つのファイルの中の重なりは ZF4 が、表との食い違いはここが受け持つ。[DEC87](30_HLD.md#494-設計判断)「ゾーンは Z15 の画素でピークに突き合わせる」）。
+2. 食い違いを、止める前にすべて集める。
+   - 表に無いピークのゾーン: `zone.pixel` が `peaks` に無いゾーンを、`zones` の順（`index` の順）に集める。
+   - ゾーンの欠けたピーク: `peaks` の鍵の順（`merged_peak.csv` の行の順）に、AZ と delete判定ゾーンのうち 1 の表に無いものを、AZ・delete判定ゾーンの順に集める。
+3. 2 で 1 つでも集まれば、MZ1 を出して止まる。`{list}` は、表に無いピークのゾーンを先に、欠けたピークを後に、`、` でつなぐ。緯度経度の字句は、表に無いピークのゾーンは `zone.properties['peak_lat']`・`['peak_lon']` の `JsonNumber.text`、欠けたピークは `peaks[key].values['peak_lat']`・`['peak_lon']`。
+4. 無ければ、`peaks` の鍵の順に `PeakZones(activation, delete)` を入れた辞書を返す。`peaks` が空で `zones` も空なら、空の辞書を返す（0 行でも続ける。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 1「`merged_peak.csv` を読む」）。`peaks` が空で `zones` が空でなければ、すべてのゾーンが「表に無いピークのゾーン」になって MZ1 で止まる。
+
+`_input_error_advice(symbol: str) -> str`（内部）: 7.1 の `InputError` の `symbol`（`'MP1'`〜`'MP3'`・`'ZF1'`〜`'ZF4'`）に対する 2 行目の文を返す。どれも [7.5.4](#754-メッセージ文面)の `{redo}`（フェーズ2 から通しでやり直す）を返す（[HLD 4.9.3](30_HLD.md#493-異常系)の「やり直しの案内」の 1 つ目。起動の形で分かれないので、[7.4.3](#743-関数の細部)の `_redo` と違い `symbol` だけを受け取る）。それ以外の `symbol` は `ValueError` を上げる（呼ぶ側の誤り）。`_config_opt` を読む。MZ1 の 2 行目も同じ文にする。
+
+##### read_summits_list
+
+`read_summits_list(path: str) -> SummitsList`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 3「SOTA サミットリスト CSV と登録変更リストを読む」のうち、SOTA サミットリスト CSV の部分である（[DEC88](30_HLD.md#494-設計判断)「サミットリスト CSV の JA の行の誤りで止める」、[ADR-SRS-054](decisions/ADR-SRS-054-summitslist-validto-reference-date.md)）。
+
+1. `abspath = os.path.abspath(path)`。`os.path.exists(abspath)` が偽なら SS1。`open(abspath, encoding='utf-8-sig', newline='')` を `with` で開き（`OSError` は SS2。ディレクトリも SS2）、`csv.reader(f, strict=True)` で読む。
+   - 先頭の BOM（U+FEFF）を 1 つだけ除く（[HLD 4.9.1](30_HLD.md#491-目的と範囲)の対象外の「CSV の引用符と BOM」。利用者が表計算のソフトで保存し直しうるため。[7.2.3](#723-関数の細部)の `read_land_peaks` と同じ）。
+   - 読む途中の `UnicodeDecodeError` と `OSError` は SS2、`csv.Error` は SS3（`{detail}` は `{line_no} 行目を CSV として読めない: {reason}`。`{reason}` は `str(e)`）。
+   - `line_no` の数え方は [7.1.3](#713-関数の細部)の `read_merged_peak` の 2 と同じ（各記録を読み始める前に 1 つ増やす。空の記録も数える）。
+2. 1 行目（最初の記録）。記録が 1 つも無ければ SS3（`基準日の行が無い`）。最初の欄が `_SUMMITS_DATE_RE` に合わなければ SS3（`1 行目が SOTA Summits List (Date=DD/MM/YYYY) の形でない: {line}`。`{line}` は最初の欄）。合っても `datetime.date(年, 月, 日)` が作れなければ SS3（`基準日が暦に無い: {line}`）。2 つ目からの欄は見ない（表計算のソフトで保存し直すと、空の欄が続きうるため）。
+3. 2 行目（見出し）。2 つ目の記録が無ければ SS3（`見出しの行が無い`）。`_SUMMITS_COLUMNS` の名前ごとに、見出しの記録の中で最初に `==` になる位置を引く。無い名前があれば、`_SUMMITS_COLUMNS` の順で最初のものを SS3（`見出しに列 {name} が無い`）。
+4. 3 行目からのデータの記録。空の記録（空行）は飛ばす。`SummitCode` の位置の欄が `JA` で始まる記録だけを確かめる（欄が `SummitCode` の位置まで無い記録、`JA` で始まらない記録は確かめない。`JA` で始まらない行の誤りでは止めない。[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)）。`JA` で始まる記録は、次の順に見て、ファイルの順で最初に外れたもので、その場で SS4 を出して止まる（`{detail}` は次の文）。
+   - 欄の数が、使う 6 列の位置の最大 + 1 より少ない: `{line_no} 行目の欄が足りない: 使う列は {need} 欄目まで、この行は {have} 欄`（`{need}` は最大の位置 + 1、`{have}` は欄の数。使わない列だけが欠ける記録は止めない）。
+   - `Latitude` が `cmp5_common.is_valid_coord(値, 'lat')` で偽: `{line_no} 行目の Latitude が 座標として読めない: {value}`。`Longitude` も同じ（`'lon'`）。値の前後の空白は除かない（`' 34.5'` は座標として読めない。写し違いを黙って直さないため。[7.2.3](#723-関数の細部)の `read_land_peaks` と同じ。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 3 が「[4.8.2](30_HLD.md#482-処理の流れ)の 1『リストを読む』の意味で座標として読めない」で止めるため）。
+   - `AltM` が `_INTEGER_RE` に合わない: `{line_no} 行目の AltM が 整数として読めない: {value}`。
+   - `ValidTo` が `_DMY_RE` に合わないか、`datetime.date(年, 月, 日)` が作れない: `{line_no} 行目の ValidTo が DD/MM/YYYY の日付として読めない: {value}`。
+5. 4 を通った記録について、`SummitCode` ごとに記録の番号を集める。すべての記録を読み終えてから、同じ `SummitCode` が 2 つ以上あるものがあれば、SS5 を出して止まる。`{list}` は、最初に現れた順に、`{code}（{line_no}、{line_no} 行目）` を `、` でつなぐ（4 で止まらなかったときだけ、ここに来る。廃止済みの行も数える。同じ `SummitCode` のどれを採るかの規則は設けない。[SRS §7.2.4](20_SRS.md#724-sota-サミットリスト-csv)の正常入力の前提）。
+6. `ValidTo` の日付が基準日以降の記録を現役とし（基準日と同じ日は現役。`>=`）、`Summit(code, name, alt_m, lat, lon, line_no)` をファイルの順に並べる。基準日より前の記録は廃止済みとし、`retired_count` に数え、`SummitCode` を `retired_codes` に入れる。`JA` で始まる全記録（廃止済みを含む）について、`_SUMMIT_CODE_RE.fullmatch(SummitCode)` が合えば、2 つ目の組（地域コード）をキーに、1 つ目の組（アソシエーション）を `region_assocs` に足す（合わない記録は入れるだけで止めない。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 3 の止まる条件に無いため）。`SummitsList(ref_date, summits, retired_count, retired_codes, region_assocs)` を返す。
+
+##### find_updatelist
+
+`find_updatelist(ref_dir: str) -> str`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「登録変更リストの読み方」の「ファイルの選び方」である（[DEC188](30_HLD.md#494-設計判断)「登録変更リストのファイル名は ASCII の年だけ」）。
+
+1. `abspath = os.path.abspath(ref_dir)`。`os.listdir(abspath)` の名前のうち、`_UPDATELIST_RE.fullmatch(名前)` が合い、`os.path.isfile(os.path.join(abspath, 名前))` が真のものを集める（ディレクトリや、名前の全体が合わないもの〈`.bak` を足したもの、全角の数字、4 桁でない年〉は採らない）。`os.listdir` が `OSError` になるときは、集まらなかったものとして扱う。
+2. 1 つも集まらなければ UX1 を出して止まる（`{dir}` は `abspath`）。
+3. 集まったものの年（4 桁の数を `int` にしたもの）が最大のものの絶対パスを返す（同じ年は 1 つしか無い）。
+
+##### read_updatelist
+
+`read_updatelist(path: str) -> UpdateList`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「登録変更リストの読み方」の、構文の検査と正規化までを行い、申請の並びを作る（バンドの比べによる変更の選別は後の回の `match_pending_applications`）。実物の形は、2026-10-19 と 2026-11-01 に確かめたもの（UTF-8、外部の DTD の宣言だけで内部サブセットと実体の宣言は無い、`table` は 1 つ、`<br/>` は無い、年の表は新しい年から 3 つ、題の行は「`2026年`」と「`山岳データ登録変更リスト`」が別々のセル、見出しの 2 行だけが `rowspan`・`colspan` を持つ、反映済みの目印の行はアクションの欄が空）に合わせてある。
+
+1. **読む**: `abspath = os.path.abspath(path)`。`open(abspath, 'rb')` で全体をバイト列で読む（`OSError` は UX2。無いファイルとディレクトリも UX2）。
+   - 実体と内部サブセットの検査は、バイト列の検索でなく、`xml.parsers.expat.ParserCreate()` の読みで行う（バイト列の `b'<!ENTITY'` や DOCTYPE の正規表現では、UTF-16 の文書の宣言を見つけられず、`ET.fromstring` が内部実体を展開してしまう。expat は符号化の宣言と BOM で読むので、符号化によらず当たる）。`parser.StartDoctypeDeclHandler` に、4 つ目の引数 `has_internal_subset` が真なら内部の例外 `_UnsafeXml('内部サブセットがある')` を上げる関数を、`parser.EntityDeclHandler` に、呼ばれたら `_UnsafeXml('実体の宣言がある')` を上げる関数を設定し、`parser.Parse(data, True)` を呼ぶ。内部サブセットが無ければ実体の宣言は来ないので、後者は通常は呼ばれない（念のための検査）。`_UnsafeXml`（`Exception` の子の内部の例外）は UX3（`{detail}` は例外の文）、`xml.parsers.expat.ExpatError` も UX3（`{detail}` は `str(e)`）。外部の DTD と外部の実体は、expat も `xml.etree.ElementTree` も取りに行かない（DOCTYPE が外部の DTD だけを指すのは通る。実物がその形）。
+   - 通ったら、`root = ET.fromstring(data)` で木にする。`ET.ParseError` は UX3（`{detail}` は `str(e)`）。外部の DTD を取りに行かないので、名前付きの文字参照（`&nbsp;` など）は、expat の読みは通っても、ここで `undefined entity` として ParseError になる（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「読み方」。2026 年版の実物には無い）。
+2. **表と行**: 名前空間を除いた局所名（`tag` の最後の `}` より後ろ）で要素を見る。`root.iter()` で最初の `table` を探し、無ければ UX4（`{detail}` は `表が無い`）。`tr` は、`table` の直下の `tr` と、`table` の直下の `thead`・`tbody`・`tfoot` の直下の `tr` を、文書の順に集める（入れ子の表は見ない。[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト)の「表が 1 つ」）。`tr` の直下の `td`・`th` をセルとする。
+3. **セルの文字**: セルの中の文字を文書の順につなぐ（局所名が `br` の要素は空白 1 つとして読む。`JA1ABC<br/>2026/10/19` が `JA1ABC2026/10/19` にならないように）。つないだ文字を `unicodedata.normalize('NFKC', …)` で揃え、空白の並び（`str.split()` の区切り）を 1 つの半角の空白にして前後を除く（内部の関数 `_norm`）。全角の数字・英字・`，`・全角の空白・`／` が半角になる。`、` は NFKC で変わらないので、座標の区切りは別に扱う（7）。見出しは、さらに空白をすべて除いてから比べる。
+4. **格子**: `rowspan`・`colspan` は `_SPAN_RE.fullmatch` に合えばその数、無いか合わなければ 1。行ごとに、上の行から延びている `rowspan` の列を飛ばしながらセルを置き、`colspan` の列にはその文字を写し、`rowspan` が 2 以上なら下の行の同じ列にも写す（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「格子への展開」。`変更後`〈`colspan=3`〉の下の 2 行目の `標高m` を、上の行の文字との組で引くために、結合したセルが覆う位置へ文字を写す）。
+   - 題の行（5）かどうかは、その行自身のセルの文字だけで決める（上から延びてきた文字は見ない）。題の行なら、上から延びている `rowspan` を捨ててから、その行のセルを置く（年の表をまたいで写さない。実物は見出しの行にしか `rowspan` が無いので、効くのは書式が変わったときだけ）。
+   - 反映済みの目印の行（ADR-SRS-086 の Context の「ここまでは…反映済」）と題の行・Update の行は、実物ではアクションの欄（列 0）が空なので、6 の「アクションの欄が空の行は読み飛ばす」で扱う（目印の行のための別の決まりは置かない）。
+   - 見出しの `rowspan=2` を写すので、見出しの 2 行目のアクションの欄も `アクション` になる。見出しの 2 行は 5 で見出しとして扱い、申請の行にしない。
+5. **年の表と見出し**: 行を上から見て、次の順に年の表を切る。最初の題の行の前の行は読まない。題の行が 1 つも無ければ UX4（`年の表の題の行が無い`）。
+   - 題の行: その行のセルのうち、`_TITLE_YEAR_RE.fullmatch` に合うセルと、空白を除くと `_TITLE_TEXT` に等しいセルの両方がある行。または、1 つのセルが `_TITLE_FULL_RE.fullmatch` に合う行。年は `int` にする。`fullmatch` にして年の後の語まで見るので、実物の備考の `2022年分再申請` のような申請の行の文は題の行にならない。
+   - Update の行: 題の行の後、見出しの行より前で、`Update` に等しいセルと、`_UPDATE_DATE_RE.fullmatch` に合い `datetime.date.fromisoformat` で読めるセルの両方がある最初の行。その日付を `YearUpdate(年, 日付)` にする。無ければ `YearUpdate(年, '')` にし、その年の表の知らせる行の先頭に `unreadable_update`（`reason` は `_REASON_UPDATE`、`row` は `None`、`year` はその年、ほかの文字列は空文字）を足す。
+   - 見出し: 題の行の後で最初に、空白を除くと `アクション` に等しいセルを持つ行と、その次の行の 2 行。年の表の見出しの行が無い（次の題の行か表の終わりが先に来る、または 2 行目が無い）ときは UX4（`{year} 年の表に見出しの行が無い`）。
+   - 列: 見出しの上の行と下の行の文字（空白を除く）の組で引く。`アクション` は上が `アクション`、山岳 ID か県名は上が `既存山岳IDもしくは県名`、変更後の標高は上が `変更後` で下が `標高m`、位置は上が `新規追加詳細` で下が `位置`、申請者・申請日は上が `申請者・申請日`。同じ条件に合う列が複数あれば最初の列。年の表ごとに引き、引けない列があれば、この順で最初のものを UX4（`{year} 年の表の見出しで {name} の列を特定できない`。`{name}` は `アクション`・`既存山岳ID もしくは県名`・`変更後の標高`・`位置`・`申請者・申請日`）。見出しはあるが申請の行が 0 の年の表は止めない。
+6. **申請の行**: 見出しの 2 行の後、次の題の行（または表の終わり）までの行。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「年の表と Update の日付」のとおり、見出しの後のすべての行に、年の表ごとに 1 から通し番号を付ける（アクションの欄が空で読み飛ばす行も数える。利用者がページの元の行を数えて探せるように）。アクションの欄（`_norm` した文字）が空の行は、読み飛ばす。ほかの行は次の順に扱う。
+   1. 申請者と申請日: 申請者・申請日の欄を `_APPLIED_RE.search` する。最初の一致があり、`datetime.date(年, 月, 日)` が作れれば、申請日は `YYYY-MM-DD`（月と日は 2 桁にそろえる）、申請者は `_norm(欄[:一致の始め] + ' ' + 欄[一致の終わり:])`（一致の部分を除いた残り。分割はしない）。一致が無いか暦に無ければ、申請日は空文字、申請者は欄の文字全体。知らせる行の `applicant`・`applied_on` に使うので、どの読めない理由のときも先に求めておく。
+   2. アクションの欄が `_ACTIONS` のどれでもなければ `unreadable_row`（`reason` は `_REASON_ACTION`、`value` はアクションの欄、`year`・`row` はその行、`action` はアクションの欄、`target` は「既存山岳ID もしくは 県名」の欄、`applicant`・`applied_on` は 1 の値）。この行は `row_count` に数えない。
+   3. `row_count` を 1 増やす。アクションが `変更` で、変更後の標高の欄が空なら、ほかの欄を読まずに、この行を取り込まず知らせない（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「取り込む申請」は、読み込みの時点で決めるのを変更後の標高の欄が空の変更までとし、[SRS §7.2.9](20_SRS.md#729-山岳データ登録変更リスト)も名称・座標だけの変更を取り込まない行とする。山岳 ID や申請日が読めなくても知らせない）。
+   4. 欄の読み。読めない欄があれば、次の順で最初のものを `reason` と `value` にして `unreadable_row` を作る（1 行 1 件。項目は 2 と同じ）。
+      - 追加の位置: `re.split(r'[,、 ]+', 欄)` の空でない部分が、ちょうど 2 つで、1 つ目が `is_valid_coord(…, 'lat')`、2 つ目が `is_valid_coord(…, 'lon')` を通ること。ほかは `_REASON_POSITION`（`value` は位置の欄）。
+      - 変更・削除の山岳 ID: 「既存山岳ID もしくは 県名」の欄が `_SUMMIT_ID_RE.fullmatch` に合うこと。ほかは `_REASON_ID`（`value` はその欄）。
+      - 変更後の標高（変更だけ。空の行は 2 で除いてある）: 欄の末尾の `m` を 1 つ除き、前後の空白を除いたものが `_ELEV_RE.fullmatch` に合うこと。ほかは `_REASON_ELEV`（`value` は標高の欄）。
+      - 申請日: 3 で申請日が空文字なら `_REASON_DATE`（`value` は申請者・申請日の欄）。
+   5. 読めない欄が無ければ、`Application` を作る（`action` は `_ACTIONS` の値、追加は `lat`・`lon` に位置の 2 つの字句、変更・削除は `summit_id` に山岳 ID、変更は `new_elev` に標高から末尾の `m` を除いた字句、`years` は `(年,)`、`first_seen` は `(年, 通し番号)`、`action_text`・`target_text` はこの行の欄の文字）。
+7. **重ね合わせ**: 鍵は (`action`、`summit_id` か (`Decimal(lat)`, `Decimal(lon)`)、`Decimal(new_elev)` か `None`、`applicant`、`applied_on`)。同じ鍵の 2 つ目からは、先の `Application` の `years` に年を足すだけにする（先の字句を残す。frozen なので `years` を足した新しい `Application` に置き換える）。座標と標高は 10 進の値で比べる（`35.10` と `35.1` は同じ。[DEC104](30_HLD.md#494-設計判断)「入力から来る数は 10 進の値を変えずに書く」の値の同じさ）。`applications` は、最初に現れた順に並べる。
+8. **知らせる行の並び**: 年の表がファイルに現れる順に、その年の表の中では `unreadable_update` を先に、`unreadable_row` を通し番号の順に並べる（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」）。
+9. `UpdateList(os.path.basename(abspath), applications, updates, notices, row_count)` を返す。
+
+##### read_boundaries
+
+`read_boundaries(regions_path: str, municipalities_path: str) -> Boundaries`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 4「地域と市区町村の GeoJSON を読み、索引を作る」のうち、読む部分である（索引は `build_spatial_indexes`）。地域、市区町村の順に同じ手順で読む（`{target}` は `地域`・`市区町村`）。
+
+1. `os.path.exists(abspath)` が偽なら、そのファイルは `None` にし、`warnings` に BN1（地域）か BN2（市区町村）の記号と 1 行目の組を足す（[HLD 4.9.3](30_HLD.md#493-異常系)の「必ず含める内容」の「無いファイルのパスと、…」。止めない）。
+2. ある: `open(abspath, encoding='utf-8')` と `json.load(f, parse_constant=_reject_constant)` で読む（`_reject_constant(token)` は内部の関数で、`ValueError(f'{token} は JSON の数でない')` を上げる。[3.1.3](#313-関数の細部)と同じ）。`OSError`・`UnicodeDecodeError`・`ValueError`（`json.JSONDecodeError` を含む）・`RecursionError` は BD1。
+3. 書式の検査。最初に外れたもので BD2（`{detail}` は次の文）。
+   - 最上位が `dict` で `type` が `FeatureCollection`、`features` が `list` であること: `FeatureCollection でない`。
+   - `features` の要素（1 から数える）ごとに、`properties` が `dict` で、地域なら `assoc`・`area_code`・`region_name`、市区町村なら `municipality`・`code` が、すべて `str` であること: `{n} 番目の Feature の properties に {name} が無いか文字列でない`。
+   - `geometry` が `dict` で `type` が `Polygon` か `MultiPolygon` であること: `{n} 番目の Feature の geometry が Polygon でも MultiPolygon でもない`。
+   - `_to_shape(geometry)`（`build_spatial_indexes` の内部の関数）で形を作れること。作れなければ（`ValueError`・`TypeError`・`KeyError`・`shapely.errors.ShapelyError`。座標が文字列のときは `ValueError`、`coordinates` が無いときは `KeyError`。`{reason}` は `str(e)`）: `{n} 番目の Feature の geometry を作れない: {reason}`。作った形は捨てる（索引は `build_spatial_indexes` が作る。形を作る手間が 2 度かかるが、座標の誤りを書式の誤りとして 4.9.3 の表の「書式が違う」で止めるため。形を直さない）。
+4. `RegionFeature`・`MunicipalityFeature` を、ファイルの順に並べる（並びは確かめない。CMP1〔行政区域前処理〕が (`assoc`, `area_code`) と `code` の順に書く。[HLD 4.17.2](30_HLD.md#4172-処理の流れ)）。0 件でもよい（空の `list`）。
+5. `Boundaries(regions, municipalities, warnings)` を返す。
+
+##### build_spatial_indexes
+
+`build_spatial_indexes(peak_zones: dict[tuple[int, int], PeakZones], boundaries: Boundaries) -> SpatialIndexes`
+
+[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 4「地域と市区町村の GeoJSON を読み、索引を作る」の索引の部分である（[DEC94](30_HLD.md#494-設計判断)「ゾーンと地域は空間索引で引く」。[ADR-SRS-008](decisions/ADR-SRS-008-dominant-peak-identification.md)の空間インデックス）。
+
+1. `_to_shape(geometry: dict) -> shapely.Geometry`（内部）: `{'type': geometry['type'], 'coordinates': _plain(geometry['coordinates'])}` を `shapely.geometry.shape` に渡して返す。`_plain` は、`list` の要素を再帰して、`cmp5_common.JsonNumber` を `float(n.text)` に替え、`int`・`float` はそのままにする（ゾーンの座標は `JsonNumber`、地域と市区町村の座標は `json.load` の数）。形を直さない（`make_valid` などを呼ばない。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の 2 の「形を変える修正をしない」）。ゾーンの形を作れないときは、例外のまま伝える（ゾーンは `merge_zones` が書いたもので、読み込みの時点で型は確かめてある。[HLD 4.9.3](30_HLD.md#493-異常系)の表に当たる行が無い、プログラムの欠陥）。
+2. AZ と delete判定ゾーンの索引: `peak_zones` の鍵の順に、`_to_shape(zones.activation.geometry)`・`_to_shape(zones.delete.geometry)` を並べ、`shapely.STRtree` にする。`keys` は `peak_zones` の鍵の順の Z15 の画素。
+3. 地域と市区町村の索引: `boundaries.regions`・`boundaries.municipalities` が `None` でなければ、`_to_shape(feature.geometry)` の並びを `shapely.STRtree` にする。`keys` は並びの位置（0 から）。`None` なら、その索引も `None`。
+4. `SpatialIndexes(activation, delete, regions, municipalities)` を返す。
+5. メモリ（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「メモリ」。実測は [HLD 5.2.2](30_HLD.md#522-処理の流れ)の「実測の計画」の 4「CMP5 の突合」）: 後の回の書き出しのために `ZoneFeature.geometry`（`JsonNumber` の `dict`）も持ち続けるので、ゾーンのジオメトリは、`dict` と `shapely` の形の 2 つの形で持つ。
+
+#### 7.5.4 メッセージ文面
+
+書き方は [2.2](#22-ログとメッセージの文面)。この回に書くのは、読み込みの関数が出すメッセージだけである。引数と設定の誤り（`_parse_args`・`load_config`）、ログの場面（G1〜G7・L1〜L3）、突き合わせから後の関数のメッセージ、結果の要約は、後の回で足す。7.1 の部品の誤り（MP1〜MP3・ZF1〜ZF4）の 1 行目は [7.1.4](#714-メッセージ文面)の `what` のまま、2 行目は `{redo}`（`_input_error_advice`）。
+
+- `{path}`・`{reason}` は [7.5.3](#753-関数の細部)の前置きのとおり。`{dir}` は、`find_updatelist` では探した `$DATA_DIR/ref/` の絶対パス、`read_updatelist` では `{path}` の置き場のディレクトリの絶対パス。`{detail}`・`{list}`・`{target}` は、メッセージごとに下に書いた文。
+- `{config_opt}` は後の回の `main` が決める値（[7.2.3](#723-関数の細部)の `main` の 5 と同じ。既定の設定ファイルなら空の文字列、そうでなければ、空白 1 つに続けて `--config <パス>`）。
+- 案内の文（2 行目に入れる）:
+  - `{redo}` は `scripts/run_pipeline.sh{config_opt} を --phase なしで起動して、フェーズ2 から通しでやり直す`（[7.3.4](#734-メッセージ文面)・[7.2.4](#724-メッセージ文面)と同じ文。[HLD 4.9.3](30_HLD.md#493-異常系)の「やり直しの案内」の 1 つ目の、`merged_peak.csv` と `merged_peak.geojson` の場面）。
+  - `{rerun4}` は `scripts/run_pipeline.sh --phase 4{config_opt} を起動し直す`（`--phase 4` は引数なので、`{config_opt}` はその後ろに入れる。[7.4.4](#744-メッセージ文面)の `{redo_stage}` と同じ形）。
+  - `{cmp1_rebuild}` は `venv/bin/python3 scripts/preprocess_boundaries.py --rebuild{config_opt} で地域と市区町村の GeoJSON を作り直し、venv/bin/python3 scripts/fetch_tiles.py{config_opt} を起動して取得完了の記録を作り直してから、{rerun4}`（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)の「フェーズ1」の CMP1 の作り直しの手順。CMP1 が取得完了の記録も消すので、CMP2 の起動を添える）。
+  - `{summits_advice}` は `SOTA サミットリスト CSV を提供元から落とし直して {path} に置いてから、{rerun4}`。
+  - `{update_advice}` は `登録変更リストのページを元のまま保存し直して {dir} に置く（ブラウザの保存の種類によっては、HTML に作り直されて XHTML として読めなくなる）。直してから、{rerun4}`。
+
+| 記号 | 場面 | 1 行目（`ERROR:` か `WARNING:` と空白 1 つの後） | 2 行目（`対処:` と空白 1 つの後） | 終了コード |
+|---|---|---|---|---|
+| MZ1 | `merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違う | `merged_peak.geojson のゾーンが merged_peak.csv と食い違う: {path}: {list}`（`{list}` は [7.5.3](#753-関数の細部)の `match_zones_to_peaks` の 3 の順に、表に無いピークのゾーンは `{peak_lat},{peak_lon} の {kind}（ピークが merged_peak.csv に無い）`、欠けたピークは `{peak_lat},{peak_lon} の {kinds}（ゾーンが merged_peak.geojson に無い）` を `、` でつなぐ。`{kind}` は `activation_zone`・`delete_zone`、`{kinds}` は欠けた種類をこの順に `・` でつなぐ。緯度経度は入力の字句のまま） | `{redo}` | 1 |
+| SS1 | SOTA サミットリスト CSV が無い | `SOTA サミットリスト CSV が無い: {path}` | `{summits_advice}` | 1 |
+| SS2 | SOTA サミットリスト CSV を読めない | `SOTA サミットリスト CSV を読めない: {path}: {reason}` | `{path} の読み取りの権限と、UTF-8 で保存されていることを確かめてから、{rerun4}` | 1 |
+| SS3 | SOTA サミットリスト CSV の書式が違う（基準日の行、見出し、CSV として読めない） | `SOTA サミットリスト CSV の書式が違う: {path}: {detail}`（`{detail}` は [7.5.3](#753-関数の細部)の `read_summits_list` の 1〜3 の文） | `{summits_advice}` | 1 |
+| SS4 | `JA` で始まる行の値が読めない | `SOTA サミットリスト CSV の値が読めない: {path}: {detail}`（`{detail}` は 7.5.3 の `read_summits_list` の 4 の文） | `{summits_advice}` | 1 |
+| SS5 | 同じ `SummitCode` の行が 2 つ以上 | `SOTA サミットリスト CSV に同じ SummitCode の行が 2 つ以上ある: {path}: {list}`（`{list}` は 7.5.3 の `read_summits_list` の 5 の文） | `{summits_advice}` | 1 |
+| UX1 | 登録変更リストが無い | `登録変更リストが無い: {dir}（ファイル名が sota_updatelist_<4 桁の年>.xhtml の形のもの）` | `{update_advice}` | 1 |
+| UX2 | 登録変更リストを読めない | `登録変更リストを読めない: {path}: {reason}` | `{path} の読み取りの権限を確かめてから、{rerun4}` | 1 |
+| UX3 | 登録変更リストが XHTML として読めない（整形式でない、内部サブセットか実体の宣言がある） | `登録変更リストが XHTML として読めない: {path}: {detail}`（`{detail}` は 7.5.3 の `read_updatelist` の 1 の文） | `{update_advice}` | 1 |
+| UX4 | 登録変更リストの使う列を見出しの文字で特定できない | `登録変更リストの使う列を見出しの文字で特定できない: {path}: {detail}`（`{detail}` は 7.5.3 の `read_updatelist` の 2・5 の文） | `{update_advice}` | 1 |
+| BD1 | 地域か市区町村の GeoJSON を読めない | `{target}の GeoJSON を読めない: {path}: {reason}`（`{target}` は `地域` か `市区町村`。`NaN` などは `{reason}` が `NaN は JSON の数でない`） | `{cmp1_rebuild}` | 1 |
+| BD2 | 地域か市区町村の GeoJSON の書式が違う | `{target}の GeoJSON の書式が違う: {path}: {detail}`（`{detail}` は 7.5.3 の `read_boundaries` の 3 の文） | `{cmp1_rebuild}` | 1 |
+| BN1 | 地域の GeoJSON が無い（`WARNING:`） | `地域の GeoJSON が無い: {path}。仮サミットコードのエリアがすべて ZZ になり、region_name が空文字になる（全国の実行では仮サミットコードの連番上限で止まりうる）` | `{cmp1_rebuild}` | 0 |
+| BN2 | 市区町村の GeoJSON が無い（`WARNING:`） | `市区町村の GeoJSON が無い: {path}。municipality が空文字になる` | `{cmp1_rebuild}` | 0 |
+| UN1 | 登録変更リストに知らせる行がある（`WARNING:`。知らせる行 1 件ごとに 1 組） | `登録変更リストの知らせる行: {kind}: {reason}: {where}、アクション {action}、山岳 ID か県名 {target}、申請者 {applicant}、申請日 {applied_on}、問題の値 {value}（全体で {total} 件）` | `止まらずに続ける。ページの元の行を確かめて、直すか放置するかを決める` | 0 |
+
+- BN1・BN2 の 2 行目は、`read_boundaries` が返す `warnings` の組の記号を、後の回の `main` が見て足す（`warnings` が持つのは 1 行目だけ）。
+- UN1 の項目は `Notice` の項目で、`{kind}` は `Notice.kind` の英語の名前のまま、`{where}` は `{year} 年の表の {row} 行目`（`row` が `None` の `unreadable_update` は `{year} 年の表`）、`{total}` は `UpdateList.notices` の件数。空の値は `（空）` と書く。UN1 を出すのは後の回の `main` で、この回は文面だけを決める（出す順は `UpdateList.notices` の順。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」）。
+- 知らせる行の `reason` の文（`Notice.reason`。UN1 の `{reason}` にもなる）:
+
+| 定数 | 場面 | 文 |
+|---|---|---|
+| `_REASON_ACTION` | アクションの欄の語が違う | `アクションの欄の語が 追加・変更・削除 のどれでもない` |
+| `_REASON_POSITION` | 追加の位置が読めない | `追加の位置が 緯度,経度 の形で読めない` |
+| `_REASON_ID` | 変更・削除の山岳 ID が読めない | `山岳 ID が アソシエーション/地域コード-番号 の形で読めない` |
+| `_REASON_ELEV` | 変更後の標高が読めない | `変更後の標高が数として読めない` |
+| `_REASON_DATE` | 申請日が読めない | `申請日が読めない` |
+| `_REASON_UPDATE` | Update の日付が読めない | `Update の日付が読めない` |
+
+#### 7.5.5 UT 候補
+
+すべて自動（合否をテストのコードが判定できる）。この回の関数は `main` を通らないので、子のプロセスは使わず、同じプロセスで関数を直接呼ぶ。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.5.4](#754-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。`{path}` は渡した絶対パス。共通の準備は次の 5 つ。
+
+- **同じプロセス**: [7.2.5](#725-ut-候補)の同じ名前の準備と同じ（`merge_peaks` を `match_summits` に読み替える）。`match_summits._config_opt` は空の文字列にしておく（このとき `{rerun4}` は `scripts/run_pipeline.sh --phase 4 を起動し直す`、`{redo}` は `scripts/run_pipeline.sh を --phase なしで起動して、フェーズ2 から通しでやり直す`）。ファイルはケースごとに一時のディレクトリ `<tmp>` に書く。
+- **SOTA サミットリスト CSV**: 1 行目 `SOTA Summits List (Date=18/10/2026)`、2 行目（見出しの 17 列）`SummitCode,AssociationName,RegionName,SummitName,AltM,AltFt,GridRef1,GridRef2,Longitude,Latitude,Points,BonusPoints,ValidFrom,ValidTo,ActivationCount,ActivationDate,ActivationCall`。データの行は `row(code, name, alt, lon, lat, valid_to)` で書く: `{code},A,R,{name},{alt},0,0,0,{lon},{lat},1,0,01/01/2020,{valid_to},0,,`（17 欄。使う列は 0・3・4・8・9・13 欄目）。改行は LF。記録の番号は、1 行目が 1、見出しが 2、最初のデータの行が 3。
+- **登録変更リストの XHTML**: UTF-8 の次の組み立てを使う（実物の形を縮めたもの）。`xhtml(*rows)` は `<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><body><table><tbody>` + 行 + `</tbody></table></body></html>`。行は次の関数で作る（`<tr>` の文字列）。
+  - `title(y)`: `<td></td><td>{y}年</td><td>山岳データ登録変更リスト</td>`。`upd(d)`: `<td></td><td>{d}</td><td>Update</td>`。`marker()`: `<td></td><td></td><td>↑↑↑↑↑ ここまでは2025年7月1日版に反映済 ↑↑↑↑↑</td>`。
+  - `head()`: 2 行。1 行目は `<td rowspan="2">アクション</td><td rowspan="2">既存山岳ID もしくは 県名</td><td colspan="3">変更前</td><td colspan="3">変更後</td><td rowspan="2">備考</td><td rowspan="2">申請者・申請日</td><td colspan="6">新規追加詳細</td>`、2 行目は `山岳名(日本語)`・`山岳名(英文読み)`・`標高m` を 2 組と、`位置`・`所在地`・`コル位置`・`比較SOTA-ID`・`コル標高`・`プロミネンス` を、それぞれ `<td>` に入れた 12 個。格子にすると、アクション・山岳 ID か県名・変更後の標高・備考・申請者・申請日・位置が 0・1・7・8・9・10 列目になる。
+  - `app(action, target, elev, who, pos, note='')`: 16 個の `<td>` を、0 列目 `action`、1 列目 `target`、7 列目 `elev`、8 列目 `note`、9 列目 `who`、10 列目 `pos` にし、ほかを空にしたもの。
+- **ピークとゾーン**: `cmp5_common.MergedPeakRow(<path>, <n>, {'peak_lat': …, 'peak_lon': …})` を直接作る（鍵は使う 2 つだけでよい）。ゾーンは `cmp5_common.ZoneFeature(index, kind, pixel, area_complete, geometry, properties)` を直接作る。`properties` は `{'peak_lat': JsonNumber(…), 'peak_lon': JsonNumber(…)}` を持つ `dict`、`geometry` は `{'type': 'Polygon', 'coordinates': [[[x, 0], [x + 1, 0], [x + 1, 1], [x, 1], [x, 0]]]}`（x を左端とする一辺 1 の四角。数は `JsonNumber`）。ピークは P1（画素 (1, 1)、`35.10000000`・`138.10000000`）と P2（画素 (2, 2)、`35.20000000`・`138.20000000`）、画素 (9, 9) の `36.00000000`・`139.00000000` は表に無いピーク。
+- **地域と市区町村の GeoJSON**: `{"type":"FeatureCollection","features":[…]}`。地域の Feature は `{"type":"Feature","properties":{"assoc":"JA","area_code":"HS","region_name":"広島県"},"geometry":{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}}`、市区町村の Feature は `properties` が `{"municipality":"廿日市市","code":"34210"}` で `geometry` が `MultiPolygon`（`"coordinates":[[[[0,0],[1,0],[1,1],[0,0]]]]`）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-match_summits-01` | ゾーンをピークに突き合わせる | 同じプロセス。ピークの表は P1・P2（この順）。ゾーンは、P1 の AZ（`index` 1）・P1 の delete判定ゾーン（2）・P2 の AZ（3）・P2 の delete判定ゾーン（4） | `match_zones_to_peaks(<ピークの表>, <ゾーン>, <path>)` | 辞書で、鍵が (1, 1)・(2, 2) の順、値が `PeakZones(<index 1>, <index 2>)`・`PeakZones(<index 3>, <index 4>)`。ゾーンの並びを 4・3・2・1 にしても同じ（鍵の順は `peaks` の順） |
+| `UT-match_summits-02` | 食い違いをすべて挙げて 1 回で止まる | 同じプロセス。(a) P1・P2 のピークの表で、ゾーンは P1 の両方と、画素 (9, 9) の AZ、P2 の AZ だけ。(b) ゾーンは P1 の両方と P2 の両方に加えて、(9, 9) の AZ と delete判定ゾーン（この順）。(c) ゾーンは P1 の両方だけ | (a)(b)(c) を `match_zones_to_peaks` に | どれも終了コード 1 で MZ1。1 行目は `merged_peak.geojson のゾーンが merged_peak.csv と食い違う: <path>:` の後に空白 1 つを挟んで、(a) `36.00000000,139.00000000 の activation_zone（ピークが merged_peak.csv に無い）、35.20000000,138.20000000 の delete_zone（ゾーンが merged_peak.geojson に無い）`、(b) `36.00000000,139.00000000 の activation_zone（ピークが merged_peak.csv に無い）、36.00000000,139.00000000 の delete_zone（ピークが merged_peak.csv に無い）`、(c) `35.20000000,138.20000000 の activation_zone・delete_zone（ゾーンが merged_peak.geojson に無い）`。2 行目は `{redo}` |
+| `UT-match_summits-03` | 空の入力 | 同じプロセス | (a) 空のピークの表と空のゾーンの並び、(b) P1 だけのピークの表と空のゾーンの並び、(c) 空のピークの表と P1 の両方のゾーン | (a) 空の辞書（止まらない）。(b) MZ1 で、`35.10000000,138.10000000 の activation_zone・delete_zone（ゾーンが merged_peak.geojson に無い）`。(c) MZ1 で、`35.10000000,138.10000000 の activation_zone（ピークが merged_peak.csv に無い）、35.10000000,138.10000000 の delete_zone（ピークが merged_peak.csv に無い）` |
+| `UT-match_summits-04` | SOTA サミットリスト CSV の読み方 | 同じプロセス。(a) 1・2 行目の後に次のデータの行と空行を書く: 3 行目 `row('JA/HS-001', '山A', '100', '132.5', '34.5', '31/12/2099')`、4 行目 `JA/HS-002`（山B、200、132.6、34.6）の `ValidTo` が `18/10/2026`、5 行目 `JA/HS-003`（山C、300、132.7、34.7）が `17/10/2026`、6 行目 `JA5/KC-001`（山D、400、132.8、34.8）が `31/12/2099`、7 行目 `JA/KC-002`（山E、500、132.9、34.9）が `01/01/2000`、8 行目 `row('W7W/LC-001', 'Peak', 'x', 'xx', 'yy', 'bad')`、9 行目は空行。(b) (a) の先頭に BOM（U+FEFF）を付けたもの | `read_summits_list` に (a)(b) | どちらも `SummitsList` で、`ref_date` が `datetime.date(2026, 10, 18)`、`summits` が `Summit('JA/HS-001', '山A', '100', '34.5', '132.5', 3)`・`Summit('JA/HS-002', '山B', '200', '34.6', '132.6', 4)`・`Summit('JA5/KC-001', '山D', '400', '34.8', '132.8', 6)`（`ValidTo` が基準日と同じ日は現役。`W7W/LC-001` の誤りは見ない）、`retired_count` が 2、`retired_codes` が `frozenset({'JA/HS-003', 'JA/KC-002'})`、`region_assocs` が `{'HS': frozenset({'JA'}), 'KC': frozenset({'JA', 'JA5'})}` |
+| `UT-match_summits-05` | 読めないときと書式の誤り | 同じプロセス。(a) 無いパス、(b) ディレクトリ、(c) 中身が `b'\xff\xfe\x00'`、(d) 0 バイトのファイル、(e) 1 行目が `Hello`、(f) 1 行目が `SOTA Summits List (Date=31/02/2026)`、(g) 1 行目だけ、(h) 2 行目の見出しから `ValidTo` を除いたもの、(i) 3 行目が `JA/HS-001,"abc"x`（引用符の後に文字） | それぞれ `read_summits_list` に | どれも終了コード 1。(a) SS1、(b) SS2（`{reason}` は `Is a directory`）、(c) SS2（`UTF-8 として読めない`）、(d) SS3（`基準日の行が無い`）、(e) SS3（`1 行目が SOTA Summits List (Date=DD/MM/YYYY) の形でない: Hello`）、(f) SS3（`基準日が暦に無い: SOTA Summits List (Date=31/02/2026)`）、(g) SS3（`見出しの行が無い`）、(h) SS3（`見出しに列 ValidTo が無い`）、(i) SS3（`3 行目を CSV として読めない:` で始まる）。SS1 以外の 2 行目は `{summits_advice}`、SS2 の 2 行目は `<path> の読み取りの権限と、UTF-8 で保存されていることを確かめてから、{rerun4}` |
+| `UT-match_summits-06` | `JA` の行の値の誤り | 同じプロセス。1・2 行目の後に、3 行目として次の 1 行（それ以外は誤りのない行）を置く。(a) `Latitude` が `34.5` の前に空白を 1 つ付けたもの、(b) `Longitude` が `abc`、(c) `AltM` が `1.5`、(d) `ValidTo` が `1/1/2020`、(e) `ValidTo` が `31/02/2026`、(f) `JA/HS-001,A,R,山A,100,0,0,0,132.5,34.5`（10 欄）、(g) 14 欄までで使わない列だけが欠ける行（`JA/HS-001,A,R,山A,100,0,0,0,132.5,34.5,1,0,01/01/2020,31/12/2099`）、(h) 3 行目の `Latitude` が `abc` で、4 行目の `AltM` も `1.5` | `read_summits_list` に | (a)〜(f)(h) は終了コード 1 で SS4。`{detail}` は (a) `3 行目の Latitude が 座標として読めない:` の後に空白を 2 つ挟んで `34.5`（値の前の空白がそのまま残る）、(b) `3 行目の Longitude が 座標として読めない: abc`、(c) `3 行目の AltM が 整数として読めない: 1.5`、(d) `3 行目の ValidTo が DD/MM/YYYY の日付として読めない: 1/1/2020`、(e) 同じ文で `31/02/2026`、(f) `3 行目の欄が足りない: 使う列は 14 欄目まで、この行は 10 欄`、(h) `3 行目の Latitude が 座標として読めない: abc`（最初の行だけ）。(g) は止まらず、`summits` が 1 件 |
+| `UT-match_summits-07` | 重複 | 同じプロセス。(a) 3〜7 行目が `JA/HS-001`・`JA/HS-002`・`JA/HS-001`・`JA/HS-002`・`JA/HS-002`（どれも誤りのない行）、(b) 3 行目が `JA/HS-001`（現役）、4 行目が `JA/HS-001` で `ValidTo` が `01/01/2000`、(c) (a) の 8 行目に `AltM` が `1.5` の行を足す、(d) `W7W/LC-001` が 2 行 | `read_summits_list` に | (a) SS5 で `{list}` が `JA/HS-001（3、5 行目）、JA/HS-002（4、6、7 行目）`。(b) SS5 で `JA/HS-001（3、4 行目）`（廃止済みの行も数える）。(c) SS4（`8 行目の AltM が 整数として読めない: 1.5`。重複より先に値の誤りで止まる）。(d) 止まらない（`JA` で始まらない行は確かめない） |
+| `UT-match_summits-08` | 登録変更リストのファイルを選ぶ | 同じプロセス。`<tmp>/ref/` に `sota_updatelist_2024.xhtml`・`sota_updatelist_2025.xhtml`（どれも中身は空のファイル）、年が全角の数字（U+FF12・U+FF10・U+FF12・U+FF16）の `sota_updatelist_<年>.xhtml`、`sota_updatelist_2026.xhtml.bak`、ディレクトリの `sota_updatelist_2027.xhtml`、`sota_updatelist_202.xhtml`、`Sota_updatelist_2028.xhtml` を置く | (a) `find_updatelist('<tmp>/ref')`、(b) 2025 と 2024 のファイルを消して (a)、(c) `find_updatelist('<tmp>/none')` | (a) `<tmp>/ref/sota_updatelist_2025.xhtml`（年が最大の、名前の全体が合うファイル）。(b)(c) 終了コード 1 で UX1（1 行目は `登録変更リストが無い: <ref の絶対パス>（ファイル名が sota_updatelist_<4 桁の年>.xhtml の形のもの）`、2 行目は `{update_advice}`） |
+| `UT-match_summits-09` | 登録変更リストの読み方（標準の形と重ね合わせ） | 同じプロセス。`sota_updatelist_2026.xhtml` に、`title(2026)`・`upd('2026-10-14')`・`head()`・`app('追加', '東京都', '', '7M3XYZ 2026/10/19', '35.1,138.2')`・`app('変更', 'JA/HS-185', '468m', 'JK1VUZ 2026/02/14', '')`・`app('削除', 'JA/YG-263', '', 'JA1ABC 2026/3/5', '')`・`marker()`、続けて `title(2025)`・`upd('2026-02-04')`・`head()`・`app('追加', '東京都', '', '7M3XYZ 2026/10/19', '35.10,138.20')`・`app('変更', 'JA/HS-185', '468', 'JK1VUZ 2026/02/14', '')` | `read_updatelist('<tmp>/sota_updatelist_2026.xhtml')` | `UpdateList` で、`file_name` が `sota_updatelist_2026.xhtml`、`updates` が `[YearUpdate(2026, '2026-10-14'), YearUpdate(2025, '2026-02-04')]`、`applications` が 3 件: `Application('add', None, '35.1', '138.2', None, '7M3XYZ', '2026-10-19', (2026, 2025), (2026, 1), '追加', '東京都')`・`Application('change', 'JA/HS-185', None, None, '468', 'JK1VUZ', '2026-02-14', (2026, 2025), (2026, 2), '変更', 'JA/HS-185')`・`Application('delete', 'JA/YG-263', None, None, None, 'JA1ABC', '2026-03-05', (2026,), (2026, 3), '削除', 'JA/YG-263')`、`notices` が空、`row_count` が 5（目印の行は数えない） |
+| `UT-match_summits-10` | 揃え方 | 同じプロセス。`title(2026)`・`upd('2026-10-14')`・`head()` の後に、次の行を順に置く: (1) `app('追加', '県', '', <who>, <pos>)`（`<who>` は `7M3XYZ 2026/10/19`、`<pos>` は `35.1,138.2` の、ASCII の `!`〜`~` を `chr(ord(c) + 0xFEE0)` で全角にし、空白を U+3000 にしたもの）、(2) `app('追加', '県', '', 'A 2026/1/2', '35.1、138.2')`、(3) `app('追加', '県', '', 'B 2026/1/3', '35.1 138.2')`、(4) `app('変更', 'JA/HS-185', <elev>, 'C 2026/1/4', '')`（`<elev>` は `123m` を (1) と同じ方法で全角にしたもの）、(5) `app('変更', 'JA/HS-186', '123 m', 'D 2026/1/5', '')`、(6) `app('追加', '県', '', 'E 2026/10/190', '35.1,138.2')`、(7) `app('追加', '県', '', 'JG2WGK 2025/01/08JQ3AJX', '35.2,138.3')`、(8) `app('追加', '県', '', '2026/1/6', '35.3,138.4')` | `read_updatelist` に | `applications` が 7 件（(6) を除く。順は (1)(2)(3)(4)(5)(7)(8)）で、(1) は `lat` が `35.1`・`lon` が `138.2`・`applicant` が `7M3XYZ`・`applied_on` が `2026-10-19`、(2)(3) は同じ位置で `applicant` が `A`・`B`、`applied_on` が `2026-01-02`・`2026-01-03`、(4)(5) は `new_elev` が `123`、`applicant` が `C`・`D`、(7) は `applicant` が `JG2WGK JQ3AJX`・`applied_on` が `2025-01-08`、(8) は `applicant` が空文字・`applied_on` が `2026-01-06`。`notices` が `[Notice('unreadable_row', '申請日が読めない', 2026, 6, '追加', '県', 'E 2026/10/190', '', 'E 2026/10/190')]`（日付の後ろに数字が続くものは日付としない）。`row_count` が 8 |
+| `UT-match_summits-11` | 読めない行と、知らせない行 | 同じプロセス。`title(2026)`・`upd('2026-10-14')`・`head()` の後に、次の 11 行（通し番号 1〜11）を置く: (1) `app('追加', '県', '', 'A 2026/1/1', 'abc')`、(2) `app('追加', '県', '', 'A 2026/1/2', '35.1,138.2,5')`、(3) `app('変更', 'JA/HS', '100', 'A 2026/1/3', '')`、(4) `app('変更', 'JA/HS-185', '1.2.3', 'A 2026/1/4', '')`、(5) `app('削除', 'JA/YG-263', '', '', '')`、(6) `app('移動', 'JA/YG-263', '', 'A 2026/1/6', '')`、(7) `app('変更', '', '', '', '')`、(8) `app('変更', 'JA/HS-185', '', '2026/13/45', '')`、(9) `app('', '', '', 'memo', '')`、(10) `app('追加', '県', '', 'A 2026/1/10', '35.5,138.5')`、(11) `app('削除', 'JA/YG-263', '', 'A 2026/1/11', '')` | `read_updatelist` に | `notices` が通し番号 1〜6 の 6 件で、(1) `Notice('unreadable_row', '追加の位置が 緯度,経度 の形で読めない', 2026, 1, '追加', '県', 'A', '2026-01-01', 'abc')`、(2) 同じ理由で `value` が `35.1,138.2,5`・`row` が 2・`applied_on` が `2026-01-02`、(3) `山岳 ID が アソシエーション/地域コード-番号 の形で読めない`・`value` が `JA/HS`・`target` が `JA/HS`、(4) `変更後の標高が数として読めない`・`value` が `1.2.3`、(5) `Notice('unreadable_row', '申請日が読めない', 2026, 5, '削除', 'JA/YG-263', '', '', '')`、(6) `アクションの欄の語が 追加・変更・削除 のどれでもない`・`action` が `移動`・`value` が `移動`・`applied_on` が `2026-01-06`。(7)(8)(9) は知らせない（(7)(8) は変更後の標高が空、(9) はアクションの欄が空）。`applications` が (10)(11) の 2 件。`row_count` が 9（(6)(9) は数えない） |
+| `UT-match_summits-12` | 題の行・目印の行・格子 | 同じプロセス。(a) 2 つのセルの `title(2026)`。(b) `<tr><td>2026年 山岳データ登録変更リスト</td></tr>`（1 つのセルの題の行）。どちらも `upd('2026-10-14')`・`head()`・`app('追加', '県', '', 'A 2026/1/1', '35.1,138.2')`。(c) (a) の後に `app('変更', 'JA/HS-185', '468', 'A 2026/1/2', '', '2022年分再申請')`。(d) (a) の `app` の後に `marker()` と `app('追加', '県', '', 'B 2026/1/3', '35.2,138.3')`。(e) `app('追加', '県', '', 'C 2026/1/4', '35.3,138.4')` の末尾に、空の `<td>` を 5 つと `<td>追加</td>` を足した行。(f) `title(2026)`・`upd('2026-10-14')`・`head()` の後に、0 列目が `<td rowspan="4">追加</td>` の行 1 つ（ほかは `app('追加', '県', '', 'D 2026/1/5', '35.4,138.5')` の 1 列目以降）を置き、続けて `title(2025)`・`upd('2025-01-31')`・`head()`・`app('追加', '県', '', 'E 2025/1/6', '35.5,138.6')`。(g) `app('追加', '県', '', 'F<br/>2026/1/7', '35.6,138.7')` | `read_updatelist` に (a)〜(g) | (a)(b) `applications` が `[Application('add', None, '35.1', '138.2', None, 'A', '2026-01-01', (2026,), (2026, 1), '追加', '県')]`、`updates` が `[YearUpdate(2026, '2026-10-14')]`、`notices` が空、`row_count` が 1。(c) 2 件目が `Application('change', 'JA/HS-185', None, None, '468', 'A', '2026-01-02', (2026,), (2026, 2), '変更', 'JA/HS-185')`（備考の `2022年分再申請` を題の行と取り違えない）。(d) 2 件目の `first_seen` が `(2026, 3)`、`row_count` が 2（目印の行は知らせず、通し番号は数える）。(e) 申請が 1 件でアクションが `add`（後ろの `追加` を読まない）。(f) 2025 年の表の申請が `Application('add', None, '35.5', '138.6', None, 'E', '2025-01-06', (2025,), (2025, 1), '追加', '県')`（2026 年の表の `rowspan` が 2025 年の表へ延びない）で、`updates` が 2 件。(g) `applicant` が `F`・`applied_on` が `2026-01-07` |
+| `UT-match_summits-13` | 年の表の構造の誤りと Update | 同じプロセス。(a) `title(2026)`・`upd(…)`・`head()` だけ。(b) 表の無い XHTML（`<html xmlns="http://www.w3.org/1999/xhtml"><body><p>x</p></body></html>`）。(c) `head()` と `app(…)` だけ（題の行が無い）。(d) `title(2026)`・`upd(…)` だけ（見出しが無い）。(e) (a) の `head()` の `申請者・申請日` を `申請者` にしたもの。(f) `title(2026)`・`head()`・`app('追加', '県', '', 'A 2026/1/1', '35.1,138.2')`（Update の行が無い）。(g) (f) の `title(2026)` の後に `upd('2026-13-45')` を足したもの | `read_updatelist` に | (a) 止まらず、`applications` が空、`updates` が `[YearUpdate(2026, '2026-10-14')]`、`notices` が空、`row_count` が 0。(b) UX4（`{detail}` は `表が無い`）。(c) UX4（`年の表の題の行が無い`）。(d) UX4（`2026 年の表に見出しの行が無い`）。(e) UX4（`2026 年の表の見出しで 申請者・申請日 の列を特定できない`）。(f)(g) 止まらず、`updates` が `[YearUpdate(2026, '')]`、`notices` が `[Notice('unreadable_update', 'Update の日付が読めない', 2026, None, '', '', '', '', '')]`、`applications` が 1 件。UX4 の 2 行目は `{update_advice}`（`{dir}` は `<tmp>`） |
+| `UT-match_summits-14` | 危うい入力 | 同じプロセス。外側を `<?xml version="1.0" encoding="{enc}"?>{doctype}<html xmlns="http://www.w3.org/1999/xhtml"><body><table><tbody></tbody></table></body></html>` とする。(a) `{enc}` が `UTF-8`、`{doctype}` が `<!DOCTYPE html [<!ENTITY e "X">]>`。(b)(c)(d) (a) の `UTF-8` を `UTF-16` にし、それぞれ `.encode('utf-16')`（BOM あり）、`.encode('utf-16-le')`、`.encode('utf-16-be')` のバイト列。(e) `{doctype}` が `<!DOCTYPE html [<!ELEMENT html ANY>]>`。(f) `{doctype}` が `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" "http://www.w3.org/Math/DTD/mathml2/xhtml-math11-f.dtd">`（外部の DTD の宣言だけ）で、`<tbody>` の中に `title(2026)`・`upd(…)`・`head()`。(g) (f) の `<body>` の中に `<p>a&nbsp;b</p>` を足したもの。(h) `<html><body></html>`。(i) 0 バイトのファイル | `read_updatelist` に (a)〜(i) | (a)〜(e) 終了コード 1 で UX3、`{detail}` は `内部サブセットがある`（符号化によらず当たる）。(f) 止まらず（外部の DTD は取りに行かない）、`updates` が 1 件。(g) UX3（`{detail}` は `undefined entity` で始まる）。(h) UX3（`mismatched tag` で始まる）。(i) UX3（`no element found` で始まる）。UX3 の 2 行目は `{update_advice}` |
+| `UT-match_summits-15` | 読めない | 同じプロセス。(a) 無いパス、(b) ディレクトリ | `read_updatelist` に | どちらも終了コード 1 で UX2。`{reason}` は (a) `No such file or directory`、(b) `Is a directory`。2 行目は `<path> の読み取りの権限を確かめてから、{rerun4}` |
+| `UT-match_summits-16` | 地域と市区町村の GeoJSON の読み方 | 同じプロセス。(a) 地域に 2 つの Feature（`JA`・`HS`・`広島県`、`JA`・`YN`・`山梨県`。ジオメトリは `Polygon`）、市区町村に 2 つの Feature（`廿日市市`・`34210`、`南巨摩郡富士川町`・`19364`。ジオメトリは `MultiPolygon` と `Polygon`）。(b) どちらのファイルも無い。(c) 地域はあり、市区町村が無い。(d) どちらも `features` が空 | `read_boundaries(<地域>, <市区町村>)` に | (a) `regions` が `RegionFeature` の 2 件（ファイルの順）、`municipalities` が `MunicipalityFeature` の 2 件、`geometry` は読んだ `dict` のまま、`warnings` が空。(b) `regions`・`municipalities` が `None`、`warnings` が `[('BN1', '地域の GeoJSON が無い: <地域のパス>。仮サミットコードのエリアがすべて ZZ になり、region_name が空文字になる（全国の実行では仮サミットコードの連番上限で止まりうる）'), ('BN2', '市区町村の GeoJSON が無い: <市区町村のパス>。municipality が空文字になる')]`。(c) `regions` が 2 件、`municipalities` が `None`、`warnings` が BN2 の 1 組だけ。(d) どちらも空の `list`（`None` でない）、`warnings` が空 |
+| `UT-match_summits-17` | 地域と市区町村の GeoJSON の誤り | 同じプロセス。地域のファイルを次のものにして、市区町村のファイルは正しいものを置く。(k) 同じ誤り (a)〜(j) を市区町村のファイルに入れ（地域のファイルは正しいもの。`{target}` は `市区町村`、(g)(h) は `code` を使う）、(a)(e) だけで確かめる。BD1: (a) 中身が `x`、(b) 中身に `NaN`（`{"type":"FeatureCollection","features":[{"a":NaN}]}`）、(c) ディレクトリ、(d) `b'\xff\xfe\x00'`。BD2: (e) `{"type":"Feature"}`、(f) `{"type":"FeatureCollection"}`、(g) 2 つ目の Feature の `region_name` が無い、(h) `region_name` が数 `5`、(i) `geometry` が `Point`、(j) `geometry` が `Polygon` で `coordinates` が `"x"` | `read_boundaries` に | どれも終了コード 1。BD1 は 1 行目が `地域の GeoJSON を読めない: <path>:` の後に空白 1 つを挟んで、(a) `Expecting value: line 1 column 1 (char 0)`、(b) `NaN は JSON の数でない`、(c) `Is a directory`、(d) `UTF-8 として読めない`。BD2 は 1 行目が `地域の GeoJSON の書式が違う: <path>:` の後に空白 1 つを挟んで、(e)(f) `FeatureCollection でない`、(g) `2 番目の Feature の properties に region_name が無いか文字列でない`、(h) `1 番目の Feature の properties に region_name が無いか文字列でない`（(h) は 1 つ目の Feature で）、(i) `1 番目の Feature の geometry が Polygon でも MultiPolygon でもない`、(j) `1 番目の Feature の geometry を作れない:` で始まる。2 行目は `{cmp1_rebuild}`。市区町村で `code` が無いときは `{n} 番目の Feature の properties に code が無いか文字列でない` |
+| `UT-match_summits-18` | 空間索引 | 同じプロセス。`peak_zones` は、鍵 (1, 1)（AZ が x も y も 0〜1 の四角、delete判定ゾーンが 0〜2 の四角）と鍵 (2, 2)（AZ が 10〜11、delete判定ゾーンが 10〜12 の四角）。座標の数は `JsonNumber`。`boundaries` は地域が 2 つの四角（x も y も 0〜1 と 10〜11）で、市区町村が `None` | `build_spatial_indexes(<peak_zones>, <boundaries>)` | `activation.keys` が `[(1, 1), (2, 2)]`、`activation.tree.query(shapely.Point(0.5, 0.5), predicate='intersects')` が添字 `[0]`、`Point(10.5, 10.5)` が `[1]`、`Point(5, 5)` が空。`delete.tree.query(shapely.Point(1.5, 1.5), predicate='intersects')` が `[0]`。`regions.keys` が `[0, 1]`、`municipalities` が `None` |
+| `UT-match_summits-19` | 7.1 の誤りの案内の文 | 同じプロセス | `_input_error_advice` に (a) `'MP1'`・`'MP2'`・`'MP3'`・`'ZF1'`〜`'ZF4'` のそれぞれ（`_config_opt` は空）、(b) (a) の `'MP3'` を `_config_opt` が空白 1 つに続けて `--config /a.ini` のとき、(c) `'XX'` | (a) どれも `scripts/run_pipeline.sh を --phase なしで起動して、フェーズ2 から通しでやり直す`。(b) `scripts/run_pipeline.sh --config /a.ini を --phase なしで起動して、フェーズ2 から通しでやり直す`。(c) `ValueError` |
