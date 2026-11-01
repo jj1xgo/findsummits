@@ -5226,14 +5226,14 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 **この節は 3 回に分けて書いている**（関数が 21 あり、元になる HLD の文が 7.2 の 3.5〜4 倍あるため。2026-11-01 に持ち主が決めた）。今書いてあるのは、HLD 3.5.3 の表の「群」の列が「読み込み」の 6 関数（`match_zones_to_peaks`・`read_summits_list`・`find_updatelist`・`read_updatelist`・`read_boundaries`・`build_spatial_indexes`）と「突き合わせ」の 4 関数（`is_in_zone`・`z15_pixel_center_latlon`・`match_activation_zones`・`match_delete_zones`）と「照合と採番」の 2 関数（`locate_regions`・`assign_provisional_codes`）の 12 関数と、それが使う型・文面・UT 候補だけである。組み立ての群、書き出しの群、起動の部分（`main`・`_parse_args`）、起動の直後の確かめ、結果の要約、書き込みの失敗の扱いは、書くときに足す。そのため、[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）の受け方と結合のつなぎ目（`CMP5-INT3`・`CMP5-EXT4`〜`7`）は、全部を書いてからまとめて書く。[HLD 4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)（Z15 の画素の変換）は、`z15_pixel_center_latlon` の式を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まりと表 7 で CMP4（地形解析エンジン）とそろえることで受ける（[7.1](#71-cmp5_common)の `latlon_to_z15_pixel` と同じ形）。
 
-- [5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、この回で書く部分は `build_spatial_indexes` の細部に置いた（ゾーンのジオメトリを持ち続けたまま索引用の形を作るので、2 つの形で持つ）。
+- [5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、1 回目で書いた部分は `build_spatial_indexes` の細部に置いた（ゾーンのジオメトリを持ち続けたまま索引用の形を作るので、2 つの形で持つ）。
 - 読み込みの関数は警告を出さず、`Boundaries.warnings`・`UpdateList.notices` に並べて返す。警告を出すのは `main` である（後の回）。登録変更リストの知らせる行を出す順は [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」が決め、地域と市区町村に入らない点の警告は 7「地域と市区町村を照合する」が `assign_provisional_codes` の後と決めている。地域と市区町村の GeoJSON が無いときの警告（BN1・BN2）を出す時機は HLD に定めが無い（4「地域と市区町村の GeoJSON を読み、索引を作る」が、7 の点ごとの警告をこの警告 1 つにまとめると決めるだけ）ので、後の回の `main` を書くときに決める。読み込みの関数の中で出すと、これらの順を後の回が決められなくなるため、この回の読み込みの関数は出さない。突き合わせと照合・採番の関数も同じ理由で警告を出さず、警告の材料を返り値に並べて返す（`ActivationMatch.overlaps`・`DeleteMatch.unmatched`・`RegionMatch.outside`）。ただし、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき（AO1）と、仮サミットコードの連番上限を超えるエリアがあるとき（PN1・PN2）は入力の誤りで止まる場面なので、`match_activation_zones` と `assign_provisional_codes` が [7.5.4](#754-メッセージ文面)のメッセージを出して止まる。
 
 #### 7.5.1 ファイル割付
 
 - 関数はすべて `scripts/match_summits.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/match_summits.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.is_valid_coord(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)・[7.4.1](#741-ファイル割付)と同じ形）。
-- この回の関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`math`・`os`・`re`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass` である（`typing` の `Iterable`・`Sequence` は、この回の関数の宣言が使わないので読まない。使う回の節で足す）。ほかに `shapely`（`import shapely`・`import shapely.errors`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す。突き合わせと照合の関数が使う `shapely.Point`・`shapely.contains_xy`・`shapely.covers` と `STRtree` の `geometries` は、`import shapely` で使える）。後の回で使う `openpyxl`・`subprocess` などは、その回の節を書くときに足す。
-- ファイルの先頭のコメントに `# trace: LLD-match_summits` を書く。起動の部分（`if __name__ == '__main__': main()`）は後の回で足すので、この回の関数だけでは単独で起動できない。
+- 今書いてある関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`math`・`os`・`re`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass` である（`typing` の `Iterable`・`Sequence` は、今書いてある関数の宣言が使わないので読まない。使う回の節で足す）。ほかに `shapely`（`import shapely`・`import shapely.errors`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す。突き合わせと照合の関数が使う `shapely.Point`・`shapely.contains_xy`・`shapely.covers` と `STRtree` の `geometries` は、`import shapely` で使える）。後の回で使う `openpyxl`・`subprocess` などは、その回の節を書くときに足す。
+- ファイルの先頭のコメントに `# trace: LLD-match_summits` を書く。起動の部分（`if __name__ == '__main__': main()`）は後の回で足すので、今書いてある関数だけでは単独で起動できない。
 - UT のコードは `tests/scripts/test_match_summits.py` に置く。各テストに `# trace: UT-match_summits-NN` のコメントを付ける。ID は 01 から通しで付け、後の回は続きの番号から付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.5.2 型とデータ
@@ -5252,7 +5252,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - `SummitsList(ref_date, summits, retired_count, retired_codes, region_assocs)`: `ref_date` は `datetime.date`、`summits` は `list[Summit]`（現役。ファイルの順）、`retired_count` は `int`（廃止済みとして除いた `JA` の行の数）、`retired_codes` は `frozenset[str]`（廃止済みの `SummitCode`）、`region_assocs` は `dict[str, frozenset[str]]`（地域コード → その地域コードを持つアソシエーションの集合。`JA` で始まる全行〈廃止済みを含む〉から作る。`_SUMMIT_CODE_RE` に合わない `SummitCode` は入れない）。
   - `Application(action, summit_id, lat, lon, new_elev, applicant, applied_on, years, first_seen, action_text, target_text)`: 登録変更リストの申請 1 件。`action` は `'add'`・`'change'`・`'delete'`。`summit_id` は変更・削除の山岳 ID（追加は `None`）。`lat`・`lon` は追加の位置（変更・削除は `None`）。`new_elev` は変更後の標高から末尾の `m` を除いた字句（変更だけ。ほかは `None`）。`applicant`（空文字がありうる）・`applied_on`（`YYYY-MM-DD`）。`years` は載っている年の表の年の `tuple[int, ...]`（ファイルに現れる順）。`first_seen` は最初に現れた年の表の年と、その表の中の申請の行の通し番号の `tuple[int, int]`。`action_text`・`target_text` は最初に現れた行のアクションの欄と「既存山岳ID もしくは 県名」の欄の、揃えた後の文字列（後の回の知らせる行に使う）。座標・標高・日付の字句は、最初に現れた行のものを残す。
   - `YearUpdate(year, update)`: `year` は `int`、`update` は `YYYY-MM-DD` か空文字。
-  - `Notice(kind, reason, year, row, action, target, applicant, applied_on, value)`: 登録変更リストの知らせる行 1 件。`kind` は `'unreadable_row'`・`'unknown_id'`・`'ambiguous_region'`・`'unmatched_add'`・`'unreadable_update'`（この回の関数が作るのは `'unreadable_row'` と `'unreadable_update'` だけ。残りは後の回）。`row` は年の表の中の申請の行の通し番号（`'unreadable_update'` は `None`）。項目の名前と並びは [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「出力の組み立て」の 3「metadata を作る」の `updatelist_notices` と同じ（後の回がそのまま JSON に書く）。
+  - `Notice(kind, reason, year, row, action, target, applicant, applied_on, value)`: 登録変更リストの知らせる行 1 件。`kind` は `'unreadable_row'`・`'unknown_id'`・`'ambiguous_region'`・`'unmatched_add'`・`'unreadable_update'`（1 回目の関数が作るのは `'unreadable_row'` と `'unreadable_update'` だけ。残りは後の回）。`row` は年の表の中の申請の行の通し番号（`'unreadable_update'` は `None`）。項目の名前と並びは [HLD 4.9.2](30_HLD.md#492-処理の流れ)の「出力の組み立て」の 3「metadata を作る」の `updatelist_notices` と同じ（後の回がそのまま JSON に書く）。
   - `UpdateList(file_name, applications, updates, notices, row_count)`: `file_name` はパスを含まないファイル名、`applications` は `list[Application]`（同じ申請を重ね合わせた後。最初に現れた順）、`updates` は `list[YearUpdate]`（年の表がファイルに現れる順）、`notices` は `list[Notice]`（[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」の並び）、`row_count` は `int`（アクションの欄が `追加`・`変更`・`削除` の行の数。重ね合わせの前で、読めない欄のある行も数える。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「行の分け方と揃え方」が、この 3 つのアクションの行を申請の行と呼ぶのに合わせ、後の回の結果の要約の「申請の行の数」に使う。通し番号の最大とは違う）。
   - `RegionFeature(assoc, area_code, region_name, geometry)`・`MunicipalityFeature(municipality, code, geometry)`: 項目は `str`、`geometry` は GeoJSON の `geometry` のオブジェクトの `dict`（`json.load` が返した数のまま）。地域は (`assoc`, `area_code`) の順、市区町村は `code` の順に並ぶファイルを、読んだ順のまま持つ（[HLD 4.17.2](30_HLD.md#4172-処理の流れ)）。
   - `Boundaries(regions, municipalities, warnings)`: `regions: list[RegionFeature] | None`・`municipalities: list[MunicipalityFeature] | None`（`None` はファイルが無い印）、`warnings: list[tuple[str, str]]`（無いファイルの警告の記号〈`'BN1'`・`'BN2'`〉と 1 行目の文の組。2 行目は記号で [7.5.4](#754-メッセージ文面)の文を選んで足す。出すのは後の回の `main`）。
@@ -5274,7 +5274,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 関数ごとに `#####` の見出し（関数の名前だけ）を立てて書く。内部の関数は、使う関数の見出しの下に書く。HLD 3.5.3 の表の「呼ぶ順」で並べる。
 
-**止まり方**: 7.5 の関数は、誤りを見つけたら、[7.5.4](#754-メッセージ文面)のメッセージを `common.log_error(<1 行目>, <2 行目>)` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（[7.2.3](#723-関数の細部)の「止まり方」と同じ）。この回の 6 関数は、`InputError` を上げる 7.1 の部品を呼ばない（`is_valid_coord` は上げない）ので、`cmp5_common.InputError` を捕まえない。`read_merged_peak`・`index_peaks_by_pixel`・`read_zone_features` を呼び、その `InputError` を捕まえて止まるのは `main` で、後の回で書く（案内の文を選ぶ内部の関数 `_input_error_advice` はこの回で書く）。
+**止まり方**: 7.5 の関数は、誤りを見つけたら、[7.5.4](#754-メッセージ文面)のメッセージを `common.log_error(<1 行目>, <2 行目>)` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（[7.2.3](#723-関数の細部)の「止まり方」と同じ）。7.5 の 12 関数は、`InputError` を上げる 7.1 の部品を呼ばない（`is_valid_coord` は上げない）ので、`cmp5_common.InputError` を捕まえない。`read_merged_peak`・`index_peaks_by_pixel`・`read_zone_features` を呼び、その `InputError` を捕まえて止まるのは `main` で、後の回で書く（案内の文を選ぶ内部の関数 `_input_error_advice` は、1 回目の `match_zones_to_peaks` の下に書いてある）。
 
 **{reason}・{path}**: [2.1.4](#214-メッセージ文面)と同じ（`OSError` の `strerror`、無ければ `str(e)`。`UnicodeDecodeError` なら `UTF-8 として読めない`）。`{path}` は `os.path.abspath` したパス。
 
@@ -5397,7 +5397,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 1. `pixel = cmp5_common.latlon_to_z15_pixel(lat, lon)`（点が入る全球の Z15 の画素 (gx, gy)）。
 2. `center_lat, center_lon = z15_pixel_center_latlon(pixel)`（その画素の中心）。
-3. `shapely.contains_xy(zone, center_lon, center_lat)` を返す（`x` が経度、`y` が緯度。引数の順に注意）。元の `lat`・`lon` を形に当てない。
+3. `bool(shapely.contains_xy(zone, center_lon, center_lat))` を返す（`x` が経度、`y` が緯度。引数の順に注意。`contains_xy` は numpy の真偽値を返すので、Python の `bool` にして返す）。元の `lat`・`lon` を形に当てない。
 
 - 画素の中心は画素の内側にあって輪郭の線の上に乗らない（ゾーンは塗った画素の境界をたどる形で、画素の境目は輪郭の線の上にしか無い）ので、輪郭の上を外とする `contains` と内とする `covers` は同じ結果になる。ここでは `contains_xy` を使う。
 - 元の点がゾーンの輪郭の線の上にあっても、見るのは画素の中心なので、結果はその画素が塗られているかだけで決まる。経度が画素の西端にちょうど乗る点は、東の画素（画素の座標が 1 大きい方）に入る（[2.4](#24-言語ごとに別に実装する式のテストベクトル)の `latlon_to_tile` の `floor`。画素の経度の境目は `gx / 2²³ × 360 − 180` で丸めが無い）。
@@ -5580,7 +5580,7 @@ dominant_peak = min(candidates, key=key)
 
 - AO2・RG1・UM1 の警告を出すのは後の回の `main` で、この回は文面と材料（`ActivationMatch.overlaps`・`RegionMatch.outside`・`DeleteMatch.unmatched`）だけを決める（BN1・BN2 と同じ形）。AO2 は `overlaps` の順、RG1 は `outside` の順（ピーク → コル → サミット）、UM1 は 1 組。RG1 は `assign_provisional_codes` の後に出す。AO1・PN1・PN2 は、`match_activation_zones` と `assign_provisional_codes` が出して止まる。
 - BN1・BN2 の 2 行目は、`read_boundaries` が返す `warnings` の組の記号を、後の回の `main` が見て足す（`warnings` が持つのは 1 行目だけ）。
-- UN1 の項目は `Notice` の項目で、`{kind}` は `Notice.kind` の英語の名前のまま、`{where}` は `{year} 年の表の {row} 行目`（`row` が `None` の `unreadable_update` は `{year} 年の表`）、`{total}` は `UpdateList.notices` の件数。空の値は `（空）` と書く。UN1 を出すのは後の回の `main` で、この回は文面だけを決める（出す順は `UpdateList.notices` の順。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」）。
+- UN1 の項目は `Notice` の項目で、`{kind}` は `Notice.kind` の英語の名前のまま、`{where}` は `{year} 年の表の {row} 行目`（`row` が `None` の `unreadable_update` は `{year} 年の表`）、`{total}` は `UpdateList.notices` の件数。空の値は `（空）` と書く。UN1 を出すのは後の回の `main` で、1 回目は文面だけを決めた（出す順は `UpdateList.notices` の順。[HLD 4.9.2](30_HLD.md#492-処理の流れ)の「申請済みの判定」の 7「知らせる行をまとめる」）。
 - 知らせる行の `reason` の文（`Notice.reason`。UN1 の `{reason}` にもなる）:
 
 | 定数 | 場面 | 文 |
@@ -5594,7 +5594,7 @@ dominant_peak = min(candidates, key=key)
 
 #### 7.5.5 UT 候補
 
-すべて自動（合否をテストのコードが判定できる）。この回の関数は `main` を通らないので、子のプロセスは使わず、同じプロセスで関数を直接呼ぶ。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.5.4](#754-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。`{path}` は渡した絶対パス。共通の準備は次の 6 つ。
+すべて自動（合否をテストのコードが判定できる）。今書いてある関数は `main` を通らないので、子のプロセスは使わず、同じプロセスで関数を直接呼ぶ。止まるケースの期待の「メッセージ」は、標準エラー出力の 2 行（[7.5.4](#754-メッセージ文面)・[7.1.4](#714-メッセージ文面)・[2.2](#22-ログとメッセージの文面)の文面に値を入れたもの）。`{path}` は渡した絶対パス。共通の準備は次の 6 つ。
 
 - **同じプロセス**: [7.2.5](#725-ut-候補)の同じ名前の準備と同じ（`merge_peaks` を `match_summits` に読み替える）。`match_summits._config_opt` は空の文字列にしておく（このとき `{rerun4}` は `scripts/run_pipeline.sh --phase 4 を起動し直す`、`{redo}` は `scripts/run_pipeline.sh を --phase なしで起動して、フェーズ2 から通しでやり直す`）。ファイルはケースごとに一時のディレクトリ `<tmp>` に書く。
 - **SOTA サミットリスト CSV**: 1 行目 `SOTA Summits List (Date=18/10/2026)`、2 行目（見出しの 17 列）`SummitCode,AssociationName,RegionName,SummitName,AltM,AltFt,GridRef1,GridRef2,Longitude,Latitude,Points,BonusPoints,ValidFrom,ValidTo,ActivationCount,ActivationDate,ActivationCall`。データの行は `row(code, name, alt, lon, lat, valid_to)` で書く: `{code},A,R,{name},{alt},0,0,0,{lon},{lat},1,0,01/01/2020,{valid_to},0,,`（17 欄。使う列は 0・3・4・8・9・13 欄目）。改行は LF。記録の番号は、1 行目が 1、見出しが 2、最初のデータの行が 3。
