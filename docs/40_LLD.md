@@ -5309,6 +5309,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
   - 組み立ての結果（4 回目）:
     - `Metadata(items, warnings)`: `items` は `dict`（`merged_summit.geojson` の `metadata` のオブジェクト。値は `str`・`list`・`dict`・`int`・`None`）、`warnings` は `list[tuple[str, str]]`（警告の記号〈`'MT1'`・`'MT2'`〉と 1 行目の文の組。`SotaNames.warnings` と同じ形で、2 行目は記号で [7.5.4](#754-メッセージ文面)の文を選んで足す。出すのは [main](#mainmatch_summits)）。`build_metadata` が返す。
     - `SummitFeatures(features, text)`: `features` は `list[dict]`（Feature の `dict` を出力の順に並べたもの。数は `cmp5_common.JsonNumber`・`int`・`float`、真偽は `bool`、空欄は `None`）、`text` は `str`（`merged_summit.geojson` の中身の全体。[write_summit_outputs](#write_summit_outputs)がこのまま書く）。`build_summit_features` が返す。
+  - 起動の引数: `_Args(config)`（内部）: `config: str`（`--config` の値のまま。`--config` は必須なので `None` は持たない。[7.2.2](#722-型とデータ)の `_Args` と同じ形）。
 - `slots=True` は付けない（[7.1](#71-cmp5_common)〜[7.4](#74-check_cols)と同じく、メモリの実測〈HLD 5.2.2 の「実測の計画」の 4〉の後に決める）。
 
 #### 7.5.3 関数の細部
@@ -5994,7 +5995,7 @@ dominant_peak = min(candidates, key=key)
 | SA5 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
 | SW1 | `merged_summit.geojson` か `merged_summit.xlsx` を書けない（一時ファイルと置いたファイルは消した） | `merged_summit.geojson か merged_summit.xlsx を書けない: {path}: {reason}。2 つの出力はどちらも置いていない` | `{dir} の空きと権限を確かめてから、{rerun4}`（`{dir}` は `results/` の絶対パス） | 1 |
 | SW2 | 出力を書けず、置いた `merged_summit.xlsx` も消せない | `merged_summit.geojson か merged_summit.xlsx を書けない: {path}: {reason}。置いた merged_summit.xlsx も消せなかった: {xlsx_path}: {xlsx_reason}` | `{xlsx_path} を手で消し、{dir} の空きと権限を確かめてから、{rerun4}` | 1 |
-| GT1 | 不備ゲートの条件に当たった（`main` が出す。2 つの出力は書いてある） | `不備ゲートに当たった: {list}`（`{list}` は、`check_defect_gate` が返した条件をその順に `；` でつなぐ。1 つの条件は `{kind} {count} 件（確かめる列 {column}）`。`{kind}` は `unmatched_over_threshold`・`is_area_incomplete`・`is_key_col_unresolved`、`{count}` は返された件数、`{column}` は `_DEFECT_COLUMNS` の値。`unmatched_over_threshold` だけ、`（` の後に `unmatched_summit_threshold={threshold}、` を足す） | `merged_summit.geojson と merged_summit.xlsx は調査用に書いた。merged_summit.xlsx の確かめる列を見て原因を調べ、直してから、{rerun4}` | 4 |
+| GT1 | 不備ゲートの条件に当たった（`ERROR:`。`main` が出す。2 つの出力は書いてある） | `不備ゲートに当たった: {list}`（`{list}` は、`check_defect_gate` が返した条件をその順に `；` でつなぐ。1 つの条件は `{kind} {count} 件（確かめる列 {column}）`。`{kind}` は `unmatched_over_threshold`・`is_area_incomplete`・`is_key_col_unresolved`、`{count}` は返された件数、`{column}` は `_DEFECT_COLUMNS` の値。`unmatched_over_threshold` だけ、`（` の後に `unmatched_summit_threshold={threshold}、` を足す） | `merged_summit.geojson と merged_summit.xlsx は調査用に書いた。merged_summit.xlsx の確かめる列を見て原因を調べ、直してから、{rerun4}` | 4 |
 
 - MT1・MT2 の警告を出すのは [main](#mainmatch_summits) で、`build_metadata` は文面の材料（`Metadata.warnings`）だけを返す（BN1・BN2・SN1〜SN4 と同じ形）。2 行目は、`warnings` の組の記号を `main` が見て足す。XS1・XS2 は、`build_summit_sheets` が出して止まる（AO1・PN1・PN2 と同じ形）。
 - AO2・RG1・UM1 の警告を出すのは [main](#mainmatch_summits) で、`match_activation_zones`・`locate_regions`・`match_delete_zones` は文面の材料（`ActivationMatch.overlaps`・`RegionMatch.outside`・`DeleteMatch.unmatched`）だけを返す（BN1・BN2 と同じ形）。AO2 は `overlaps` の順、RG1 は `outside` の順（ピーク → コル → サミット）、UM1 は 1 組。RG1 は `assign_provisional_codes` の後に出す。AO1・PN1・PN2 は、`match_activation_zones` と `assign_provisional_codes` が出して止まる。
