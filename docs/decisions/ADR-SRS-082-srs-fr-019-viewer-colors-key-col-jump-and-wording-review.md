@@ -17,8 +17,8 @@
 4. rationale の編集欄を「`category` ∈ {add, delete, band_change} の通常フィーチャ」に置くとしていた。これらのカテゴリにはコル・線・matched のサミットも含まれるが、rationale が申請書の列 I に転記されるのは、申請書の行のもとになる点（add と band_change のピーク、通常の削除のサミット。[FR-011](../20_SRS.md#fr-011-申請書-xlsx-生成)）だけである。申請から除外している間も、これらの点の編集はできる（[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の `rationale`）。HLD も [DEC134](../30_HLD.md#4194-設計判断) で、編集値を行を生む点にだけ当てている。
 5. 出力の表が、申請書 XLSX と申請エビデンス ZIP を「各エクスポート」の 1 行にまとめていた。[§6.1](../20_SRS.md#61-外部if一覧) は、入出力の表のデータ名に外部 I/F 一覧の名前（「申請書 XLSX」「申請エビデンス ZIP（パッケージング仕様）」）を使うと定めている。
 6. 不完全なゾーンがビューアに届かないことを、アクティベーションゾーン（AZ）についてだけ書いていた。2026-10-12 に delete判定ゾーンにも `area_complete` を足し、[FR-009](../20_SRS.md#fr-009-sotaリスト突合match_status-判定) の不備ゲートが両方を検査する（[ADR-SRS-080](ADR-SRS-080-srs-section-4-5-second-review-read-errors-and-delete-zone-completeness.md)）。
-7. HLD に委ねるパラメータを、地図のライブラリの設定の名前（`maxBounds`・`zoomSnap`）で書いていた。SRS には実装の手段の名前を書かない（`docs/CLAUDE.md`「SRS 機能要件（FR）記述規約」）。
-8. 地理院基準点タイルの取得 URL を本文に書いていた。背景タイルの URL は SRS に書かず、出典の一覧（`ref/SOURCES.md`）に置いている。同じ URL は出典の一覧にもあり、本文はそこへリンクしている。
+7. HLD に委ねるパラメータを、地図のライブラリの設定の名前（`maxBounds`・`zoomSnap`）で書いていた。SRS には実装の手段の名前を書かない（[`docs/CLAUDE.md`](../CLAUDE.md)「SRS 機能要件（FR）記述規約」）。
+8. 地理院基準点タイルの取得 URL を本文に書いていた。背景タイルの URL は SRS に書かず、出典の一覧（[`ref/SOURCES.md`](../../ref/SOURCES.md)）に置いている。同じ URL は出典の一覧にもあり、本文はそこへリンクしている。
 
 ## Decision
 

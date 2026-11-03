@@ -7,7 +7,7 @@
 
 ## Context
 
-findsummits には現時点でタグが 0 本、`release/*` ブランチも存在しない。`docs/00_GLOSSARY.md`「バージョン呼称」
+findsummits には現時点でタグが 0 本、`release/*` ブランチも存在しない。[`docs/00_GLOSSARY.md`](../00_GLOSSARY.md)「バージョン呼称」
 には v1.0 / v2.0 の呼称があるが、採番規則・タグを打つ時点・1.0.0 の到達条件・互換性保証の対象範囲は
 文書化されていない。
 
