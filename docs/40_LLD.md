@@ -6505,7 +6505,7 @@ HLD 4.19.2 の導き方の 1「フィーチャを写す」である。`batch.fea
 HLD 4.19.2 の導き方の 2 である。引数を確かめない（`copy_features` の後の状態と、記録の配列を受ける）。`decision === 'delete'` の要素ごとに（`''` の要素は見ない。`previous_decision` も見ない）:
 
 1. 状態の中で、`copy_features` の 2 の適格の形で、`summit_code` が要素のコードと `===` で等しい点を数える。ちょうど 1 つでなければ当てず、`{kind: 'manual_delete_not_applied', summit_code: string, found: number}` を通知に入れる（`found` は数えた数。0 は不在か適格でない、2 以上は重なり）。
-2. ちょうど 1 つなら、その点の `category` を `'delete'`、`review_decision` を `'delete'`、`review_note` を `note_draft.trim()` にし（四つのキーのどれも、`properties` に無ければ、群の前置きのとおり書かずに飛ばす）、`rationale` を次の 3 行の文字列（行の間は `'\n'`、末尾に改行を付けない。[FR-019](20_SRS.md#fr-019-html-ビューア機能仕様)の「孤立要確認サミットの担当者指定削除」の専用テンプレート）にする。`{review_note}` が空文字なら `未記入（担当者補記）` を入れる。
+2. ちょうど 1 つなら、その点の `category` を `'delete'`、`review_decision` を `'delete'`、`review_note` を `note_draft.trim()` にし（四つのキーのどれも、`properties` に無ければ、群の前置きのとおり書かずに飛ばす）、`rationale` を次の 3 行の文字列（行の間は `'\n'`、末尾に改行を付けない。[FR-019](20_SRS.md#fr-019-html-ビューア機能仕様)の「孤立要確認サミットの担当者指定削除」の専用テンプレート）にする。`{review_note}` は `rationale` の 3 行目に差し込む値で、これが空文字なら `未記入（担当者補記）` を入れる（`review_note` のキーの値は `note_draft.trim()` のまま空文字で、置き換えるのは `rationale` の 3 行目だけ）。
 
    ```text
    担当者判断による削除申請
