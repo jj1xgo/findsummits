@@ -6521,9 +6521,9 @@ HLD 4.19.2 の導き方の 2 である。引数を確かめない（`copy_featur
 
 HLD 4.19.2 の導き方の 3 である（[DEC134](30_HLD.md#4194-設計判断)「編集値は行を生む点にだけ当てる」）。引数を確かめない。要素ごとに、当てる点を状態の中から探す。
 
-- 新設の要素: `feature_type === 'peak'`・`category === 'add'`・`match_status` が `'new'` か `'dominant'` で、ジオメトリの `coordinates[0]`・`coordinates[1]` が要素の `lon`・`lat` と `===` で等しい点。要素の 3 つの項目のうち null でないものを、同じ名前のプロパティに入れる（null は編集していない項目で、`copy_features` が写したバッチの値をそのまま残す。毎回バッチから写し直した状態に当てる〈DEC133〉ので、前に当てた値が残ることはない）。
-- 既存で `action === 'band_change'` の要素: `feature_type === 'peak'`・`category === 'band_change'` で、`summit_code` が等しい点。`rationale` を入れる。
-- 既存で `action === 'delete'` の要素: 通常の削除のサミットの点（`copy_features` の 4）で、`summit_code` が等しい点。`rationale` を入れる。
+- 新設の要素: `feature_type === 'peak'`・`category === 'add'`・`match_status` が `'new'` か `'dominant'` で、ジオメトリの `coordinates[0]`・`coordinates[1]` が要素の `lon`・`lat` と `===` で等しい点。要素の 3 つの項目のうち null でないものを、同じ名前のプロパティに入れる（そのキーが `properties` に無ければ、群の前置きのとおり書かずに飛ばす。null は編集していない項目で、`copy_features` が写したバッチの値をそのまま残す。毎回バッチから写し直した状態に当てる〈DEC133〉ので、前に当てた値が残ることはない）。
+- 既存で `action === 'band_change'` の要素: `feature_type === 'peak'`・`category === 'band_change'` で、`summit_code` が等しい点。`rationale` を入れる（キーが `properties` に無ければ、新設と同じく飛ばす）。
+- 既存で `action === 'delete'` の要素: 通常の削除のサミットの点（`copy_features` の 4）で、`summit_code` が等しい点。`rationale` を入れる（キーが無ければ同じく飛ばす）。
 
 当たる点が 2 つ以上なら、すべてに当てる（[SRS §8.2.2](20_SRS.md#822-localstorage-編集内容詳細仕様)は名前と根拠の保存値を「一致した対象にだけ適用」とし、除外の台帳〈[SRS §8.2.3](20_SRS.md#823-除外台帳)〉のような一意の要求を置いていない。追加のピークの座標と、変更・通常の削除の候補のコードとアクションは、バッチの中で重ならないので、ふつうは起きない）。当たる点が無ければ、`{kind: 'name_edit_not_applied', target: 'new' | 'existing', lon: number | null, lat: number | null, summit_code: string | null, action: 'band_change' | 'delete' | null}` を通知に入れる（新設は `summit_code`・`action` を null、既存は `lon`・`lat` を null）。`category === 'review'` のフィーチャと、`apply_manual_deletes` が当てた担当者指定削除の点（`match_status` が `'unmatched'`）は、上の条件に当たらないので当たらない。
 
