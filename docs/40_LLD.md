@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -165,6 +165,13 @@
     - [8.1.3 関数の細部](#813-関数の細部)
     - [8.1.4 メッセージ文面](#814-メッセージ文面)
     - [8.1.5 UT 候補](#815-ut-候補)
+- [9. CMP7 申請書生成 UI](#9-cmp7-申請書生成-ui)
+  - [9.1 `index_calc`](#91-index_calc)
+    - [9.1.1 ファイル割付](#911-ファイル割付)
+    - [9.1.2 型とデータ](#912-型とデータ)
+    - [9.1.3 関数の細部](#913-関数の細部)
+    - [9.1.4 メッセージ文面](#914-メッセージ文面)
+    - [9.1.5 UT 候補](#915-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -207,16 +214,23 @@
   - 出力: 標準出力・標準エラー出力・ログファイルへの出力は、6.12 の `log_info`・`log_warning`・`log_error` だけで行う（`std::cout`・`std::cerr`・`printf`・`puts` を使わない。6.12 は出力を `write` で直接書くので、標準入出力のバッファと混ぜると順が崩れる）。
   - `{reason}`: ファイルの読み書きの失敗の理由は、失敗した POSIX の呼び出しの `errno` を `std::strerror` に渡した文（Python の `OSError` の `strerror` と同じ文）。
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
+- CMP7（申請書生成 UI）・CMP8（公開用ビューア）の `index.html` の JavaScript の規約（[9](#9-cmp7-申請書生成-ui) のモジュールが従う）:
+  - ファイル: CMP7・CMP8 のプログラムは `public/index.html` 1 本（[HLD 3.7.1](30_HLD.md#371-プログラム)、[DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」）。JavaScript は HTML に書き込んだ普通の script 要素に書き、`type="module"`・`import`・`export` を使わない（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）。[9.1](#91-index_calc) の関数は計算の要素 1 つに置き、9.2 の関数はほかの要素に置く（[HLD 3.7.3](30_HLD.md#373-関数)の「置き場」）。UT のコードは、モジュールごとに `tests/public/test_<モジュール名>.js` の 1 本（9.1 は `tests/public/test_index_calc.js`。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。要素の中とテストのファイルの先頭のコメントに `// trace: LLD-<モジュール名>` を書き、テストの各ケースの直前に `// trace: UT-<モジュール名>-NN` を書く（`tools/lint_trace.py` がこの形を読むようにするのは [#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」で行う）。
+  - 言語の水準: ECMAScript 2020 までの構文と標準の組み込みだけを使う（DEC130。正はこの 1 文で、次の列挙は例）。ECMAScript の外のグローバル（`TextEncoder`・`TextDecoder` などのブラウザの API）を計算の要素で使うかと、テストの文脈への渡し方は、それを使う群を書くときに決める。使わないものの例（ES2021 以降）: 論理代入（`??=`・`||=`・`&&=`）、数の区切りの `_`、`String.prototype.replaceAll`、`Array.prototype.at`・`findLast`、`Object.hasOwn`、クラスのフィールドと `#` の名前、`static` のブロック、`Promise.any`、`AggregateError`、`WeakRef`、正規表現の `d`・`v` の旗、`Array.prototype.toSorted`・`toReversed`・`toSpliced`・`with`・`findLastIndex`、`Object.groupBy`、`Set.prototype.union` などの集合のメソッド。`?.`・`??` は使ってよい。各要素の中身は `// trace:` のコメントの次に `'use strict';` を置き、宣言は `const`・`let`・`function` で書く（`var` を使わない）。
+  - 名前（[HLD 3 章](30_HLD.md#3-プログラム構造)の冒頭の決まり）: ほかのモジュールから呼ぶ関数は [HLD 3.7.3](30_HLD.md#373-関数)・[3.8.3](30_HLD.md#383-関数)の名前（英小文字・数字・`_`）。LLD が足す内部の関数と定数は `_` と英小文字で始める（`_mesh_code_re` のように）。同じページの普通の script 要素は最上位の名前を共有するので、要素をまたいで同じ名前を宣言しない。
+  - 型の書き方（上の「型は、そのモジュールの言語の書き方で書く」）: JavaScript は型を宣言しないので、関数の見出しの下に `name(arg: 型, …) -> 型` の形で、JSDoc の型の書き方（`string`・`number`・`boolean`・`Array<number>`・`[number, number]`〈長さ 2 の配列〉・`'a' | 'b'`・`*`〈何でもよい〉）で書く。コードに JSDoc のコメントは書かなくてよい。
+  - 止まり方: 計算の要素の関数は、呼び出しの誤り（HLD の表が受け取らないとした値）を見つけたら、組み込みの `RangeError` か `TypeError` を `throw` する（どちらを投げるかは関数の見出しの下に書く）。利用者への知らせは画面の要素が出す（9.2）。
+  - テストの枠組み（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）: Node.js に同梱の `node:test` と `node:assert/strict` を `require` で読む（テストのファイルは CommonJS。ES2020 の制限はテストのファイルには掛けない。Node.js の版と `make test` への組み込みは [2.5](#25-ビルドとテストの名前)）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
-- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・表を読めず列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき AO1、確定していないピークの AZ の重なり AO2、仮サミットコードの連番上限を超えるエリアがあるとき PN1・PN2、地域か市区町村のどれにも入らない点 RG1、`unmatched` のサミット UM1、SOTA 既存サミット GeoJSON を使わない・読めない・`name` を読めない Feature を飛ばした・同じコードに違う山岳名があるとき SN1〜SN4、算出表に無い標高 PT1、1 つの AZ に 2 件以上の登録 MR1、`software_version` か `gsi_tile_latest_date` を求められない MT1・MT2、XLSX の行を結べないか取り元のプロパティが無い XS1、XLSX に値を変えずに書けない文字列がある XS2、引数の誤り SA1〜SA5、出力を書けないとき SW1・SW2、不備ゲート GT1、結果の要約 SM1〜SM4 である。8.1 の記号は、引数の誤り VA1〜VA5、入力の誤り VR1〜VR3、テンプレートの誤り VT1、書き出しの失敗と中断 VW1〜VW3、結果の要約 VL1・VL2 である。
+- LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・表を読めず列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき AO1、確定していないピークの AZ の重なり AO2、仮サミットコードの連番上限を超えるエリアがあるとき PN1・PN2、地域か市区町村のどれにも入らない点 RG1、`unmatched` のサミット UM1、SOTA 既存サミット GeoJSON を使わない・読めない・`name` を読めない Feature を飛ばした・同じコードに違う山岳名があるとき SN1〜SN4、算出表に無い標高 PT1、1 つの AZ に 2 件以上の登録 MR1、`software_version` か `gsi_tile_latest_date` を求められない MT1・MT2、XLSX の行を結べないか取り元のプロパティが無い XS1、XLSX に値を変えずに書けない文字列がある XS2、引数の誤り SA1〜SA5、出力を書けないとき SW1・SW2、不備ゲート GT1、結果の要約 SM1〜SM4 である。8.1 の記号は、引数の誤り VA1〜VA5、入力の誤り VR1〜VR3、テンプレートの誤り VT1、書き出しの失敗と中断 VW1〜VW3、結果の要約 VL1・VL2 である。9.1 はメッセージの記号を持たない（メッセージを出さない）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
 - UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
 
-この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4・7.5・8.1 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
+この章は、HLD 3.9 の共通部品のモジュール（2.1）と、HLD の「目的と範囲」の「対象外」の行で繰り返し出る項目を受ける横断の節（2.2〜2.4）を置く。横断の節は追跡の宣言を持たず、モジュールの節から指す（ADR-LLD-001 の Decision 1）。2.2〜2.5 は今は 2.1・3.1・4.1・5.1・5.2・6.1・6.2・6.3・6.4・6.5・6.6・6.7・6.8・6.9・6.10・6.11・6.12・7.1・7.2・7.3・7.4・7.5・8.1・9.1 が使う項目だけを書き、ほかのモジュールの節を書くときに足す。
 
 ### 2.1 共通部品
 
@@ -662,7 +676,7 @@ def main() -> None:
 
 ### 2.4 言語ごとに別に実装する式のテストベクトル
 
-HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群。[6.10](#610-analyze_terrain_convert)）・JavaScript（`index.html` の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（6.10）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` を Python（CMP5。[HLD 3.5.3](30_HLD.md#353-関数)・[3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）と C++（6.10）で別に実装し、この節の表で一致を確かめる。後の 3 つの関数のテストベクトルは、[HLD 4.7.1](30_HLD.md#471-目的と範囲)の対象外の行が LLD に送っているものである。テストのコードとこの表の置き場とテストのレベルは、[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)で決めた（各言語の UT にこの表の行を写して期待値にする。[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon`・`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` と、メッシュの取得範囲の決まりの分だけを書いてある。
+HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」のとおり、`mesh_to_latlon`・`latlon_to_tile` を Python（2.1）・C++（CMP4 の「変換」の群。[6.10](#610-analyze_terrain_convert)）・JavaScript（[9.1](#91-index_calc) の「3.9 と同じ決まり」の群）で別に実装し、`tile_to_latlon` を Python（3.1）と C++（6.10）で別に実装し（[HLD 3.1.3](30_HLD.md#313-関数)）、`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` を Python（CMP5。[HLD 3.5.3](30_HLD.md#353-関数)・[3.5.4](30_HLD.md#354-コンポーネント内の共通部品)）と C++（6.10）で別に実装し、この節の表で一致を確かめる。後の 3 つの関数のテストベクトルは、[HLD 4.7.1](30_HLD.md#471-目的と範囲)の対象外の行が LLD に送っているものである。テストのコードとこの表の置き場とテストのレベルは、[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)で決めた（各言語の UT にこの表の行を写して期待値にする。[HLD 2.2.1](30_HLD.md#221-目的と範囲)の対象外の行）。今は `mesh_to_latlon`・`latlon_to_tile`・`tile_to_latlon`・`latlon_to_mesh`・`latlon_to_z15_pixel`・`z15_pixel_center_latlon` と、メッシュの取得範囲の決まりの分だけを書いてある。
 
 計算の決まり（どの言語も IEEE 754 の倍精度で、書いた順に左から計算する。式の正本は用語集の[メッシュコード → 緯度経度](00_GLOSSARY.md#mesh-to-latlon)と[緯度経度 → XYZ タイル番号](00_GLOSSARY.md#latlon-to-tile)）。`n = 2^z` は倍精度の値にする。整数の値（`2 × aa`・`x`・`y`、下の取得範囲の決まりの 3 の `x_e`）は、割る前に倍精度にし、整数どうしの割り算をしない（C++ で整数の型のまま `x / n` と書くと整数の割り算になり、表 3 の (1, 1, 1) の経度が −180 になる）:
 
@@ -814,7 +828,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 
 ### 2.5 ビルドとテストの名前
 
-[HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
+[HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分と、CMP7・CMP8 の `index.html` の UT のファイルと起動の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
 - テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.5 は `build/test_image`、6.6 は `build/test_scan`、6.7 は `build/test_csv`、6.8 は `build/test_zone`、6.9 は `build/test_record`、6.10 は `build/test_convert`、6.11 は `build/test_stage`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
@@ -822,6 +836,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 - 呼ぶ順などを確かめる試験用の実行ファイル `build/flow_stage`（[6.11.1](#6111-ファイル割付)）: `tests/src/flow_stage.cpp`・`tests/src/stub_analysis.cpp` と、`src/stage.cpp`・`src/common.cpp`・`src/convert.cpp`・`src/target.cpp` をコンパイルし、GoogleTest の `gtest_main` とリンクする（指定はテスト用の実行ファイルと同じ）。`tests/src/test_<群の名前>.cpp` の形にしないのは、上の決まり（`main` を持たない `src/` の `.cpp` をすべてリンクする）を Makefile のパターンで当てたとき、スタブの定義が無く、本物をリンクした実行ファイルがリンクに失敗するのを避けるため（`build/test_launch_main` と同じ扱い）。この実行ファイルは `build/test_launch_main` と違い、それ自身がテストの実行ファイルなので、`make test` が実行する。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main`・`build/flow_stage` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、`build/flow_stage` もテスト用の実行ファイルとして順に実行し、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- CMP7・CMP8 の `index.html` の UT は、モジュールごとに 1 本の `tests/public/test_<モジュール名>.js`（[9.1](#91-index_calc) は `tests/public/test_index_calc.js`。[1.2](#12-lld-の規約)の JavaScript の規約）で、本体ルートで `node --test tests/public/test_index_calc.js` で実行する。`make test` への組み込みと Node.js の版は [#197](https://github.com/jj1xgo/findsummits/issues/197)「CMP7 の実装の前にライブラリの版を決め、ブラウザでの動きを確かめる」で決める（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の表の `make test` の行）。
 
 ## 3. CMP1 行政区域前処理
 
@@ -6376,3 +6391,95 @@ dominant_peak = min(candidates, key=key)
 | `UT-generate_viewer-12` | `start_log` の前の誤り | 子のプロセス。`merged_summit.geojson` に `G` | (a) `--config c.ini`（相対パス）、(b) `--config <tmp>/c.ini --mesh 5338` | どちらも終了コード 2。標準エラー出力は (a) VA5（`c.ini`）、(b) VA1（`--mesh`）の 2 行。`<tmp>/logs` を作らず、出力も `.tmp` も無い（[HLD 3.6.3](30_HLD.md#363-関数)、`IT-CMP6-EXT2-02` の (b)） |
 | `UT-generate_viewer-13` | ログの出力先を用意できない | 子のプロセス。`merged_summit.geojson` に `G`。`<tmp>/logs` のパスに通常のファイルを置く | `--config <tmp>/c.ini` | 終了コード 1。標準エラー出力に G3（`{path}` は `<tmp>/logs`、`{config_path}` は `<tmp>/c.ini`）の 2 行だけ。出力も `.tmp` も無く、ログファイルは作られない（[HLD 4.13.3](30_HLD.md#4133-異常系)の表の 2 行目。`UT-common-21` の形） |
 | `UT-generate_viewer-14` | 中断（`SIGTERM`・`SIGINT`）で止まる（データファイルを置いた直後。終了コードと VL2） | 子のプロセス。`merged_summit.geojson` に `G`。(a) `SIGTERM`、(b) `SIGINT` を、別々の子で送る。`python3 <tmp>/src/scripts/generate_viewer.py` の代わりに、`-c` で次のドライバを動かす（cwd は `<tmp>/work`）: `sys.path` の先頭に `<tmp>/src/scripts` を入れ、`sys.argv = ['generate_viewer.py', '--config', '<tmp>/c.ini']` にし、`import os, signal, generate_viewer` した後、`real = os.replace` を控えて、`os.replace` を「`real(src, dst)` を呼び、`os.path.basename(dst)` が `merged_viewer_data.js` なら `os.kill(os.getpid(), <シグナル>)` を送る」関数に差し替え、`generate_viewer.main()` を呼ぶ（`<シグナル>` は (a) `signal.SIGTERM`、(b) `signal.SIGINT`。`UT-match_summits-79` と同じ形） | ドライバを終わるまで待つ | 終了コード (a) 143、(b) 130。`<tmp>/data/results/` に `merged_viewer_data.js`・`merged_viewer.html`・`.tmp` で終わる名前が無い（置いたデータファイルを消した）。標準エラー出力に `ERROR:` で始まる行が無く、VW3 も無い。ログの最後から 2 番目の行が `結果の要約: 途中で止まった（読んだフィーチャ 2 件）。merged_viewer_data.js と merged_viewer.html はそろえて置いていない`、最後の行は `終了:` で始まり、(a) `SIGTERM`、(b) `SIGINT` を含む（`UT-common-19` の形） |
+
+## 9. CMP7 申請書生成 UI
+
+この章は、CMP7（申請書生成 UI）の 1 本のプログラム（[HLD 3.7.1](30_HLD.md#371-プログラム)の `index.html`）のモジュールを置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 3）。同じページが CMP8（公開用ビューア）としても動く（[DEC127](30_HLD.md#4134-設計判断)「テンプレートは 1 本で作業用と公開用を切り替える」）ので、CMP8 の `index.html` の関数（[HLD 3.8.3](30_HLD.md#383-関数)）もこの章に置く（CMP8 の配信の組み立て `build_public_site` は 10 章）。モジュールは、[HLD 3.7.3](30_HLD.md#373-関数)の「置き場」の「計算」の 9.1 `index_calc` と「画面」の 9.2 `index_screen` の 2 つ（ADR-LLD-001 の Decision 5）。コンポーネント内の共通部品は無い（[HLD 3.7.4](30_HLD.md#374-コンポーネント内の共通部品)）。JavaScript で、[1.2](#12-lld-の規約)の JavaScript の規約に従う。
+
+### 9.1 `index_calc`
+
+- **ID**: LLD-index_calc
+- **対応 HLD**: [3.7](30_HLD.md#37-cmp7-申請書生成-ui)・[3.8](30_HLD.md#38-cmp8-公開用ビューア)・[4.11](30_HLD.md#411-fr-011-申請書-xlsx-生成)・[4.12](30_HLD.md#412-fr-012-サミット一覧申請内容反映版生成)・[4.13](30_HLD.md#413-fr-013-html-ビューア生成)・[4.19](30_HLD.md#419-fr-019-html-ビューア機能仕様)・[4.20](30_HLD.md#420-fr-020-公開用ビューア配信)・[4.21](30_HLD.md#421-fr-021-申請エビデンス-zip-生成)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
+- **ファイル**: `public/index.html`
+
+関数の名前と役割は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「置き場」が「計算」の関数と、[3.8.3](30_HLD.md#383-関数)の表の同じ列が「計算」の関数で、処理の正本は表の「処理の正本」の列の節である。この節は、それを JavaScript で書くための細部（要素の置き方、型、止まり方、UT 候補）だけを足す。HLD 3.7.3 の前置きのとおり、計算の要素の関数は DOM・地図・localStorage に触れず、`tests/public/` から Node.js の `node:test` で UT を行う（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[DEC141](30_HLD.md#4194-設計判断)「DOM に触れない処理は DEC131 の要素に置く」、[DEC147](30_HLD.md#4194-設計判断)「DOM に触れない描画の計算も script 要素に置く」）。
+
+- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
+- 結合のつなぎ目は、`CMP7-EXT1`（CMP6（可視化生成）の `generate_viewer` → `index.html`）のうち、データファイルの変数があれば作業用とし、無くて `file:` ならどちらでもないとする判定を `decide_open_mode` が受ける（変数の値を渡すのは 9.2 の `start_page`。[HLD 3.7.5](30_HLD.md#375-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP7-EXT1-01`（作業用として動く）と `IT-CMP7-EXT1-02`（データファイルを消すか JavaScript として読めない中身にすると、変数が無いので `'neither'` になり、読めない旨を出す）。
+- [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、`mesh_to_latlon`・`latlon_to_tile` の値を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表で Python・C++ とそろえることで受ける（ADR-LLD-001 の Decision 6 の 5.3 の行の「言語ごとに別に実装する式のテストベクトル」）。出力のバイト列の決定性と、[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）は、状態と出力を持つ群を書くときに受ける。
+
+#### 9.1.1 ファイル割付
+
+- 計算の要素は `public/index.html` の中の 1 つの script 要素で、開始タグは属性を `id` だけにした `<script id="findsummits-calc">`（この字句のとおり。[HLD 3.7.3](30_HLD.md#373-関数)の「要素の `id`」は LLD で決める）。開始タグの直後で改行し、開始タグの次の行を `// trace: LLD-index_calc`、その次の文を `'use strict';` にする。終了タグ `</script>` は行の頭に置く。中身に `</script`・`<!--`・`<script` を（大文字・小文字を問わず）書かない（HTML の script の中身の解釈が変わるため。テストの取り出しも最初の `</script>` で切る）。
+- 置き場は、`<script src="merged_viewer_data.js">` の後、画面の要素より前（画面の要素が計算の関数を呼ぶため）。ほかの要素の並びは 9.2 で決める。
+- 要素の最上位には、関数の宣言（`function`）と定数（`const`）だけを置き、読み込んだときに何も実行しない（関数を呼ばない、グローバルの値を読まない）。HLD 3.7.3・3.8.3 の関数（ほかの要素とテストから呼ぶもの）は、必ず `function <名前>(…) { … }` の宣言で書き、`const`・`let` に関数を代入する形（`const f = (…) => …` など）で書かない。普通の script の最上位の `const`・`let` はグローバルのオブジェクトのプロパティにならないので、UT の `vm` の文脈から呼べない（ブラウザでは名前が共有されて動いてしまい、違いに気づきにくい）。内部の関数も同じ形にそろえる。
+- 関数は、引数と、この要素の定数と関数と、ECMAScript の組み込みだけを使い、ほかのグローバル（`window`・`document`・`localStorage`・`location`・`navigator`・`fetch`・`L`・`XLSX`・`JSZip` など）を読まない。SheetJS・JSZip を使う出力の関数の受け方と、ECMAScript の外の組み込み（`TextEncoder`・`TextDecoder` など）を使う関数の受け方は、それを使う群を書くときに決める（[#197](https://github.com/jj1xgo/findsummits/issues/197)「CMP7 の実装の前にライブラリの版を決め、ブラウザでの動きを確かめる」のライブラリの読み方とあわせて。[1.2](#12-lld-の規約)）。
+- UT のコードは `tests/public/test_index_calc.js` 1 本（[1.2](#12-lld-の規約)）。
+
+#### 9.1.2 型とデータ
+
+- 内部の定数: `_mesh_code_re = /^[0-9]{4}$/`（`mesh_to_latlon` が受けるメッシュコードの形。[2.1.3](#213-関数の細部)の Python の `[0-9]{4}` と同じ。JavaScript の `$` は旗の無い正規表現では文字列の末尾にだけ合うので、末尾の改行を受けない）。
+- 開き方の値: `'working'`（作業用）・`'public'`（公開用）・`'neither'`（どちらでもない）の 3 つの文字列（[HLD 3.7.3](30_HLD.md#373-関数)の `decide_open_mode` の「返すもの」）。定数の名前は付けない（画面の要素も同じ字句で比べる）。
+- 緯度経度の組とタイル番号は長さ 2 の配列（`[緯度, 経度]`・`[x, y]`）。数はすべて Number（IEEE 754 の倍精度。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まり）。
+
+#### 9.1.3 関数の細部
+
+群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
+
+##### 起動
+
+###### decide_open_mode
+
+`decide_open_mode(data: *, protocol: string) -> 'working' | 'public' | 'neither'`
+
+[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の「開き方による切り替え」の 1〜3 である。`data` は `window.FINDSUMMITS_DATA` の値（無ければ `undefined`）、`protocol` はページの URL のスキーム（`location.protocol` の値。`'file:'`・`'https:'` のように `:` までを含む）で、どちらも呼ぶ側（9.2 の `start_page`）が読んで渡す。HLD 3.7.3 の表の受け取るもの「データファイルの変数の有無」は、変数の値そのもので受け、有無は値が `undefined` かで表す（有無の判定を、UT で確かめられる計算の側に置くため）。
+
+1. `data !== undefined` なら `'working'`（「window.FINDSUMMITS_DATA があるとき」。`null` を含め、値の形は見ない。形は CMP6 が書く前に確かめる。[DEC126](30_HLD.md#4134-設計判断)「データファイルは GeoJSON を変数に代入する 1 文」）。
+2. そうでなく、`protocol` が `'http:'` か `'https:'`（この字句と `===` で等しい）なら `'public'`（「http か https で開いたとき」）。
+3. そうでなければ `'neither'`（「file: で開いて読めないとき」。`'file:'` のほかのスキームも同じ。HLD は `file:` の場合だけを書いているが、ほかのスキームでは公開用の読み込みが成り立たないため）。
+
+引数を検査しない（止まらない）。CMP8 も同じ関数を使う（[HLD 3.8.3](30_HLD.md#383-関数)）。
+
+##### 3.9 と同じ決まり
+
+###### mesh_to_latlon（JavaScript）
+
+`mesh_to_latlon(mesh: string) -> [[number, number], [number, number]]`
+
+[2.1.3](#213-関数の細部)の `mesh_to_latlon` と同じ決まり（HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)「メッシュ・タイル変換の二重実装を許容」）。`typeof mesh !== 'string'` なら `TypeError`、`_mesh_code_re` に合わなければ `RangeError` を投げる。`aa = Number(mesh.slice(0, 2))`、`bb = Number(mesh.slice(2))`。返すのは `[[南端の緯度, 西端の経度], [北端の緯度, 東端の経度]]` で、式と計算の順は [2.4](#24-言語ごとに別に実装する式のテストベクトル)の決まりのとおり（南端の緯度 = `(2 * aa) / 3`、北端の緯度 = `(2 * (aa + 1)) / 3`、西端の経度 = `100 + bb`、東端の経度 = `101 + bb`）。範囲（3036〜6848）は見ない。
+
+###### latlon_to_tile（JavaScript）
+
+`latlon_to_tile(lat: number, lon: number, z: number) -> [number, number]`
+
+2.1.3 の `latlon_to_tile` と同じ決まり。`[x, y]` を返す。式と計算の順は 2.4 の決まりのとおりで、JavaScript では `n = 2 ** z`、`Math.floor`・`Math.tan`・`Math.cos`・`Math.log`（自然対数）・`Math.PI` を使い、`r = (lat * Math.PI) / 180` を 1 つの式で求める（度をラジアンにする関数を作らない。2.4 の「掛ける順で値が変わるため」）。引数を検査しない（止めず、範囲の中に丸めない。範囲の外の緯度経度でも、式のとおりの値を返す。2.1.3 と同じ）。ただし、緯度が −90 以下か 90 以上のとき、または `NaN` のときの値は決めない。−90 以下と 90 より大きいときは `Math.log` に 0 以下が渡り、JavaScript は `NaN` か無限大を、Python の 2.1.3 は `ValueError` を出すので、言語で振る舞いがそろわない。90 ちょうどは `tan` が極端に大きくなり、処理系の最後の桁で結果が割れうる。呼ぶ側はこの範囲の値を渡さない。地図の表示範囲を渡す呼び出し（後の群の `visible_tiles` など）は、その群で緯度の範囲を決める。
+
+#### 9.1.4 メッセージ文面
+
+なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。利用者への知らせの文面は 9.2）。
+
+#### 9.1.5 UT 候補
+
+すべて自動（合否をテストのコードが判定できる）。UT のコードは `tests/public/test_index_calc.js`。群ごとに `#####` の見出し（9.1.3 と同じ群の名前に `（UT 候補）` を添えたもの。9.1.3 の見出しと同じ文字列にしない。[5.1.5](#515-ut-候補)の「起動と準備（UT 候補）」と同じ形）を立てて表を分ける。要素の全体を見るケース（どの群にも属さないもの）は、最初の群の見出しより前の表に置く。ID は群をまたいで通し番号にする（後の群は続きの番号から始める）。次の共通の準備を使う。
+
+- **計算の要素の読み込み**（どのケースも使う）: テストのファイルの位置から本体ルートの `public/index.html` を UTF-8 で読み（`path.join(__dirname, '..', '..', 'public', 'index.html')`）、`<script id="findsummits-calc">` の直後から、その後の最初の `</script>` の直前までを取り出す（開始タグか、その後の終了タグが見つからなければ、取り出す前に `assert` で落とす。見つからない位置で切り出して、ほかの期待の失敗と原因が混ざらないようにするため）。`vm.createContext({})` で空の文脈を作り、`vm.runInContext(<取り出した中身>, <文脈>)` で実行し、文脈の `decide_open_mode` などを呼ぶ。ケースごとに読み込み直す。
+- **値の比べ方**: 文脈が返した配列は別の realm のもので、`assert.deepStrictEqual` はプロトタイプの違いで落ちるので、`structuredClone` で写してから比べる。数は `===`（`assert.strictEqual`）か、写した配列の `assert.deepStrictEqual` で比べる（2.4 の表 1・表 2 は `==` で等しいと決めた値）。投げた例外は別の realm の組み込みなので、`assert.throws(<呼び出し>, (e) => e.name === 'RangeError')` のように `name` で見る（`instanceof` で見ない）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈で実行して例外が出ない。(d) 実行の後の文脈で、`decide_open_mode`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
+
+##### 起動（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-02` | `decide_open_mode` の開き方の判定 | 計算の要素の読み込み | (a) `({type: 'FeatureCollection', features: []}, 'file:')`、(b) `({}, 'https:')`、(c) `(undefined, 'http:')`、(d) `(undefined, 'https:')`、(e) `(undefined, 'file:')`、(f) `(undefined, 'about:')`、(g) `(undefined, '')`、(h) `(null, 'file:')`、(i) `(0, 'file:')` | (a)(b)(h)(i) `'working'`、(c)(d) `'public'`、(e)(f)(g) `'neither'`。どれも例外を投げない |
+
+##### 3.9 と同じ決まり（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-03` | `mesh_to_latlon` の値（2.4 の表 1）と、範囲を見ないこと | 計算の要素の読み込み | (a) 2.4 の表 1 の 6 つのメッシュ（文字列）、(b) `'0000'`、(c) `'9999'` | (a) 各行の `[[南端の緯度, 西端の経度], [北端の緯度, 東端の経度]]` が表 1 の 4 つの値と等しい（写した配列の `deepStrictEqual`）。(b) `[[0, 100], [0.6666666666666666, 101]]`、(c) `[[66, 199], [66.66666666666667, 200]]`（2.4 の式から求めた値。範囲〈3036〜6848〉の外でも例外を投げない） |
+| `UT-index_calc-04` | `mesh_to_latlon` の受けない値 | 計算の要素の読み込み | (a) `'533'`、(b) `'53390'`、(c) `'53a9'`、(d) `''`、(e) `' 5339'`、(f) `'5339\n'`、(g) `'\uFF15\uFF13\uFF13\uFF19'`（全角の数字の 5339。コードポイント U+FF15・U+FF13・U+FF13・U+FF19）、(h) `5339`（数）、(i) `null`、(j) `undefined` | (a)〜(g) `name` が `'RangeError'` の例外、(h)〜(j) `name` が `'TypeError'` の例外を投げる |
+| `UT-index_calc-05` | `latlon_to_tile` の値（2.4 の表 2） | 計算の要素の読み込み | 2.4 の表 2 の全行（緯度・経度・z） | 各行の `[x, y]` が表 2 の値と等しい |
+| `UT-index_calc-06` | `latlon_to_tile` は範囲の外でも止めない | 計算の要素の読み込み | (a) `(85.05112878, -180, 15)`、(b) `(-85.05112878, 180, 15)` | (a) `[0, -1]`、(b) `[32768, 32768]`。例外を投げない |
