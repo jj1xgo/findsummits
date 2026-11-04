@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈4 つの関数〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈5 つの関数〉と「除外判断ファイル」〈`compare_code_points` だけ〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -6404,7 +6404,7 @@ dominant_peak = min(candidates, key=key)
 
 関数の名前と役割は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「置き場」が「計算」の関数と、[3.8.3](30_HLD.md#383-関数)の表の同じ列が「計算」の関数で、処理の正本は表の「処理の正本」の列の節である。この節は、それを JavaScript で書くための細部（要素の置き方、型、止まり方、UT 候補）だけを足す。HLD 3.7.3 の前置きのとおり、計算の要素の関数は DOM・地図・localStorage に触れず、`tests/public/` から Node.js の `node:test` で UT を行う（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[DEC141](30_HLD.md#4194-設計判断)「DOM に触れない処理は DEC131 の要素に置く」、[DEC147](30_HLD.md#4194-設計判断)「DOM に触れない描画の計算も script 要素に置く」）。
 
-- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`（この群の残りの `apply_exclusions`・`apply_pending_returns`・`derive_current_state` は、後で書き足す）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
+- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`（この群の残りの `apply_pending_returns`・`derive_current_state` は、後で書き足す）と、「除外判断ファイル」の群の `compare_code_points`（この群の残りは後で書き足す）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
 - 結合のつなぎ目は、`CMP7-EXT1`（CMP6（可視化生成）の `generate_viewer` → `index.html`）のうち、データファイルの変数があれば作業用とし、無くて `file:` ならどちらでもないとする判定を `decide_open_mode` が受ける（変数の値を渡すのは 9.2 の `start_page`。[HLD 3.7.5](30_HLD.md#375-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP7-EXT1-01`（作業用として動く）と `IT-CMP7-EXT1-02`（データファイルを消すか JavaScript として読めない中身にすると、変数が無いので `'neither'` になり、読めない旨を出す）。
 - [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、`mesh_to_latlon`・`latlon_to_tile` の値を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表で Python・C++ とそろえることで受ける（ADR-LLD-001 の Decision 6 の 5.3 の行の「言語ごとに別に実装する式のテストベクトル」）。出力のバイト列の決定性と、[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）は、状態と出力を持つ群を書くときに受ける。
 
@@ -6424,20 +6424,26 @@ dominant_peak = min(candidates, key=key)
 - 編集の記録（`EditRecord`）: 次の 6 つのキーをこの順に持つオブジェクト。キーの名前と各要素の形は、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザへの保存」の値の表の同じ名前のキーと同じ（その表の `schema_version`・`generated_at` は持たない。保存の値を組み立てる `build_storage_value` が足す）。除外判断ファイルの `records` を台帳の形とした [DEC140](30_HLD.md#4194-設計判断)「除外判断ファイルは識別キーの順の JSON」に合わせ、ほかの記録も保存の値と同じ形にして、保存と読み込みで写し替えないようにする。
   - `names`: `Array<NameEdit>`。新設は `{target: 'new', lon: number, lat: number, summit_name_jp: string | null, summit_name: string | null, rationale: string | null}`（3 つの項目の null は、編集していない項目）、既存は `{target: 'existing', summit_code: string, action: 'band_change' | 'delete', rationale: string}`。キーはこの順。
   - `manual_deletes`: `Array<ManualDelete>`。`{summit_code: string, decision: 'delete' | '', note_draft: string, previous_decision: 'delete' | ''}`。
-  - `exclusions`: `Array<ExclusionRecord>`。HLD 4.19.2 の「除外判断ファイル」の `records` の要素の形（`target`・`lon`・`lat`・`summit_code`・`action`・`note`・`decided_generated_at`・`conditions` の順）。
+  - `exclusions`: `Array<ExclusionRecord>`。HLD 4.19.2 の「除外判断ファイル」の `records` の要素の形（`target`・`lon`・`lat`・`summit_code`・`action`・`note`・`decided_generated_at`・`conditions` の順。`conditions` は下の `ExclusionConditions`）。
   - `exclusion_note_drafts`: `Array<{record_key: RecordKey, note_draft: string}>`。
   - `pending_returns`: `Array<PendingReturnRecord>`。同じ節の `pending_returns` の要素の形（`target`・`lon`・`lat`・`summit_code`・`action`・`decided_generated_at`・`conditions` の順。`conditions` は `{applications, origin}`）。
   - `exclusions_unsynced`: `boolean`（判断ファイルとの差）。
   - 空の記録は、配列がすべて空で `exclusions_unsynced` が `false` のもの。各配列の中の並びは入れた順とし、同じ照合の値の要素を置き換えるときは元の位置のままにする（HLD 4.19.2 の導き方の 6 のとおり、記録の並びは結果に効かないため。ファイルに書くときの並びは、書く側の関数が決める）。同じ照合の値（下の「照合の値」）を持つ要素は 1 つの配列に 1 つまでで、`apply_edit` は重なりを作らない（保存の値から読んだ記録の重なりは、`parse_storage_value` が除く）。
 - 識別キー（`RecordKey`）: `{target: 'new' | 'existing', lon: number | null, lat: number | null, summit_code: string | null, action: 'add' | 'band_change' | 'delete'}` の 5 つのキーをこの順に持つオブジェクト。値の決まりは HLD 4.19.2 の「除外判断ファイル」の `records` と同じ（新設は `target: 'new'`・`lon`・`lat` が数・`summit_code: null`・`action: 'add'`、既存は `target: 'existing'`・`lon: null`・`lat: null`・`summit_code` が文字列・`action` が `'band_change'` か `'delete'`）。
 - 照合の値: 2 つの識別キーは、`target` と `action` が等しく、新設なら `lon`・`lat` が、既存なら `summit_code` が `===` で等しいとき同じとする（内部の関数 `_same_record_key(a: RecordKey, b: RecordKey) -> boolean`）。`names` の要素は、`target` が等しく、新設なら `lon`・`lat`、既存なら `summit_code` と `action` が `===` で等しいとき同じとする（内部の関数 `_same_name_target(a: NameEdit, b: NameEdit) -> boolean`）。`manual_deletes` の要素は `summit_code` で比べる。座標は数の等しさで比べ、丸めない（HLD 4.19.2 の導き方の 3）。
+- 判断時条件（`ExclusionConditions`）: 除外した時点の候補の条件を値で持つオブジェクト。キーの名前と各値の形は、HLD 4.19.2 の「除外判断ファイル」の `conditions` と同じで、`action` ごとに次の順のキーを持つ。画面が `apply_edit` の `exclude` に渡し、記録とファイルのキーの順になるので、順は省かない。`ExclusionRecord` の `conditions` も同じ形。
+  - `add`: `match_status`・`peak_lon`・`peak_lat`・`peak_elev`・`prominence`・`points`・`child_delete_codes`（コードの文字列の配列）。
+  - `band_change`: `match_status`・`summit_lon`・`summit_lat`・`sota_alt_m`・`peak_lon`・`peak_lat`・`peak_elev`・`prominence`・`points`。
+  - `delete`: `match_status`・`summit_lon`・`summit_lat`・`sota_alt_m`・`parent_summit_code`・`parent_lon`・`parent_lat`・`parent_elev`・`parent_prominence`。
+- 除外前の候補（`ExclusionCandidate`）: `{index: number, key: RecordKey, conditions: ExclusionConditions, members: Array<number>}` の 4 つのキーをこの順に持つオブジェクト。`index` は行を生む点の `state` の中の位置（0 から）、`members` は行に集約するフィーチャ（[DEC135](30_HLD.md#4194-設計判断)「除外の属性は鍵と終点の座標でそろえる」）の位置を昇順に並べた配列（行を生む点を含む）。`key` と `conditions` は、画面が「申請から除外」の操作で `apply_edit` に渡す値そのものである。
+- 台帳の一覧の要素（`LedgerEntry`）: `{record: ExclusionRecord, status: 'applied' | 'not_applied', reason: null | 'target_missing' | 'not_target' | 'not_unique' | 'action_changed' | 'conditions_changed', candidate: number | null}` の 4 つのキーをこの順に持つオブジェクト。`record` は受け取った台帳の要素そのもの（写さない）。`reason` は未適用の理由で、適用なら null、未適用なら HLD の「対象不在」「対象外」「一意でない」「アクション変化」「条件変化」の順の 5 つの字句のどれか。`candidate` は、照らして当たった候補がちょうど 1 つのときの、候補の一覧の中の位置（0 から）で、0 個か 2 個以上なら null。
 - 状態（`State`）: バッチの `features` と同じ数・同じ順のフィーチャのオブジェクトの配列（[DEC108](30_HLD.md#4124-設計判断)「現在の状態はバッチと同じ並びで値だけを置き換える」）。
 - 通知（`Notice`）: `{kind: string, …}` の形のオブジェクト。`kind` の値ごとのキーは、それを返す関数の細部に書く（今は `'manual_delete_not_applied'`・`'name_edit_not_applied'` の 2 つ）。文面は 9.2 が作る。
-- プログラムの誤り（`ProgramError`）: 同じく `{kind: string, …}` の形。今は `copy_features` の `'missing_property'` だけ（導き方の 4 の線の数の不一致は、`apply_exclusions` を書くときに足す）。呼び出しの誤りの例外（`TypeError`・`RangeError`）とは別で、画面の側がエクスポートを止めるために値で受ける（HLD 4.19.2 の導き方の 6）。
+- プログラムの誤り（`ProgramError`）: 同じく `{kind: string, …}` の形。今は `copy_features` の `'missing_property'` と、`apply_exclusions` の `'coord_diff_count_mismatch'`（導き方の 4 の線の数の不一致）の 2 つ。呼び出しの誤りの例外（`TypeError`・`RangeError`）とは別で、画面の側がエクスポートを止めるために値で受ける（HLD 4.19.2 の導き方の 6）。
 
 #### 9.1.3 関数の細部
 
-群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
+群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「除外判断ファイル」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
 
 ##### 起動
 
@@ -6455,11 +6461,11 @@ dominant_peak = min(candidates, key=key)
 
 ##### 編集の記録と現在の状態
 
-この群は今は 4 つの関数（`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`）だけを書いてある。HLD 3.7.3 の表の残り（`derive_current_state`・`apply_exclusions`・`apply_pending_returns`）は、書き足すときに、この見出しの下の関数の並びを表の順に直す。関数は HLD の表の順に並べる。
+この群は今は 5 つの関数（`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`）だけを書いてある。HLD 3.7.3 の表の残り（`derive_current_state`・`apply_pending_returns`）は、書き足すときに、この見出しの下の関数の並びを表の順に直す。関数は HLD の表の順に並べる。
 
 処理の正本は [HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「編集の記録」と「現在の状態の導き方」で、HLD に無い JavaScript の値の形（操作の形、通知とプログラムの誤りの形、返すものの組）と、受け取った値を書き換えるかどうかを、ここで決める。
 
-- 導き方の 2・3 の `apply_manual_deletes`・`apply_name_edits` は、受け取った状態のフィーチャの `properties` のキーの値を書き換え、同じ配列を `state` として返す。導き方の 1 の `copy_features` がフィーチャと `properties` のオブジェクトを写すので、2・3 はその写しを書き換える。現在の状態は操作のたびにバッチと編集の記録から初めから導き直す（[DEC133](30_HLD.md#4194-設計判断)「現在の状態は、バッチと編集の記録から毎回導く」）ので、1 で写した後は同じ写しを書き換えて、操作のたびに全フィーチャを何度も写さないようにする。バッチの値は書き換えない。`pending_applications` の配列は 1 では写さずバッチと共有するので、2 で評価し直すときは新しい配列を作り、元の配列とその要素は書き換えない。
+- 導き方の 2・3・4 の `apply_manual_deletes`・`apply_name_edits`・`apply_exclusions` は、受け取った状態のフィーチャの `properties` のキーの値を書き換え、同じ配列を `state` として返す。導き方の 1 の `copy_features` がフィーチャと `properties` のオブジェクトを写すので、2〜4 はその写しを書き換える。現在の状態は操作のたびにバッチと編集の記録から初めから導き直す（[DEC133](30_HLD.md#4194-設計判断)「現在の状態は、バッチと編集の記録から毎回導く」）ので、1 で写した後は同じ写しを書き換えて、操作のたびに全フィーチャを何度も写さないようにする。バッチの値は書き換えない。`pending_applications` の配列は 1 では写さずバッチと共有するので、2 で評価し直すときは新しい配列を作り、元の配列とその要素は書き換えない。
 - 書き換えるキーが `properties` に無ければ（`Object.prototype.hasOwnProperty.call(properties, <キー>)` が偽）、そのキーは書かずに飛ばし、ほかのキーは書く（HLD 4.19.2 の導き方の 1 の「バッチのフィーチャに無いキーは足さない」。欠けは `copy_features` がプログラムの誤りとして返しているので、2・3 は通知にも誤りにも入れない）。キーの有無は `Object.hasOwn`（ECMAScript 2022）を使えないので、`Object.prototype.hasOwnProperty.call` で見る（[1.2](#12-lld-の規約)）。
 - 通知は記録の配列の順に入れる。結果の並びは `derive_current_state` が決める（記録を入れた順は結果に効かない。HLD 4.19.2 の導き方の 6）。
 - `structuredClone` は ECMAScript の組み込みでなくブラウザの API（HTML の仕様）なので、計算の要素では使わない（UT の空の `vm` の文脈には無い。[1.2](#12-lld-の規約)）。
@@ -6527,6 +6533,68 @@ HLD 4.19.2 の導き方の 3 である（[DEC134](30_HLD.md#4194-設計判断)�
 
 当たる点が 2 つ以上なら、すべてに当てる（[SRS §8.2.2](20_SRS.md#822-localstorage-編集内容詳細仕様)は名前と根拠の保存値を「一致した対象にだけ適用」とし、除外の台帳〈[SRS §8.2.3](20_SRS.md#823-除外台帳)〉のような一意の要求を置いていない。追加のピークの座標と、変更・通常の削除の候補のコードとアクションは、バッチの中で重ならないので、ふつうは起きない）。当たる点が無ければ、`{kind: 'name_edit_not_applied', target: 'new' | 'existing', lon: number | null, lat: number | null, summit_code: string | null, action: 'band_change' | 'delete' | null}` を通知に入れる（新設は `summit_code`・`action` を null、既存は `lon`・`lat` を null）。`category === 'review'` のフィーチャと、`apply_manual_deletes` が当てた担当者指定削除の点（`match_status` が `'unmatched'`）は、上の条件に当たらないので当たらない。
 
+###### apply_exclusions
+
+`apply_exclusions(state: State, exclusions: Array<ExclusionRecord>) -> {state: State, ledger: Array<LedgerEntry>, candidates: Array<ExclusionCandidate>, errors: Array<ProgramError>}`
+
+HLD 4.19.2 の導き方の 4 である（[DEC135](30_HLD.md#4194-設計判断)「除外の属性は鍵と終点の座標でそろえる」）。引数を確かめない（2・3 と同じ）。次の順に行う。(1) 除外前の候補を作る（下の「除外前の候補」）。(2) 候補ごとに行に集約するフィーチャを決め、削除の候補の線の数を確かめる（「行に集約するフィーチャと線の数」）。(3) 台帳の要素ごとに候補に照らす（「台帳を照らす」）。(4) 照らしをすべて終えてから除外を当てる（「除外を当てる」）。
+
+- `ledger` は `exclusions` と同じ順・同じ数、`candidates` は下の「除外前の候補」の並び、`errors` は線の数の不一致を見つけた順。台帳の一覧を画面へ出す並びは、後で書く `derive_current_state` が決める。
+- 受け取った状態のフィーチャの `properties` のキーの値を書き換え、同じ配列を `state` として返す（群の前置きのとおり。書き換えるキーが `properties` に無ければ、書かずに飛ばす）。台帳の要素とその `conditions` は書き換えない。`ledger` の `record` は、受け取った台帳の要素そのものを入れる。
+- 全フィーチャを何度も見なくて済むように、`summit_code` などで引く `Map` を作ってよい（内部の作りで、結果は下の定義と同じにする）。
+- 以下で使う言葉。「通常の削除のサミットの点」は `copy_features` の 4 の形（`feature_type === 'summit'`・`match_status === 'delete'`・`category === 'delete'`・`review_reason === ''`）。「座標」は点のジオメトリの `coordinates[0]`（経度）・`coordinates[1]`（緯度）、「線の終点」は LineString のジオメトリの `coordinates` の最後の要素の `[0]`・`[1]`。コードと値は `===` で比べる。
+
+**除外前の候補**: 状態のフィーチャを並びの順に見て、次の 3 種の点ごとに候補を作り、その順に並べる（`candidates` の並び）。`key` と `conditions` は、キーをこの順に持つ新しいオブジェクトにする（画面がそのまま `apply_edit` の `exclude` に渡し、記録と判断ファイルのキーの順になる）。
+
+| アクション | 行を生む点 | `key` | `conditions` |
+|---|---|---|---|
+| `add` | `feature_type === 'peak'`・`category === 'add'` | `{target: 'new', lon: 座標の経度, lat: 座標の緯度, summit_code: null, action: 'add'}` | `match_status`・`peak_elev`・`prominence`・`points`（ピークの点の同じ名前のプロパティ）、`peak_lon`（座標の経度）・`peak_lat`（座標の緯度）、`child_delete_codes`（`dominant_peak_code` がピークの点の `summit_code` と等しい通常の削除のサミットの点の `summit_code` を、重なりを除き、`compare_code_points` の順に並べた配列。無ければ空の配列）。キーの順は 9.1.2 の `ExclusionConditions` のとおり |
+| `band_change` | `feature_type === 'peak'`・`category === 'band_change'` | `{target: 'existing', lon: null, lat: null, summit_code: ピークの点の summit_code, action: 'band_change'}` | `match_status`（ピークの点）、`summit_lon`・`summit_lat`（AZ の中のサミットの点の座標）、`sota_alt_m`（同じ点のプロパティ）、`peak_lon`・`peak_lat`（ピークの点の座標）、`peak_elev`・`prominence`・`points`（ピークの点） |
+| `delete` | 通常の削除のサミットの点 | `{target: 'existing', lon: null, lat: null, summit_code: サミットの点の summit_code, action: 'delete'}` | `match_status`（サミットの点）、`summit_lon`・`summit_lat`（サミットの点の座標）、`sota_alt_m`（サミットの点）、`parent_summit_code`（親のピークの点の `match_status` が `'matched'` ならその `summit_code`、ほかは null）、`parent_lon`・`parent_lat`（親の座標）、`parent_elev`（親の `peak_elev`）、`parent_prominence`（親の `prominence`） |
+
+- 「AZ の中のサミットの点」は、`feature_type === 'summit'`・`match_status === 'matched'` で、`summit_code` がピークの点と等しい点（[HLD 4.12.2](30_HLD.md#4122-処理の流れ)の 2「行ごとに、関わるフィーチャを結ぶ」の結び方。[DEC110](30_HLD.md#4124-設計判断)「列の値は行を生む点と鍵で結んだフィーチャから取る」）。「親のピークの点」は、`feature_type === 'peak'` で、`summit_code` がサミットの点の `dominant_peak_code` と等しい点。
+- 空文字のコードは結ばない。`child_delete_codes` の子と「親のピークの点」は、比べるコード（ピークの点の `summit_code`、サミットの点の `dominant_peak_code`）が空文字なら、無いものとする（子は空の配列、親は 0 個）。線の数の確かめ（下の「行に集約するフィーチャと線の数」）と、除外を当てるときの `add` の子の選び方も同じで、`dominant_peak_code` が空文字の削除の候補は、線を拾わず、どの `add` の子にもしない。理由は、SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) では `dominant_peak_code` の空文字は親が `ambiguous`（親のコードが無い）ことを表し、`ambiguous` のピークの `summit_code` も空文字なので、空文字どうしの一致は親子を表さないため（正しいバッチでは、その削除の候補は `category=review` で、通常の削除にならない）。
+- 相手がちょうど 1 つでなければ（0 個か 2 個以上）、相手から取る項目（`band_change` は `summit_lon`・`summit_lat`・`sota_alt_m`、`delete` は `parent_` で始まる 5 つ）をすべて null にする。理由は、正しいバッチでは起きないため。変更の候補と AZ の中のサミットの点の結び付きの失敗は、エクスポートの側が [DEC114](30_HLD.md#4124-設計判断)「結び付かない行があればエクスポートを止める」で止める。null の入った条件で除外した記録は、判断ファイルに書いて読み直すときの型の検査（数でなければ拒む）に外れるが、壊れたバッチでだけ起きることなので、ここでは止めない。
+- プロパティから取る項目は、そのキーが `properties` に無ければ null にする（`Object.prototype.hasOwnProperty.call` で見る。値が `undefined` のときも null にする。`JSON.stringify` で落ちるキーを作らないため）。値は写すだけで型を確かめない（バッチの値の型は CMP5 が決める。`prominence` の null はバッチの値のまま）。
+
+**行に集約するフィーチャと線の数**: 候補ごとの `members`（行に集約するフィーチャの位置を昇順に並べた配列。重なりを入れない。行を生む点を含む）は次のとおり。
+
+- `add`: `category === 'add'` で、`summit_code` がピークの点と等しいフィーチャ（`feature_type` を問わない。SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当てでは、ピークの点・`key_col`・`activation_zone`・`delete_zone`・`peak_col_link`）。
+- `band_change`: `category === 'band_change'` で、`summit_code` がピークの点と等しいフィーチャ（ピークの点・`key_col`・`activation_zone`・`delete_zone`・`peak_col_link` に加えて、AZ の中のサミットの点と、それへの `coord_diff`）。並びで隣り合うフィーチャや一部の種類だけで選ばない（`delete_zone` などは離れて置かれうる）。
+- `delete`: サミットの点と、それに結んだ `coord_diff`（下）。変更の親から削除の候補への線は `category=delete` なので、変更の候補の `members` に入らない（SRS [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定) の割り当てルールで、削除の線の `category` は親によらず `delete`）。
+
+通常の削除の線の結び方（DEC135）: 通常の削除のサミットの点を、`dominant_peak_code` と座標の組（3 つの値が `===` で等しいもの）で組に分ける。組ごとに、`feature_type === 'coord_diff'`・`category === 'delete'` で、`summit_code` が組の `dominant_peak_code` と等しく、線の終点が組の座標と等しいフィーチャを拾う（`dominant_peak_code` が空文字の組は何も拾わない）。組の点と拾った線を、それぞれ状態の並びの順に並べ、数が等しければ同じ順位どうしを結ぶ（1 つの点と 1 本の線の組もこの規則で結ぶ。同じ親と同じ座標の削除の候補が 2 つあるとき、終点だけで線を拾うと両方の線が両方に付くので、順位で 1 対 1 に結ぶ。コードの順に並べ替えてから結ばない）。数が違えば、その組の点には線を結ばず（`members` は点だけ）、`{kind: 'coord_diff_count_mismatch', parent_summit_code: string, summit_codes: Array<string>, summit_count: number, line_count: number}` を `errors` に 1 つ入れる。`parent_summit_code` は組の `dominant_peak_code`、`summit_codes` は組の点の `summit_code` を並びの順に、`summit_count` は組の点の数、`line_count` は拾った線の数（[HLD 4.19.3](30_HLD.md#4193-異常系)の「親と削除候補のコードを示す」）。`errors` の並びは、組の最初の点の並びの順。
+
+- 組の大きさによらず確かめる。HLD の DEC135 は「2 つ以上あるとき」に順位で結び、数が合わなければ誤りとするが、4.19.3 の表の行は組の大きさを限らない。CMP5 は削除の候補ごとに線を 1 本作るので、1 つの点の組で線が 0 本か 2 本以上でも、壊れたバッチと見て誤りにする。
+- どの組の座標にも終点が合わない `category=delete` の `coord_diff`（組の無い線）は、誤りにも `members` にも入れない。HLD 4.19.3 の行と DEC135 は削除の候補の側から数を比べるので、候補の無い線は誤りの定義に入らない。CMP5 は削除の候補ごとに線を作るので、正しいバッチでは起きず、その線に除外の属性が付かないだけで、申請書の行には効かない。
+
+**台帳を照らす**: 台帳の要素ごとに（`exclusions` の順に）、照らす候補を選ぶ。新設（`target === 'new'`）の要素は、アクションが `add` の候補のうち `key.lon`・`key.lat` が要素の `lon`・`lat` と等しいもの。既存（`target === 'existing'`）の要素は、アクションが `band_change` か `delete` の候補のうち `key.summit_code` が要素の `summit_code` と等しいもの（ここではアクションを比べない）。次の順に見て、最初に当たったものを `LedgerEntry` にする。
+
+1. 選んだ候補が 0 個: 未適用。新設は、座標が要素と等しい `feature_type === 'peak'` の点があれば `reason` を `'not_target'`、無ければ `'target_missing'`。既存は、`summit_code` が要素と等しく `feature_type` が `'peak'` か `'summit'` の点があれば `'not_target'`、無ければ `'target_missing'`（担当者指定削除の点〈`match_status` が `'unmatched'` で `category` が `'delete'`〉は通常の削除の形でないので候補にならず、ここで `'not_target'` になる）。`candidate` は null。
+2. 2 個以上: `'not_unique'`。`candidate` は null。どれにも当てない。
+3. 1 個で、候補のアクションが要素の `action` と違う: `'action_changed'`。
+4. 1 個で、判断時条件が違う: `'conditions_changed'`。要素の `conditions` がオブジェクトでない（`null` を含む）なら、キーを見ずに違うとする（例外を投げない）。オブジェクトなら、候補のアクションのキー（9.1.2 の `ExclusionConditions` の順）ごとに比べ、1 つでも違えば違う。`child_delete_codes` は集合として比べる（要素の `conditions` の値が配列でなければ違う。配列なら、重なりを除いた要素の数が等しく、一方の要素がすべて他方にある。順によらない）。ほかは `===` で比べる（数と null を区別する。`prominence` の 0 と null は違う）。要素の `conditions` に無いキーは `undefined` として比べる（違いになる）。余分なキーは見ない。
+5. それ以外: 適用（`status: 'applied'`・`reason: null`）。
+
+3〜5 の `candidate` は、その候補の `candidates` の中の位置。未適用の要素のフィーチャには、何も当てない。
+
+**除外を当てる**: 照らしをすべて終えてから、次の 1・2 の順に当てる（結果が台帳の並びによらないため。台帳の順に当てながら `parent_add` を付けると、子の `manual` が後から来たときに上書きの順で結果が変わる）。
+
+1. 適用した要素ごとに、その候補の `members` のフィーチャの `application_exclusion` を `'manual'`、`exclusion_note` を要素の `note`（そのまま。前後の空白は `apply_edit` と判断ファイルの読み込みが除いている）にする。
+2. 続いて、適用した `add` の候補ごとに、`dominant_peak_code` がそのピークの点の `summit_code` と等しい `delete` の候補のうち、1 で `manual` にしなかったものの `members` のフィーチャの `application_exclusion` を `'parent_add'`、`exclusion_note` を `追加候補 {summit_code} を除外したため削除申請を保留`（`{summit_code}` は親のピークの点の `summit_code`。SRS の `exclusion_note` の文と同じ）にする。`summit_code` が空文字のピークは親にならない。変更の候補の子の削除には `parent_add` を付けない。
+
+適用しない候補のフィーチャは、`copy_features` が写したバッチの値のまま（バッチは全件空文字）。
+
+##### 除外判断ファイル
+
+この群は今は `compare_code_points` だけを書いてある。導き方の 4（`apply_exclusions`）で使うので、群のほかの関数より先に書く。
+
+###### compare_code_points
+
+`compare_code_points(a: string, b: string) -> -1 | 0 | 1`
+
+HLD 4.19.2 の「除外判断ファイル」の「文字列の順は、Unicode の符号位置の順」である。`typeof a !== 'string'` か `typeof b !== 'string'` なら `TypeError` を投げる。2 つの文字列を先頭から符号位置（`String.prototype.codePointAt` の値。上位サロゲートの次に下位サロゲートがあれば 1 つの符号位置、対になっていないサロゲートはその値の符号位置）で 1 つずつ比べ、最初に違う符号位置が小さいほうを前とする（`a` が前なら -1、後なら 1）。違う符号位置が無ければ、短いほうを前とし、長さも同じなら 0。`Array.prototype.sort` の比べる関数にそのまま渡せる。`localeCompare`・`Intl` を使わない（ロケールで順が変わるため）。既定の `sort` や `<` の比べ方は UTF-16 の符号単位の順なので、基本多言語面の外の文字（符号位置が U+FFFF より大きいもの）と、U+E000〜U+FFFF の文字の間で順が逆になり、使えない。
+
 ##### 3.9 と同じ決まり
 
 ###### mesh_to_latlon（JavaScript）
@@ -6543,7 +6611,7 @@ HLD 4.19.2 の導き方の 3 である（[DEC134](30_HLD.md#4194-設計判断)�
 
 #### 9.1.4 メッセージ文面
 
-なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知とプログラムの誤りは値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
+なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知・台帳の一覧・プログラムの誤りは値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
 
 #### 9.1.5 UT 候補
 
@@ -6570,10 +6638,49 @@ HLD 4.19.2 の導き方の 3 である（[DEC134](30_HLD.md#4194-設計判断)�
 - **表の中の仮の名前**: キーと条件の名前は `KEY1`・`COND1` の形で書き、英大文字 1 文字と数字の名前を使わない（`docs/` の文書では、`make lint` の検査H〈`tools/lint_docs.py`〉が、コード表記の外の古い記号の形を止めるため）。
 - **書き換えないことの確かめ**: 呼ぶ前と後で、引数を `JSON.stringify` した文字列が等しいことを見る。`UT-index_calc-07`〜`11` では、各段の `apply_edit` の呼び出しごとに、渡した記録と `op` について見る（`UT-index_calc-08` の (f) だけに限らない）。
 - **状態の作り方**（`UT-index_calc-14`〜`16`）: どのケースも、小さなバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` で写した状態から始める。`apply_manual_deletes`・`apply_name_edits` には、ケースの入力の要素 1 つだけの配列を渡す（14 の (d) だけは 4 つの要素を 1 回で渡す）。
+- **除外のバッチ**（`UT-index_calc-18`〜`22` が使う）: テストのコードの中で、次の 22 のフィーチャを持つ `{type: 'FeatureCollection', features: [...]}` を作る関数を書き、ケースごとに作り直す。どのフィーチャの `properties` も、表の列のキーをこの順（`feature_type`・`match_status`・`category`・`summit_code`・`review_reason`・ほかのプロパティ）に持ち、その後に共通の 6 つ（小さなバッチと同じ）を持つ。`match_status`・`review_reason` が「—」のフィーチャは、そのキーを持たない。名は、このバッチの中の呼び名で、プロパティではない。
+
+  | 位置 | 名 | `feature_type` | `match_status` | `category` | `summit_code` | `review_reason` | ほかのプロパティ（この順） | ジオメトリ |
+  |---|---|---|---|---|---|---|---|---|
+  | 0 | `A1` | `peak` | `dominant` | `add` | `T-002` | `''` | `peak_elev: 1200`・`prominence: 300`・`points: 6` | 点 `[139, 36]` |
+  | 1 | `A1k` | `key_col` | — | `add` | `T-002` | — | なし | 点 `[139.01, 36.01]` |
+  | 2 | `A1z` | `activation_zone` | — | `add` | `T-002` | — | なし | Polygon `[[[139, 36], [139.001, 36], [139.001, 36.001], [139, 36]]]` |
+  | 3 | `A1d` | `delete_zone` | — | `add` | `T-002` | — | なし | 2 と同じ Polygon |
+  | 4 | `A1l` | `peak_col_link` | — | `add` | `T-002` | — | なし | LineString `[[139, 36], [139.01, 36.01]]` |
+  | 5 | `D1` | `summit` | `delete` | `delete` | `JA/NN-010` | `''` | `sota_alt_m: 1100`・`dominant_peak_code: 'T-002'` | 点 `[139.1, 36.1]` |
+  | 6 | `D1c` | `coord_diff` | `dominant` | `delete` | `T-002` | — | なし | LineString `[[139, 36], [139.1, 36.1]]` |
+  | 7 | `D2` | `summit` | `delete` | `delete` | `JA/NN-011` | `''` | `sota_alt_m: 1105`・`dominant_peak_code: 'T-002'` | 点 `[139.1, 36.1]`（`D1` と同じ座標） |
+  | 8 | `D2c` | `coord_diff` | `dominant` | `delete` | `T-002` | — | なし | 6 と同じ LineString |
+  | 9 | `B1` | `peak` | `matched` | `band_change` | `JA/NN-020` | `''` | `peak_elev: 1600`・`prominence: 250`・`points: 8` | 点 `[140, 37]` |
+  | 10 | `B1k` | `key_col` | — | `band_change` | `JA/NN-020` | — | なし | 点 `[140.01, 37.01]` |
+  | 11 | `B1z` | `activation_zone` | — | `band_change` | `JA/NN-020` | — | なし | Polygon `[[[140, 37], [140.001, 37], [140.001, 37.001], [140, 37]]]` |
+  | 12 | `B1s` | `summit` | `matched` | `band_change` | `JA/NN-020` | `''` | `sota_alt_m: 1490`・`dominant_peak_code: ''` | 点 `[140.001, 37.001]` |
+  | 13 | `B1c` | `coord_diff` | `matched` | `band_change` | `JA/NN-020` | — | なし | LineString `[[140, 37], [140.001, 37.001]]` |
+  | 14 | `D3` | `summit` | `delete` | `delete` | `JA/NN-021` | `''` | `sota_alt_m: 1400`・`dominant_peak_code: 'JA/NN-020'` | 点 `[140.1, 37.1]` |
+  | 15 | `D3c` | `coord_diff` | `matched` | `delete` | `JA/NN-020` | — | なし | LineString `[[140, 37], [140.1, 37.1]]` |
+  | 16 | `N1` | `peak` | `matched` | `no_change` | `JA/NN-030` | `''` | `peak_elev: 1000`・`prominence: 160`・`points: 6` | 点 `[141, 38]` |
+  | 17 | `N1s` | `summit` | `matched` | `no_change` | `JA/NN-030` | `''` | `sota_alt_m: 990`・`dominant_peak_code: ''` | 点 `[141.001, 38.001]` |
+  | 18 | `R1` | `summit` | `unmatched` | `review` | `JA/NN-040` | `unmatched` | `review_group_id: ''`・`sota_alt_m: 800`・`dominant_peak_code: ''`・`rationale: ''`・`review_decision: ''`・`review_note: ''` | 点 `[142.5, 39.5]` |
+  | 19 | `P1` | `peak` | `new` | `add` | `T-003` | `''` | `peak_elev: 900`・`prominence: null`・`points: 4` | 点 `[142, 39]` |
+  | 20 | `B1d` | `delete_zone` | — | `band_change` | `JA/NN-020` | — | なし | 11 と同じ Polygon |
+  | 21 | `B1l` | `peak_col_link` | — | `band_change` | `JA/NN-020` | — | なし | LineString `[[140, 37], [140.01, 37.01]]` |
+
+  （`B1d`・`B1l` は、ほかの位置を変えないために末尾に置く。変更の候補の `members` が、並びの隣り合いでなく `category` と `summit_code` で選ばれることも確かめる。）
+- **除外の状態の作り方**（`UT-index_calc-18`〜`22`）: 除外のバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` で写した `state` を `apply_exclusions` に渡す（`copy_features` の `errors` は見ない。除外のバッチは名前と根拠のキーを持たないため）。台帳の要素は `{target, lon, lat, summit_code, action, note, decided_generated_at: '2026-10-01T00:00:00Z', conditions}` の形で、ケースが挙げない値は、次の「期待の候補」の同じ候補の `key` と `conditions` を写して作る（「候補 N の要素」は、期待の候補の位置 N の `key` の 5 つの値と `conditions` の写しを持つ要素）。`note` は、ケースが挙げなければ `'理由A'`。期待の候補に同じ候補が無い要素（新設や既存のキーをケースが直に挙げるもの）の `conditions` は `{}`（照らしの 1〜3 で決まり、値は結果に効かない）。
+- **期待の候補**（`UT-index_calc-18` の期待。ほかのケースも参照する）: 除外のバッチの候補の一覧は、次の 6 つをこの順に持つ。`key` は 9.1.2 の識別キーの 5 つのキーの順（新設は `{target: 'new', lon, lat, summit_code: null, action: 'add'}`、既存は `{target: 'existing', lon: null, lat: null, summit_code, action}`）。
+
+  | 位置 | `index` | `key` | `conditions` | `members` |
+  |---|---|---|---|---|
+  | 0 | 0 | 新設 `(139, 36)`・`add` | `{match_status: 'dominant', peak_lon: 139, peak_lat: 36, peak_elev: 1200, prominence: 300, points: 6, child_delete_codes: ['JA/NN-010', 'JA/NN-011']}` | `[0, 1, 2, 3, 4]` |
+  | 1 | 5 | 既存 `JA/NN-010`・`delete` | `{match_status: 'delete', summit_lon: 139.1, summit_lat: 36.1, sota_alt_m: 1100, parent_summit_code: null, parent_lon: 139, parent_lat: 36, parent_elev: 1200, parent_prominence: 300}` | `[5, 6]` |
+  | 2 | 7 | 既存 `JA/NN-011`・`delete` | 位置 1 と同じで `sota_alt_m: 1105` | `[7, 8]` |
+  | 3 | 9 | 既存 `JA/NN-020`・`band_change` | `{match_status: 'matched', summit_lon: 140.001, summit_lat: 37.001, sota_alt_m: 1490, peak_lon: 140, peak_lat: 37, peak_elev: 1600, prominence: 250, points: 8}` | `[9, 10, 11, 12, 13, 20, 21]` |
+  | 4 | 14 | 既存 `JA/NN-021`・`delete` | `{match_status: 'delete', summit_lon: 140.1, summit_lat: 37.1, sota_alt_m: 1400, parent_summit_code: 'JA/NN-020', parent_lon: 140, parent_lat: 37, parent_elev: 1600, parent_prominence: 250}` | `[14, 15]` |
+  | 5 | 19 | 新設 `(142, 39)`・`add` | `{match_status: 'new', peak_lon: 142, peak_lat: 39, peak_elev: 900, prominence: null, points: 4, child_delete_codes: []}` | `[19]` |
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
-| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈で実行して例外が出ない。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
+| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈で実行して例外が出ない。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`compare_code_points`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
 
 ##### 起動（UT 候補）
 
@@ -6597,6 +6704,17 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 | `UT-index_calc-14` | `apply_manual_deletes` の当て方 | 計算の要素の読み込み。小さなバッチを `copy_features` で写した状態。要素は `{summit_code, decision, note_draft, previous_decision}` の値の順で書く | (a) `[{JA/NN-003, 'delete', ' 確認 ', ''}]`、(b) `[{JA/NN-003, 'delete', ' \n ', ''}]`、(c) `[{JA/NN-003, '', '下書き', 'delete'}]`、(d) `JA/NN-004`（保留組）・`JA/NN-005`（matched）・`JA/NN-006`（2 つ）・`JA/NN-404`（無い）の順に `'delete'`、(e) F4 の `review_note` を消したバッチで (a) | (a) F4 の `category`・`review_decision` が `'delete'`、`review_note` が `'確認'`、`rationale` が `'担当者判断による削除申請\n対象：JA/NN-003\n確認内容：確認'`、通知が空。(b) `review_note` が `''`、`rationale` の 3 行目が `確認内容：未記入（担当者補記）`。(c) F4 は変わらず、通知が空。(d) どの点も変わらず、通知が `found` の 0・0・2・0 の 4 件（`kind` は `'manual_delete_not_applied'`、記録の順）。(e) F4 の `category`・`review_decision`・`rationale` は (a) と同じに替わり、`properties` に `review_note` のキーは無いまま（足さない）、通知は空 |
 | `UT-index_calc-15` | 担当者指定削除の点の申請の評価し直し | 計算の要素の読み込み。状態の作り方のとおり（(b)(c) はバッチを作り直してから F4 を替える） | (a) 14 の (a) の要素、(b) F4 の `pending_applications` を小さなバッチの F4 の (3) だけの配列にしたバッチで、14 の (a) の要素、(c) F4 の `pending_applications` を小さなバッチの F4 の (2) だけの配列にしたバッチで、14 の (a) の要素 | (a) F4 の `pending_applications` の `match` が順に `'same'`・`'different'`・`'same'`、`pending_match` が `'same'`、`pending_return` が `false`、各要素の `Object.keys` の順が元と同じ、バッチの F4 の配列の `match` は `'held'`・`'held'`・`'same'` のまま。(b) `pending_applications` は内容がバッチの配列と等しいまま（小さなバッチの F4 の (3) の 1 つだけ。`held` の申請が無いので書き換えない）、`pending_match` は `''` のまま。(c) `pending_applications` が 1 つで、その `match` が `'different'`（`held` の変更の申請の評価し直し）、`pending_match` が `'different'`（`same` が無い）、`pending_return` が `false`、バッチの F4 の配列の `match` は `'held'` のまま |
 | `UT-index_calc-16` | `apply_name_edits` の当て方 | 計算の要素の読み込み。状態の作り方のとおり。(f) は 14 の (a) を当てた後の状態、(h) は F0 の `summit_name` を消したバッチ | (a) 新設 `(138.5, 35.25)` の `{summit_name_jp: '山', summit_name: null, rationale: 'R'}`、(b) 新設 `(138.5000001, 35.25)`、(c) 既存 `JA/NN-001`・`band_change` の `'B'`、(d) 既存 `JA/NN-001`・`delete` の `'D'`、(e) 既存 `JA/NN-002`・`delete` の `'X'`、(f) 既存 `JA/NN-003`・`delete` の `'Y'`、(g) 既存 `JA/NN-005`・`band_change` の `'Z'`、(h) 新設 `(138.5, 35.25)` の `{summit_name_jp: null, summit_name: 'n', rationale: 'R'}` | (a) F0 の `summit_name_jp` が `'山'`、`summit_name` は `''` のまま、`rationale` が `'R'`。F1（同じ座標の `key_col`）は変わらず、`properties` に `summit_name_jp`・`rationale` のキーが無いまま。(b) 当たらず通知 `{kind: 'name_edit_not_applied', target: 'new', lon: 138.5000001, lat: 35.25, summit_code: null, action: null}`。(c) F2 の `rationale` が `'B'`。(d) 当たらず通知（アクションが違う。`lon`・`lat` は null）。(e) F3 の `rationale` が `'X'`。(f) 当たらず通知（担当者指定削除の点）、F4 の `rationale` はテンプレートのまま。(g) 当たらず通知（no_change）。(h) F0 の `rationale` が `'R'`、`properties` に `summit_name` のキーは無いまま（足さない）、通知は空 |
+| `UT-index_calc-18` | `apply_exclusions` の除外前の候補と判断時条件 | 計算の要素の読み込み。除外の状態の作り方。(b) は `P1` の `peak_elev` のキーを消したバッチ、(c) は `B1s` を `match_status: 'delete'` にしたバッチ（AZ の中のサミットの点が 0 個）、(d) は `D1` と `D2` の `summit_code` を入れ替えたバッチ、(e) は期待の候補のバッチから `N1`（位置 16）の `summit_code` と `D3`（位置 14）の `dominant_peak_code` を `''` にしたバッチ | (a)〜(e) 空の台帳 | (a) `candidates` が期待の候補と等しく、各 `key`・`conditions` の `Object.keys` の順が 9.1.2 の順。`ledger`・`errors` が空。どのフィーチャの `application_exclusion`・`exclusion_note` も `''` のまま。(b) 位置 5 の候補の `conditions.peak_elev` が null（キーはある）。(c) 位置 3 の候補の `summit_lon`・`summit_lat`・`sota_alt_m` が null で、ほかの項目は期待の候補のまま。(d) 位置 0 の候補の `child_delete_codes` が `['JA/NN-010', 'JA/NN-011']`（符号位置の順で、並びの順ではない）。位置 1 の候補が `index: 5`・`key.summit_code: 'JA/NN-011'`・`members: [5, 6]`、位置 2 の候補が `index: 7`・`key.summit_code: 'JA/NN-010'`・`members: [7, 8]`（同じ座標の線は並びの順位で結び、コードの順で結ばない）。(e) 位置 4 の候補の `parent_summit_code`・`parent_lon`・`parent_lat`・`parent_elev`・`parent_prominence` がすべて null（空文字どうしで `N1` を親にしない）、`members` が `[14]`、`errors` が `[{kind: 'coord_diff_count_mismatch', parent_summit_code: '', summit_codes: ['JA/NN-021'], summit_count: 1, line_count: 0}]` |
+| `UT-index_calc-19` | `apply_exclusions` の除外の当て方と `parent_add` | 計算の要素の読み込み。除外の状態の作り方。(f) は 18 の (d) のバッチ（`D1` と `D2` の `summit_code` を入れ替えたもの） | (a) 候補 0 の台帳の要素（`note: '理由A'`）、(b) (a) と候補 1 の要素（`note: 'd1'`）、(c) 候補 3 の要素（`note: ''`）、(d) 候補 4 の要素（`note: 'd3'`）、(e) (b) の 2 つを逆の順にした台帳、(f) 既存 `JA/NN-010`・`delete` で、`conditions` が候補 2 のもの（`sota_alt_m: 1105`）、`note: 'd'` の要素 1 つ | (a) 位置 0〜4 の `application_exclusion` が `'manual'`・`exclusion_note` が `'理由A'`。位置 5〜8 が `'parent_add'`・`'追加候補 T-002 を除外したため削除申請を保留'`。ほかは `''`。`ledger` の要素が `{record: <渡した要素>, status: 'applied', reason: null, candidate: 0}`。(b) 位置 0〜4 は (a) と同じ、位置 5・6 が `'manual'`・`'d1'`、位置 7・8 が `'parent_add'`。(c) 位置 9〜13・20・21 が `'manual'`・`''`、位置 14・15 は `''` のまま（変更の候補の子に `parent_add` は付けない）。(d) 位置 14・15 だけが `'manual'`・`'d3'`。(e) 状態は (b) と同じ（`ledger` は台帳の順）。(f) `ledger` の要素が `applied`・`candidate: 2`、位置 7・8 だけが `'manual'`・`'d'`、位置 5・6 は `''` のまま |
+| `UT-index_calc-20` | `apply_exclusions` の未適用の理由 | 計算の要素の読み込み。除外の状態の作り方。(l) は `copy_features` の後に `apply_manual_deletes` へ要素 `{summit_code: 'JA/NN-040', decision: 'delete', note_draft: '', previous_decision: ''}` 1 つの配列を渡した後の状態（`R1` の `category` が `'delete'` になる）、(o) は `P1`（位置 19）の座標を `[139, 36]`（`A1` と同じ）にしたバッチ | 台帳の要素 1 つずつ: (a) 候補 5 の要素で `conditions.prominence` を 0、(b) 新設 `(141, 38)`、(c) 新設 `(150, 40)`、(d) 既存 `JA/NN-030`・`band_change`、(e) 既存 `JA/NN-040`・`delete`、(f) 既存 `JA/NN-999`・`delete`、(g) 既存 `JA/NN-020`・`delete`（`conditions` は候補 1 のもの）、(h) 候補 1 の要素で `conditions.sota_alt_m` を 1101、(i) 候補 0 の要素で `conditions.child_delete_codes` を `['JA/NN-011', 'JA/NN-010']`、(j) 候補 0 の要素で `conditions.child_delete_codes` を `['JA/NN-010']`、(k) `D2` の `summit_code` を `'JA/NN-010'` にしたバッチで、候補 1 の要素、(l) 既存 `JA/NN-040`・`delete`、(m) 候補 3 の要素で `conditions` から `points` のキーを消したもの、(n) 候補 0 の要素で `conditions` から `child_delete_codes` のキーを消したもの、(o) 候補 0 の要素、(p) 候補 3 の要素で `conditions` を `null` にしたもの | `ledger` の 1 つの要素の `reason`・`candidate` が順に: (a) `'conditions_changed'`・5、(b) `'not_target'`・null、(c) `'target_missing'`・null、(d) `'not_target'`・null、(e) `'not_target'`・null、(f) `'target_missing'`・null、(g) `'action_changed'`・3、(h) `'conditions_changed'`・1、(i) null・0、(j) `'conditions_changed'`・0、(k) `'not_unique'`・null、(l) `'not_target'`・null、(m) `'conditions_changed'`・3、(n) `'conditions_changed'`・0（例外を投げない）、(o) `'not_unique'`・null（新設の一意でない）、(p) `'conditions_changed'`・3（例外を投げない）。(b)〜(f)・(l) の `conditions` は `{}`。`status` は (i) だけが `'applied'`（位置 0〜4 が `'manual'`）で、ほかは `'not_applied'`（どのフィーチャの `application_exclusion` も `''` のまま） |
+| `UT-index_calc-21` | `apply_exclusions` の `coord_diff` の結び方と数の誤り | 計算の要素の読み込み。除外の状態の作り方。(a) `D2c`（位置 8）を消したバッチ、(b) `D3c`（位置 15）の終点を `[140.2, 37.1]` にしたバッチ、(c) 位置 15 の後に `D3c` と同じフィーチャをもう 1 つ足したバッチ | (a) 候補 0 の要素（`note: '理由A'`）、(b)(c) 空の台帳 | (a) `errors` が `[{kind: 'coord_diff_count_mismatch', parent_summit_code: 'T-002', summit_codes: ['JA/NN-010', 'JA/NN-011'], summit_count: 2, line_count: 1}]`。候補 1・2 の `members` が `[5]`・`[7]`。位置 5・7 が `'parent_add'`、位置 6（`D1c`）は `''` のまま。(b) `errors` が `parent_summit_code: 'JA/NN-020'`・`summit_codes: ['JA/NN-021']`・`summit_count: 1`・`line_count: 0` の 1 件、候補 4 の `members` が `[14]`。(c) `line_count: 2` の 1 件、候補 4 の `members` が `[14]` |
+| `UT-index_calc-22` | `apply_exclusions` の書き換えの範囲とキーを足さないこと | 計算の要素の読み込み。除外の状態の作り方。(b) は `A1k`（位置 1）の `application_exclusion` のキーを消したバッチ | (a) 候補 0 と候補 3 の要素の台帳、(b) 候補 0 の要素 | (a) 返した `state` が渡した配列と同じもの（`===`）。渡した台帳とその要素の `JSON.stringify` が呼ぶ前と同じ。バッチ（`copy_features` に渡したもの）の `JSON.stringify` が呼ぶ前と同じ。`ledger` の各 `record` が渡した要素と同じもの（`===`）。各フィーチャの `properties` の `Object.keys` の順が元と同じ。(b) 位置 1 の `properties` に `application_exclusion` のキーが無いまま、`exclusion_note` は `'理由A'`（`note` は候補 0 の要素の既定で `'理由A'` とする）、位置 0・2〜4 は `'manual'` |
+
+##### 除外判断ファイル（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-17` | `compare_code_points` の順 | 計算の要素の読み込み | (a) `('a', 'b')`、(b) `('b', 'a')`、(c) `('a', 'a')`、(d) `('', 'a')`、(e) `('ab', 'a')`、(f) `(String.fromCodePoint(0xFF61), String.fromCodePoint(0x1F600))`、(g) `(String.fromCodePoint(0x1F600), String.fromCodePoint(0xFFFF))`、(h) `('JA/NN-011', 'JA/NN-010')`、(i) `(1, 'a')`、(j) `('a', null)` | (a) -1、(b) 1、(c) 0、(d) -1、(e) 1、(f) -1（符号位置 U+FF61 は U+1F600 より前。UTF-16 の符号単位の比べ方では後になる）、(g) 1（U+1F600 は U+FFFF より後。符号単位では前）、(h) 1。(i)(j) `name` が `'TypeError'` の例外 |
 
 ##### 3.9 と同じ決まり（UT 候補）
 
