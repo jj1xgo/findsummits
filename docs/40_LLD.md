@@ -6529,7 +6529,7 @@ HLD 4.19.2 の導き方の 1〜6 である（[DEC133](30_HLD.md#4194-設計判�
 
 HLD 4.19.2 の導き方の 1「フィーチャを写す」である。`batch.features` が配列でないか、`properties` がオブジェクトでない（`null` を含む）フィーチャがあれば `TypeError` を投げる（CMP6 がデータファイルを書く前に形を確かめているので、呼び出しの誤りとして止める）。
 
-- 各フィーチャを、元のキーの順のまま新しいオブジェクトに写し、その `properties` を、元のキーの順のまま新しいオブジェクトに写したものにする（`Object.keys` の順に 1 つずつ写す）。プロパティの値（`pending_applications` の配列を含む）とジオメトリは写さず、同じものを使う（2・3 が書き換えるのはプロパティのオブジェクトのキーの値で、配列の中身は書き換えないため、浅い写しで足りる。全フィーチャを深く写すと操作のたびの時間が増える）。
+- 各フィーチャを、元のキーの順のまま新しいオブジェクトに写し、その `properties` を、元のキーの順のまま新しいオブジェクトに写したものにする（`Object.keys` の順に 1 つずつ写す）。プロパティの値（`pending_applications` の配列を含む）とジオメトリは写さず、同じものを使う（導き方の 2〜5 が書き換えるのはプロパティのオブジェクトのキーの値で、配列の中身は書き換えないため、浅い写しで足りる。全フィーチャを深く写すと操作のたびの時間が増える）。
 - キーの欠けを、`Object.prototype.hasOwnProperty.call(properties, <キー>)` が偽であることで見つける（値が `null` でもキーはあり、継承したキーは無いとみなす）。フィーチャごとに（フィーチャの並びの順に）、次の 1〜4 の順で見る。`errors` はこの見る順に入れる（同じ番号の中は挙げたキーの順）。
   1. どのフィーチャも: `application_exclusion`・`exclusion_note`・`pending_applications`・`pending_match`・`pending_note`・`pending_return`（この順）。
   2. 担当者指定削除の適格の形の点（`feature_type === 'summit'`・`match_status === 'unmatched'`・`category === 'review'`・`review_reason === 'unmatched'`・`review_group_id === ''`。コードは見ない）: `category`・`review_decision`・`review_note`・`rationale`。
