@@ -9,7 +9,7 @@
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「保存と引き継ぎ」〈計算の 7 つすべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -6404,7 +6404,7 @@ dominant_peak = min(candidates, key=key)
 
 関数の名前と役割は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「置き場」が「計算」の関数と、[3.8.3](30_HLD.md#383-関数)の表の同じ列が「計算」の関数で、処理の正本は表の「処理の正本」の列の節である。この節は、それを JavaScript で書くための細部（要素の置き方、型、止まり方、UT 候補）だけを足す。HLD 3.7.3 の前置きのとおり、計算の要素の関数は DOM・地図・localStorage に触れず、`tests/public/` から Node.js の `node:test` で UT を行う（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[DEC141](30_HLD.md#4194-設計判断)「DOM に触れない処理は DEC131 の要素に置く」、[DEC147](30_HLD.md#4194-設計判断)「DOM に触れない描画の計算も script 要素に置く」）。
 
-- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`derive_current_state`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`（この群の 7 つすべて）と、「除外判断ファイル」の群の計算の 4 つすべて（`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
+- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`derive_current_state`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`（この群の 7 つすべて）と、「保存と引き継ぎ」の群の計算の 7 つすべて（`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`）と、「除外判断ファイル」の群の計算の 4 つすべて（`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
 - 結合のつなぎ目は、`CMP7-EXT1`（CMP6（可視化生成）の `generate_viewer` → `index.html`）のうち、データファイルの変数があれば作業用とし、無くて `file:` ならどちらでもないとする判定を `decide_open_mode` が受ける（変数の値を渡すのは 9.2 の `start_page`。[HLD 3.7.5](30_HLD.md#375-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP7-EXT1-01`（作業用として動く）と `IT-CMP7-EXT1-02`（データファイルを消すか JavaScript として読めない中身にすると、変数が無いので `'neither'` になり、読めない旨を出す）。
 - [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、`mesh_to_latlon`・`latlon_to_tile` の値を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表で Python・C++ とそろえることで受ける（ADR-LLD-001 の Decision 6 の 5.3 の行の「言語ごとに別に実装する式のテストベクトル」）。[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、現在の状態を導き直すときのメモリは、`derive_current_state` で受ける（[9.1.3](#913-関数の細部)）。除外判断ファイルのバイト列の決定性（[SRS 6.2.10](20_SRS.md#6210-除外判断-json) の「並び」と [NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は、`build_exclusion_file` で受ける（9.1.3）。出力のバイト列の決定性と、出力を作るときのメモリは、出力の群を書くときに受ける。
 
@@ -6419,6 +6419,9 @@ dominant_peak = min(candidates, key=key)
 #### 9.1.2 型とデータ
 
 - 内部の定数: `_mesh_code_re = /^[0-9]{4}$/`（`mesh_to_latlon` が受けるメッシュコードの形。[2.1.3](#213-関数の細部)の Python の `[0-9]{4}` と同じ。JavaScript の `$` は旗の無い正規表現では文字列の末尾にだけ合うので、末尾の改行を受けない）。
+- 内部の定数（保存と引き継ぎの群が使う）:
+  - `_storage_prefix = 'findsummits:1:'`（世代のキーの接頭辞と保存の形の版。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザへの保存」）。
+  - `_storage_key_re = /^findsummits:1:[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/`（引き継ぎ元の候補にするキーの形。HLD の「`YYYY-MM-DDTHH:MM:SSZ` の形」。`[0-9]` は ASCII の数字だけに合い、全角の数字に合わない。旗の無い正規表現の `$` は文字列の末尾にだけ合うので、末尾の改行と空白を受けない。日付として正しいか〈月が 13 など〉は見ない。HLD は「形」とだけ書くため）。
 - 開き方の値: `'working'`（作業用）・`'public'`（公開用）・`'neither'`（どちらでもない）の 3 つの文字列（[HLD 3.7.3](30_HLD.md#373-関数)の `decide_open_mode` の「返すもの」）。定数の名前は付けない（画面の要素も同じ字句で比べる）。
 - 緯度経度の組とタイル番号は長さ 2 の配列（`[緯度, 経度]`・`[x, y]`）。数はすべて Number（IEEE 754 の倍精度。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まり）。
 - 編集の記録（`EditRecord`）: 次の 6 つのキーをこの順に持つオブジェクト。キーの名前と各要素の形は、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザへの保存」の値の表の同じ名前のキーと同じ（その表の `schema_version`・`generated_at` は持たない。保存の値を組み立てる `build_storage_value` が足す）。除外判断ファイルの `records` を台帳の形とした [DEC140](30_HLD.md#4194-設計判断)「除外判断ファイルは識別キーの順の JSON」に合わせ、ほかの記録も保存の値と同じ形にして、保存と読み込みで写し替えないようにする。
@@ -6446,13 +6449,20 @@ dominant_peak = min(candidates, key=key)
 - 拒む理由（`ExclusionFileFailure`）: `{kind: 'not_utf8' | 'not_json' | 'unsupported_version' | 'missing_key' | 'extra_key' | 'bad_value' | 'duplicate_key', path: Array<string | number>}` の 2 つのキーをこの順に持つオブジェクト。`kind` が `'duplicate_key'` のときだけ、3 つ目のキー `first: number` を持つ。`path` は、外れた値までの、最上位からのキー（文字列）と配列の位置（0 からの数）の並びで、最上位そのものは `[]`。`missing_key` の `path` は欠けたキーまで、`extra_key` の `path` は余分なキーまでを含む。`duplicate_key` の `path` は `[<配列のキー>, <後の要素の位置>]` で、`first` は同じ識別キーの前の要素の位置。各 `kind` は [HLD 4.19.3](30_HLD.md#4193-異常系)の判断ファイルの行の「UTF-8 でない」（`not_utf8`）、「JSON でない」（`not_json`）、「版が 1 でも 2 でもない」（`unsupported_version`）、「検証に外れる」（残りの 4 つ）に当たる。同じ行の「読めない」（ファイルを読むことの失敗）は画面の `load_exclusion_file` が受ける（9.2）。
 - 読み込みの結果（`ExclusionFileResult`）: 受け入れたら `{ok: true, exclusions: Array<ExclusionRecord>, pending_returns: Array<PendingReturnRecord>}`、拒んだら `{ok: false, failure: ExclusionFileFailure}`。キーはこの順。
 - 差分（`ExclusionDiff`）: `{exclusions: {added, changed, removed}, pending_returns: {added, changed, removed}, counts: {exclusions: {applied: number, not_applied: number}, pending_returns: {applied: number, not_applied: number}}}`。キーはどれもこの順。`added`・`removed` は記録の要素の配列、`changed` は `{before, after}`（前と後の要素）の配列。中身は `diff_exclusion_ledgers`。
+- 外した名前の要素（`IgnoredName`）: `{index: number, reason: 'invalid' | 'duplicate', target: 'new' | 'existing' | null, lon: number | null, lat: number | null, summit_code: string | null, action: 'band_change' | 'delete' | null}` の 7 つのキーをこの順に持つオブジェクト。`index` は保存の値の `names` の中の位置（0 から）、`reason` は形の外れ（`'invalid'`）か重なり（`'duplicate'`）。後ろの 5 つは示す識別値（HLD の「件数と識別値を示す」）で、要素がオブジェクトで、`target` が `'new'` で `lon`・`lat` がどちらも「数」（除外判断ファイルの群の「値の決まり」。範囲も）なら新設の識別値（`summit_code`・`action` は null）、`target` が `'existing'` で `summit_code` が文字列で `action` が `'band_change'` か `'delete'` なら既存の識別値（`lon`・`lat` は null）、どちらでもなければ 5 つとも null（識別値を取れない。画面は位置だけを示す）。名前の通知（`name_edit_not_applied`）の 5 つのキーと同じ並びで、`action` の null は新設を表す。
+- 外した担当者指定削除の要素（`IgnoredManualDelete`）: `{index: number, reason: 'invalid' | 'duplicate', summit_code: string | null}`。`summit_code` は、要素がオブジェクトで `summit_code` が文字列ならその値、ほかは null。
+- 保存の値の受け入れの結果（`StorageParseResult`）: `{record: EditRecord, rejected: boolean, names_ignored: Array<IgnoredName>, manual_deletes_ignored: Array<IgnoredManualDelete>, exclusions_failure: ExclusionFileFailure | null, pending_returns_failure: ExclusionFileFailure | null}` の 6 つのキーをこの順に持つオブジェクト（[HLD 3.7.3](30_HLD.md#373-関数)の `parse_storage_value` の返すものの順: 受け入れた記録、値の全体を採らなかったか、無視した要素と示す識別値、台帳を空にしたか、申請に戻した記録を空にしたか）。`exclusions_failure`・`pending_returns_failure` は、その配列の全体を採らなかったときの最初に外れた 1 か所（`ExclusionFileFailure`）で、採ったときと、キーが無かったときは null。
+- 引き継ぎ元（`InheritSource`）: `{current_exists: boolean, key: string | null, generated_at: string | null}`。`current_exists` は今回のキーがあるか。`key` は引き継ぎ元のキー、`generated_at` はそのキーの `findsummits:1:` の後ろの文字列で、引き継ぎ元が無いときと、今回のキーがあるときは、どちらも null。
+- 引き継ぎの確かめ方（`InheritPrompt`）: 確かめないときは `{kind: 'none'}`、壊れた旨だけを示すときは `{kind: 'broken'}`、確かめるときは `{kind: 'ask', counts: {names: number, manual_deletes: number, exclusions: number, pending_returns: number}, names_ignored, manual_deletes_ignored, exclusions_failure, pending_returns_failure}`（キーはこの順。後ろの 4 つは受け取った `StorageParseResult` の同じ名前の値そのもの）。
+- 引き継ぎの結果（`InheritResult`）: `{record: EditRecord, names_not_applied: Array<{target, lon, lat, summit_code, action}>, manual_deletes_not_applied: Array<string>}`（キーはこの順）。`names_not_applied` の要素は `IgnoredName` の後ろの 5 つと同じ形の識別値（名前の通知から `kind` を除いたもの）、`manual_deletes_not_applied` は適格でないコードの並び（HLD の「当たらない記録の件数と識別値」「適格でないコードは示して写さない」）。
+- キーの一覧の行（`StorageEntrySummary`）: `{version: string | null, generated_at: string | null, counts: {names: number, manual_deletes: number, exclusions: number, pending_returns: number} | null, length: number}`（キーはこの順。HLD の「版、解析日時、記録の件数、値の文字数」。null は「不明」）。
 - 状態（`State`）: バッチの `features` と同じ数・同じ順のフィーチャのオブジェクトの配列（[DEC108](30_HLD.md#4124-設計判断)「現在の状態はバッチと同じ並びで値だけを置き換える」）。
 - 通知（`Notice`）: `{kind: string, …}` の形のオブジェクト。`kind` の値ごとのキーは、それを返す関数の細部に書く（今は `'manual_delete_not_applied'`・`'name_edit_not_applied'` の 2 つ。`apply_exclusions`・`apply_pending_returns` は通知を返さないので、HLD 4.19.2 の導き方の 6 の「2〜5 の通知」は、2・3 の通知だけになる）。文面は 9.2 が作る。
 - プログラムの誤り（`ProgramError`）: 同じく `{kind: string, …}` の形。今は `copy_features` の `'missing_property'` と、`apply_exclusions` の `'coord_diff_count_mismatch'`（導き方の 4 の線の数の不一致）の 2 つ。呼び出しの誤りの例外（`TypeError`・`RangeError`）とは別で、画面の側がエクスポートを止めるために値で受ける（HLD 4.19.2 の導き方の 6）。
 
 #### 9.1.3 関数の細部
 
-群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「除外判断ファイル」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
+群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「保存と引き継ぎ」、「除外判断ファイル」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
 
 ##### 起動
 
@@ -6662,6 +6672,113 @@ HLD 4.19.2 の導き方の 5 である（[DEC191](30_HLD.md#4194-設計判断)�
 - 子: 通常の削除のサミットの点で、`dominant_peak_code` が親の `summit_code` と等しく、`application_exclusion === ''` で、申請済みとして外れていない点。外れているのは `pending_match === 'same'` かつ `pending_return === false` の点で、これは子に入れない（`pending_match` が `'same'` でない点と、`pending_return` が `true` の点〈申請に戻された点〉は入れる）。
 - 親が除外されているときは、4 で子に `parent_add` が付いており、親の `application_exclusion` も空でないので入らない（HLD のとおり）。親の `summit_code` が空文字のときは親にしない（`apply_exclusions` の「空文字のコードは結ばない」と同じ理由）。
 
+##### 保存と引き継ぎ
+
+この群は、HLD 3.7.3 の表の計算の 7 つを表の順に書く（画面の `read_storage`・`write_storage`・`confirm_inherit`・`show_storage_keys`・`watch_other_tabs` は 9.2）。処理の正本は [HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザへの保存」「新しい解析結果での引き継ぎ」「保存の失敗と古い世代の削除」で、HLD に無い JavaScript の値の形（受け入れの結果、示す識別値、引き継ぎの確かめ方、キーの一覧の行）、確かめの順、重なりの数え方、件数の内訳と文字数の数え方を、ここで決める。
+
+- 計算の要素は localStorage に触れない（[9.1.1](#911-ファイル割付)）。localStorage の読み書きとその例外は画面の `read_storage`・`write_storage` が受け、この群の関数は値の文字列とキーの一覧を受け取る。
+- 受け取った引数とその配列・要素を書き換えない（7 つとも）。
+
+###### storage_key
+
+`storage_key(generated_at: string) -> string`
+
+`typeof generated_at !== 'string'` なら `TypeError`。`_storage_prefix + generated_at` を返す（HLD の「接頭辞 `findsummits:`、保存の形の版 `1`、`:`、`metadata.generated_at` をつないだ文字列」）。形は確かめない（`metadata.generated_at` の形は CMP6 が書く前に確かめている。形の違う値で作ったキーは、後の世代の `select_inherit_source` が候補にしないだけで、今回の世代の保存には効かない）。
+
+###### build_storage_value
+
+`build_storage_value(record: EditRecord, generated_at: string) -> string`
+
+[DEC136](30_HLD.md#4194-設計判断)「ブラウザの保存は世代ごとに 1 つの JSON」の値を作る。
+
+- `record` がオブジェクトでない（`null` と配列を含む）、`names`・`manual_deletes`・`exclusions`・`exclusion_note_drafts`・`pending_returns` のどれかが配列でない、`exclusions_unsynced` が真偽値でない、`generated_at` が文字列でない、のどれかなら `TypeError`（画面が持つ記録を渡すので、呼び出しの誤りとして止める）。
+- `{schema_version: 1, generated_at, names, manual_deletes, exclusions, exclusion_note_drafts, pending_returns, exclusions_unsynced}`（この順。HLD の値の表の順。後ろの 6 つは `record` の同じ名前の値そのもの）を `JSON.stringify(<それ>)`（字下げなし）にして返す。
+- 字下げしないのは、localStorage の容量に入りやすくするため（値は人が読むものでない。ファイルの `build_exclusion_file` は字下げ 2）。要素は写さず、キーの順と配列の並びは記録のまま書く（記録は `apply_edit`・`parse_storage_value`・`inherit_records`・`parse_exclusion_file` が 9.1.2 の順に作る）。要素の値は確かめない（壊れた値は、読むときの受け入れの表で外れる）。
+- 同じ記録から作った値を `parse_storage_value(<値>, generated_at)` で受け入れると、`rejected` が偽で、`record` は元の記録と同じ値になり（`assert.deepStrictEqual` で等しい）、外した要素は無く、2 つの `_failure` は null になる。成り立つのは、記録が受け入れの表のどの行にも外れず、3 つの項目がどれも null の新設の名前の要素を持たず、台帳と申請に戻した記録の要素が `_canonical_exclusion_record`・`_canonical_pending_return` で写しても変わらない〈キーの順、`child_delete_codes`・`applications` の並びと重なりが書き出しの形〉ときである。`apply_edit` が作る記録は、画面が候補の `key`・`conditions` をそのまま渡せば、この形になる。外れる記録は、受け入れで 9.1.2 の形にそろった記録になる。
+
+###### parse_storage_value
+
+`parse_storage_value(value: string, generated_at: string) -> StorageParseResult`
+
+HLD 4.19.2 の「ブラウザへの保存」の受け入れの表と、その後の「無ければ空」の段落である。`value` は localStorage から読んだ値の文字列、`generated_at` はキーの `findsummits:1:` の後ろの文字列（今回の世代なら `metadata.generated_at`、引き継ぎ元なら `select_inherit_source` の返した `generated_at`）。どちらかが文字列でなければ `TypeError`（キーが無い・localStorage が使えないは画面の `read_storage` が受け、この関数を呼ばない）。今回の世代の値、引き継ぎ元の値、「読み直す」（別の画面での変更）の値に、同じ関数を使う。
+
+1. **値の全体を確かめる**（受け入れの表の 1 行目）: 次のどれかなら、値の全体を採らず、`{record: <空の記録>, rejected: true, names_ignored: [], manual_deletes_ignored: [], exclusions_failure: null, pending_returns_failure: null}` を返す（後ろは見ない）。
+   1. `JSON.parse(value)` が例外を投げる（種類を問わない）。
+   2. 結果がオブジェクトでない（`null` と配列を含む）。
+   3. `schema_version` が数の `1` でない（`===` で比べる。文字列の `'1'` も外れ）。
+   4. `generated_at` が文字列でないか、引数の `generated_at` と `===` で等しくない。
+   5. `names` か `manual_deletes` が配列でない（キーが無いときを含む）。
+   6. `exclusions`・`exclusion_note_drafts` のキーがあり（`Object.prototype.hasOwnProperty.call` が真）、値が配列でない（`null` も外れ。キーが無いのは「無し」で、外れでない）。
+   7. `exclusions_unsynced` のキーがあり、値が真偽値でない（`null` も外れ）。
+
+   最上位の余分なキーは見ない。HLD の受け入れの表の 1 行目は確かめることを列挙し、余分なキーを挙げていないので、値の全体を捨てる理由にしない（保存の形の版を上げずにキーを足した後の値も読める）。`pending_returns` はここでは見ない（受け入れの表の最後の行のとおり、配列でないときも、申請に戻した記録だけを空にする。6）。
+2. **`names`**（受け入れの表の 2 行目）: 要素を位置の順に見て、次の形なら「形が正しい」とする（除外判断ファイルの群の「キーの組の確かめ」でキーがちょうど決まった組であり、値が次の決まりに合う。数は同じ群の「値の決まり」の「数」で、範囲も確かめる）。
+   - 新設: キーの組が `target`・`lon`・`lat`・`summit_name_jp`・`summit_name`・`rationale`。`target` が `'new'`、`lon`・`lat` が数、ほかの 3 つが文字列か null。
+   - 既存: キーの組が `target`・`summit_code`・`action`・`rationale`。`target` が `'existing'`、`summit_code` が文字列（空文字も受け入れる。HLD の形は「文字列」）、`action` が `'band_change'` か `'delete'`、`rationale` が文字列。
+   - それ以外（オブジェクトでない、`target` がどちらでもない、キーの組か値が外れる）は形の外れで、`IgnoredName`（`reason: 'invalid'`）を作る。
+
+   形の正しい新設の要素で、3 つの項目がどれも null のものは、示さずに除く（編集値が無い。HLD の表の 2 行目の最後の文）。残った形の正しい要素どうしで、`_same_name_target`（9.1.2 の照合の値）で同じものが別の位置にある要素は、すべて重なり（`reason: 'duplicate'`）として外す。形の外れた要素と、示さずに除いた要素は、重なりに数えない（数えると、正しい記録を余計に失う）。残りを受け入れ、`names` の位置の順のまま、9.1.2 の `NameEdit` のキーの順に持つ新しいオブジェクトに写して記録に入れる。`names_ignored` は、外した要素を `index` の昇順に並べる。
+3. **`manual_deletes`**（3 行目）: 形が正しいのは、キーの組が `summit_code`・`decision`・`note_draft`・`previous_decision` で、`summit_code` が文字列（空文字も受け入れる）、`decision` と `previous_decision` が `'delete'` か `''`、`note_draft` が文字列のもの。外れたものと、形の正しい要素どうしで `summit_code` が `===` で等しいものが別の位置にある要素を、2 と同じく外し（`IgnoredManualDelete`）、残りを 9.1.2 のキーの順の新しいオブジェクトに写して受け入れる。`manual_deletes_ignored` は `index` の昇順。
+4. **`exclusions`**（4 行目）: キーが無ければ空の配列（`exclusions_failure` は null）。あれば `_check_exclusion_records(<値>, 'exclusions')` を呼び、null なら各要素を `_canonical_exclusion_record` で写した配列（位置の順のまま。`note` の前後の空白は除かない。除くのは判断ファイルの読み込みと `apply_edit` の `exclude` で、保存の値は除いた後のもの）、null でなければ空の配列にし、返った値を `exclusions_failure` に入れる（台帳全体を採らない）。
+5. **`exclusion_note_drafts`**（5 行目）: キーが無ければ空の配列。あれば、要素ごとに、キーの組が `record_key`・`note_draft` で、`record_key` がオブジェクトでキーの組が識別キーの 5 つ（`target`・`lon`・`lat`・`summit_code`・`action`）で `_check_record_key_part` が null を返し、`note_draft` が文字列のものを形が正しいとする。形の正しい要素どうしで `record_key` が `_same_record_key` で同じものが別の位置にある要素を外す。残りを `{record_key: <5 つのキーをこの順に持つ新しいオブジェクト>, note_draft}` に写して受け入れる。外したものは示さない（HLD のとおり。結果に入れない）。
+6. **`pending_returns`**（6 行目）: キーが無ければ空の配列。あれば `_check_pending_returns(<値>, 'pending_returns')` を呼び（配列でないときは `bad_value`・`['pending_returns']` が返る。`null` も同じ）、null なら各要素を `_canonical_pending_return` で写した配列、null でなければ空の配列にして、返った値を `pending_returns_failure` に入れる。ほかの記録と 4 の受け入れには効かない（配列ごとに別に判断する）。
+7. **`exclusions_unsynced`**: キーが無ければ `false`、あればその値。4 で台帳を採らなかったときも、6 で申請に戻した記録を採らなかったときも、値は変えない（HLD は変えると書いていない。画面は空であることと判断ファイルから戻せることを示す）。
+8. `{record: {names, manual_deletes, exclusions, exclusion_note_drafts, pending_returns, exclusions_unsynced}, rejected: false, names_ignored, manual_deletes_ignored, exclusions_failure, pending_returns_failure}` を返す（記録のキーは 9.1.2 の順）。
+
+- 受け入れた記録の要素は、`apply_edit` が作る形と同じキーの順になる（保存の値のキーの順が違っても、読み直した記録は同じ形になる）。
+- 名前と担当者指定削除の要素の「キーの組」に、除外判断ファイルの群の確かめ方をそのまま使うので、`__proto__` という名前のキーも余分なキーになる（`JSON.parse` は自分のキーとして作る）。
+- 最上位の余分なキーは見ないが、名前・担当者指定削除の要素の余分なキーは、その要素を形の外れにする（HLD の「上の形である」を、キーの組がちょうど決まったものと読む）。`exclusions`・`pending_returns` は除外判断ファイルの検証をそのまま使うので、余分なキーは配列の全体を採らない理由になる（HLD の「下の『除外判断を読み込む』の 2 の検証に通る」）。
+
+###### select_inherit_source
+
+`select_inherit_source(keys: Array<string>, generated_at: string) -> InheritSource`
+
+HLD 4.19.2 の「新しい解析結果での引き継ぎ」の、今回のキーの有無と引き継ぎ元の選び方である（[DEC137](30_HLD.md#4194-設計判断)「引き継ぎ元は今回より前の世代のうち直前の 1 つ」）。`keys` は画面の `read_storage` が返した `findsummits:` で始まるキーの一覧（並びは決まっていない）、`generated_at` は今回の `metadata.generated_at`。`keys` が配列でないか、文字列でない要素を持つか、`generated_at` が文字列でなければ `TypeError`。この検査は 1 の前に、`keys` のすべての要素に対して行う（今回のキーが前の方にあっても、後ろに文字列でない要素があれば `TypeError`）。今回の `generated_at` の形は確かめない（`storage_key` と同じく、`metadata.generated_at` の形は CMP6 が書く前に確かめている）。
+
+1. `keys` に `storage_key(generated_at)` と `===` で等しい要素があれば、`{current_exists: true, key: null, generated_at: null}` を返す（同じ世代への再訪。引き継ぎ元を選ばない）。
+2. 無ければ、`_storage_key_re` に合う要素について、`findsummits:1:` の後ろの文字列（`_storage_prefix` の長さから後ろ）が、`compare_code_points` で `generated_at` より前（-1）のものの中から、`compare_code_points` で最も後のものを選ぶ（HLD の「文字列の順で比べる」。形が決まっているので ASCII の順と同じ）。`{current_exists: false, key: <そのキー>, generated_at: <その後ろの文字列>}` を返す。当たる要素が無ければ `{current_exists: false, key: null, generated_at: null}`。
+3. 形の違うキー（違う版、時刻の形が違う、末尾に空白や改行がある、全角の数字）は候補にしない。`generated_at` より後か同じ世代のキーも候補にしない（同じ世代は 1 で返っている）。`keys` に同じ文字列が 2 つあっても結果は同じ。
+
+###### decide_inherit_prompt
+
+`decide_inherit_prompt(parsed: StorageParseResult | null) -> InheritPrompt`
+
+HLD 4.19.2 の「新しい解析結果での引き継ぎ」の 3 つの場合分けである。`parsed` は、引き継ぎ元が無ければ null、あれば引き継ぎ元の値を `parse_storage_value` で受け入れた結果。null でもオブジェクトでもない（`undefined` と配列を含む）なら `TypeError`。オブジェクトの中の形（キーの有無と型）は確かめない（`parse_storage_value` の返したものを渡す。キーの欠けたオブジェクトを渡したときの振る舞いは決めない）。
+
+1. `parsed` が null なら `{kind: 'none'}`。
+2. `parsed.rejected` が真なら `{kind: 'broken'}`（受け入れの表の 1 行目に外れた。壊れて引き継げない旨だけを示す）。
+3. `parsed.record` の `names`・`manual_deletes`・`exclusions`・`pending_returns` の数がどれも 0 で、`names_ignored` と `manual_deletes_ignored` が空で、`exclusions_failure` と `pending_returns_failure` が null なら `{kind: 'none'}`（確かめずに空の記録で始める）。除外理由の下書きと `exclusions_unsynced` は見ない（下書きは引き継がず、HLD の場合分けも 4 種だけを挙げる）。示さずに除いた名前の要素と下書きの要素は「外れたもの」に数えない（結果に入っていない）。申請に戻した記録だけを持つ世代は、ここに当たらない。
+4. それ以外は `{kind: 'ask', counts: {names, manual_deletes, exclusions, pending_returns}, names_ignored, manual_deletes_ignored, exclusions_failure, pending_returns_failure}`（`counts` は 3 の 4 つの数。後ろの 4 つは `parsed` の値そのもので、写さない）。
+
+[DEC137](30_HLD.md#4194-設計判断)「引き継ぎ元は今回より前の世代のうち直前の 1 つ」の字句は「その世代の記録が 3 種とも空で」と書くが、4.19.2 の本文は `names`・`manual_deletes`・`exclusions`・`pending_returns` の 4 種を挙げる（申請に戻した記録を足した後の文）。この関数は正本の本文に従い、4 種を見る。
+
+###### inherit_records
+
+`inherit_records(source: EditRecord, batch: {features: Array<Feature>}) -> InheritResult`
+
+HLD 4.19.2 の「新しい解析結果での引き継ぎ」の「引き継ぐ」である。`source` は引き継ぎ元を `parse_storage_value` で受け入れた記録、`batch` は今回のバッチ。`source` がオブジェクトでない（`null` と配列を含む）か、`names`・`manual_deletes`・`exclusions`・`pending_returns` のどれかが配列でないか、`exclusions_unsynced` が真偽値でなければ `TypeError`（`exclusion_note_drafts` は写さないので見ない。`batch` の誤りは `copy_features` が投げる）。配列の要素の形は確かめない（`parse_storage_value` が受け入れた記録を渡す。形の外れた要素を渡したときの振る舞いは決めない）。
+
+1. `copy_features(batch)` で写した状態を作る（`errors` は見ない。導き方で見つける）。名前と担当者指定削除の当てる先の判定はこの状態で行い、状態は書き換えない（判定だけに使う）。
+2. **名前と根拠**: `source.names` の要素ごとに（位置の順）、`apply_name_edits` の当てる点の条件（[9.1.3](#913-関数の細部)の同じ関数の 3 つの箇条。新設は座標、既存は `summit_code` とアクション）に当たる点が状態の中に 1 つ以上あれば、その要素そのもの（写さない）を今回の `names` に入れる。無ければ、識別値 `{target, lon, lat, summit_code, action}`（新設は `summit_code`・`action` を null、既存は `lon`・`lat` を null。`apply_name_edits` の通知の `kind` を除いた形）を `names_not_applied` に入れる。担当者指定削除の点（`match_status` が `'unmatched'`）は条件に当たらないので、この判定は導き方の 2 を当てる前の状態でも後の状態でも同じになる。
+3. **担当者指定削除**: `source.manual_deletes` の要素ごとに（位置の順）、状態の中で `copy_features` の 2 の適格の形で `summit_code` が要素のコードと `===` で等しい点を数える。ちょうど 1 つなら（`apply_manual_deletes` の 1 と同じ。0 は不在か適格でない、2 以上は重なり）、`{summit_code, decision: '', note_draft: <要素の note_draft>, previous_decision: <要素の decision が 'delete' なら 'delete'、ほかは ''>}` を今回の `manual_deletes` に入れる（HLD の「判断は空文字」「前の世代で判断が `delete` だったものは `previous_decision` を `delete` にする」の字句どおり。前の世代の `previous_decision` は見ないので、2 世代前に削除を指定して前の世代で選び直さなかったものは、前回の削除指定として示さない）。ちょうど 1 つでなければ、要素の `summit_code` を `manual_deletes_not_applied` に入れる（`decision` が `''` の要素も同じ）。
+4. **除外台帳と申請に戻した記録**: `exclusions` と `pending_returns` は、`source` の配列を写した新しい配列（要素そのものは写さない）。`exclusions_unsynced` は `source.exclusions_unsynced` のまま（HLD の「判断ファイルとの差も写す」）。`exclusion_note_drafts` は空の配列（HLD の「除外理由の下書きは写さない」）。
+5. `{record: {names, manual_deletes, exclusions, exclusion_note_drafts, pending_returns, exclusions_unsynced}, names_not_applied, manual_deletes_not_applied}` を返す（記録のキーは 9.1.2 の順）。
+
+- 写した後の適用と未適用の件数（HLD の「写した後 … 件数を示す」）は、この関数では求めない。画面は返った記録で `derive_current_state` を呼び（記録を変えた後にいつも導き直す。[DEC133](30_HLD.md#4194-設計判断)「現在の状態は、バッチと編集の記録から毎回導く」）、その `ledger` と `pending_returns` の `status` を数える（`diff_exclusion_ledgers` の `counts` と同じ数え方）。
+- 「引き継がない」は、画面が空の記録で今回のキーを作る（この関数を呼ばない）。
+
+###### summarize_storage_entry
+
+`summarize_storage_entry(key: string, value: string) -> StorageEntrySummary`
+
+HLD 4.19.2 の「保存の失敗と古い世代の削除」のキーの一覧の 1 行である（[DEC138](30_HLD.md#4194-設計判断)「保存に失敗したら選んだ古い世代を消してやり直す」）。`key` が文字列でないか `'findsummits:'` で始まらない（`key.indexOf('findsummits:') !== 0`）か、`value` が文字列でなければ `TypeError`（`findsummits:` で始まらないキーは画面が一覧に出さない）。
+
+1. `key` の `'findsummits:'` の後ろを `rest` とし、`rest` の最初の `':'` の前を `version`（`':'` が無ければ `rest` の全体）にする。版は値でなくキーから取る（値が壊れていても版は示せる）。
+2. `length` は `value.length`（UTF-16 の符号単位の数）で、いつも求める。ブラウザの localStorage の容量の数え方に近い（基本多言語面の外の字は 2 と数える）。
+3. `version` が `'1'` でないか、`rest` に `':'` が無ければ（`'findsummits:1'`・`'findsummits:'` など）、`{version, generated_at: null, counts: null, length}`（違う版の値の形は分からず、区切りの無いキーは解析日時を取れないので、解析日時と件数は「不明」。一覧には出し、選べるようにする）。
+4. そうでなければ（`version` が `'1'` で `':'` がある）、`generated_at` は `rest` の最初の `':'` の後ろの全体（空文字もありうる。形は確かめない）。`parse_storage_value(value, generated_at)` で受け入れ、`rejected` が真なら `counts` は null、偽なら受け入れた記録の `names`・`manual_deletes`・`exclusions`・`pending_returns` の数（`{names, manual_deletes, exclusions, pending_returns}` の順）。`{version, generated_at, counts, length}` を返す。
+5. 件数は受け入れた後の数で、外した要素と、採らなかった台帳・申請に戻した記録は数えない（引き継ぐとしたら写る数）。除外理由の下書きは数えない。引き継ぎの確認で示す 4 種と同じ内訳で返し、合計して 1 つの数で出すか内訳で出すかは 9.2 の画面が決める。
+
 ##### 除外判断ファイル
 
 この群は、HLD 3.7.3 の表の計算の 4 つ（`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`）を、表の順に書く（画面の `save_exclusion_file`・`load_exclusion_file` は 9.2）。`compare_code_points` は導き方の 4（`apply_exclusions`）で使うので、先に書いた。
@@ -6724,15 +6841,15 @@ HLD 4.19.2 の「除外判断を読み込む」の 1〜3 である（SRS 7.2.8�
 5. `_check_exclusion_records(top.records, 'records')` が null でなければ、それを返す。
 6. 版 2 だけ、`_check_pending_returns(top.pending_returns, 'pending_returns')` が null でなければ、それを返す。
 
-**キーの組の確かめ**（オブジェクトと、決まったキーの並びに対して）: 決まったキーを並びの順に見て、オブジェクトに無いもの（`Object.prototype.hasOwnProperty.call` が偽）があれば、最初のものを `missing_key`。無ければ、オブジェクトの `Object.keys` の順に見て、決まったキーに無いものがあれば、最初のものを `extra_key`（`__proto__` という名前のキーも `JSON.parse` は自分のキーとして作るので、余分なキーになる。`Object.keys` は整数のような名前のキー〈`"1"` など〉をファイルの順によらず先に返すので、「最初のもの」はファイルで最初に出たものと違うことがある）。キーの順は見ない。
+**キーの組の確かめ**（オブジェクトと、決まったキーの並びに対して。保存と引き継ぎの群の `parse_storage_value` も、名前・担当者指定削除・除外理由の下書きの要素に使う）: 決まったキーを並びの順に見て、オブジェクトに無いもの（`Object.prototype.hasOwnProperty.call` が偽）があれば、最初のものを `missing_key`。無ければ、オブジェクトの `Object.keys` の順に見て、決まったキーに無いものがあれば、最初のものを `extra_key`（`__proto__` という名前のキーも `JSON.parse` は自分のキーとして作るので、余分なキーになる。`Object.keys` は整数のような名前のキー〈`"1"` など〉をファイルの順によらず先に返すので、「最初のもの」はファイルで最初に出たものと違うことがある）。キーの順は見ない。
 
-**値の決まり**（下の 2 つの関数で使う）:
+**値の決まり**（下の 2 つの関数と、保存と引き継ぎの群の `parse_storage_value` で使う）:
 
 - 「数」は `typeof` が `'number'` で `Number.isFinite` が真のもの（グローバルの `isFinite` は引数を数に変えるので使わない。`JSON.parse('1e400')` は `Infinity` になるので、`typeof` だけでは通ってしまう）。経度（キーが `lon` か、`_lon` で終わるもの）は -180 以上 180 以下、緯度（`lat` か `_lat` で終わるもの）は -90 以上 90 以下も確かめる。「数か null」は null か数。
 - 「文字列」は `typeof` が `'string'`。「空でない文字列」は文字列で `''` でないもの。
 - 外れたら `bad_value` で、`path` はその値まで。
 
-内部の関数 `_check_exclusion_records(value: *, name: string) -> ExclusionFileFailure | null`（保存と引き継ぎの群の `parse_storage_value` が、`exclusions` の受け入れに `name` を `'exclusions'` にして使う。その群は後で書く）:
+内部の関数 `_check_exclusion_records(value: *, name: string) -> ExclusionFileFailure | null`（保存と引き継ぎの群の `parse_storage_value` が、`exclusions` の受け入れに `name` を `'exclusions'` にして使う）:
 
 1. `value` が配列でなければ `bad_value`・`[name]`。
 2. 要素ごとに（位置 `i` の順に。`path` は `[name, i, …]`）:
@@ -6744,7 +6861,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 1〜3 である（SRS 7.2.8�
 3. 要素をすべて確かめた後に、識別キーの重なりを確かめる: 位置 `j` を 1 から順に、その前の位置 `i`（0 から順に）で、`target`・`lon`・`lat`・`summit_code`・`action` の 5 つがすべて `===` で等しいものがあれば、最初に見つけたものを `{kind: 'duplicate_key', path: [name, j], first: i}`（内容が同じでも拒む。HLD のとおり）。
 4. どれにも外れなければ null。
 
-内部の関数 `_check_record_key_part(o, path) -> ExclusionFileFailure | null`（両方の配列で使う）: 次の順に確かめる。`target` が `'new'` か `'existing'`（でなければ `bad_value`・`[…, 'target']`）。`action` が、`new` なら `'add'`、`existing` なら `'band_change'` か `'delete'`（でなければ `[…, 'action']`）。続けて `lon`・`lat`・`summit_code` の順に、`new` なら `lon`・`lat` が数（範囲も）で `summit_code` が null、`existing` なら `lon`・`lat` が null で `summit_code` が空でない文字列。
+内部の関数 `_check_record_key_part(o, path) -> ExclusionFileFailure | null`（両方の配列と、保存と引き継ぎの群の `parse_storage_value` の除外理由の下書きの `record_key` で使う）: 次の順に確かめる。`target` が `'new'` か `'existing'`（でなければ `bad_value`・`[…, 'target']`）。`action` が、`new` なら `'add'`、`existing` なら `'band_change'` か `'delete'`（でなければ `[…, 'action']`）。続けて `lon`・`lat`・`summit_code` の順に、`new` なら `lon`・`lat` が数（範囲も）で `summit_code` が null、`existing` なら `lon`・`lat` が null で `summit_code` が空でない文字列。
 
 内部の関数 `_check_pending_returns(value: *, name: string) -> ExclusionFileFailure | null`（`parse_storage_value` が、`name` を `'pending_returns'` にして使う）: 1 と 3・4 は `_check_exclusion_records` と同じ。要素ごとの 2 は次の順。
 
@@ -6787,7 +6904,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 
 #### 9.1.4 メッセージ文面
 
-なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知・台帳の一覧・申請に戻した記録の一覧・親が申請済みの削除の一覧・プログラムの誤り・判断ファイルの拒む理由・差分は値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
+なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知・台帳の一覧・申請に戻した記録の一覧・親が申請済みの削除の一覧・プログラムの誤り・判断ファイルの拒む理由・差分・保存の値の受け入れの結果・引き継ぎの確かめ方は値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
 
 #### 9.1.5 UT 候補
 
@@ -6795,7 +6912,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 
 - **計算の要素の読み込み**（どのケースも使う）: テストのファイルの位置から本体ルートの `public/index.html` を UTF-8 で読み（`path.join(__dirname, '..', '..', 'public', 'index.html')`）、`<script id="findsummits-calc">` の直後の改行（LF。CRLF なら CR LF）の次から、その後の最初の `</script>` の直前までを取り出す（取り出した中身の最初の行が、開始タグの次の行になる）（開始タグか、その後の終了タグが見つからなければ、取り出す前に `assert` で落とす。見つからない位置で切り出して、ほかの期待の失敗と原因が混ざらないようにするため）。`vm.createContext({TextEncoder, TextDecoder})`（テストのファイルの Node.js のグローバルの 2 つだけを入れた文脈）で文脈を作り、`vm.runInContext(<取り出した中身>, <文脈>)` で実行し、文脈の `decide_open_mode` などを呼ぶ。ケースごとに読み込み直す。`UT-index_calc-01` の (c) だけは、空の文脈 `vm.createContext({})` で実行する。
 - **値の比べ方**: 文脈が返した配列は別の realm のもので、`assert.deepStrictEqual` はプロトタイプの違いで落ちるので、`structuredClone` で写してから比べる。文脈が返した配列を `map`・`filter`・`slice` などで加工した配列も、元の配列と同じ別の realm のものになる（加工の結果は元の配列の realm で作られる）ので、加工した結果を比べるときも、`structuredClone` で写してから比べる。数は `===`（`assert.strictEqual`）か、写した配列の `assert.deepStrictEqual` で比べる（2.4 の表 1・表 2 は `==` で等しいと決めた値）。投げた例外は別の realm の組み込みなので、`assert.throws(<呼び出し>, (e) => e.name === 'RangeError')` のように `name` で見る（`instanceof` で見ない）。返した `Uint8Array` は、`Buffer.from(<返した値>).toString('utf8')` で文字列にして比べる。テストのファイルは Node.js の `structuredClone` を使ってよい（ES2020 の制限は掛けない。[1.2](#12-lld-の規約)）。
-- **小さなバッチ**（`UT-index_calc-12`〜`16` が使う。07〜11 は記録だけを渡す）: テストのコードの中で、次の 9 つのフィーチャを持つ `{type: 'FeatureCollection', features: [...]}` を作る関数を書き、ケースごとに作り直す。どのフィーチャの `properties` も、表の列の後に共通の 6 つ（`application_exclusion: ''`・`exclusion_note: ''`・`pending_applications: []`・`pending_match: ''`・`pending_note: ''`・`pending_return: false`）をこの順に持つ（F4 の `pending_applications` だけは下の 3 つの要素の配列）。ジオメトリは `{type: 'Point', coordinates: [lon, lat]}`。
+- **小さなバッチ**（`UT-index_calc-12`〜`16` と `46` が使う。07〜11 は記録だけを渡す）: テストのコードの中で、次の 9 つのフィーチャを持つ `{type: 'FeatureCollection', features: [...]}` を作る関数を書き、ケースごとに作り直す。どのフィーチャの `properties` も、表の列の後に共通の 6 つ（`application_exclusion: ''`・`exclusion_note: ''`・`pending_applications: []`・`pending_match: ''`・`pending_note: ''`・`pending_return: false`）をこの順に持つ（F4 の `pending_applications` だけは下の 3 つの要素の配列）。ジオメトリは `{type: 'Point', coordinates: [lon, lat]}`。
 
   | 名 | `feature_type` | `match_status` | `category` | `summit_code` | `review_reason` | `review_group_id` | ほかのプロパティ（この順で共通の 6 つより前） | 座標 `[lon, lat]` |
   |---|---|---|---|---|---|---|---|---|
@@ -6842,8 +6959,8 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
   | 21 | `B1l` | `peak_col_link` | — | `band_change` | `JA/NN-020` | — | なし | LineString `[[140, 37], [140.01, 37.01]]` |
 
   （`B1d`・`B1l` は、ほかの位置を変えないために末尾に置く。変更の候補の `members` が、並びの隣り合いでなく `category` と `summit_code` で選ばれることも確かめる。）
-- **除外の状態の作り方**（`UT-index_calc-18`〜`22`）: 除外のバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` で写した `state` を `apply_exclusions` に渡す（`copy_features` の `errors` は見ない。除外のバッチは名前と根拠のキーを持たないため）。台帳の要素は `{target, lon, lat, summit_code, action, note, decided_generated_at: '2026-10-01T00:00:00Z', conditions}` の形で、ケースが挙げない値は、次の「期待の候補」の同じ候補の `key` と `conditions` を写して作る（「候補 N の要素」は、期待の候補の位置 N の `key` の 5 つの値と `conditions` の写しを持つ要素）。`note` は、ケースが挙げなければ `'理由A'`。期待の候補に同じ候補が無い要素（新設や既存のキーをケースが直に挙げるもの）の `conditions` は `{}`（照らしの 1〜3 で決まり、値は結果に効かない）。
-- **期待の候補**（`UT-index_calc-18` の期待。ほかのケースも参照する）: 除外のバッチの候補の一覧は、次の 6 つをこの順に持つ。`key` は 9.1.2 の識別キーの 5 つのキーの順（新設は `{target: 'new', lon, lat, summit_code: null, action: 'add'}`、既存は `{target: 'existing', lon: null, lat: null, summit_code, action}`）。
+- **除外の状態の作り方**（`UT-index_calc-18`〜`22`。`38`・`40`・`43`・`45`・`47` の保存の記録と `43` の下書きの要素も、候補 N の要素と期待の候補の `key` を使う）: 除外のバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` で写した `state` を `apply_exclusions` に渡す（`copy_features` の `errors` は見ない。除外のバッチは名前と根拠のキーを持たないため）。台帳の要素は `{target, lon, lat, summit_code, action, note, decided_generated_at: '2026-10-01T00:00:00Z', conditions}` の形で、ケースが挙げない値は、次の「期待の候補」の同じ候補の `key` と `conditions` を写して作る（「候補 N の要素」は、期待の候補の位置 N の `key` の 5 つの値と `conditions` の写しを持つ要素）。`note` は、ケースが挙げなければ `'理由A'`。期待の候補に同じ候補が無い要素（新設や既存のキーをケースが直に挙げるもの）の `conditions` は `{}`（照らしの 1〜3 で決まり、値は結果に効かない）。
+- **期待の候補**（`UT-index_calc-18` の期待。ほかのケースも参照する。`38`・`40`・`43`・`45`・`47` の保存の記録と `43` の下書きの要素も、候補 N の要素と期待の候補の `key` を使う）: 除外のバッチの候補の一覧は、次の 6 つをこの順に持つ。`key` は 9.1.2 の識別キーの 5 つのキーの順（新設は `{target: 'new', lon, lat, summit_code: null, action: 'add'}`、既存は `{target: 'existing', lon: null, lat: null, summit_code, action}`）。
 
   | 位置 | `index` | `key` | `conditions` | `members` |
   |---|---|---|---|---|
@@ -6867,7 +6984,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
   | 14 | `D3` | (1) `{action: 'delete', summit_code: 'JA/NN-021', lat: null, lon: null, new_alt_m: null, new_points: null, applicant: 'JA1CCC', applied_on: '2026-07-01', years: [2026], match: 'same'}`、(2) `{action: 'change', summit_code: 'JA/NN-021', lat: null, lon: null, new_alt_m: 1390.5, new_points: 6, applicant: 'JA1CCC', applied_on: '2026-07-02', years: [2026], match: 'different'}` | `'same'` |
   | 18 | `R1` | (1) `{action: 'delete', summit_code: 'JA/NN-040', lat: null, lon: null, new_alt_m: null, new_points: null, applicant: 'JA1DDD', applied_on: '2026-06-01', years: [2026], match: 'held'}`、(2) `{action: 'change', summit_code: 'JA/NN-040', lat: null, lon: null, new_alt_m: 820, new_points: 2, applicant: 'JA1EEE', applied_on: '2026-06-02', years: [2026], match: 'held'}` | `''`（バッチのまま） |
 
-- **申請済みの状態の作り方**（`UT-index_calc-23`〜`26`）: 申請済みのバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` → `apply_manual_deletes`（要素 `{summit_code: 'JA/NN-040', decision: 'delete', note_draft: '', previous_decision: ''}` 1 つの配列。ケースが「担当者指定削除なし」とするときは空の配列）→ `apply_name_edits`（空の配列）→ `apply_exclusions`（ケースが挙げる台帳。挙げなければ空の配列）→ `apply_pending_returns`（ケースが挙げる記録）の順に渡す（除外の状態の作り方と同じく、`copy_features` の `errors` は見ない）。`R1` は `apply_manual_deletes` で `category` が `'delete'` になり、(1) の `match` が `'same'`、(2) が `'different'`、`pending_match` が `'same'` になる。申請に戻した記録の要素は `{target, lon, lat, summit_code, action, decided_generated_at: '2026-10-01T00:00:00Z', conditions}` の形で、「候補 N の戻す要素」は、次の期待の申請に戻す候補の位置 N の `key` の 5 つの値と `conditions` の写しを持つ要素。期待の申請に戻す候補に同じ候補が無い要素の `conditions` は `{}`。台帳の要素は、除外の状態の作り方の「候補 N の要素」（期待の候補から作る。`note` は `'理由A'`）。
+- **申請済みの状態の作り方**（`UT-index_calc-23`〜`26`。`38`・`40`・`43`・`45`・`47` の保存の記録と `43`・`45` も、候補 N の戻す要素を使う）: 申請済みのバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` → `apply_manual_deletes`（要素 `{summit_code: 'JA/NN-040', decision: 'delete', note_draft: '', previous_decision: ''}` 1 つの配列。ケースが「担当者指定削除なし」とするときは空の配列）→ `apply_name_edits`（空の配列）→ `apply_exclusions`（ケースが挙げる台帳。挙げなければ空の配列）→ `apply_pending_returns`（ケースが挙げる記録）の順に渡す（除外の状態の作り方と同じく、`copy_features` の `errors` は見ない）。`R1` は `apply_manual_deletes` で `category` が `'delete'` になり、(1) の `match` が `'same'`、(2) が `'different'`、`pending_match` が `'same'` になる。申請に戻した記録の要素は `{target, lon, lat, summit_code, action, decided_generated_at: '2026-10-01T00:00:00Z', conditions}` の形で、「候補 N の戻す要素」は、次の期待の申請に戻す候補の位置 N の `key` の 5 つの値と `conditions` の写しを持つ要素。期待の申請に戻す候補に同じ候補が無い要素の `conditions` は `{}`。台帳の要素は、除外の状態の作り方の「候補 N の要素」（期待の候補から作る。`note` は `'理由A'`）。
 - **期待の申請に戻す候補**（`UT-index_calc-23` の (a) の期待。ほかのケースも参照する）: 申請済みの状態の `apply_pending_returns` の候補の一覧は、次の 3 つをこの順に持つ。`key` は 9.1.2 の識別キーの 5 つのキーの順、`conditions` は `applications`・`origin` の順、`applications` の要素は `PendingApplicationKey` の 7 つのキーの順。
 
   | 位置 | `index` | `key` | `conditions` | `members` |
@@ -6894,9 +7011,61 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
   | `APP8` | `action: 'add'`・`summit_code: ''`・`lat: 36`・`lon: 139.4` |
   | `APP9` | 替えない（`APP1` と同じ値の別のオブジェクト） |
 
+- **世代**（`UT-index_calc-37`〜`47`）: `GEN` は `'2026-11-01T00:00:00Z'`。
+- **保存の記録**（`UT-index_calc-38`・`40`・`43`・`45`・`47`）: `SREC` は次の 6 つのキーを 9.1.2 の順に持つ記録。ケースごとに作り直す。
+  - `names`: [`{target: 'new', lon: 138.5, lat: 35.25, summit_name_jp: '山', summit_name: null, rationale: null}`, `{target: 'existing', summit_code: 'JA/NN-001', action: 'band_change', rationale: 'r'}`]
+  - `manual_deletes`: [`{summit_code: 'JA/NN-003', decision: 'delete', note_draft: '根拠', previous_decision: ''}`]
+  - `exclusions`: [候補 1 の要素]（除外の状態の作り方のもの。`note` は `'理由A'`）
+  - `exclusion_note_drafts`: [`{record_key: <期待の候補の位置 3 の key の写し>, note_draft: '下書き'}`]
+  - `pending_returns`: [候補 1 の戻す要素]（申請済みの状態の作り方のもの）
+  - `exclusions_unsynced`: `true`
+- **保存の値**: `VAL` は、テストのコードで `JSON.stringify({schema_version: 1, generated_at: GEN, ...<SREC の 6 つのキーと値をこの順に>})`（字下げなし）で作った文字列（`build_storage_value` を使わずに作る）。「`VAL` の X を Y にした値」は、`JSON.parse(VAL)` の X を Y に替える（「消す」は `delete`）か足してから `JSON.stringify` した文字列。「古い値」は `JSON.stringify({schema_version: 1, generated_at: GEN, names: [], manual_deletes: []})`。
+- **受け入れの結果の期待**: 返す値を `structuredClone` で写して、`{record, rejected, names_ignored, manual_deletes_ignored, exclusions_failure, pending_returns_failure}`（`Object.keys` の順も）と比べる。表で挙げないキーは、`rejected` が `false`、2 つの配列が `[]`、2 つの `_failure` が `null`、`record` は `SREC` と同じ（ケースが挙げる配列だけが違う）。「採らなかった結果」は `{record: <空の記録>, rejected: true, names_ignored: [], manual_deletes_ignored: [], exclusions_failure: null, pending_returns_failure: null}`。
+- **名前の要素**（`UT-index_calc-41`）: `NM0`〜`NM14` は次の値（キーはこの順）。
+
+  | 名 | 値 |
+  |---|---|
+  | `NM0` | `{target: 'new', lon: 138.5, lat: 35.25, summit_name_jp: '山', summit_name: null, rationale: null}` |
+  | `NM1` | `{target: 'new', lon: 139, lat: 36, summit_name_jp: null, summit_name: null, rationale: null}` |
+  | `NM2` | `{target: 'existing', summit_code: 'JA/NN-001', action: 'band_change', rationale: 'r'}` |
+  | `NM3` | `NM2` の `rationale` を `'r2'` にしたもの |
+  | `NM4` | `{target: 'existing', summit_code: 'JA/NN-002', action: 'delete', rationale: 'd', x: 1}` |
+  | `NM5` | `NM0` の `lon` を `181`、`summit_name_jp` を `'a'` にしたもの |
+  | `NM6` | `null` |
+  | `NM7` | `{target: 'existing', summit_code: 'JA/NN-005', action: 'delete', rationale: null}` |
+  | `NM8` | `{target: 'other', summit_code: 'JA/NN-006', action: 'delete', rationale: 'o'}` |
+  | `NM9` | `NM0` の `summit_name` を `1` にしたもの |
+  | `NM10` | `NM0` の `lon` を `'139'`、`lat` を `36`、`summit_name_jp` を `'a'` にしたもの |
+  | `NM11` | `{target: 'existing', summit_code: 'JA/NN-007', action: 'add', rationale: 'a'}` |
+  | `NM12` | `{target: 'new', lon: 140, lat: 37, summit_name_jp: 's', summit_name: null}`（`rationale` のキーが無い） |
+  | `NM13` | `NM1` の `summit_name_jp` を `'x'` にしたもの |
+  | `NM14` | `{target: 'existing', summit_code: 'JA/NN-001', action: 'delete', rationale: ''}` |
+
+- **担当者指定削除の要素**（`UT-index_calc-42`）: `MD0`〜`MD9`（キーはこの順）。
+
+  | 名 | 値 |
+  |---|---|
+  | `MD0` | `{summit_code: 'JA/NN-003', decision: 'delete', note_draft: '根拠', previous_decision: ''}` |
+  | `MD1` | `{summit_code: 'JA/NN-007', decision: '', note_draft: '', previous_decision: 'delete'}` |
+  | `MD2` | `{summit_code: 'JA/NN-007', decision: 'delete', note_draft: '', previous_decision: ''}` |
+  | `MD3` | `{summit_code: 'JA/NN-008', decision: 'x', note_draft: '', previous_decision: ''}` |
+  | `MD4` | `null` |
+  | `MD5` | `{summit_code: 5, decision: '', note_draft: '', previous_decision: ''}` |
+  | `MD6` | `{summit_code: 'JA/NN-009', decision: '', note_draft: '', previous_decision: '', x: 1}` |
+  | `MD7` | `{summit_code: 'JA/NN-003', decision: 'delete', note_draft: ''}`（`previous_decision` のキーが無い） |
+  | `MD8` | `{summit_code: 'JA/NN-010', decision: '', note_draft: null, previous_decision: ''}` |
+  | `MD9` | `{summit_code: '', decision: '', note_draft: '', previous_decision: ''}` |
+
+- **下書きの要素**（`UT-index_calc-43` の (g)）: `DR0` は `{record_key: <期待の候補の位置 3 の key>, note_draft: '下書き'}`、`DR1` は `{record_key: <位置 0 の key>, note_draft: 'a'}`、`DR2` は `DR1` の `note_draft` を `'b'` にしたもの、`DR3` は `null`、`DR4` は `DR0` を写したものの `record_key`（これも写す）に `x: 1` を足したもの（`note_draft` は `'c'`。`DR0` は変えない）、`DR5` は `{record_key: {target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-030', action: 'delete'}, note_draft: 1}`、`DR6` は `DR5` の `summit_code` を `''`・`note_draft` を `'e'` にしたもの、`DR7` は `{record_key: <位置 5 の key>, note_draft: ''}`、`DR8` は `{note_draft: 'f'}`（`record_key` のキーが無い）。
+- **キーの一覧**（`UT-index_calc-44`）: `KEYS1` は次の 11 の文字列をこの順に並べた配列: `'findsummits:1:2026-10-01T00:00:00Z'`、`'findsummits:1:2026-10-15T12:00:00Z'`、`'findsummits:1:2026-12-01T00:00:00Z'`、`'findsummits:2:2026-10-20T00:00:00Z'`、`'findsummits:1:2026-10-20'`、`'findsummits:1:2026-10-20T00:00:00.000Z'`、`'findsummits:1:2026-10-20t00:00:00Z'`、`'mock:1:2026-10-20T00:00:00Z'`、`'findsummits:1:2026-10-31T23:59:59Z '`（末尾に空白 1 つ）、`'findsummits:1:2026-10-31T23:59:59Z\n'`（末尾に LF）、`'findsummits:1:\u{FF12}026-10-20T00:00:00Z'`（先頭の数字が全角の 2〈U+FF12〉。JavaScript の文字列の書き方で挙げる）。
+- **引き継ぎ元の記録**（`UT-index_calc-46`）: `INH` は次の 6 つのキーを 9.1.2 の順に持つ記録（ケースごとに作り直す。`exclusions`・`pending_returns` の要素は確かめない値なので、仮のオブジェクトにする）。
+  - `names`: [`IN0` `{target: 'new', lon: 138.5, lat: 35.25, summit_name_jp: '山', summit_name: null, rationale: null}`, `IN1` `{target: 'new', lon: 138.5, lat: 35.26, summit_name_jp: null, summit_name: 'x', rationale: null}`, `IN2` `{target: 'existing', summit_code: 'JA/NN-001', action: 'band_change', rationale: 'r'}`, `IN3` `IN2` の `action` を `'delete'`・`rationale` を `'x'` にしたもの, `IN4` `{target: 'existing', summit_code: 'JA/NN-002', action: 'delete', rationale: 'd'}`, `IN5` `IN4` の `action` を `'band_change'`・`rationale` を `'y'` にしたもの, `IN6` `{target: 'existing', summit_code: 'JA/NN-005', action: 'band_change', rationale: 'z'}`, `IN7` `{target: 'new', lon: 140, lat: 37, summit_name_jp: '四', summit_name: null, rationale: null}`]
+  - `manual_deletes`: [`{summit_code: 'JA/NN-003', decision: 'delete', note_draft: '根拠', previous_decision: ''}`, `{summit_code: 'JA/NN-004', decision: '', note_draft: 'n', previous_decision: ''}`, `{summit_code: 'JA/NN-006', decision: 'delete', note_draft: '', previous_decision: ''}`, `{summit_code: 'JA/NN-005', decision: 'delete', note_draft: '', previous_decision: ''}`, `{summit_code: 'JA/NN-099', decision: '', note_draft: '', previous_decision: 'delete'}`]
+  - `exclusions`: [`{a: 1}`, `{b: 2}`]、`exclusion_note_drafts`: [`{record_key: {}, note_draft: 'q'}`]、`pending_returns`: [`{c: 3}`]、`exclusions_unsynced`: `true`
+
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
-| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈（`vm.createContext({})`）で実行して例外が出ない（要素の最上位で `TextEncoder`・`TextDecoder` を読まない）。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`・`derive_current_state`・`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
+| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈（`vm.createContext({})`）で実行して例外が出ない（要素の最上位で `TextEncoder`・`TextDecoder` を読まない）。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`・`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`・`derive_current_state`・`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
 
 ##### 起動（UT 候補）
 
@@ -6930,6 +7099,22 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 | `UT-index_calc-25` | 当て方と書き換えの範囲 | 申請済みの状態の作り方。(d) は `A1k`（位置 1）の `pending_return` のキーを消したバッチ、(f) は `B1`（位置 9）の `pending_applications` の (1) の `match` を `'same'`、`pending_match` を `'same'` にしたバッチ | (a) 候補 0 の戻す要素、(b) 候補 2 の戻す要素、(c) 候補 1 の戻す要素、(d) 候補 0 の戻す要素、(e) 候補 0 と候補 2 の戻す要素、(f) 既存 `JA/NN-020`・`band_change`、`conditions` が `{applications: [{action: 'change', summit_code: 'JA/NN-020', lat: null, lon: null, new_points: 10, applicant: 'JA1BBB', applied_on: '2026-07-01'}], origin: 'normal'}` の戻す要素 | (a) 位置 0〜4 の `pending_return` が `true`、ほかは `false`。`parent_pending_deletes` が `[]`（親が申請に戻った）。(b) 位置 18 だけが `true`。`parent_pending_deletes` は 23 の (a) と同じ。(c) 位置 14・15 だけが `true`。(d) 位置 1 の `properties` に `pending_return` のキーが無いまま、位置 0・2〜4 は `true`。(e) 返した `state` が渡した配列と同じもの（`===`）。渡した記録とその要素の `JSON.stringify` が呼ぶ前と同じ。バッチ（`copy_features` に渡したもの）の `JSON.stringify` が呼ぶ前と同じ。各フィーチャの `properties` の `Object.keys` の順が元と同じ。(f) 申請に戻す候補の `index` が `[0, 9, 14, 18]` で、位置 1 の候補が `key` 既存 `JA/NN-020`・`band_change`・`members` `[9, 10, 11, 12, 13, 20, 21]`、`pending_returns` の要素が `'applied'`・null・1。位置 9〜13・20・21 だけの `pending_return` が `true`（変更の候補も、行に集約するフィーチャ全体に当てる） |
 | `UT-index_calc-26` | 親が申請済みの削除の選び方 | 申請済みの状態の作り方。(c)(d) は `D1`（位置 5）の `pending_applications` を `[{action: 'delete', summit_code: 'JA/NN-010', lat: null, lon: null, new_alt_m: null, new_points: null, applicant: 'JA1FFF', applied_on: '2026-07-05', years: [2026], match: 'same'}]`、`pending_match` を `'same'` にしたバッチ、(e) は `A1`（位置 0）の `summit_code` だけを `''` にしたバッチ | 記録は空。台帳は (a) 候補 0 の要素（`A1` の除外）、(b) 候補 1 の要素（`D1` の除外）、(c)(d)(e) 空。(d) だけ、申請に戻した記録に、要素 `{target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-010', action: 'delete', decided_generated_at: '2026-10-01T00:00:00Z', conditions: {applications: [{action: 'delete', summit_code: 'JA/NN-010', lat: null, lon: null, new_points: null, applicant: 'JA1FFF', applied_on: '2026-07-05'}], origin: 'normal'}}` 1 つ | `parent_pending_deletes` の `index` が順に: (a) `[]`（親が除外。子には `parent_add` が付く）、(b) `[7]`（`D1` は自分の除外）、(c) `[7]`（`D1` は申請済みで外れている）、(d) `[5, 7]`（`D1` は申請に戻った）、(e) `[]`（`summit_code` が空文字のピークは親にならない） |
 | `UT-index_calc-27` | `derive_current_state` の組み立て、並び、申請可否 | 申請済みのバッチ（手を加えずに `derive_current_state` に渡す）。(f) は `A1k`（位置 1）の `exclusion_note` のキーを消し、`D2c`（位置 8）を消したバッチ | 編集の記録（空の記録の形）: (a) `manual_deletes` が `R1` の要素 1 つ、ほかは空。(b) (a) に、`exclusions` を候補 5・0・4・3・1 の要素の順、`pending_returns` を候補 0・2・1 の戻す要素の順で足したもの。(c) (a) に、`exclusions` を [候補 0 の要素、候補 1 の要素で `conditions.sota_alt_m` を 1101、候補 4 の要素で `conditions.sota_alt_m` を 1401、候補 5 の要素で `conditions.prominence` を 0、既存 `JA/NN-030`・`band_change` の要素] で足したもの。(d) `manual_deletes` を `JA/NN-099`・`JA/NN-050`（どちらも `decision: 'delete'`）・`R1` の順、`names` を [既存 `JA/NN-777`・`delete`・`rationale: 'x'`、新設 `(150, 40)`・`summit_name_jp: 'a'`、既存 `JA/NN-777`・`band_change`・`rationale: 'y'`、新設 `(149, 41)`・`summit_name_jp: 'b'`]（新設のほかの 2 つの項目は null）。(e) (c) の記録で、各配列の並びを逆にしたもの。(f) 空の記録。(g) `null`、(h) (a) で `exclusions` を `{}` にしたもの。(i) (c) の記録に、`pending_returns` として候補 1 の戻す要素（`D3`）を足したもの | (a) 返す値の `Object.keys` が `['state', 'ledger', 'candidates', 'pending_returns', 'pending_candidates', 'parent_pending_deletes', 'notices', 'errors']`。`candidates` が期待の候補と、`pending_candidates` が期待の申請に戻す候補と等しい。`parent_pending_deletes` の `index` が `[5, 7]`。`notices`・`errors` が空。(b) `ledger` の `record.summit_code`（新設は `record.lon`）の並びが `['JA/NN-020', 'JA/NN-010', 'JA/NN-021', 139, 142]`、`pending_returns` の並びが `['JA/NN-021', 'JA/NN-040', 139]`（識別キーの順）。各 `record` は渡した要素と同じもの（`===`）。(c) `ledger` の各要素の `[status, reason, candidate, applicable]` が順に `['not_applied', 'not_target', null, null]`（`JA/NN-030`）、`['not_applied', 'conditions_changed', 1, false]`（`D1` は親の除外で `parent_add`）、`['not_applied', 'conditions_changed', 4, false]`（`D3` は申請済みで外れている）、`['applied', null, 0, false]`（`A1`）、`['not_applied', 'conditions_changed', 5, true]`（`P1` は今回は申請対象）。各要素の `Object.keys` が `['record', 'status', 'reason', 'candidate', 'applicable']`。(d) `notices` の `kind` と識別値が順に、`manual_delete_not_applied` の `JA/NN-050`・`JA/NN-099`、`name_edit_not_applied` の既存 `JA/NN-777`・`band_change`、既存 `JA/NN-777`・`delete`、新設 `(150, 40)`、新設 `(149, 41)`（緯度の昇順）。(e) 返す値の `JSON.stringify` が (c) と同じ（記録の並びは結果に効かない）。渡した記録の各配列の並びが呼ぶ前と同じ。(f) `errors` が `[{kind: 'missing_property', index: 1, feature_type: 'key_col', summit_code: 'T-002', property: 'exclusion_note'}, {kind: 'coord_diff_count_mismatch', parent_summit_code: 'T-002', summit_codes: ['JA/NN-010', 'JA/NN-011'], summit_count: 2, line_count: 1}]`（1 の誤りの後に 4 の誤り）。(g)(h) `name` が `'TypeError'` の例外。(i) `ledger` の `JA/NN-021` の要素が `['not_applied', 'conditions_changed', 4, true]`（申請に戻したので今回は申請対象。申請可否は 5 の後の状態で決める）で、ほかの 4 つの要素は (c) と同じ。(a)〜(f)・(i) で、渡したバッチと記録の `JSON.stringify` が呼ぶ前と同じ |
+
+##### 保存と引き継ぎ（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-37` | `storage_key` のキーと止まり方 | 計算の要素の読み込み | (a) `'2026-11-01T03:04:05Z'`、(b) `''`、(c) `20261101`、`null`、`undefined` | (a) `'findsummits:1:2026-11-01T03:04:05Z'`、(b) `'findsummits:1:'`、(c) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-38` | `build_storage_value` の値と止まり方 | 計算の要素の読み込み。世代。保存の記録。保存の値 | (a) `(SREC, GEN)`、(b) `(<空の記録>, GEN)`、(c) (a) と同じ、(d) `(null, GEN)`、`SREC` の `names` を `'x'` にしたもの、`SREC` から `exclusion_note_drafts` のキーを消したもの、`SREC` の `exclusions_unsynced` を `'true'` にしたもの、`(SREC, null)` | (a) `VAL` と `assert.strictEqual` で等しい（キーの順、字下げなし）。(b) `'{"schema_version":1,"generated_at":"2026-11-01T00:00:00Z","names":[],"manual_deletes":[],"exclusions":[],"exclusion_note_drafts":[],"pending_returns":[],"exclusions_unsynced":false}'`。(c) 呼ぶ前と後で `SREC` の `JSON.stringify` が同じ。(d) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-39` | `parse_storage_value` が値の全体を採らないとき | 計算の要素の読み込み。世代。保存の記録。保存の値 | `generated_at` はどれも `GEN`。値は (a) `'x'`、(b) `''`、(c) `'[]'`、(d) `'null'`、(e) `'1'`、`VAL` で (f) `schema_version` を `2`、(g) `schema_version` を `'1'`、(h) `generated_at` を `'2026-11-02T00:00:00Z'`、(i) `generated_at` を消す、(j) `names` を消す、(k) `names` を `{}`、(l) `manual_deletes` を `null`、(m) `exclusions` を `{}`、(n) `exclusions` を `null`、(o) `exclusion_note_drafts` を `'x'`、(p) `exclusions_unsynced` を `'false'`、(q) `exclusions_unsynced` を `null`。(r) `(1, GEN)`、`(VAL, null)`、`(null, GEN)` | (a)〜(q) どれも採らなかった結果（`Object.keys` の順も）。(r) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-40` | 受け入れと、無いときの扱い、書き出しの形にそろえること | 計算の要素の読み込み。世代。保存の記録。保存の値 | `generated_at` はどれも `GEN`。値は (a) `VAL`、(b) 古い値、(c) `VAL` から `exclusions`・`exclusion_note_drafts`・`pending_returns`・`exclusions_unsynced` のキーを消したもの、(d) `VAL` の最上位と、その中のすべてのオブジェクト（要素、`conditions`、`record_key`、`applications` の要素）のキーの順を逆にしたもの、(e) `VAL` の最上位に `x: 1` を足したもの、(f) `VAL` の `exclusions` を [候補 0 の要素の `note` を `'  理由 '` に、`conditions.child_delete_codes` を `['JA/NN-011', 'JA/NN-010']` にしたもの] にしたもの、(g) `build_storage_value(SREC, GEN)` の返した値 | (a) `record` が `SREC` と等しい（`record` と各要素の `Object.keys` の順が 9.1.2 の順）、ほかは表で挙げないキーの値。結果の `Object.keys` が `['record', 'rejected', 'names_ignored', 'manual_deletes_ignored', 'exclusions_failure', 'pending_returns_failure']`。(b) `record` が空の記録で、`rejected` が `false`、ほかは表で挙げないキーの値（勝手に除外も申請に戻しもしない）。(c) `record` の `names`・`manual_deletes` が `SREC` と同じで、`exclusions`・`exclusion_note_drafts`・`pending_returns` が `[]`、`exclusions_unsynced` が `false`。2 つの `_failure` が null。(d) `record` の `JSON.stringify` が `SREC` の `JSON.stringify` と同じ（キーは 9.1.2 の順に戻る）。(e) (a) と同じ（最上位の余分なキーは見ない）。(f) `record.exclusions[0].note` が `'  理由 '`（除かない）、`record.exclusions[0].conditions.child_delete_codes` が `['JA/NN-010', 'JA/NN-011']`、`exclusions_failure` が null。(g) (a) と同じ（組み立てて受け入れ直すと同じ記録） |
+| `UT-index_calc-41` | 名前の要素の外し方と識別値 | 計算の要素の読み込み。世代。保存の記録。保存の値。名前の要素 | `VAL` の `names` を `[NM0, NM1, …, NM14]`（15 の要素をこの順）にした値、`GEN` | `record.names` が `[NM0, NM13, NM14]` と等しい（`Object.keys` の順も。`NM1` は示さずに除き、`NM9` が形の外れなので `NM0` は重ならない。`NM13` は `NM1` を除いた後なので重ならない。`NM14` はアクションが `NM2` と違う）。`names_ignored` が次の 11 の要素を `index` の昇順に持つ（1 件ずつ挙げる）: (1) `{index: 2, reason: 'duplicate', target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-001', action: 'band_change'}`、(2) `{index: 3, reason: 'duplicate', target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-001', action: 'band_change'}`、(3) `{index: 4, reason: 'invalid', target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-002', action: 'delete'}`、(4) `{index: 5, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}`（経度が範囲の外なので識別値を取れない）、(5) `{index: 6, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}`、(6) `{index: 7, reason: 'invalid', target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-005', action: 'delete'}`、(7) `{index: 8, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}`、(8) `{index: 9, reason: 'invalid', target: 'new', lon: 138.5, lat: 35.25, summit_code: null, action: null}`、(9) `{index: 10, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}`、(10) `{index: 11, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}`、(11) `{index: 12, reason: 'invalid', target: 'new', lon: 140, lat: 37, summit_code: null, action: null}`。ほかは表で挙げないキーの値 |
+| `UT-index_calc-42` | 担当者指定削除の要素の外し方 | 計算の要素の読み込み。世代。保存の記録。保存の値。担当者指定削除の要素 | `VAL` の `manual_deletes` を `[MD0, …, MD9]` にした値、`GEN` | `record.manual_deletes` が `[MD0, MD9]` と等しい（`MD7` が形の外れなので `MD0` は重ならない。空文字の `summit_code` も受け入れる）。`manual_deletes_ignored` が `[{index: 1, reason: 'duplicate', summit_code: 'JA/NN-007'}, {index: 2, reason: 'duplicate', summit_code: 'JA/NN-007'}, {index: 3, reason: 'invalid', summit_code: 'JA/NN-008'}, {index: 4, reason: 'invalid', summit_code: null}, {index: 5, reason: 'invalid', summit_code: null}, {index: 6, reason: 'invalid', summit_code: 'JA/NN-009'}, {index: 7, reason: 'invalid', summit_code: 'JA/NN-003'}, {index: 8, reason: 'invalid', summit_code: 'JA/NN-010'}]`。ほかは表で挙げないキーの値 |
+| `UT-index_calc-43` | 台帳・申請に戻した記録・下書きの受け入れ（配列ごとに別に判断する） | 計算の要素の読み込み。世代。保存の記録。保存の値。下書きの要素 | `generated_at` はどれも `GEN`。`VAL` で (a) `exclusions` を [候補 1 の要素, 候補 1 の要素]、(b) `exclusions[0].note` を `1`、(c) `pending_returns` を `{}`、(d) `pending_returns` を `null`、(e) `pending_returns` を [候補 1 の戻す要素, 候補 1 の戻す要素]、(f) `exclusions` を `[null]`・`pending_returns` を `[null]`、(g) `exclusion_note_drafts` を `[DR0, …, DR8]` | (a) `record.exclusions` が `[]`、`exclusions_failure` が `{kind: 'duplicate_key', path: ['exclusions', 1], first: 0}`、`record.pending_returns` は `SREC` のまま、`pending_returns_failure` が null、`rejected` が `false`。(b) `record.exclusions` が `[]`、`exclusions_failure` が `{kind: 'bad_value', path: ['exclusions', 0, 'note']}`。(c)(d) `record.pending_returns` が `[]`、`pending_returns_failure` が `{kind: 'bad_value', path: ['pending_returns']}`、`record.exclusions` は `SREC` のまま、`exclusions_failure` が null、`rejected` が `false`。(e) `record.pending_returns` が `[]`、`pending_returns_failure` が `{kind: 'duplicate_key', path: ['pending_returns', 1], first: 0}`。(f) `record.exclusions` と `record.pending_returns` が `[]`、`exclusions_failure` が `{kind: 'bad_value', path: ['exclusions', 0]}`、`pending_returns_failure` が `{kind: 'bad_value', path: ['pending_returns', 0]}`、`record.names`・`manual_deletes`・`exclusion_note_drafts` と `exclusions_unsynced`（`true`）は `SREC` のまま。(g) `record.exclusion_note_drafts` が `[DR0, DR7]` と等しく（`DR1`・`DR2` は重なり、ほかは形の外れ）、`names_ignored`・`manual_deletes_ignored` が `[]`、2 つの `_failure` が null（下書きの外れは示さない） |
+| `UT-index_calc-44` | `select_inherit_source` の選び方 | 計算の要素の読み込み。世代。キーの一覧 | `generated_at` は (h) の 4 つ目を除いて `GEN`。(a) `KEYS1`、(b) `KEYS1` の末尾に `'findsummits:1:' + GEN` を足したもの、(c) `KEYS1` の位置 2 から後ろ（`KEYS1.slice(2)`）、(d) `[]`、(e) `KEYS1` を逆の順にしたもの、(f) `KEYS1` の末尾に `'findsummits:1:2026-10-31T23:59:59Z'` を足したもの、(g) `['findsummits:1:2026-10-01T00:00:00Z', 'findsummits:1:2026-10-45T99:99:99Z']`、(h) `(null, GEN)`、`(['x', 1], GEN)`、`(['findsummits:1:' + GEN, 1], GEN)`（今回のキーの後ろに文字列でない要素）、`(KEYS1, null)` | (a)(e) `{current_exists: false, key: 'findsummits:1:2026-10-15T12:00:00Z', generated_at: '2026-10-15T12:00:00Z'}`（`Object.keys` の順も）。(b) `{current_exists: true, key: null, generated_at: null}`。(c)(d) `{current_exists: false, key: null, generated_at: null}`（(c) は後の世代と形の違うキーだけ）。(f) `{current_exists: false, key: 'findsummits:1:2026-10-31T23:59:59Z', generated_at: '2026-10-31T23:59:59Z'}`。(g) `{current_exists: false, key: 'findsummits:1:2026-10-45T99:99:99Z', generated_at: '2026-10-45T99:99:99Z'}`（日付として正しいかは見ない）。(h) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-45` | `decide_inherit_prompt` の 3 つの場合分け | 計算の要素の読み込み。世代。保存の記録。保存の値。名前の要素。担当者指定削除の要素 | 引数は、(a) `null` のほかは、次の値を `parse_storage_value(<値>, GEN)` で受け入れた結果: (b) 古い値、(c) `{schema_version: 1, generated_at: GEN, names: [], manual_deletes: [], exclusions: [], exclusion_note_drafts: [<SREC の下書きの要素>], pending_returns: [], exclusions_unsynced: true}` の `JSON.stringify`、(d) 古い値の `names` を `[NM1]`、(e) `'x'`、(f) `VAL`、(g) 古い値に `pending_returns: [候補 1 の戻す要素]` を足したもの、(h) 古い値の `names` を `[NM6]`、(i) 古い値に `exclusions: [null]` を足したもの、(j) 古い値の `manual_deletes` を `[MD4]`。(k) `undefined`、`'x'`、`1` | (a)〜(d) `{kind: 'none'}`。(e) `{kind: 'broken'}`。(f) `{kind: 'ask', counts: {names: 2, manual_deletes: 1, exclusions: 1, pending_returns: 1}, names_ignored: [], manual_deletes_ignored: [], exclusions_failure: null, pending_returns_failure: null}`（`Object.keys` の順も）で、返した `names_ignored` が渡した結果の `names_ignored` と同じオブジェクト（`===`）。(g) `kind` が `'ask'`、`counts` が `{names: 0, manual_deletes: 0, exclusions: 0, pending_returns: 1}`。(h) `kind` が `'ask'`、`counts` が 4 つとも 0、`names_ignored` が `[{index: 0, reason: 'invalid', target: null, lon: null, lat: null, summit_code: null, action: null}]`。(i) `kind` が `'ask'`、`counts` が 4 つとも 0、`exclusions_failure` が `{kind: 'bad_value', path: ['exclusions', 0]}`。(j) `kind` が `'ask'`、`manual_deletes_ignored` が `[{index: 0, reason: 'invalid', summit_code: null}]`。(k) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-46` | `inherit_records` の写し方 | 計算の要素の読み込み。小さなバッチ（作り直す）。引き継ぎ元の記録 | (a) `(INH, <小さなバッチ>)`、(b) `INH` の `manual_deletes` を [`{summit_code: 'JA/NN-003', decision: '', note_draft: 'n2', previous_decision: 'delete'}`] に、ほかの配列を `[]` に、`exclusions_unsynced` を `false` にしたもの、(c) (a) と同じ、(d) `(null, <小さなバッチ>)`、`INH` の `names` を `'x'` にしたもの、`INH` の `exclusions_unsynced` を `'true'` にしたもの、`(INH, null)` | (a) 返した値の `Object.keys` が `['record', 'names_not_applied', 'manual_deletes_not_applied']`、`record` の `Object.keys` が 9.1.2 の順。`record.names` の長さが 3 で、要素が順に `INH.names[0]`・`[2]`・`[4]` と同じオブジェクト（`===`）。`record.manual_deletes` が `[{summit_code: 'JA/NN-003', decision: '', note_draft: '根拠', previous_decision: 'delete'}]`。`record.exclusions` が `INH.exclusions` と別の配列（`!==`）で、要素が同じオブジェクト（`===`）、`record.pending_returns` も同じ。`record.exclusion_note_drafts` が `[]`、`exclusions_unsynced` が `true`。`names_not_applied` が `[{target: 'new', lon: 138.5, lat: 35.26, summit_code: null, action: null}, {target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-001', action: 'delete'}, {target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-002', action: 'band_change'}, {target: 'existing', lon: null, lat: null, summit_code: 'JA/NN-005', action: 'band_change'}, {target: 'new', lon: 140, lat: 37, summit_code: null, action: null}]`（F4 の座標の新設も当たらない）。`manual_deletes_not_applied` が `['JA/NN-004', 'JA/NN-006', 'JA/NN-005', 'JA/NN-099']`（保留組、2 つある、適格でない、無い）。(b) `record` が `{names: [], manual_deletes: [{summit_code: 'JA/NN-003', decision: '', note_draft: 'n2', previous_decision: ''}], exclusions: [], exclusion_note_drafts: [], pending_returns: [], exclusions_unsynced: false}`（前の世代の `previous_decision` は写さない）。(c) 呼ぶ前と後で、`INH` とバッチの `JSON.stringify` が同じ。(d) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-47` | `summarize_storage_entry` の 1 行 | 計算の要素の読み込み。世代。保存の記録。保存の値。名前の要素 | (a) `('findsummits:1:' + GEN, VAL)`、(b) `('findsummits:1:' + GEN, 'x')`、(c) `('findsummits:1:2026-10-01T00:00:00Z', VAL)`、(d) `('findsummits:2:2026-10-01T00:00:00Z', VAL)`、(e) `('findsummits:abc', '')`、(f) `('findsummits:1:' + GEN, <VAL の names を [NM0, NM6] にした値>)`、(g) `('findsummits:1:' + GEN, '\u{1F600}')`、(h) `('findsummits:1', 'x')`、(i) `('findsummits:', '')`、(j) `(1, 'x')`、`('other:1:x', 'x')`、`('findsummits:1:x', null)` | (a) `{version: '1', generated_at: GEN, counts: {names: 2, manual_deletes: 1, exclusions: 1, pending_returns: 1}, length: VAL.length}`（`Object.keys` の順も）。(b) `{version: '1', generated_at: GEN, counts: null, length: 1}`。(c) `{version: '1', generated_at: '2026-10-01T00:00:00Z', counts: null, length: VAL.length}`（値の `generated_at` がキーと違う）。(d) `{version: '2', generated_at: null, counts: null, length: VAL.length}`。(e) `{version: 'abc', generated_at: null, counts: null, length: 0}`。(f) `counts` が `{names: 1, manual_deletes: 1, exclusions: 1, pending_returns: 1}`（外した要素は数えない）。(g) `length` が `2`、`counts` が null。(h) `{version: '1', generated_at: null, counts: null, length: 1}`（区切りが無い）。(i) `{version: '', generated_at: null, counts: null, length: 0}`。(j) どれも `name` が `'TypeError'` の例外 |
 
 ##### 除外判断ファイル（UT 候補）
 
