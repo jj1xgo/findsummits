@@ -7016,6 +7016,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 | `is_band_change_candidate` | `point` | 空 | 空 |
 | `dominant_peak_code`・`dominant_peak_dist_m` | 空 | `point` | `point` |
 
+- 取り元のプロパティの名前は、列の名前と同じ（`_list_columns` の名前をそのままキーに使う。座標の列は上のとおりジオメトリから取る）。
 - 取り元のキーが無ければ `{kind: 'row_missing_property', row, summit_code, index, feature_type, property}` を入れ、その列は null にして続ける。行の順、行の中は列の順。同じ取り元の同じキーの欠けが 2 つの行に出れば、行ごとに 2 件入れる（`row` が違う。画面が行ごとに示せるため）。
 - 値は加工せずに写す（真偽値は真偽値のまま。文字列の `true`・`false` にするのは後の回の `build_list_xlsx`。HLD 4.12.2 の 4）。
 - 誤りが 1 件でもあれば `{ok: false, errors}`、無ければ `{ok: true, rows}`（`rows` と同じ順・同じ数）。
