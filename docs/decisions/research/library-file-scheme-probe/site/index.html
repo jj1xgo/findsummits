@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>findsummits #197 の確かめ</title>
+        <link rel="stylesheet"
+              id="leaflet-css"
+              href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+              integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="probe.css">
+        <script src="probe_data.js"></script>
+        <script type="module" src="probe_module.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+                crossorigin="anonymous"></script>
+        <script src="probe_expected.js"></script>
+        <script src="probe.js" defer></script>
+    </head>
+    <body>
+        <h1>findsummits #197 の確かめ</h1>
+        <p>
+            「確かめる」を押すと、下の表と JSON が出ます。JSON は「コピー」で写して貼ってください。
+        </p>
+        <p>
+            <button type="button" id="run">確かめる</button>
+            <button type="button" id="save">保存する</button>
+            <button type="button" id="copy">コピー</button>
+            <button type="button" id="samples">見本を落とす</button>
+        </p>
+        <p id="saved"></p>
+        <table id="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>確かめること</th>
+                    <th>結果</th>
+                    <th>詳しく</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <textarea id="json" rows="12" cols="80" readonly></textarea>
+    </body>
+</html>
