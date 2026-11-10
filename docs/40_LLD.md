@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-08 |
+| 最終更新日 | 2026-11-10 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -836,7 +836,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 - 呼ぶ順などを確かめる試験用の実行ファイル `build/flow_stage`（[6.11.1](#6111-ファイル割付)）: `tests/src/flow_stage.cpp`・`tests/src/stub_analysis.cpp` と、`src/stage.cpp`・`src/common.cpp`・`src/convert.cpp`・`src/target.cpp` をコンパイルし、GoogleTest の `gtest_main` とリンクする（指定はテスト用の実行ファイルと同じ）。`tests/src/test_<群の名前>.cpp` の形にしないのは、上の決まり（`main` を持たない `src/` の `.cpp` をすべてリンクする）を Makefile のパターンで当てたとき、スタブの定義が無く、本物をリンクした実行ファイルがリンクに失敗するのを避けるため（`build/test_launch_main` と同じ扱い）。この実行ファイルは `build/test_launch_main` と違い、それ自身がテストの実行ファイルなので、`make test` が実行する。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main`・`build/flow_stage` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、`build/flow_stage` もテスト用の実行ファイルとして順に実行し、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
-- CMP7・CMP8 の `index.html` の UT は、モジュールごとに 1 本の `tests/public/test_<モジュール名>.js`（[9.1](#91-index_calc) は `tests/public/test_index_calc.js`。[1.2](#12-lld-の規約)の JavaScript の規約）で、本体ルートで `node --test tests/public/test_index_calc.js` で実行する。`make test` への組み込みと Node.js の版は [#197](https://github.com/jj1xgo/findsummits/issues/197)「CMP7 の実装の前にライブラリの版を決め、ブラウザでの動きを確かめる」で決める（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の表の `make test` の行）。
+- CMP7・CMP8 の `index.html` の UT は、モジュールごとに 1 本の `tests/public/test_<モジュール名>.js`（[9.1](#91-index_calc) は `tests/public/test_index_calc.js`。[1.2](#12-lld-の規約)の JavaScript の規約）で、本体ルートで `node --test tests/public/test_index_calc.js` で実行する。`make test` は、`tests/scripts/` のテストの後に `node --test tests/public/` を実行し、失敗すれば 0 以外の終了状態で終わる（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の表の `make test` の行）。Node.js の版は[環境定義](01_environment.md)のとおり。
 
 ## 3. CMP1 行政区域前処理
 
@@ -6413,7 +6413,7 @@ dominant_peak = min(candidates, key=key)
 - 計算の要素は `public/index.html` の中の 1 つの script 要素で、開始タグは属性を `id` だけにした `<script id="findsummits-calc">`（この字句のとおり。[HLD 3.7.3](30_HLD.md#373-関数)の「要素の `id`」は LLD で決める）。開始タグの直後で改行し、開始タグの次の行を `// trace: LLD-index_calc`、その次の文を `'use strict';` にする。終了タグ `</script>` は行の頭に置く。中身に `</script`・`<!--`・`<script` を（大文字・小文字を問わず）書かない（HTML の script の中身の解釈が変わるため。テストの取り出しも最初の `</script>` で切る）。
 - 置き場は、`<script src="merged_viewer_data.js">` の後、画面の要素より前（画面の要素が計算の関数を呼ぶため）。ほかの要素の並びは 9.2 で決める。
 - 要素の最上位には、関数の宣言（`function`）と定数（`const`）だけを置き、読み込んだときに何も実行しない（関数を呼ばない、グローバルの値を読まない）。HLD 3.7.3・3.8.3 の関数（ほかの要素とテストから呼ぶもの）は、必ず `function <名前>(…) { … }` の宣言で書き、`const`・`let` に関数を代入する形（`const f = (…) => …` など）で書かない。普通の script の最上位の `const`・`let` はグローバルのオブジェクトのプロパティにならないので、UT の `vm` の文脈から呼べない（ブラウザでは名前が共有されて動いてしまい、違いに気づきにくい）。内部の関数も同じ形にそろえる。
-- 関数は、引数と、この要素の定数と関数と、ECMAScript の組み込みだけを使い、ほかのグローバル（`window`・`document`・`localStorage`・`location`・`navigator`・`fetch`・`L`・`XLSX`・`JSZip` など）を読まない。ただし、`build_exclusion_file`・`parse_exclusion_file`・`build_evidence_geojson` の 3 つは、UTF-8 の符号化と復号に、ECMAScript の外のグローバル `TextEncoder`・`TextDecoder` を、呼ばれたときに読む（要素の最上位では読まない）。この 2 つは WHATWG の Encoding Standard のグローバルで、対応ブラウザ（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）と Node.js のどれにもある。（`build_evidence_geojson` は符号化だけを使う。）UTF-8 の復号を ECMAScript だけで書くと、壊れた並び（過長、サロゲート、U+10FFFF 超え、途中で切れたもの）の見分けを自分で書くことになり誤りやすく、引数で渡すと [HLD 3.7.3](30_HLD.md#373-関数)の受け取るものが変わるため、グローバルから読む。UT の文脈への渡し方は 9.1.5 の共通の準備に書く。SheetJS・JSZip を使う出力の 3 つの関数（`build_application_xlsx`・`build_list_xlsx`・`build_evidence_zip`）の受け方は、それを書くときに決める（[#197](https://github.com/jj1xgo/findsummits/issues/197)「CMP7 の実装の前にライブラリの版を決め、ブラウザでの動きを確かめる」のライブラリの読み方とあわせて。[1.2](#12-lld-の規約)）。
+- 関数は、引数と、この要素の定数と関数と、ECMAScript の組み込みだけを使い、ほかのグローバル（`window`・`document`・`localStorage`・`location`・`navigator`・`fetch`・`L`・`XLSX`・`JSZip` など）を読まない。ただし、`build_exclusion_file`・`parse_exclusion_file`・`build_evidence_geojson` の 3 つは、UTF-8 の符号化と復号に、ECMAScript の外のグローバル `TextEncoder`・`TextDecoder` を、呼ばれたときに読む（要素の最上位では読まない）。この 2 つは WHATWG の Encoding Standard のグローバルで、対応ブラウザ（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）と Node.js のどれにもある。（`build_evidence_geojson` は符号化だけを使う。）UTF-8 の復号を ECMAScript だけで書くと、壊れた並び（過長、サロゲート、U+10FFFF 超え、途中で切れたもの）の見分けを自分で書くことになり誤りやすく、引数で渡すと [HLD 3.7.3](30_HLD.md#373-関数)の受け取るものが変わるため、グローバルから読む。UT の文脈への渡し方は 9.1.5 の共通の準備に書く。SheetJS・JSZip を使う出力の 3 つの関数（`build_application_xlsx`・`build_list_xlsx`・`build_evidence_zip`）の受け方は、それを書くときに決める（試験でのライブラリの取り方と照合は HLD の [DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」。ライブラリの版は HLD の [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」。[1.2](#12-lld-の規約)）。
 - UT のコードは `tests/public/test_index_calc.js` 1 本（[1.2](#12-lld-の規約)）。
 
 #### 9.1.2 型とデータ
@@ -6900,7 +6900,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 
 ##### 出力
 
-この群は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「出力」の群の計算の 10 のうち、SheetJS・JSZip を使わない 7 つ（表の順に `collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_list_rows`・`split_by_category`・`build_evidence_geojson`）を書く。ライブラリを使う 3 つ（`build_application_xlsx`・`build_list_xlsx`・`build_evidence_zip`）は、[#197](https://github.com/jj1xgo/findsummits/issues/197)「CMP7 の実装の前にライブラリの版を決め、ブラウザでの動きを確かめる」でライブラリの版と書き込みの可否を決めた後に書く。画面の `run_export` は 9.2。
+この群は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「出力」の群の計算の 10 のうち、SheetJS・JSZip を使わない 7 つ（表の順に `collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_list_rows`・`split_by_category`・`build_evidence_geojson`）を書く。ライブラリを使う 3 つ（`build_application_xlsx`・`build_list_xlsx`・`build_evidence_zip`）は、後で書く（ライブラリは HLD の [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」の SheetJS CE と JSZip、申請書の固定の書き方は HLD の [DEC117](30_HLD.md#4114-設計判断)「申請書はテンプレートの配置を再現する」）。画面の `run_export` は 9.2。
 
 - 処理の正本は、[HLD 4.11.2](30_HLD.md#4112-処理の流れ)の 1〜3、[4.12.2](30_HLD.md#4122-処理の流れ)の 1〜3、[4.21.2](30_HLD.md#4212-処理の流れ)の 2「フィーチャを 5 つに分ける」・3「GeoJSON 5 本を組み立てて書く」、[4.19.2](30_HLD.md#4192-処理の流れ)の「エクスポートの前の確認」の警告の一覧の手順と警告の表である。HLD に無い JavaScript の値の形（結んだ行、行の値、警告、誤り）、確かめの順、誤りを集めること、識別子の持ち方を、ここで決める。
 - 受け取った引数とその配列・要素・フィーチャを書き換えない（7 つとも）。
