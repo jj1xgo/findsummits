@@ -74,10 +74,10 @@ async function addPane(JSZip, buf) {
   const name = "xl/worksheets/sheet1.xml";
   let xml = await zip.file(name).async("string");
   const pane = '<pane xSplit="0" ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/>';
-  if (/<sheetView([^>]*)\/>/.test(xml)) {
-    xml = xml.replace(/<sheetView([^>]*)\/>/, `<sheetView$1>${pane}</sheetView>`);
-  } else if (/<sheetView([^>]*)>/.test(xml)) {
-    xml = xml.replace(/<sheetView([^>]*)>/, `<sheetView$1>${pane}`);
+  if (/<sheetView(\s[^>]*)?\/>/.test(xml)) {
+    xml = xml.replace(/<sheetView(\s[^>]*)?\/>/, `<sheetView$1>${pane}</sheetView>`);
+  } else if (/<sheetView(\s[^>]*)?>/.test(xml)) {
+    xml = xml.replace(/<sheetView(\s[^>]*)?>/, `<sheetView$1>${pane}`);
   } else {
     throw new Error("sheetView が無い");
   }

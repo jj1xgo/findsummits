@@ -276,9 +276,13 @@
     var name = "xl/worksheets/sheet1.xml";
     var xml = await zip.file(name).async("string");
     var pane = '<pane xSplit="0" ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/>';
-    xml = /<sheetView([^>]*)\/>/.test(xml)
-      ? xml.replace(/<sheetView([^>]*)\/>/, "<sheetView$1>" + pane + "</sheetView>")
-      : xml.replace(/<sheetView([^>]*)>/, "<sheetView$1>" + pane);
+    if (/<sheetView(\s[^>]*)?\/>/.test(xml)) {
+      xml = xml.replace(/<sheetView(\s[^>]*)?\/>/, "<sheetView$1>" + pane + "</sheetView>");
+    } else if (/<sheetView(\s[^>]*)?>/.test(xml)) {
+      xml = xml.replace(/<sheetView(\s[^>]*)?>/, "<sheetView$1>" + pane);
+    } else {
+      throw new Error("sheetView が無い");
+    }
     zip.file(name, xml, { date: zip.file(name).date, createFolders: false });
     return zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
   }

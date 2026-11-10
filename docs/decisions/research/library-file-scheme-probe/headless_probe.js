@@ -62,9 +62,14 @@ async function main() {
       if (step.startsWith("samples:")) {
         const dest = path.resolve(step.slice("samples:".length));
         fs.mkdirSync(dest, { recursive: true });
+        // 前回の見本を新しいものと取り違えないよう、先に消す。書き込み途中（.crdownload）が残る間は待つ
+        const zip = path.join(dest, "probe-samples.zip");
+        fs.rmSync(zip, { force: true });
         await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: dest });
         await evalJs("document.getElementById('samples').click()");
-        for (let i = 0; i < 60 && !fs.existsSync(path.join(dest, "probe-samples.zip")); i++) await sleep(500);
+        const done = () => fs.existsSync(zip) && fs.statSync(zip).size > 0 &&
+          !fs.readdirSync(dest).some((f) => f.endsWith(".crdownload"));
+        for (let i = 0; i < 60 && !done(); i++) await sleep(500);
       }
       console.log(JSON.stringify({ step, seconds: Math.round((Date.now() - start) / 1000), json: await readJson() }));
     } else if (step === "a" || step === "b") {

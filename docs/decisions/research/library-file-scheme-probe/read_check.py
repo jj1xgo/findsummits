@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import zipfile
+from xml.etree import ElementTree
 
 import openpyxl
 
@@ -41,19 +42,27 @@ def check_sheet(path, expected):
     if "merges" in expected:
         result["結合"] = "書ける" if merges == set(expected["merges"]) else f"書けない {sorted(merges)}"
     if "freeze" in expected:
-        result["固定"] = "書ける" if ws.freeze_panes == expected["freeze"] else f"書けない（{ws.freeze_panes}）"
+        # topLeftCell だけでなく、枠が固定（frozen）で、分ける行の数が固定の行の上の行の数であることも見る
+        pane = ws.sheet_view.pane
+        want_rows = openpyxl.utils.cell.coordinate_to_tuple(expected["freeze"])[0] - 1
+        frozen = (pane is not None and pane.state == "frozen" and pane.topLeftCell == expected["freeze"]
+                  and int(pane.ySplit or 0) == want_rows)
+        state = None if pane is None else f"{pane.topLeftCell} {pane.state} ySplit={pane.ySplit}"
+        result["固定"] = "書ける" if frozen else f"書けない（{state}）"
     if "wrap" in expected:
         wrapped = bool(ws[expected["wrap"]].alignment.wrap_text)
         result["折り返し（参考）"] = "書ける" if wrapped else "書けない"
 
     # 期待が None のセルは、openpyxl では空文字のセルと見分けられないので、XML に要素が無いことを見る（DEC112）
+    # 属性の順や名前空間の接頭辞によらないよう、XML を解析して c 要素の r 属性を集める
     with zipfile.ZipFile(path) as z:
-        sheet_xml = z.read("xl/worksheets/sheet1.xml").decode("utf-8")
+        root = ElementTree.fromstring(z.read("xl/worksheets/sheet1.xml"))
+    present = {el.get("r") for el in root.iter() if el.tag.rsplit("}", 1)[-1] == "c"}
     bad_values = []
     for ref, (value, kind) in expected["cells"].items():
         got = ws[ref].value
         if kind is None:
-            if re.search(rf'<(?:\w+:)?c r="{ref}"[\s/>]', sheet_xml):
+            if ref in present:
                 bad_values.append(f"{ref}=セルがある")
         elif _kind(got) != kind or got != value:
             bad_values.append(f"{ref}={got!r}")

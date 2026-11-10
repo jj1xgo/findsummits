@@ -55,6 +55,16 @@ def _strip_created(src, dst):
             zout.writestr(info, data)
 
 
+def _rewrite_sheet(src, dst, change):
+    """xl/worksheets/sheet1.xml を change で書き換えた写しを作る。"""
+    with zipfile.ZipFile(src) as zin, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:
+        for info in zin.infolist():
+            data = zin.read(info.filename)
+            if info.filename == "xl/worksheets/sheet1.xml":
+                data = change(data.decode("utf-8")).encode("utf-8")
+            zout.writestr(info, data)
+
+
 class CheckSheetTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -110,6 +120,44 @@ class CheckSheetTest(unittest.TestCase):
         expected = {"sheets": ["一覧", "出典"], "cells": {}, "second_a1": "出典の文"}
         result = read_check.check_sheet(self.path("two.xlsx"), expected)
         self.assertTrue(result["2 枚目の A1"].startswith("不一致"), result["2 枚目の A1"])
+
+    def test_cell_with_r_not_first_attribute_is_found(self):
+        # 期待が空のセルに値があり、XML の属性の順が t の後に r のときも見逃さない（Codex の push 前のレビュー I2）
+        _book(self.path("order.xlsx"))
+        cell = '<row r="7"><c t="inlineStr" r="F6"><is><t>x</t></is></c></row>'
+        _rewrite_sheet(self.path("order.xlsx"), self.path("order2.xlsx"),
+                       lambda xml: xml.replace("</sheetData>", cell + "</sheetData>"))
+        result = read_check.check_sheet(self.path("order2.xlsx"), EXPECTED)
+        self.assertIn("F6", result["値と型"])
+
+    def test_split_pane_is_not_a_freeze(self):
+        # topLeftCell が A6 でも、state が frozen でない分割の枠は固定でない（argon の push 前のレビュー 4）
+        _book(self.path("split.xlsx"))
+        _rewrite_sheet(self.path("split.xlsx"), self.path("split2.xlsx"),
+                       lambda xml: xml.replace('state="frozen"', 'state="split"'))
+        result = read_check.check_sheet(self.path("split2.xlsx"), EXPECTED)
+        self.assertTrue(result["固定"].startswith("書けない"), result["固定"])
+
+    def test_missing_merge_is_reported(self):
+        _book(self.path("nomerge.xlsx"))
+        wb = openpyxl.load_workbook(self.path("nomerge.xlsx"))
+        wb.active.unmerge_cells("A3:A4")
+        wb.save(self.path("nomerge.xlsx"))
+        result = read_check.check_sheet(self.path("nomerge.xlsx"), EXPECTED)
+        self.assertTrue(result["結合"].startswith("書けない"), result["結合"])
+
+    def test_wrong_sheet_name_is_reported(self):
+        _book(self.path("name.xlsx"))
+        wb = openpyxl.load_workbook(self.path("name.xlsx"))
+        wb.active.title = "シート1"
+        wb.save(self.path("name.xlsx"))
+        result = read_check.check_sheet(self.path("name.xlsx"), EXPECTED)
+        self.assertTrue(result["シート"].startswith("不一致"), result["シート"])
+
+    def test_same_type_different_value_is_reported(self):
+        _book(self.path("val.xlsx"), e6=13)
+        result = read_check.check_sheet(self.path("val.xlsx"), EXPECTED)
+        self.assertIn("E6", result["値と型"])
 
     def test_created_present_and_absent(self):
         _book(self.path("with.xlsx"))

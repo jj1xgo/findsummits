@@ -89,6 +89,8 @@ ZIP（JSZip 3.10.2）:
 
 DEC124 の「端末の現地時刻として書く」は、補正して渡せば満たせる。
 
+(b) の申請書を表計算のソフトで読めるかは、2026-11-10 に LibreOffice 26.8.2.2 で確かめた（`soffice --headless --convert-to xlsx` で読み込んで書き出し直し、openpyxl で読み返した）。書き出し直した後も、`A6` の固定（`state` が `frozen`、`ySplit` が 5）と結合が残った。LibreOffice は書き足した `<pane>` を読めている。Excel は手元に無く not run。
+
 ## `file://` と `http://localhost` での動き
 
 `https://` の置き場（Cloudflare Pages）はやめた（持ち主の判断、2026-11-08。リモートの端末からでは wrangler login の許可の戻り先が届かなかった）。代わりに、2026-11-10 にホストの `python3 -m http.server`（`127.0.0.1:8197`）から `build/probe-site/` を配信し、`http://localhost:8197/` で測った（持ち主の判断、2026-11-10）。localhost は安全なコンテキストなので `https://` に近いが、本物の `https://` の配信ではない。
@@ -163,6 +165,7 @@ P11・P12 の画素（タイルの真ん中の RGBA と、全画素の値の合�
 - **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 標高タイルの PNG を Canvas を通さずに復号する。Brave は対応に残し、Shields は既定のままで等高線が正しく出る。HLD の DEC194 に書いた。
   - 確かめ 1: 雑音は自分で書いた画素の読み返しでも入る。`library-file-scheme-probe/site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える）で、画面ありの Brave の `http://localhost` では 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。
   - 確かめ 2: P11 の 3 つのタイルは、どれも 256×256、8 ビットの RGB（カラータイプ 2）、インターレースなしで、チャンクは IHDR・IDAT・IEND だけだった。`library-file-scheme-probe/png_decode_check.js`（Node.js 24.21.0）で `DecompressionStream("deflate")` と行のフィルタを戻す処理だけで復号すると、真ん中の画素と全画素の値の合計が、3 つとも Chrome の Canvas の読み出し（上の表の左の列）と一致した（画素ごとの比較はしていない）。
+  - 確かめ 3: 復号が扱う形（8 ビットの RGB、圧縮とフィルタの方式 0、インターレースなし）が、ほかのタイルでも同じかを、2026-11-10 に地理院の 39 枚で数えた（DEM10b 12 枚・DEM5a 15 枚・DEM5b 1 枚・DEM1a 11 枚。東京湾の周りの海の際を含む。DEM5b は山地の 20 点を探して 1 枚だけ見つかった）。39 枚とも同じ形で、チャンクは IHDR・IDAT・IEND だけ、使われていた行のフィルタは 1・2・4 だった。DEM5c は見つからず not run。全面が無効値のタイルは、今回の範囲では 404 になり、PNG では返らなかった。
   - 初めは「既知の画素で自己診断し、ずれていたら等高線を描かずに知らせる」と決めたが、確かめ 2 の後に替えた（既定の Brave で等高線が出ないため）。
 - **Firefox の `file://` の localStorage の分け方**（持ち主の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）。HLD の DEC136 に書いた。反対に Chrome と Brave は、フォルダが違っても localStorage を 1 つにまとめるので、別の `$DATA_DIR` のビューアの世代も引き継ぎの候補に入る。これも DEC136 に書いた。
 

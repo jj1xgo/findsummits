@@ -18,7 +18,12 @@ function paeth(a, b, c) {
   return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 
+const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+
+// HLD 4.19.2 の「標高タイルの復号」の確かめ: シグネチャ、IHDR（8 ビットの RGB、圧縮とフィルタの方式 0、インターレースなし）、
+// 展開した長さ、行のフィルタの種類（0〜4）。外れたら例外にする（製品では fetch_tile の「失敗」に当たる）
 async function decode(buf) {
+  if (buf.length < 8 || SIGNATURE.some((b, i) => buf[i] !== b)) throw new Error("PNG のシグネチャでない");
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let width = 0;
   let height = 0;
@@ -30,7 +35,9 @@ async function decode(buf) {
     if (type === "IHDR") {
       width = view.getUint32(i + 8);
       height = view.getUint32(i + 12);
-      if (data[8] !== 8 || data[9] !== 2 || data[12] !== 0) throw new Error("8 ビットの RGB でインターレースなしの PNG だけを扱う");
+      if (len !== 13 || data[8] !== 8 || data[9] !== 2 || data[10] !== 0 || data[11] !== 0 || data[12] !== 0) {
+        throw new Error("8 ビットの RGB、圧縮とフィルタの方式 0、インターレースなしの PNG だけを扱う");
+      }
     } else if (type === "IDAT") {
       idat.push(data);
     }
@@ -39,9 +46,11 @@ async function decode(buf) {
   const raw = await inflate(Buffer.concat(idat));
   const bpp = 3;
   const stride = width * bpp;
+  if (width === 0 || raw.length !== height * (stride + 1)) throw new Error("展開した長さが IHDR と合わない");
   const rgb = new Uint8Array(height * stride);
   for (let y = 0; y < height; y++) {
     const f = raw[y * (stride + 1)];
+    if (f > 4) throw new Error(`行 ${y} のフィルタの種類 ${f} は無い`);
     for (let x = 0; x < stride; x++) {
       const v = raw[y * (stride + 1) + 1 + x];
       const a = x >= bpp ? rgb[y * stride + x - bpp] : 0;
