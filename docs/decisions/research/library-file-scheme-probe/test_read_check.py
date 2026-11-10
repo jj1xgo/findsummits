@@ -138,6 +138,14 @@ class CheckSheetTest(unittest.TestCase):
         result = read_check.check_sheet(self.path("split2.xlsx"), EXPECTED)
         self.assertTrue(result["固定"].startswith("書けない"), result["固定"])
 
+    def test_fractional_y_split_is_not_a_freeze(self):
+        # ySplit は 5 ちょうどでなければ、A6 での固定でない（Codex の確認限定巡）
+        _book(self.path("half.xlsx"))
+        _rewrite_sheet(self.path("half.xlsx"), self.path("half2.xlsx"),
+                       lambda xml: xml.replace('ySplit="5"', 'ySplit="5.5"'))
+        result = read_check.check_sheet(self.path("half2.xlsx"), EXPECTED)
+        self.assertTrue(result["固定"].startswith("書けない"), result["固定"])
+
     def test_missing_merge_is_reported(self):
         _book(self.path("nomerge.xlsx"))
         wb = openpyxl.load_workbook(self.path("nomerge.xlsx"))
@@ -164,6 +172,22 @@ class CheckSheetTest(unittest.TestCase):
         _strip_created(self.path("with.xlsx"), self.path("without.xlsx"))
         self.assertTrue(read_check.core_dates(self.path("with.xlsx"))["created"].startswith("あり"))
         self.assertEqual(read_check.core_dates(self.path("without.xlsx"))["created"], "なし")
+
+
+class DeterminismTest(unittest.TestCase):
+    def test_missing_file_in_other_dir_is_reported(self):
+        # 比べる先にファイルが無いとき、黙って飛ばさない（argon の push 前のレビュー 4 の 1 つ目）
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            first = os.path.join(tmp, "first", "b")
+            os.makedirs(first)
+            _book(os.path.join(first, "application.xlsx"))
+            os.makedirs(os.path.join(tmp, "other"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                read_check.main([os.path.join(tmp, "first"), os.path.join(tmp, "other")])
+            self.assertIn("b/application.xlsx: 比べる先に無い", out.getvalue())
 
 
 class CheckZipTest(unittest.TestCase):

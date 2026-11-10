@@ -46,7 +46,7 @@ def check_sheet(path, expected):
         pane = ws.sheet_view.pane
         want_rows = openpyxl.utils.cell.coordinate_to_tuple(expected["freeze"])[0] - 1
         frozen = (pane is not None and pane.state == "frozen" and pane.topLeftCell == expected["freeze"]
-                  and int(pane.ySplit or 0) == want_rows)
+                  and float(pane.ySplit or 0) == want_rows)
         state = None if pane is None else f"{pane.topLeftCell} {pane.state} ySplit={pane.ySplit}"
         result["固定"] = "書ける" if frozen else f"書けない（{state}）"
     if "wrap" in expected:
@@ -166,7 +166,10 @@ def main(dirs):
             for name in ("application.xlsx", "list.xlsx"):
                 a = os.path.join(first, cand, name)
                 b = os.path.join(other, cand, name)
-                if not (os.path.exists(a) and os.path.exists(b)):
+                if not os.path.exists(a):
+                    continue
+                if not os.path.exists(b):
+                    print(f"- {cand}/{name}: 比べる先に無い")
                     continue
                 if _sha256(a) == _sha256(b):
                     print(f"- {cand}/{name}: 一致")
