@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Canvas の自己診断（#197）</title>
+</head>
+<body>
+<p>既知の画素を Canvas に書いて読み返し、違う値の数を出す（Brave の Shields の雑音を見つけられるかの確かめ）。</p>
+<pre id="r"></pre>
+<script>
+  var c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  var x = c.getContext("2d");
+  var d = x.createImageData(256, 256);
+  for (var i = 0; i < d.data.length; i += 4) {
+    d.data[i] = i % 256;
+    d.data[i + 1] = (i >> 3) % 256;
+    d.data[i + 2] = 7;
+    d.data[i + 3] = 255;
+  }
+  x.putImageData(d, 0, 0);
+  var g = x.getImageData(0, 0, 256, 256).data;
+  var diff = 0;
+  for (var j = 0; j < g.length; j++) {
+    if (g[j] !== d.data[j]) diff++;
+  }
+  document.getElementById("r").textContent = "diff=" + diff + " of " + g.length;
+</script>
+</body>
+</html>

@@ -143,5 +143,26 @@ P11・P12 の画素（タイルの真ん中の RGBA と、全画素の値の合�
 
 ## 見込みと違った行の扱い
 
-- **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 等高線を描く前に、既知の画素を Canvas に書いて読み返す自己診断をし、ずれていたら等高線を描かずに、Brave の Shields でそのサイトの指紋採取の保護を切ると出ることを示す。Brave は対応に残す。自己診断で見つけられることは、`build/probe-site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える。build の下で、リポジトリには置いていない）で確かめた。画面ありの Brave の `http://localhost` で 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。HLD の DEC159 と等高線の節に書き足す（Task 6）。
+- **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 等高線を描く前に、既知の画素を Canvas に書いて読み返す自己診断をし、ずれていたら等高線を描かずに、Brave の Shields でそのサイトの指紋採取の保護を切ると出ることを示す。Brave は対応に残す。自己診断で見つけられることは、`library-file-scheme-probe/site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える）で確かめた。画面ありの Brave の `http://localhost` で 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。HLD の DEC159 と等高線の節に書き足す（Task 6）。
 - **Firefox の `file://` の localStorage の分け方**（持ち主の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）ことを、HLD の DEC136 に書き足す（Task 6）。
+
+## XLSX の方式の比較
+
+(a) と (d) は申請書の `A6` での固定が書けず、要件で落ちた（「書き込みの可否」）。残る 2 つを比べる。
+
+| 項目 | (b) SheetJS CE＋JSZip で pane を書き足す | (c) ExcelJS |
+|---|---|---|
+| 要件の列（値と型・結合・固定・シート・表示形式・出典の `A1`） | 全部満たす | 全部満たす |
+| 参考: `B3` の折り返し | 書けない（HLD 4.11.1 の対象外） | 書ける |
+| 文書のプロパティ | 書かなければ書かない。固定値でも書ける | 書かなくても今の時刻を書く。固定値なら書ける |
+| 決定性（[NFR-003](../../20_SRS.md#nfr-003-再現性決定論的出力)） | 一致（JSZip の書き戻しに `createFolders: false` が要る） | **不一致**（`docProps/core.xml` と全エントリの時刻に今の時刻が入る） |
+| ライセンス | Apache-2.0（SheetJS CE 0.20.3。配布元の `package.json`）、MIT または GPL-3.0（JSZip） | MIT |
+| 最後の版の日付 | SheetJS CE 0.20.3 は 2024-07-18（SheetJS の git のタグ `v0.20.3`）、JSZip 3.10.2 は 2026-09-08 | 4.4.0 は 2023-10-19 |
+| 大きさ | `xlsx.full.min.js` 951904 バイト（JSZip 97781 バイトは申請エビデンス ZIP のためにどちらでも読む） | `exceljs.min.js` 947702 バイト（JSZip はどちらでも読む） |
+| 配布元 | cdn.sheetjs.com（jsDelivr の 0.20.3 は 404）。JSZip は jsDelivr | jsDelivr |
+| SRI の公開の値 | SheetJS は無い（自分で取った sha384 を使う）。JSZip は cdnjs と一致 | cdnjs と一致 |
+| `file://` での読み込み（P7） | Chrome・Brave・Firefox で通った（Safari は not run） | 同じ |
+| ライブラリの名前の書き直し | 要らない（DEC129 の 3 つのまま） | 要る（SRS 12 か所・HLD・LLD・IT・ST と、SRS の改訂の ADR） |
+| 実装の手間 | pane の XML を書き足す処理を自分で持つ（`<sheetView>` の中の 1 要素） | 決定性のために、`docProps/core.xml` と ZIP のエントリの時刻を JSZip で読み直して書き直す処理が要る |
+
+決めた方式（持ち主の判断、2026-11-10）: (b)。SheetJS CE 0.20.3 で書き、JSZip 3.10.2 で申請書の `<sheetView>` に `A6` の固定の `<pane>` を書き足す（書き戻しは `createFolders: false`）。理由は、要件を全部満たし、決定性を保ち、DEC129 のライブラリの 3 つのまま名前の書き直しが要らないため。(c) ExcelJS は決定性のための書き直しと名前の書き直しが要る。新しい Issue は立てない。
