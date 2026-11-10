@@ -11,6 +11,11 @@
 | `library-file-scheme-probe/expected.json` | 見本の中身と期待（セルの値と型、表示形式、結合、固定、シートの名前と順、ZIP の時刻） |
 | `library-file-scheme-probe/read_check.py` | openpyxl と `zipfile` で読み返し、項目ごとに判定する。2 つ目からの出力先とはバイト列を比べる（決定性） |
 | `library-file-scheme-probe/test_read_check.py` | `read_check.py` の判定の試験 |
+| `library-file-scheme-probe/site/` | ブラウザで開く確かめ用のページ一式（P1〜P15 の `index.html`、`a/`・`b/`、Canvas の読み返しの `selftest.html`） |
+| `library-file-scheme-probe/build_site.sh` | `site/` を `build/probe-site/` に組み立て、`file://` で開くための `probe.zip` を作る |
+| `library-file-scheme-probe/headless_probe.js` | Chrome・Brave をヘッドレスで起動し、DevTools Protocol から手順どおりにページを開いて結果の JSON を集める |
+| `library-file-scheme-probe/summarize.py` | `headless_probe.js` の出力や貼った JSON を、1 行 1 項目に並べる |
+| `library-file-scheme-probe/png_decode_check.js` | 地理院の標高タイルの PNG を、Canvas を通さずに `DecompressionStream` で復号し、Canvas の読み出しと比べる値を出す |
 
 やり直すときは、リポジトリのルートで次を走らせる。
 
@@ -93,7 +98,19 @@ DEC124 の「端末の現地時刻として書く」は、補正して渡せば�
 - 2026-11-08: Chrome 157 と Brave（どちらもヘッドレス、新しいプロファイル）の `file://`。`library-file-scheme-probe/headless_probe.js` から、「保存する → `a/` → `b/` → 確かめる → 見本を落とす」の後、同じプロファイルで起動し直して「確かめる」。
 - 2026-11-10: 同じ道具と手順で、Chrome と Brave（ヘッドレス）の `http://localhost`。
 - 2026-11-10: 持ち主がホストの画面で、Firefox 153.0（ESR、既定の設定）と Brave（Chrome/157、持ち主のプロファイル、Shields は既定）を操作した。`http://localhost` は「確かめる」だけ。`file://` は `probe.zip` を展開して Ctrl+O で開き、「保存する → `a/` → `b/` → `index.html` で確かめる」の後、ブラウザを完全に終了して開き直し「確かめる」。結果の JSON は持ち主が貼った。
-- not run: Safari（持ち主の Mac が要る）、本物の `https://` の配信。
+- not run: Safari（持ち主の Mac が要る。[#338](https://github.com/jj1xgo/findsummits/issues/338) で行う）、本物の `https://` の配信。
+
+### ブラウザでのやり直しの手順
+
+1. リポジトリのルートで `bash docs/decisions/research/library-file-scheme-probe/build_site.sh` を走らせ、`build/probe-site/` を作る。
+2. `http://localhost` の回: `cd build/probe-site && python3 -m http.server 8197 --bind 127.0.0.1` で配信し、`http://localhost:8197/` を開いて「確かめる」を押し、JSON を写す。
+3. `file://` の回: `build/probe-site/probe.zip` を展開し、展開した `findsummits-probe-197/index.html` をそのブラウザの「ファイルを開く」で開く。
+   1. 「保存する」を押す → `a/index.html` を開く → `b/index.html` を開いて、値が見えたかを記録する → `index.html` で「確かめる」を押し、JSON を写す（閉じる前）。
+   2. ブラウザを完全に終了して開き直し、`index.html` で「確かめる」を押して JSON を写す（閉じた後。「保存する」は押さない）。
+   3. 「見本を落とす」で落ちた `probe-samples.zip` を展開し、`read_check.py` にかける。Mac では Finder で中のファイルの変更日が 12:34 に見えるかも見る。
+4. Mac で ZIP が開けない（「壊れている」「開発元を確認できない」）ときは、Finder の右クリックの「開く」か、ターミナルの `xattr -d com.apple.quarantine <フォルダ>` を使う。Safari が ZIP を自動で展開したときは、その展開されたフォルダを使う。
+5. `selftest.html` を開き、出た `diff=` の数を記録する（0 でなければ、Canvas の読み出しに手が入っている）。
+6. Chrome・Brave は、手順 2・3 を `headless_probe.js` でも行える（使い方はファイルの先頭）。
 
 ### `file://`
 
@@ -143,8 +160,11 @@ P11・P12 の画素（タイルの真ん中の RGBA と、全画素の値の合�
 
 ## 見込みと違った行の扱い
 
-- **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 等高線を描く前に、既知の画素を Canvas に書いて読み返す自己診断をし、ずれていたら等高線を描かずに、Brave の Shields でそのサイトの指紋採取の保護を切ると出ることを示す。Brave は対応に残す。自己診断で見つけられることは、`library-file-scheme-probe/site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える）で確かめた。画面ありの Brave の `http://localhost` で 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。HLD の DEC159 と等高線の節に書き足す（Task 6）。
-- **Firefox の `file://` の localStorage の分け方**（持ち主の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）ことを、HLD の DEC136 に書き足す（Task 6）。
+- **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 標高タイルの PNG を Canvas を通さずに復号する。Brave は対応に残し、Shields は既定のままで等高線が正しく出る。HLD の DEC194 に書いた。
+  - 確かめ 1: 雑音は自分で書いた画素の読み返しでも入る。`library-file-scheme-probe/site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える）で、画面ありの Brave の `http://localhost` では 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。
+  - 確かめ 2: P11 の 3 つのタイルは、どれも 256×256、8 ビットの RGB（カラータイプ 2）、インターレースなしで、チャンクは IHDR・IDAT・IEND だけだった。`library-file-scheme-probe/png_decode_check.js`（Node.js 24.21.0）で `DecompressionStream("deflate")` と行のフィルタを戻す処理だけで復号すると、真ん中の画素と全画素の値の合計が、3 つとも Chrome の Canvas の読み出し（上の表の左の列）と一致した。
+  - 初めは「既知の画素で自己診断し、ずれていたら等高線を描かずに知らせる」と決めたが、確かめ 2 の後に替えた（既定の Brave で等高線が出ないため）。
+- **Firefox の `file://` の localStorage の分け方**（持ち主の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）。HLD の DEC136 に書いた。反対に Chrome と Brave は、フォルダが違っても localStorage を 1 つにまとめるので、別の `$DATA_DIR` のビューアの世代も引き継ぎの候補に入る。これも DEC136 に書いた。
 
 ## XLSX の方式の比較
 

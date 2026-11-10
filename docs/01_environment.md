@@ -44,7 +44,6 @@ CPU の性能下限は設けない（[ADR-SRS-057](decisions/ADR-SRS-057-no-cpu-
 | libm | 数学関数 |
 | Python 3.13 以上と `venv` モジュール（Debian では `python3-venv`） | Python スクリプトの実行 |
 | bash | `scripts/run_all.sh` の実行 |
-| Node.js 24（LTS）以上 | 開発での試験だけに使う（`make test` の `tests/public/`。[HLD 2.6.5](30_HLD.md#265-ビルド構成)）。ツールの実行には要らない。動作確認は 24.21.0 |
 | Web ブラウザ（JavaScript 有効） | 作業用 HTML ビューアを `file://` で直接開いて確認・編集とエクスポートを行う（HTTP サーバは不要。[SRS §6.2.5](20_SRS.md#625-作業用-html-ビューア)） |
 
 ## 参考: 開発に使っているマシン
@@ -134,6 +133,8 @@ CI は Python 3.13 の新しい venv で動くため、手元と選ばれる版�
 
 動作前提環境に加えて、開発では git を使う。並行作業は `git worktree` で分け、手順は
 [開発ガイド](03_development.md) に従う。
+
+作業用・公開用のビューアの JavaScript の試験（`make test` の `tests/public/`。[HLD 2.6.5](30_HLD.md#265-ビルド構成)）には、Node.js 24（LTS）以上を使う（動作確認は 24.21.0）。ツールの実行には要らないので、動作前提環境には含めない。
 
 コンテナ [c3c](https://github.com/JJ1XGO/c3c) 上でも同じ手順で動く。コンテナで動かすときは、checkout と
 データ置き場をマウントし、`params/config.ini` の `DATA_DIR` をコンテナ内のパスにする。
