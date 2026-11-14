@@ -3,13 +3,13 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-13 |
+| 最終更新日 | 2026-11-14 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「保存と引き継ぎ」〈計算の 7 つすべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「出力」〈ライブラリを使わない計算の 7 つ〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「保存と引き継ぎ」〈計算の 7 つすべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「出力」〈計算の 10 すべて〉と「地図の描画」〈標高タイルの復号と等高線の計算の 12〉と「3.9 と同じ決まり」の群）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -6404,9 +6404,9 @@ dominant_peak = min(candidates, key=key)
 
 関数の名前と役割は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「置き場」が「計算」の関数と、[3.8.3](30_HLD.md#383-関数)の表の同じ列が「計算」の関数で、処理の正本は表の「処理の正本」の列の節である。この節は、それを JavaScript で書くための細部（要素の置き方、型、止まり方、UT 候補）だけを足す。HLD 3.7.3 の前置きのとおり、計算の要素の関数は DOM・地図・localStorage に触れず、`tests/public/` から Node.js の `node:test` で UT を行う（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[DEC141](30_HLD.md#4194-設計判断)「DOM に触れない処理は DEC131 の要素に置く」、[DEC147](30_HLD.md#4194-設計判断)「DOM に触れない描画の計算も script 要素に置く」）。
 
-- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`derive_current_state`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`（この群の 7 つすべて）と、「保存と引き継ぎ」の群の計算の 7 つすべて（`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`）と、「除外判断ファイル」の群の計算の 4 つすべて（`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`）と、「出力」の群の計算の 10 すべて（`collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_application_xlsx`・`build_list_rows`・`build_list_xlsx`・`split_by_category`・`build_evidence_geojson`・`build_evidence_zip`。HLD 3.7.3 の表の順）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
+- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `decide_open_mode` と、「編集の記録と現在の状態」の群の `apply_edit`・`derive_current_state`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`（この群の 7 つすべて）と、「保存と引き継ぎ」の群の計算の 7 つすべて（`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`）と、「除外判断ファイル」の群の計算の 4 つすべて（`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`）と、「出力」の群の計算の 10 すべて（`collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_application_xlsx`・`build_list_rows`・`build_list_xlsx`・`split_by_category`・`build_evidence_geojson`・`build_evidence_zip`。HLD 3.7.3 の表の順）と、「地図の描画」の群の計算のうち標高タイルの復号と等高線の 12（`parse_png_chunks`・`unfilter_png_rows`・`decode_elevation`・`build_elevation_grid`・`contour_interval`・`classify_contour_pixel`・`contour_tile_plan`・`scale_candidate_grid`・`fill_invalid_pixels`・`extend_contour_grid`・`paint_contour_tile`・`contour_tile_cache`。HLD 3.7.3 の表の順）と、「3.9 と同じ決まり」の群の `mesh_to_latlon`・`latlon_to_tile` だけを書いてある。ほかの群は、群ごとに書き足す。
 - 結合のつなぎ目は、`CMP7-EXT1`（CMP6（可視化生成）の `generate_viewer` → `index.html`）のうち、データファイルの変数があれば作業用とし、無くて `file:` ならどちらでもないとする判定を `decide_open_mode` が受ける（変数の値を渡すのは 9.2 の `start_page`。[HLD 3.7.5](30_HLD.md#375-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP7-EXT1-01`（作業用として動く）と `IT-CMP7-EXT1-02`（データファイルを消すか JavaScript として読めない中身にすると、変数が無いので `'neither'` になり、読めない旨を出す）。
-- [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、`mesh_to_latlon`・`latlon_to_tile` の値を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表で Python・C++ とそろえることで受ける（ADR-LLD-001 の Decision 6 の 5.3 の行の「言語ごとに別に実装する式のテストベクトル」）。[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、現在の状態を導き直すときのメモリは、`derive_current_state` で受ける（[9.1.3](#913-関数の細部)）。除外判断ファイルのバイト列の決定性（[SRS 6.2.10](20_SRS.md#6210-除外判断-json) の「並び」と [NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は、`build_exclusion_file` で受ける（9.1.3）。申請エビデンスの GeoJSON のバイト列の決定性（[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は `build_evidence_geojson` で受ける（[9.1.3](#913-関数の細部)）。申請書と一覧の XLSX のバイト列の決定性（[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は `build_application_xlsx`・`build_list_xlsx` で、ZIP の中身の決定性は `build_evidence_zip` で受ける（[9.1.3](#913-関数の細部)）。出力を作るときのメモリ（[HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)の「実測の計画」の 6・8）は、3 つの関数が中間の値を持つ範囲を決めて受け（9.1.3）、量は HLD 5.2 の実測で確かめる。
+- [5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、`mesh_to_latlon`・`latlon_to_tile` の値を [2.4](#24-言語ごとに別に実装する式のテストベクトル)の表で Python・C++ とそろえることで受ける（ADR-LLD-001 の Decision 6 の 5.3 の行の「言語ごとに別に実装する式のテストベクトル」）。[5.2](30_HLD.md#52-nfr-002-メモリ使用量)（メモリ）のうち、現在の状態を導き直すときのメモリは、`derive_current_state` で受ける（[9.1.3](#913-関数の細部)）。除外判断ファイルのバイト列の決定性（[SRS 6.2.10](20_SRS.md#6210-除外判断-json) の「並び」と [NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は、`build_exclusion_file` で受ける（9.1.3）。申請エビデンスの GeoJSON のバイト列の決定性（[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は `build_evidence_geojson` で受ける（[9.1.3](#913-関数の細部)）。申請書と一覧の XLSX のバイト列の決定性（[NFR-003](20_SRS.md#nfr-003-再現性決定論的出力)）は `build_application_xlsx`・`build_list_xlsx` で、ZIP の中身の決定性は `build_evidence_zip` で受ける（[9.1.3](#913-関数の細部)）。出力を作るときのメモリ（[HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)の「実測の計画」の 6・8）は、3 つの関数が中間の値を持つ範囲を決めて受け（9.1.3）、量は HLD 5.2 の実測で確かめる。等高線の読んだタイルのメモリ（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「地図の描画のメモリ」）は、`contour_tile_cache` が持つ件数の上限（600）で受け（9.1.3）、量は [HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)の「実測の計画」の 7 で確かめる。
 
 #### 9.1.1 ファイル割付
 
@@ -6430,6 +6430,24 @@ dominant_peak = min(candidates, key=key)
 - 内部の定数（一覧が使う）: `_list_number_formats = {peak_lat: '0.00000000', peak_lon: '0.00000000', col_lat: '0.00000000', col_lon: '0.00000000', peak_elev: '0.00', col_elev: '0.00', prominence: '0.00', dominant_peak_dist_m: '0.0'}`（[HLD 4.12.2](30_HLD.md#4122-処理の流れ)の 4 の一覧の数のセルの表示形式。ほかの列の数には表示形式を付けない）。
 - 内部の定数（一覧が使う）: `_source_sheet_text = '地理院タイル（標高タイル）を加工して作成。出典: 国土地理院 (https://maps.gsi.go.jp/development/ichiran.html)'`（[FR-012](20_SRS.md#fr-012-サミット一覧申請内容反映版生成)の出典シートの文面。「出典: 」のコロンは半角で、後に半角の空白 1 つ。URL の前に半角の空白 1 つと半角の括弧）。
 - 内部の定数（申請書が使う）: `_freeze_pane_xml = '<pane xSplit="0" ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/>'`（HLD の [DEC117](30_HLD.md#4114-設計判断)「申請書はテンプレートの配置を再現する」の `ySplit`・`topLeftCell`・`state` に、調査の記録（`docs/decisions/research/library-file-scheme-probe.md`）で書き足して openpyxl と LibreOffice で読めた `xSplit`・`activePane` を足した字句。この字句のとおり）。
+- 内部の定数（地図の描画の群が使う）:
+  - `_png_signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]`（PNG のシグネチャの 8 バイト）。
+  - `_contour_tile_base = 'https://cyberjapandata.gsi.go.jp/xyz'`（[SRS 6.2.9](20_SRS.md#629-地理院標高タイル)の「タイル URL」の行のベース。URL は `<_contour_tile_base>/<サービス名>/<z>/<x>/<y>.png`。サービス名は DEM10b が `dem_png`、DEM5a〜5c が `dem5a_png`・`dem5b_png`・`dem5c_png`、DEM1a が `dem1a_png`）。
+  - `_contour_cache_limit = 600`（読んだタイルの記録の件数の上限。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「等高線」）。
+  - `_contour_major_rgba = [160, 64, 32, 75]`・`_contour_minor_rgba = [200, 120, 80, 40]`（計曲線と主曲線の R・G・B・不透明度。HLD 4.19.2 の「計曲線は RGB（160, 64, 32）、主曲線は RGB（200, 120, 80）で、不透明度はそれぞれ 75/255 と 40/255」の 0〜255 の値）。
+- 標高の格子（`ElevationGrid`）: 長さ 65536（256×256）の `Float32Array`。添字は `y * 256 + x`（`x` は列、`y` は行で、どちらも 0 から、左上が 0）。無効値は `NaN`（HLD 4.19.2 の「無効値の印は、標高の値の配列の中に数でない値（`NaN`）として持ち、別の配列は持たない」）。値は `decode_elevation` の返した数を `Float32Array` に入れたもの（`Math.fround` した値になる。4 バイトの数で持つのは HLD 4.19.2 の「地図の描画のメモリ」による。標高タイルが取りうる値〈−83886.07〜83886.07 の 0.01 刻み〉では、丸めても判定の間隔〈5・10・20・50・100・200・500〉の倍数をまたがない）。読んだタイル 1 枚の格子（切り出しと拡大の前）も、切り出しと拡大の後の格子も、この形。-9999 は普通の標高の値で、無効値ではない（HLD の「-9999m ちょうどの標高と取り違えない」）。`Float64Array` にしないのは HLD のメモリの見積もり（1 画素 4 バイト、600 枚で約 160MB）に合わせるため、整数の配列にしないのは `NaN` を持てないため。
+- つないだ格子（`ExtendedGrid`）: 長さ 66049（257×257）の `Float32Array`。添字は `y * 257 + x`。`x`・`y` が 0〜255 の所はタイルの格子、`x = 256` の列は右の隣の左の列、`y = 256` の行は下の隣の上の行、右下の隅（`x = 256`・`y = 256`）はいつも `NaN`。
+- PNG の読み取りの結果（`PngChunksResult`）: `{ok: true, width: number, height: number, idat: Uint8Array} | {ok: false, reason: 'not_png' | 'bad_chunk' | 'bad_ihdr' | 'no_iend' | 'no_idat'}`（キーはこの順）。`reason` の意味は `parse_png_chunks`。「形が違う」を例外でなく値で返すのは、画面が値で受けて `fetch_tile` の「失敗」にするため（出力の群の `{ok, …}` と同じ）。理由を細かく持つのは、UT で枝ごとに確かめられ、変異で取り違えが分かるため（画面は理由を見分けず、どれも「失敗」にする）。
+- 行のフィルタの結果（`UnfilterResult`）: `{ok: true, rgb: Uint8Array} | {ok: false, reason: 'bad_length' | 'bad_filter'}`（キーはこの順）。`rgb` は長さ `height * width * 3` で、画素 `(x, y)` の R・G・B が添字 `(y * width + x) * 3` から 3 つ並ぶ。
+- 等高線の間隔（`ContourInterval`）: `{major: number, minor: number}`（計曲線の間隔、主曲線の間隔。単位は m。キーはこの順）。
+- 等高線の判定: `'major'`（計曲線）・`'minor'`（主曲線）・`'none'`（塗らない）の 3 つの文字列。
+- タイルの選び方（`ContourTilePlan`）: `{base: {z: number, x: number, y: number}, candidates: Array<ContourCandidate>, sub: {x: number, y: number, size: number} | null}`（キーはどれもこの順）。意味は `contour_tile_plan`。
+- 候補（`ContourCandidate`）: `{url: string, crop: {x: number, y: number, size: number}, scale: number}`（キーはこの順）。
+- 埋めた結果（`FillResult`）: `{grid: ElevationGrid, remaining: boolean}`（キーはこの順）。
+- 塗りの値（`ContourPaint`）: 長さ 262144（256×256×4）の `Uint8ClampedArray`。画素 `(x, y)` の R・G・B・不透明度が添字 `(y * 256 + x) * 4` から 4 つ並ぶ（Canvas の `ImageData` の `data` と同じ並び。画面は `new ImageData(<値>, 256, 256)` にそのまま渡し、変換しない）。塗らない画素は 4 つとも 0。
+- 読んだタイルの記録（`ContourCache`）: `Map<string, ContourCacheEntry>`。キーは URL。`Map` の並び（入れた順）を、読み始めた順として使う。
+- 記録の要素（`ContourCacheEntry`）: `{status: 'loading' | 'loaded' | 'failed', value: ElevationGrid | null}`（キーはこの順）。`'loading'` は読んでいる途中、`'loaded'` は読めて復号した、`'failed'` は読めなかった（404 と `fetch_tile` の「失敗」。取りやめは記録に残さない）。`value` は `'loaded'` のときだけ格子で、ほかは null。要素は状態を変えるたびに新しいオブジェクトにする（前に返した要素は変わらない）。`'request'` が新しく足して返した `'loading'` の要素は、その読み込みの合札（`ticket`）にもなる（`contour_tile_cache`）。
+- 記録の操作の結果（`ContourCacheResult`）: `{record: ContourCache, read: boolean, entry: ContourCacheEntry | null}`（キーはこの順）。意味は `contour_tile_cache`。
 - 開き方の値: `'working'`（作業用）・`'public'`（公開用）・`'neither'`（どちらでもない）の 3 つの文字列（[HLD 3.7.3](30_HLD.md#373-関数)の `decide_open_mode` の「返すもの」）。定数の名前は付けない（画面の要素も同じ字句で比べる）。
 - 緯度経度の組とタイル番号は長さ 2 の配列（`[緯度, 経度]`・`[x, y]`）。数はすべて Number（IEEE 754 の倍精度。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の計算の決まり）。
 - 編集の記録（`EditRecord`）: 次の 6 つのキーをこの順に持つオブジェクト。キーの名前と各要素の形は、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザへの保存」の値の表の同じ名前のキーと同じ（その表の `schema_version`・`generated_at` は持たない。保存の値を組み立てる `build_storage_value` が足す）。除外判断ファイルの `records` を台帳の形とした [DEC140](30_HLD.md#4194-設計判断)「除外判断ファイルは識別キーの順の JSON」に合わせ、ほかの記録も保存の値と同じ形にして、保存と読み込みで写し替えないようにする。
@@ -6480,7 +6498,7 @@ dominant_peak = min(candidates, key=key)
 
 #### 9.1.3 関数の細部
 
-群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「保存と引き継ぎ」、「除外判断ファイル」、「出力」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
+群ごとに `#####` の見出し（群の名前。HLD 3.7.3 の表の太字の名前のまま。「起動」「3.9 と同じ決まり」）を立て、その下に関数ごとの `######` の見出し（関数の名前だけ。2.1 と同じ名前の `mesh_to_latlon`・`latlon_to_tile` は `（JavaScript）` を添える。[5.1.3](#513-関数の細部)の `read_mesh_arg（bash）` と同じく、同じ決まりを別の言語で実装したものを言語の名前で見分けるため）を立てる。群の並びは HLD 3.7.3 の表の順（今は「起動」、「編集の記録と現在の状態」、「保存と引き継ぎ」、「除外判断ファイル」、「出力」、「地図の描画」、「3.9 と同じ決まり」の順）。止まり方は [1.2](#12-lld-の規約)の JavaScript の規約のとおり。
 
 ##### 起動
 
@@ -7134,6 +7152,176 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 - 決定性: 同じ現在の状態・`metadata`・時刻から、同じバイト列を返す。時刻が違えばバイト列は変わってよく（DEC124）、中の 6 本の中身は時刻によらない。
 - メモリ: 同時に持つのは、一覧のバイト列と 5 本の GeoJSON のバイト列と JSZip の作業領域と ZIP のバイト列で、量は [HLD 5.2](30_HLD.md#52-nfr-002-メモリ使用量)の「実測の計画」の 6・8 で測る（LLD は持ち方だけを決める）。
 
+##### 地図の描画
+
+この群は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「地図の描画」の群の計算のうち、標高タイルの復号と等高線の 12 の関数を、表の順に書く。処理の正本は、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「等高線」「標高タイルの復号」「地図の描画の計算の置き場」と、HLD の [DEC143](30_HLD.md#4194-設計判断)「等高線はズーム 17 以上で DEM1a を読む」・[DEC194](30_HLD.md#4194-設計判断)「標高タイルは Canvas を通さずに復号する」である。HLD に無い値の形（格子、候補、塗りの値、記録）と、引数の確かめをここで決める。画面の `fetch_tile`・`draw_contours` は 9.2 で、展開（`DecompressionStream`）、タイルの取得と取りやめ、候補を順に読む流れ、Canvas への書き込みは、そちらが行う。
+
+- 受け取った引数（配列・格子・オブジェクト）を書き換えない。ただし `contour_tile_cache` は、受け取った記録（`Map`）を書き換えて返す（記録は 600 件まで持つので、呼ぶたびに写さない）。
+- 型付き配列と `Map` の種類は `Object.prototype.toString.call(<値>)` の字句（`'[object Uint8Array]'`・`'[object Float32Array]'`・`'[object Map]'`）で見る（`instanceof` で見ない。UT の文脈の外で作ったものも受けるため。出力の群の `Date` と同じ理由）。Node.js の `Buffer` は `'[object Uint8Array]'` になるので受ける。
+- 「整数」は `Number.isInteger(<値>)` が真であること。
+- HLD 3.7.3 の表の受け取るもの・返すものと、ここで決めた形の対応は、各関数の細部の最初の段落に書く。
+
+###### parse_png_chunks
+
+`parse_png_chunks(bytes: Uint8Array) -> PngChunksResult`
+
+HLD 4.19.2 の「標高タイルの復号」の、シグネチャと IHDR の確かめと IDAT をつなぐところ。HLD 3.7.3 の表の返すもの「幅・高さとつないだ IDAT、または『形が違う』」は、`ok` が真の組と、`ok` が偽で `reason` を持つ組で表す。
+
+1. `bytes` が `'[object Uint8Array]'` でなければ `TypeError`。
+2. 長さが 8 より小さいか、先頭の 8 バイトが `_png_signature` と違えば `{ok: false, reason: 'not_png'}`。
+3. 位置 `pos = 8` から、`pos < bytes.length` の間だけチャンクを順に読む（`pos` がちょうど `bytes.length` になったら手順 4 へ進む。`new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)` で、長さは位置 `pos` の 4 バイトのビッグエンディアン〈`getUint32(pos)`〉、種類は位置 `pos + 4` からの 4 バイトを `String.fromCharCode` で 4 文字にしたもの〈大文字・小文字を区別する〉、中身は位置 `pos + 8` から長さのバイト、その後に CRC の 4 バイト。次のチャンクは `pos + 12 + <長さ>`）。各チャンクで、この順に見る:
+   - 残りのバイト（`bytes.length - pos`）が 12 より小さいか、長さが `bytes.length - pos - 12` より大きければ `{ok: false, reason: 'bad_chunk'}`。
+   - 最初のチャンクの種類が `IHDR` でないか、2 つ目以降に `IHDR` があれば `{ok: false, reason: 'bad_ihdr'}`。
+   - `IHDR` は、長さが 13 で、幅（中身の位置 0 の 4 バイト）と高さ（位置 4 の 4 バイト）がどちらも 256、ビット深度（位置 8）が 8、カラータイプ（位置 9）が 2、圧縮の方式（位置 10）・フィルタの方式（位置 11）・インターレース（位置 12）がどれも 0 でなければ `{ok: false, reason: 'bad_ihdr'}`。
+   - `IDAT` は中身を順に控える。
+   - `IEND` で読むのをやめる（`IEND` の後のバイトは見ない。`IEND` の長さは見ない）。
+   - ほかの種類（補助のチャンク、`PLTE`、小文字の `idat` など）は読み飛ばす（HLD の「補助のチャンクは読まない」）。
+4. `IEND` に当たらずに終わりまで読んだら（位置がちょうど `bytes.length` になったら）、`IHDR` が無ければ `{ok: false, reason: 'bad_ihdr'}`（シグネチャだけのとき）、あれば `{ok: false, reason: 'no_iend'}`。
+5. `IEND` に当たって `IDAT` が 1 つも無ければ `{ok: false, reason: 'no_idat'}`。
+6. `{ok: true, width: 256, height: 256, idat: <控えた IDAT の中身を順につないだ新しい Uint8Array>}`（中身の長さが 0 の `IDAT` も 1 つに数え、つなぐと長さ 0 になってもよい。展開できるかは画面の展開で決まる）。
+
+- CRC は見ない（HTTPS で受けたバイト列で、中身の壊れは画面の展開〈zlib の検査の値〉で分かるため）。
+- 幅と高さを 256 に限る。地理院のタイルは 256×256 で（調査の記録 `docs/decisions/research/library-file-scheme-probe.md` の確かめ 3 の 39 枚）、格子（`ElevationGrid`）が 256×256 を前提にするので、違う大きさは「形が違う」に当たる。HLD 4.19.2 は確かめる項目に大きさを挙げていないが、「形の違う PNG」は失敗とするので、その中に入れる。`unfilter_png_rows` は大きさを限らない。
+- 誤りの順は、チャンクを読む順に最初に当たったもの、終わりまで読んだ後は `IHDR`・`IEND`・`IDAT` の順（同じ入力に誤りが 2 つあるときの順を決める。`UT-index_calc-67` の (q)(r)(s)）。
+
+###### unfilter_png_rows
+
+`unfilter_png_rows(width: number, height: number, raw: Uint8Array) -> UnfilterResult`
+
+HLD 4.19.2 の「標高タイルの復号」の、展開した後の長さとフィルタの確かめと戻し。`raw` は画面が `parse_png_chunks` の `idat` を展開したバイト列。HLD 3.7.3 の表の返すもの「RGB の画素、または『形が違う』」は、`ok` の組で表す。
+
+1. `width`・`height` の `typeof` が `'number'` でないか、`raw` が `'[object Uint8Array]'` でなければ `TypeError`。`width`・`height` が 1 以上の整数でなければ `RangeError`。
+2. `raw.length` が `height * (width * 3 + 1)` でなければ `{ok: false, reason: 'bad_length'}`。
+3. 各行の頭のバイト（位置 `y * (width * 3 + 1)`）を先にすべて見て、どれかが 4 より大きければ `{ok: false, reason: 'bad_filter'}`（戻しを始める前に見るので、途中まで戻した値は返さない）。
+4. 行ごとに上から戻す。行の幅 `stride = width * 3`、画素の幅は 3 バイト。行 `y` の位置 `i`（0 から `stride - 1`）のバイト `v` に対し、`a` は同じ行で 3 バイト左の戻した値（`i < 3` なら 0）、`b` は 1 つ上の行の同じ位置の戻した値（`y = 0` なら 0）、`c` は 1 つ上の行で 3 バイト左の戻した値（`i < 3` か `y = 0` なら 0）。予測は、フィルタ 0 が 0、1 が `a`、2 が `b`、3 が `(a + b) >> 1`（切り捨て）、4 が Paeth（`p = a + b - c`、`pa = |p - a|`、`pb = |p - b|`、`pc = |p - c|` とし、`pa <= pb` かつ `pa <= pc` なら `a`、そうでなく `pb <= pc` なら `b`、ほかは `c`）。戻した値は `(v + 予測) & 255`。
+5. `{ok: true, rgb: <戻した値を行の頭のバイトを除いて並べた新しい Uint8Array>}`。
+
+- 大きさを 256 に限らない。確かめる長さは引数の `width`・`height` から決まり、小さな入力で UT を書けるため（`UT-index_calc-68` は幅 2・高さ 5）。256 に限るのは `parse_png_chunks`。
+- 戻し方は PNG の仕様（W3C の PNG の第 3 版の「Filter」の節）と調査の記録の `png_decode_check.js`（`docs/decisions/research/library-file-scheme-probe/`）と同じ。
+
+###### decode_elevation
+
+`decode_elevation(r: number, g: number, b: number) -> number`
+
+HLD 4.19.2 の「等高線」の復号（[FR-003](20_SRS.md#fr-003-標高デコードnodata-処理)の RGB の復号）。HLD 3.7.3 の表の返すもの「標高、または無効値」の無効値は `NaN` で表す。`v = r * 65536 + g * 256 + b` とし、`v === 8388608`（2^23）なら `NaN`、`v > 8388608` なら `v - 16777216`（2^24）を `v` にし、`v / 100` を返す。負の値を 0 にそろえない（HLD の「解析と違い、負の標高を 0m にそろえない」）。引数を確かめない（画素ごとに 65536 回呼ぶため。`unfilter_png_rows` の `rgb` の 3 つの値〈0〜255 の整数〉を渡す）。
+
+###### build_elevation_grid
+
+`build_elevation_grid(rgb: Uint8Array) -> ElevationGrid`
+
+HLD 4.19.2 の「等高線」の、標高タイルの画素から標高の格子を作るところ（HLD 3.7.3 の表の受け取るもの「RGB の画素」は `UnfilterResult` の `rgb`）。
+
+1. `rgb` が `'[object Uint8Array]'` でなければ `TypeError`。長さが 196608（256×256×3）でなければ `RangeError`。
+2. 新しい `Float32Array(65536)` を作り、各 `i`（0〜65535）に `decode_elevation(rgb[3 * i], rgb[3 * i + 1], rgb[3 * i + 2])` を入れて返す（`unfilter_png_rows` の `rgb` の画素の並びと、格子の添字 `y * 256 + x` は同じ順）。
+
+###### contour_interval
+
+`contour_interval(zoom: number) -> ContourInterval`
+
+HLD 4.19.2 の「等高線」の間隔の表。`typeof zoom !== 'number'` なら `TypeError`、0 以上 19 以下の整数でなければ `RangeError`。`zoom <= 11` なら `{major: 500, minor: 100}`、`<= 13` なら `{major: 200, minor: 50}`、`14` なら `{major: 100, minor: 20}`、`<= 16` なら `{major: 50, minor: 10}`、ほか（17〜19）は `{major: 20, minor: 5}`。
+
+- HLD 3.7.3 の表の受け取るものは「描くタイルのズーム」で、Leaflet のタイルの座標の `z` で受ける。地図の今のズーム（モックアップの `map.getZoom()`）ではない。1 枚のタイルの間隔と読むタイル（`contour_tile_plan` の `z`）をそろえ、ズームを動かしている途中に前のズームのタイルを描くときに、間隔がタイルと食い違わないため。地図のズームとタイルのズームが同じときは値も同じ。
+- ズームを 0〜19 の整数に限る。地図の最大のズームが 19（HLD の読むタイルの表の「18・19」）で、タイルのズームは整数のため。範囲の外は呼ぶ側の誤り（`UT-index_calc-71` の (b)）。
+
+###### classify_contour_pixel
+
+`classify_contour_pixel(e: number, right: number, bottom: number, major: number, minor: number) -> 'major' | 'minor' | 'none'`
+
+HLD 4.19.2 の「等高線」の判定。
+
+1. `e` が `NaN` なら `'none'`。
+2. `right`・`bottom` のうち `NaN` でないもの（隣）のどれかで、`Math.floor(e / major) !== Math.floor(<隣> / major)` なら `'major'`（右と下の両方を見てから決める。右で主曲線だけが当たっても、下で計曲線が当たれば `'major'`）。
+3. そうでなく、隣のどれかで `Math.floor(e / minor) !== Math.floor(<隣> / minor)` なら `'minor'`。
+4. ほかは `'none'`。
+
+- 引数を確かめない（画素ごとに呼ぶため）。-9999 は普通の値として比べる。負の値も `Math.floor` で切り捨てる（`Math.trunc` にしない。0m をまたぐ線が出るように）。
+
+###### contour_tile_plan
+
+`contour_tile_plan(z: number, x: number, y: number) -> ContourTilePlan`
+
+HLD 4.19.2 の「等高線」の読むタイルの表と、ズーム 18・19 の切り出し。`z` は地図のタイルのズーム、`x`・`y` はタイルの番号。HLD 3.7.3 の表の返すもの「候補の並び、切り出しの範囲、倍率」は、`candidates`（候補ごとの切り出しの範囲と倍率を持つ）と `sub`（ズーム 18・19 の切り出し）で表し、それに `base`（読み方の基にするタイル）を足す。
+
+1. 3 つのどれかの `typeof` が `'number'` でなければ `TypeError`。`z` が 0 以上 19 以下の整数でないか、`x`・`y` が 0 以上 `2 ** z` 未満の整数でなければ `RangeError`。
+2. **基のタイル**（`base`）: `z <= 17` なら `{z, x, y}`。`z` が 18・19 なら、`l = z - 17` として `{z: 17, x: x >> l, y: y >> l}`。
+3. **候補**（`candidates`）: 基のタイルのズーム `bz` と番号 `bx`・`by` で、HLD の表の順に並べる。1 つの候補は、ズーム `cz` のサービス名 `s` のタイルを、`bz - cz = d` 段上のタイルとして読むもので、`url` は `<_contour_tile_base>/<s>/<cz>/<bx >> d>/<by >> d>.png`、`scale` は `2 ** d`、`crop` は `{x: (bx & (scale - 1)) * (256 / scale), y: (by & (scale - 1)) * (256 / scale), size: 256 / scale}`。
+   - `bz <= 14`: `dem_png`（`cz = bz`）の 1 つ。
+   - `bz = 15`: `dem5a_png`・`dem5b_png`・`dem5c_png`（`cz = 15`）、`dem_png`（`cz = 14`）の 4 つ。
+   - `bz = 16`: `dem5a_png`・`dem5b_png`・`dem5c_png`（`cz = 15`）、`dem_png`（`cz = 14`）の 4 つ。
+   - `bz = 17`: `dem1a_png`（`cz = 17`）、`dem5a_png`・`dem5b_png`・`dem5c_png`（`cz = 15`）、`dem_png`（`cz = 14`）の 5 つ。
+4. **切り出し**（`sub`）: `z <= 17` なら null。18・19 なら、`s = 2 ** (z - 17)`、`n = 256 / s` として `{x: (x & (s - 1)) * n, y: (y & (s - 1)) * n, size: n + 1}`（18 は `size` 129、19 は 65）。`sub` は `paint_contour_tile` に渡す。
+5. 右と下の隣: 呼ぶ側は、基のタイルの右（`base.x + 1`）と下（`base.y + 1`）のタイルを、同じズーム `base.z` で `contour_tile_plan` を呼んで選ぶ（HLD の「右と下の隣のタイルも同じ選び方で読み」）。隣の番号が `2 ** base.z` になるときは呼ばずに読めないものとして扱う（範囲の外で `RangeError` になるため）。
+
+- 候補を URL で返すのは、`contour_tile_cache` の鍵と、9.2 の `fetch_tile` の引数が URL のため。URL の形は [SRS 6.2.9](20_SRS.md#629-地理院標高タイル)の「タイル URL」の行による。
+- 右と下の隣を返す値に入れない。呼ぶ側が同じ関数を呼べば足りるため。`base` を返すのは、18・19 の隣がズーム 17 の隣になるのを、呼ぶ側が求めなくて済むため。
+
+###### scale_candidate_grid
+
+`scale_candidate_grid(src: ElevationGrid, candidate: ContourCandidate) -> ElevationGrid`
+
+HLD 4.19.2 の「等高線」の「下位の候補を拡大するときは、補間せずに元の画素の値を 2×2・4×4・8×8 の画素に写す」。
+
+1. `src` が `'[object Float32Array]'` でないか、`candidate` か `candidate.crop` が null かオブジェクトでなければ（`typeof` が `'object'` でなければ）、または `candidate.scale`・`crop.x`・`crop.y`・`crop.size` のどれかの `typeof` が `'number'` でなければ `TypeError`。`src.length !== 65536` なら `RangeError`。`candidate.scale` が 1・2・4・8 のどれでもないか、`candidate.crop.size * candidate.scale !== 256` か、`crop.x`・`crop.y` が 0 以上の整数で `crop.x + crop.size <= 256` かつ `crop.y + crop.size <= 256` でなければ `RangeError`（`candidate.url` は見ない）。
+2. 新しい `Float32Array(65536)` を作り、各 `(px, py)`（0〜255）に `src[(crop.y + Math.floor(py / scale)) * 256 + crop.x + Math.floor(px / scale)]` を入れて返す。`scale` が 1 でも新しい配列を返す（読んだタイルの記録の格子を、後の `fill_invalid_pixels` が受けても変わらないように）。
+
+###### fill_invalid_pixels
+
+`fill_invalid_pixels(current: ElevationGrid | null, next: ElevationGrid) -> FillResult`
+
+HLD 4.19.2 の「等高線」の「その中の無効値の画素は、次に読めた候補の同じ位置の値で埋める」。HLD 3.7.3 の表の受け取るもの「今の格子」は、最初に読めた候補のときは null で表す（今の格子がまだ無い）。
+
+1. `next` が `'[object Float32Array]'` でないか、`current` が null でも `'[object Float32Array]'` でもなければ `TypeError`。`current` が null でなく、`current.length !== next.length` なら `RangeError`。
+2. `current` が null なら、`next` を写した新しい `Float32Array` を `grid` にする。そうでなければ、`current` を写した新しい `Float32Array` を作り、`current` の値が `NaN` の位置だけに `next` の同じ位置の値を入れて `grid` にする（`next` も `NaN` なら `NaN` のまま）。
+3. `remaining` は `grid` に `NaN` が 1 つでも残るか。`{grid, remaining}` を返す。
+
+- 呼ぶ側は、候補を順に読み、`scale_candidate_grid` を当てた格子を、最初に読めた候補なら `current` を null にして渡し、`remaining` が真の間だけ次の候補を読んで、前の `grid` を `current` にして渡す（読めない候補は飛ばす）。
+- 長さは 65536 に限らない（UT で短い格子を使えるように。呼ぶ側は `ElevationGrid` を渡す）。
+
+###### extend_contour_grid
+
+`extend_contour_grid(tile: ElevationGrid, right: ElevationGrid | null, bottom: ElevationGrid | null) -> ExtendedGrid`
+
+HLD 4.19.2 の「等高線」の「タイルごとに、右と下の隣のタイルも同じ選び方で読み、257×257 の格子にして、タイルの境界をまたぐ線をつなぐ」。`right`・`bottom` は、隣のタイルを同じ選び方で読んで埋めた後の格子（`fill_invalid_pixels` の `grid`）で、どの候補も読めなければ null（HLD の「右か下の隣のタイルが読めなければ、その境界をまたぐ線をつながない」）。
+
+1. 3 つのうち null でないものが `'[object Float32Array]'` でないか、`tile` が null なら `TypeError`。null でないものの長さが 65536 でなければ `RangeError`。
+2. 新しい `Float32Array(66049)` をすべて `NaN` で作り、`x`・`y` が 0〜255 の所に `tile[y * 256 + x]` を、`right` があれば `x = 256` の列の `y`（0〜255）に `right[y * 256]`（右の隣の左の列）を、`bottom` があれば `y = 256` の行の `x`（0〜255）に `bottom[x]`（下の隣の上の行）を入れて返す。右下の隅は `NaN` のまま（モックアップと同じ）。
+
+###### paint_contour_tile
+
+`paint_contour_tile(grid: ExtendedGrid, sub: {x: number, y: number, size: number} | null, interval: ContourInterval) -> ContourPaint`
+
+HLD 4.19.2 の「等高線」の判定と塗り。`sub` は `contour_tile_plan` の `sub`、`interval` は `contour_interval` の返したもの。
+
+1. `grid` が `'[object Float32Array]'` でないか、`interval` が null かオブジェクトでないか、`interval.major`・`interval.minor` の `typeof` が `'number'` でないか、`sub` が null でもオブジェクトでもないか、`sub` が null でなく `sub.x`・`sub.y`・`sub.size` のどれかの `typeof` が `'number'` でなければ `TypeError`。`grid.length !== 66049` か、`interval.major`・`interval.minor` が 0 より大きい有限の数（`Number.isFinite(<値>) && <値> > 0`）でないか、`sub` が null でなく、`sub.size` が 129・65 のどちらでもないか、`sub.x`・`sub.y` が 0 以上の整数で `sub.x + sub.size <= 257` かつ `sub.y + sub.size <= 257` でなければ `RangeError`。
+2. 判定する範囲: `sub` が null なら、原点 `(ox, oy) = (0, 0)`、一辺の画素の数 `n = 256`、倍率 `s = 1`。`sub` があれば、`(ox, oy) = (sub.x, sub.y)`、`n = sub.size - 1`、`s = 256 / n`（18 は 2、19 は 4）。
+3. 新しい `Uint8ClampedArray(262144)`（すべて 0）を作る。`px`・`py` が 0 から `n - 1` の各画素で、`i = (oy + py) * 257 + ox + px` として `classify_contour_pixel(grid[i], grid[i + 1], grid[i + 257], interval.major, interval.minor)` を呼ぶ。`'major'` なら `_contour_major_rgba`、`'minor'` なら `_contour_minor_rgba` の 4 つの値を、塗りの値の `(px * s + dx, py * s + dy)`（`dx`・`dy` は 0 から `s - 1`）の画素に入れる。`'none'` の画素は 0 のまま。
+4. 塗りの値を返す。
+
+- 塗りの値は `Uint8ClampedArray` にする。画面が `new ImageData(<値>, 256, 256)` にそのまま渡せる型のため（`ImageData` は `Uint8ClampedArray` を受ける）。塗りの値は Canvas に渡す前の数の配列で、Canvas に触れない。
+- 間隔が 0 や `NaN` だと全画素が塗られるので、0 より大きい有限の数に限る。
+
+###### contour_tile_cache
+
+`contour_tile_cache(record: ContourCache | null, op: 'request' | 'loaded' | 'failed' | 'cancel', url: string, ticket?: ContourCacheEntry, value?: ElevationGrid) -> ContourCacheResult`
+
+HLD 4.19.2 の「等高線」の読んだタイルの記録と、「ブラウザ内の並行処理」の取りやめ。HLD 3.7.3 の表の受け取るもの「記録、URL と結果」の結果は `op`（と `'loaded'` の `value`）で、返すもの「更新した記録、その URL を読むか」は `record` と `read` で表し、それに `entry`（URL の要素）を足す。`ticket` は、`'request'` が `read: true` で返した `entry`（その読み込みの合札）で、`'loaded'`・`'failed'`・`'cancel'` に渡す。`record` が null なら新しい `Map` を作って使う（レイヤーを ON にしたとき。OFF にしたら呼ぶ側が記録を捨てる）。それ以外は受け取った `Map` を書き換えて、同じものを `record` に返す。
+
+1. `record` が null でも `'[object Map]'` でもないか、`url` が文字列でなければ `TypeError`。`op` が 4 つの字句のどれでもなければ `RangeError`。`op` が `'request'` でなく `ticket` が null かオブジェクトでないか、`op` が `'loaded'` で `value` が `'[object Float32Array]'` でなければ `TypeError`。
+2. `op` ごとに:
+   - `'request'`（その URL を読むかを尋ねる）: 記録に URL があれば、何も変えず `read: false`、`entry` はその要素（読んでいる途中を含めて読み直さない）。無ければ、末尾に新しい要素 `{status: 'loading', value: null}` を足し、記録の件数が `_contour_cache_limit` を超えている間、`Map` の先頭（読み始めた順の最も古いもの。状態によらない）を消してから、`read: true`、`entry` は足した要素（合札）。
+   - `'loaded'`・`'failed'`・`'cancel'` は、記録の URL の今の要素が `ticket` と `===` で同じで、その `status` が `'loading'` のときだけ当てる。ほか（URL が無い、今の要素が別の読み込みのもの、もう結果が入ったもの）は何も変えず `entry: null`（取りやめた後や捨てた後に届いた古い応答と、同じ URL を読み直した後に届いた前の読み込みの応答を採らない。読み直した後の古い取りやめで、新しい読み込みを消さない）。
+   - `'loaded'`（読めて復号した）: 新しい要素 `{status: 'loaded', value: <受け取った格子。写さない>}` を同じ鍵に `Map.prototype.set` で入れ、`entry` はその新しい要素。
+   - `'failed'`（404 か `fetch_tile` の「失敗」）: 新しい要素 `{status: 'failed', value: null}` を同じく入れる。
+   - `'cancel'`（取りやめた。HLD の「取りやめた URL は … 記録にも残さず」）: URL を消す。`entry: null`。
+   - `'request'` 以外の `read` は false。
+3. `'loaded'`・`'failed'` で要素を入れ替えても、`Map` の中の位置は変えない（同じ鍵への `set` は位置を変えない。鍵を消して足し直さない）。読み始めた順で捨てるので、使った順で並べ替えない（HLD の「読み始めた順に古いものから捨て」）。
+
+- `value` は `'loaded'` のときだけ見る（ほかの `op` では渡しても見ない）。`ticket` は `'request'` では見ない。`value` の長さは見ない（65536 に限らない。UT で短い格子を使えるように。呼ぶ側は `ElevationGrid` を渡す。`fill_invalid_pixels` と同じ）。
+- 合札（`'request'` が返した要素）で今の読み込みかを見分ける。URL と状態だけで当てると、取りやめた後や捨てた後に同じ URL を読み直したとき、前の読み込みの遅れた応答（展開の途中で取りやめが間に合わなかったものなど）を採り、新しい応答を捨てる。読めた後に届いた古い取りやめで、読めた格子を消す。
+- 記録を書き換えて返す（写さない）。600 件の `Map` を呼ぶたびに写すと、タイル 1 枚に候補と隣の分だけ呼ぶ量に比べて重いため。
+- 読んでいる途中の要素も捨てる対象に入れる。HLD の「読み始めた順に古いものから捨て」は状態を分けないため。捨てた URL に後から届いた応答は `'loaded'` で採られない（記録に無い）。画面の側は、その応答をそのタイルの描画には使ってよい（記録に残さないだけ）。
+- 状態が `'loading'` の要素にだけ結果を入れる。`'failed'` を後から `'loaded'` で上書きして、記録の値が揺れないようにするため（合札は入れ替えた後の要素と `===` で同じにならないので、合札の照合だけでも同じになるが、条件を字句で書いておく）。
+
 ##### 3.9 と同じ決まり
 
 ###### mesh_to_latlon（JavaScript）
@@ -7150,14 +7338,14 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 
 #### 9.1.4 メッセージ文面
 
-なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知・台帳の一覧・申請に戻した記録の一覧・親が申請済みの削除の一覧・プログラムの誤り・判断ファイルの拒む理由・差分・保存の値の受け入れの結果・引き継ぎの確かめ方・エクスポートの警告・出力の行の値・XLSX の結果〈書けない文字列の誤りを含む〉は値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
+なし（計算の要素の関数はメッセージを出さない。止まるのは呼び出しの誤りで、組み込みの例外を投げる〈[1.2](#12-lld-の規約)〉。通知・台帳の一覧・申請に戻した記録の一覧・親が申請済みの削除の一覧・プログラムの誤り・判断ファイルの拒む理由・差分・保存の値の受け入れの結果・引き継ぎの確かめ方・エクスポートの警告・出力の行の値・XLSX の結果〈書けない文字列の誤りを含む〉・PNG の読み取りと行のフィルタの結果〈形が違う理由を含む〉・標高の格子・等高線の間隔・判定・タイルの選び方・埋めた格子・塗りの値・読んだタイルの記録は値で返す〈[9.1.2](#912-型とデータ)〉。利用者への知らせの文面は 9.2）。
 
 #### 9.1.5 UT 候補
 
 すべて自動（合否をテストのコードが判定できる）。UT のコードは `tests/public/test_index_calc.js`。群ごとに `#####` の見出し（9.1.3 と同じ群の名前に `（UT 候補）` を添えたもの。9.1.3 の見出しと同じ文字列にしない。[5.1.5](#515-ut-候補)の「起動と準備（UT 候補）」と同じ形）を立てて表を分ける。要素の全体を見るケース（どの群にも属さないもの）は、最初の群の見出しより前の表に置く。ID は群をまたいで通し番号にする（後の群は続きの番号から始める）。次の共通の準備を使う。
 
-- **計算の要素の読み込み**（`UT-index_calc-01`〜`59` が使う。`UT-index_calc-60`〜`65` は、要素の中身の取り出しをこれと同じにして、文脈の作り方だけを下の「ライブラリ入りの読み込み」に替える。ライブラリの取得をその 6 つだけに閉じ、01〜59 の文脈を変えないため）: テストのファイルの位置から本体ルートの `public/index.html` を UTF-8 で読み（`path.join(__dirname, '..', '..', 'public', 'index.html')`）、`<script id="findsummits-calc">` の直後の改行（LF。CRLF なら CR LF）の次から、その後の最初の `</script>` の直前までを取り出す（取り出した中身の最初の行が、開始タグの次の行になる）（開始タグか、その後の終了タグが見つからなければ、取り出す前に `assert` で落とす。見つからない位置で切り出して、ほかの期待の失敗と原因が混ざらないようにするため）。`vm.createContext({TextEncoder, TextDecoder})`（テストのファイルの Node.js のグローバルの 2 つだけを入れた文脈）で文脈を作り、`vm.runInContext(<取り出した中身>, <文脈>)` で実行し、文脈の `decide_open_mode` などを呼ぶ。ケースごとに読み込み直す。`UT-index_calc-01` の (c) だけは、空の文脈 `vm.createContext({})` で実行する。
-- **値の比べ方**: 文脈が返した配列は別の realm のもので、`assert.deepStrictEqual` はプロトタイプの違いで落ちるので、`structuredClone` で写してから比べる。文脈が返した配列を `map`・`filter`・`slice` などで加工した配列も、元の配列と同じ別の realm のものになる（加工の結果は元の配列の realm で作られる）ので、加工した結果を比べるときも、`structuredClone` で写してから比べる。数は `===`（`assert.strictEqual`）か、写した配列の `assert.deepStrictEqual` で比べる（2.4 の表 1・表 2 は `==` で等しいと決めた値）。投げた例外は別の realm の組み込みなので、`assert.throws(<呼び出し>, (e) => e.name === 'RangeError')` のように `name` で見る（`instanceof` で見ない）。返した `Uint8Array` は、`Buffer.from(<返した値>).toString('utf8')` で文字列にして比べる。テストのファイルは Node.js の `structuredClone` を使ってよい（ES2020 の制限は掛けない。[1.2](#12-lld-の規約)）。
+- **計算の要素の読み込み**（`UT-index_calc-01`〜`59` と `66`〜`78` が使う。`UT-index_calc-60`〜`65` は、要素の中身の取り出しをこれと同じにして、文脈の作り方だけを下の「ライブラリ入りの読み込み」に替える。ライブラリの取得をその 6 つだけに閉じ、01〜59 と 66〜78 の文脈を変えないため。66〜78 は `TextEncoder`・`TextDecoder` の 2 つだけの文脈で足りる。ライブラリを使わない）: テストのファイルの位置から本体ルートの `public/index.html` を UTF-8 で読み（`path.join(__dirname, '..', '..', 'public', 'index.html')`）、`<script id="findsummits-calc">` の直後の改行（LF。CRLF なら CR LF）の次から、その後の最初の `</script>` の直前までを取り出す（取り出した中身の最初の行が、開始タグの次の行になる）（開始タグか、その後の終了タグが見つからなければ、取り出す前に `assert` で落とす。見つからない位置で切り出して、ほかの期待の失敗と原因が混ざらないようにするため）。`vm.createContext({TextEncoder, TextDecoder})`（テストのファイルの Node.js のグローバルの 2 つだけを入れた文脈）で文脈を作り、`vm.runInContext(<取り出した中身>, <文脈>)` で実行し、文脈の `decide_open_mode` などを呼ぶ。ケースごとに読み込み直す。`UT-index_calc-01` の (c) だけは、空の文脈 `vm.createContext({})` で実行する。
+- **値の比べ方**: 文脈が返した配列は別の realm のもので、`assert.deepStrictEqual` はプロトタイプの違いで落ちるので、`structuredClone` で写してから比べる。文脈が返した配列を `map`・`filter`・`slice` などで加工した配列も、元の配列と同じ別の realm のものになる（加工の結果は元の配列の realm で作られる）ので、加工した結果を比べるときも、`structuredClone` で写してから比べる。数は `===`（`assert.strictEqual`）か、写した配列の `assert.deepStrictEqual` で比べる（2.4 の表 1・表 2 は `==` で等しいと決めた値）。投げた例外は別の realm の組み込みなので、`assert.throws(<呼び出し>, (e) => e.name === 'RangeError')` のように `name` で見る（`instanceof` で見ない）。`UT-index_calc-01`〜`65` では、返した `Uint8Array` は、`Buffer.from(<返した値>).toString('utf8')` で文字列にして比べる。`UT-index_calc-66`〜`78` は、下の「型付き配列と `Map` の比べ方」で比べ、`Buffer` の文字列にしない（0x80 以上のバイトが UTF-8 の置き換えの文字に化け、違うバイト列が等しく見えるため）。テストのファイルは Node.js の `structuredClone` を使ってよい（ES2020 の制限は掛けない。[1.2](#12-lld-の規約)）。
 - **小さなバッチ**（`UT-index_calc-12`〜`16` と `46` が使う。07〜11 は記録だけを渡す）: テストのコードの中で、次の 9 つのフィーチャを持つ `{type: 'FeatureCollection', features: [...]}` を作る関数を書き、ケースごとに作り直す。どのフィーチャの `properties` も、表の列の後に共通の 6 つ（`application_exclusion: ''`・`exclusion_note: ''`・`pending_applications: []`・`pending_match: ''`・`pending_note: ''`・`pending_return: false`）をこの順に持つ（F4 の `pending_applications` だけは下の 3 つの要素の配列）。ジオメトリは `{type: 'Point', coordinates: [lon, lat]}`。
 
   | 名 | `feature_type` | `match_status` | `category` | `summit_code` | `review_reason` | `review_group_id` | ほかのプロパティ（この順で共通の 6 つより前） | 座標 `[lon, lat]` |
@@ -7175,7 +7363,7 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
   表のキーの並びは `feature_type`・`match_status`・`category`・`summit_code`・`review_reason`・`review_group_id`、ほかのプロパティ、共通の 6 つの順。F4 の `pending_applications` は、[DEC189](30_HLD.md#494-設計判断)「申請の情報は申請ごとの配列で持つ」のキーの順（`action`・`summit_code`・`lat`・`lon`・`new_alt_m`・`new_points`・`applicant`・`applied_on`・`years`・`match`）で、(1) `{action: 'delete', summit_code: 'JA/NN-003', lat: null, lon: null, new_alt_m: null, new_points: null, applicant: 'A', applied_on: '2026-01-10', years: [2026], match: 'held'}`、(2) (1) の `action` を `'change'`、`new_alt_m` を `1234.5`、`new_points` を `4`、`applied_on` を `'2026-02-10'` にしたもの、(3) (1) の `applied_on` を `'2026-03-10'`、`match` を `'same'` にしたもの。
 - **空の記録**: `{names: [], manual_deletes: [], exclusions: [], exclusion_note_drafts: [], pending_returns: [], exclusions_unsynced: false}`。
 - **表の中の仮の名前**: キーと条件の名前は `KEY1`・`COND1` の形で書き、英大文字 1 文字と数字の名前を使わない（`docs/` の文書では、`make lint` の検査H〈`tools/lint_docs.py`〉が、コード表記の外の古い記号の形を止めるため）。
-- **書き換えないことの確かめ**: 呼ぶ前と後で、引数を `JSON.stringify` した文字列が等しいことを見る。`UT-index_calc-07`〜`11` では、各段の `apply_edit` の呼び出しごとに、渡した記録と `op` について見る（`UT-index_calc-08` の (f) だけに限らない）。`UT-index_calc-60`〜`65` は、どのケースも、呼ぶ前と後で、渡した状態（`UT-index_calc-64` は `metadata` も。`Date` は `getTime()`）を `JSON.stringify` した文字列が等しいことを見る（Promise を返す関数は `await` の後に比べる）。
+- **書き換えないことの確かめ**: 呼ぶ前と後で、引数を `JSON.stringify` した文字列が等しいことを見る。`UT-index_calc-07`〜`11` では、各段の `apply_edit` の呼び出しごとに、渡した記録と `op` について見る（`UT-index_calc-08` の (f) だけに限らない）。`UT-index_calc-60`〜`65` は、どのケースも、呼ぶ前と後で、渡した状態（`UT-index_calc-64` は `metadata` も。`Date` は `getTime()`）を `JSON.stringify` した文字列が等しいことを見る（Promise を返す関数は `await` の後に比べる）。`UT-index_calc-66`〜`78` は、どのケースも、呼ぶ前と後で、渡した配列・型付き配列を `Array.from` した値（オブジェクトの引数〈候補・`sub`・間隔〉は `structuredClone` で写したもの）が等しいことを見る（`JSON.stringify` は `NaN` を `null` にし、型付き配列と `Map` を中身の分からない形にするので使わない）。`contour_tile_cache` の記録（`Map`）は、関数が書き換えるので見ない。
 - **状態の作り方**（`UT-index_calc-14`〜`16`）: どのケースも、小さなバッチを作り直し（ケースが手を加えるならその後で）、`copy_features` で写した状態から始める。`apply_manual_deletes`・`apply_name_edits` には、ケースの入力の要素 1 つだけの配列を渡す（14 の (d) だけは 4 つの要素を 1 回で渡す）。
 - **除外のバッチ**（`UT-index_calc-18`〜`22` が使う）: テストのコードの中で、次の 22 のフィーチャを持つ `{type: 'FeatureCollection', features: [...]}` を作る関数を書き、ケースごとに作り直す。どのフィーチャの `properties` も、表の列のキーをこの順（`feature_type`・`match_status`・`category`・`summit_code`・`review_reason`・ほかのプロパティ）に持ち、その後に共通の 6 つ（小さなバッチと同じ）を持つ。`match_status`・`review_reason` が「—」のフィーチャは、そのキーを持たない。名は、このバッチの中の呼び名で、プロパティではない。
 
@@ -7357,10 +7545,14 @@ HLD 4.19.2 の「除外判断を読み込む」の 4 である。`current` は�
 - **数の差し替え**（`UT-index_calc-60`〜`65` が使う）: 出力のバッチのうち、次のプロパティを数・真偽値・改行入りの文字列に替えたもの（ほかは出力のバッチのまま）。`PA` の `points: 6`・`prominence: 150.25`・`analysis_count: 3`・`expected_count: 3`・`key_col_resolved: true`・`is_band_change_candidate: false`・`rationale: 'R1\nR2'`。`PAk` の `col_elev: 1084.3`・`col_margin_px: 2`。`SB` の `sota_alt_m: 1590`・`sota_points: 8`。`SD` の `sota_alt_m: 1400`・`dominant_peak_dist_m: 512.25`。ケースごとに作り直す。
 - **セルの読み返し**（`UT-index_calc-60`・`61`）: `XLSX.read(<bytes>, {type: 'array', cellNF: true})` で読み、シートのセル（`!` で始まらないキー）ごとに `[t, v, z]` を見る（`z` は表示形式。付けていない数と文字列は `'General'` に読める）。`'!ref'` は文字列のまま比べ、`'!merges'` は各要素に `XLSX.utils.encode_range` を当てた字句の配列にして比べる。
 - **エントリの確かめ**（`UT-index_calc-61`・`64`）: `JSZip.loadAsync(<bytes>)` の `files` の値を見て、`dir` が true のものが無いこと、`date.getTime()` がすべて同じこと（申請書）を見る。圧縮の方式は、ZIP のバイト列を位置 0 から `DataView` で読み、`getUint32(pos, true) === 0x04034b50`（ローカルファイルヘッダー）の間だけ繰り返す。各ヘッダーで、`getUint16(pos + 6, true) & 0x08` が 0（データ記述子を使わない。JSZip の `generateAsync` の既定）、`getUint16(pos + 8, true)` が 8（DEFLATE）であることを見て、次の位置を `pos + 30 + getUint16(pos + 26, true) + getUint16(pos + 28, true) + getUint32(pos + 18, true)`（名前の長さ・拡張の長さは 2 バイト、圧縮後の大きさは 4 バイト）にする。抜けた位置の 4 バイトが `0x02014b50`（中央ディレクトリ）であることと、たどったヘッダーの数がエントリの数（ZIP なら 6）と同じことも見る（バイト列の全体から署名を探さない。中の XLSX も ZIP なので、その中の署名に当たるため）。
+- **型付き配列と `Map` の比べ方**（`UT-index_calc-66`〜`78`）: 返した型付き配列は、`Object.prototype.toString.call(<値>)` の字句で種類を見て、`Array.from(<値>)` にした配列を `assert.deepStrictEqual` で比べる（`NaN` は `NaN` と等しいと見る）。返したオブジェクトは、型付き配列を中に持つときはその配列を先に `Array.from` にし、ほかは `structuredClone` で写してから、`Object.keys` の順も含めて比べる。返した `Map` は、`size`・`has`・`get`・`[...<Map>.keys()]` で見る（`[...<Map>.keys()]` はテストのファイルの配列になる）。入力の格子は、テストのファイルの `new Float32Array([...])` で作る（`FG(...)` は `new Float32Array([...])` の略。値は整数か 0.5 の倍数にし、`Math.fround` で値が変わらないようにする）。
+- **PNG のバイト列の作り方**（`UT-index_calc-66`・`67`）: テストのコードの中で、`chunk(<種類の 4 文字>, <中身のバイトの配列>)` を、長さ（4 バイトのビッグエンディアン）・種類（4 バイトの ASCII）・中身・CRC（0 の 4 バイト。`parse_png_chunks` は CRC を見ない）をつないだバイトの配列とし、`png(<チャンクの並び>, <後ろに足すバイトの配列。無ければ []>)` を、シグネチャの 8 バイト `[137, 80, 78, 71, 13, 10, 26, 10]` とチャンクと後ろのバイトをつないだ `Uint8Array` とする。`ihdr(w, h, depth, color, comp, filter, interlace)` は `chunk('IHDR', <w の 4 バイト、h の 4 バイト、残りの 5 つの 1 バイト>)`、`IHOK` は `ihdr(256, 256, 8, 2, 0, 0, 0)`、`IEND0` は `chunk('IEND', [])`。ケースごとに作り直す。
+- **フィルタの入力**（`UT-index_calc-68`）: `RAW` は次の 35 バイトの `Uint8Array`（幅 2・高さ 5。各行は頭のフィルタの種類 1 バイトと 6 バイト。行のフィルタは上から 0・1・2・3・4）: `[0, 10, 20, 30, 200, 100, 7, 1, 5, 6, 7, 255, 250, 3, 2, 1, 2, 3, 4, 5, 6, 3, 255, 1, 4, 252, 2, 247, 4, 2, 255, 247, 46, 53, 70]`。`OUT` は次の 30 の値: `[10, 20, 30, 200, 100, 7, 5, 6, 7, 4, 0, 10, 6, 8, 10, 8, 5, 16, 2, 5, 9, 1, 7, 3, 4, 4, 0, 50, 60, 70]`（行 1 の位置 3 は `(255 + 5) & 255` の折り返し、行 3 の位置 5 は `a = 9`〈同じ行の位置 2〉・`b = 16` の平均 `(9 + 16) >> 1 = 12` の切り捨てで `(247 + 12) & 255 = 3`、行 4 の位置 3・4 は Paeth の `pa` と `pc` が等しい場合と `pb` と `pc` が等しい場合）。
+- **格子の作り方**（`UT-index_calc-70`・`74`・`76`・`77`）: `IDX` は各添字 `i` に値 `i` を入れた `Float32Array(65536)`。`RIGHT` は `100000 + i`、`BOTTOM` は `200000 + i` を入れた同じ長さのもの（どれも `Math.fround` で値が変わらない）。`RGB0` は長さ 196608 の 0 の `Uint8Array`。ケースごとに作り直す。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
-| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈（`vm.createContext({})`）で実行して例外が出ない（要素の最上位で `TextEncoder`・`TextDecoder` を読まない）。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`・`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`・`derive_current_state`・`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`・`collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_application_xlsx`・`build_list_rows`・`build_list_xlsx`・`split_by_category`・`build_evidence_geojson`・`build_evidence_zip`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
+| `UT-index_calc-01` | 計算の要素の形と読み込み | `public/index.html` を読む（読み込みは共通の準備） | なし | (a) `<script id="findsummits-calc">` の字句がちょうど 1 つある。(b) 取り出した中身の開始タグの次の行が `// trace: LLD-index_calc` で、`</script`・`<!--`・`<script` を大文字・小文字を問わず含まない（取り出しの終わりの `</script>` は中身に含めない）。(c) 空の文脈（`vm.createContext({})`）で実行して例外が出ない（要素の最上位で `TextEncoder`・`TextDecoder` を読まない）。(d) 実行の後の文脈で、`decide_open_mode`・`apply_edit`・`copy_features`・`apply_manual_deletes`・`apply_name_edits`・`apply_exclusions`・`apply_pending_returns`・`storage_key`・`build_storage_value`・`parse_storage_value`・`select_inherit_source`・`decide_inherit_prompt`・`inherit_records`・`summarize_storage_entry`・`derive_current_state`・`compare_code_points`・`build_exclusion_file`・`parse_exclusion_file`・`diff_exclusion_ledgers`・`collect_export_warnings`・`select_row_points`・`join_row_features`・`build_application_rows`・`build_application_xlsx`・`build_list_rows`・`build_list_xlsx`・`split_by_category`・`build_evidence_geojson`・`build_evidence_zip`・`parse_png_chunks`・`unfilter_png_rows`・`decode_elevation`・`build_elevation_grid`・`contour_interval`・`classify_contour_pixel`・`contour_tile_plan`・`scale_candidate_grid`・`fill_invalid_pixels`・`extend_contour_grid`・`paint_contour_tile`・`contour_tile_cache`・`mesh_to_latlon`・`latlon_to_tile` の `typeof` が `'function'` |
 
 ##### 起動（UT 候補）
 
@@ -7459,6 +7651,34 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 - `SQ2`（13）: `['review', 'ambiguous', 'ambiguous', GRP, 'SQ2.review_decision', 'SQ2.review_note', '', 'SQ2.exclusion_note', '', 'SQ2.pending_note', false, 'QA.stability', 'JA/NN-051', 'SQ2.summit_name', 'SQ2.summit_name_jp', 40, 143, 900.9, 'QA.points', 40.01, 143.01, 'QAk.col_elev', 'QA.prominence', 'QA.key_col_resolved', 'QAk.col_margin_px', 'QA.analysis_count', 'QA.expected_count', 40.002, 143.002, 'SQ2.sota_alt_m', 'SQ2.sota_points', null, 'SQ2.municipality', 'SQ2.region_name', 'QAz.area_complete', '', 'SQ2.dominant_peak_dist_m']`
 - `SQ3`（14）: `['review', 'delete', 'ambiguous_parent', GRP, 'SQ3.review_decision', 'SQ3.review_note', '', 'SQ3.exclusion_note', '', 'SQ3.pending_note', false, null, 'JA/NN-052', 'SQ3.summit_name', 'SQ3.summit_name_jp', null, null, null, null, null, null, null, null, null, null, null, null, 40.1, 143.1, 'SQ3.sota_alt_m', 'SQ3.sota_points', null, 'SQ3.municipality', 'SQ3.region_name', null, '', 'SQ3.dominant_peak_dist_m']`
 - `PN`（15）: `['no_change', 'matched', '', '', 'PN.review_decision', 'PN.review_note', '', 'PN.exclusion_note', '', 'PN.pending_note', false, 'PN.stability', 'JA/NN-030', 'PN.summit_name', 'PN.summit_name_jp', 38, 141, 1000, 'PN.points', null, null, null, 'PN.prominence', 'PN.key_col_resolved', null, 'PN.analysis_count', 'PN.expected_count', 38.001, 141.001, 'SN.sota_alt_m', 'SN.sota_points', 'PN.is_band_change_candidate', 'PN.municipality', 'PN.region_name', 'PNz.area_complete', null, null]`
+
+##### 地図の描画（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_calc-66` | `parse_png_chunks` の読み取り | 計算の要素の読み込み。PNG のバイト列の作り方 | (a) `png([IHOK, chunk('tEXt', [107]), chunk('IDAT', [1, 2, 3]), chunk('IDAT', [4, 5]), IEND0], [9, 9, 9])`、(b) `png([IHOK, chunk('IDAT', []), IEND0])`、(c) `png([IHOK, chunk('IDAT', [1]), chunk('idat', [7]), chunk('IDAT', [2]), IEND0])`、(d) `png([IHOK, chunk('IDAT', [1]), IEND0, chunk('IDAT', [2])])` | (a) `{ok: true, width: 256, height: 256, idat: <[1, 2, 3, 4, 5]>}`（`idat` は `'[object Uint8Array]'`。`IEND` の後のバイトと `tEXt` を見ない）。(b) `ok` が `true`、`idat` が長さ 0。(c) `idat` が `[1, 2]`（小文字の `idat` は IDAT でない）。(d) `idat` が `[1]`（`IEND` で読むのをやめる） |
+| `UT-index_calc-67` | `parse_png_chunks` の形が違うものと誤りの順 | 66 と同じ | (a) `new Uint8Array([])`、(b) シグネチャの先頭 7 バイトだけ、(c) `png([IHOK, chunk('IDAT', [1]), IEND0])` の位置 7 を `11` にしたもの、(d) `png([])`、(e) `png([chunk('tEXt', [1]), IHOK, chunk('IDAT', [1]), IEND0])`、(f) `IHDR` の中身を 12 バイト（`ihdr` の最後の 1 バイトを除いたもの）にして `chunk('IDAT', [1])`・`IEND0` を続けたもの、(g)〜(m) `ihdr` の 1 つだけを替えたもの（(g) 幅 255、(h) 高さ 512、(i) ビット深度 16、(j) カラータイプ 6、(k) 圧縮 1、(l) フィルタ 1、(m) インターレース 1）に `chunk('IDAT', [1])` と `IEND0` を続けたもの、(n) `png([IHOK, IHOK, chunk('IDAT', [1]), IEND0])`、(o) `png([IHOK, chunk('IDAT', [1])], [0, 0, 0, 5, 73])`、(p) `IHOK` の後に、長さを 100 と書いた種類 `IDAT` のチャンクを中身 10 バイトだけで続けたもの（CRC も無い）、(q) `png([IHOK, chunk('IDAT', [1])])`、(r) `png([IHOK, IEND0])`、(s) `png([IHOK])`、(t) `null`・`[137, 80, 78, 71, 13, 10, 26, 10]`（配列）・`new ArrayBuffer(8)` | (a)(b)(c) `{ok: false, reason: 'not_png'}`。(d)(e)(f)(g)〜(m)(n) `{ok: false, reason: 'bad_ihdr'}`。(o)(p) `{ok: false, reason: 'bad_chunk'}`（残りが 12 バイトより少ない、長さが残りを超える）。(q) `{ok: false, reason: 'no_iend'}`。(r) `{ok: false, reason: 'no_idat'}`。(s) `{ok: false, reason: 'no_iend'}`（`IEND` と `IDAT` の両方が無いときは `no_iend`）。(t) どれも `name` が `'TypeError'` の例外 |
+| `UT-index_calc-68` | `unfilter_png_rows` の戻し方と確かめ | 計算の要素の読み込み。フィルタの入力 | (a) `(2, 5, RAW)`、(b) `(1, 1, new Uint8Array([0, 7, 8, 9]))`、(c) `(2, 5, <RAW の最後の 1 バイトを除いたもの>)`、(d) `(2, 5, <RAW の後ろに 0 を 1 つ足したもの>)`、(e) `(2, 5, <RAW の位置 14〈行 2 の頭〉を 5 にしたもの>)`、(f) `(2, 5, <RAW の位置 28〈行 4 の頭〉を 255 にし、後ろに 0 を 1 つ足したもの>)`、(g) `(0, 5, RAW)`・`(2, 1.5, RAW)`・`(2, -5, RAW)`、(h) `('2', 5, RAW)`・`(2, 5, Array.from(RAW))`・`(2, 5, null)` | (a) `{ok: true, rgb: <OUT>}`（`rgb` は `'[object Uint8Array]'`）。(b) `rgb` が `[7, 8, 9]`。(c)(d) `{ok: false, reason: 'bad_length'}`。(e) `{ok: false, reason: 'bad_filter'}`。(f) `{ok: false, reason: 'bad_length'}`（長さを先に見る）。(g) どれも `name` が `'RangeError'`。(h) どれも `name` が `'TypeError'` |
+| `UT-index_calc-69` | `decode_elevation` の値 | 計算の要素の読み込み | `(0, 0, 0)`・`(0, 0, 1)`・`(1, 226, 64)`・`(127, 255, 255)`・`(128, 0, 0)`・`(128, 0, 1)`・`(255, 255, 255)`・`(240, 190, 36)` | 順に `0`・`0.01`・`1234.56`・`83886.07`・`NaN`（`Number.isNaN`）・`-83886.07`・`-0.01`・`-9999`（`NaN` ではない。ほかは `assert.strictEqual`） |
+| `UT-index_calc-70` | `build_elevation_grid` の並びと値 | 計算の要素の読み込み。格子の作り方 | (a) `RGB0` の画素 0 を `(0, 0, 1)`、画素 1 を `(128, 0, 0)`、画素 256 を `(1, 226, 64)`、画素 300 を `(240, 190, 36)`、画素 65535 を `(255, 255, 255)` にしたもの（画素 `i` の R・G・B は添字 `3 * i`・`3 * i + 1`・`3 * i + 2`）、(b) 長さ 196607 の `Uint8Array`、(c) `Array.from(RGB0)` | (a) `'[object Float32Array]'` で長さ 65536。添字 0 が `Math.fround(0.01)`、1 が `NaN`、256 が `Math.fround(1234.56)`（画素 256 は 2 行目の左端）、300 が `-9999`、65535 が `Math.fround(-0.01)`、ほかの 65531 個は 0。(b) `name` が `'RangeError'`。(c) `name` が `'TypeError'` |
+| `UT-index_calc-71` | `contour_interval` の表と受けない値 | 計算の要素の読み込み | (a) ズーム `0`〜`19` の 20 個、(b) `20`・`-1`・`11.5`・`NaN`・`Infinity`、(c) `'11'`・`null`・`undefined` | (a) `0`〜`11` が `{major: 500, minor: 100}`、`12`・`13` が `{major: 200, minor: 50}`、`14` が `{major: 100, minor: 20}`、`15`・`16` が `{major: 50, minor: 10}`、`17`〜`19` が `{major: 20, minor: 5}`（`Object.keys` の順も）。(b) どれも `name` が `'RangeError'`。(c) どれも `name` が `'TypeError'` |
+| `UT-index_calc-72` | `classify_contour_pixel` の判定 | 計算の要素の読み込み | `(e, right, bottom, major, minor)` の順に、(a) `(Math.fround(99.99), 100, Math.fround(99.99), 100, 20)`、(b) `(100, 100, 100, 100, 20)`、(c) `(41, 39, 41, 100, 20)`、(d) `(41, 39, 101, 100, 20)`、(e) `(41, 41, 39, 100, 20)`、(f) `(NaN, 0, 1000, 100, 20)`、(g) `(41, NaN, 39, 100, 20)`、(h) `(41, NaN, NaN, 100, 20)`、(i) `(-0.5, 0.5, -0.5, 100, 20)`、(j) `(-9999, -9999, -9999, 100, 20)`、(k) `(-9999, 0, -9999, 100, 20)`、(l) `(39, 41, 39, 50, 10)`、(m) `(5, 4.5, 5, 20, 5)` | 順に (a) `'major'`、(b) `'none'`、(c) `'minor'`、(d) `'major'`（右は主曲線だけ、下で計曲線）、(e) `'minor'`（下だけ）、(f) `'none'`（自分が無効値）、(g) `'minor'`（右は無効値で比べない）、(h) `'none'`、(i) `'major'`（0m をまたぐ。`Math.trunc` なら `'none'`）、(j) `'none'`、(k) `'major'`（-9999 は値）、(l) `'minor'`、(m) `'minor'` |
+| `UT-index_calc-73` | `contour_tile_plan` の候補・切り出し・基のタイル | 計算の要素の読み込み | (a) `(10, 909, 403)`、(b) `(15, 29105, 12902)`、(c) `(16, 58210, 25807)`、(d) `(17, 116421, 51614)`、(e) `(18, 232843, 103228)`、(f) `(19, 465687, 206457)`、(g) `(0, 0, 0)`、(h) `(20, 0, 0)`・`(-1, 0, 0)`・`(1.5, 0, 0)`・`(10, 1024, 0)`・`(10, 0, -1)`・`(10, 0.5, 0)`、(i) `('15', 0, 0)`・`(10, null, 0)` | (a)〜(g) は下の「タイルの選び方の期待」。(h) どれも `name` が `'RangeError'`。(i) どれも `name` が `'TypeError'` |
+| `UT-index_calc-74` | `scale_candidate_grid` の切り出しと拡大 | 計算の要素の読み込み。格子の作り方 | `(IDX, <候補>)` の候補を、(a) `{url: 'u', crop: {x: 0, y: 0, size: 256}, scale: 1}`、(b) `{url: 'u', crop: {x: 128, y: 0, size: 128}, scale: 2}`、(c) `{url: 'u', crop: {x: 160, y: 192, size: 32}, scale: 8}`、(d) `scale: 3`・`crop.size` 64 で `scale: 2`・`crop` が `{x: 200, y: 0, size: 128}` で `scale: 2`、(e) `(new Float32Array(4), <(a) の候補>)`、(f) `(Array.from(IDX), <(a) の候補>)`・`(IDX, 123)`・`(IDX, {url: 'u', crop: null, scale: 1})`・`(IDX, {url: 'u', crop: {x: 0, y: 0, size: '256'}, scale: 1})` | (a) `IDX` と同じ値で、`IDX` と `===` で同じでない新しい `Float32Array`。(b) 添字 0・1・2・256・512・65535 が順に `128`・`128`・`129`・`128`・`384`・`32767`。(c) 添字 0・7・8・2048・65535 が順に `49312`・`49312`・`49313`・`49568`・`57279`（x と y の取り違えで値が変わる）。(d)(e) どれも `name` が `'RangeError'`。(f) `name` が `'TypeError'` |
+| `UT-index_calc-75` | `fill_invalid_pixels` の埋め方 | 計算の要素の読み込み。型付き配列と `Map` の比べ方 | (a) `(null, FG(1, NaN, 3, NaN))`、(b) `(null, FG(1, 2, 3, 4))`、(c) `(FG(1, NaN, 3, NaN), FG(9, 2, 9, NaN))`、(d) `(FG(NaN, -9999), FG(5, 6))`、(e) `(FG(1, 2), FG(1, 2, 3))`、(f) `([1, 2], FG(1, 2))`・`(null, null)`・`(FG(1), new Float64Array([1]))` | (a) `grid` が `[1, NaN, 3, NaN]`、`remaining` が `true`。(b) `[1, 2, 3, 4]`・`false`。(c) `[1, 2, 3, NaN]`・`true`（`current` の値は `next` で上書きしない）。(d) `[5, -9999]`・`false`（-9999 は埋めない）。(a)〜(d) の `grid` は `'[object Float32Array]'` で、渡した `current`・`next` と `===` で同じでない。(e) `name` が `'RangeError'`。(f) どれも `name` が `'TypeError'` |
+| `UT-index_calc-76` | `extend_contour_grid` のつなぎ方 | 計算の要素の読み込み。格子の作り方 | (a) `(IDX, RIGHT, BOTTOM)`、(b) `(IDX, null, BOTTOM)`、(c) `(IDX, null, null)`、(d) `(new Float32Array(4), null, null)`、(e) `(null, RIGHT, BOTTOM)`・`(IDX, Array.from(RIGHT), null)` | (a) `'[object Float32Array]'` で長さ 66049。添字 0・255・256・257・513・65790・65791・65792・66047 が順に `0`・`255`・`100000`・`256`・`100256`・`65535`・`165280`・`200000`・`200255`（添字 `y * 257 + x`。256 は右の隣の左上、513 は右の隣の 2 行目の左端、65791 は右の隣の最後の行の左端、65792 は下の隣の左上）、添字 66048 が `NaN` で、`NaN` はこの 1 つだけ。(b) `NaN` が 257 個（`x = 256` の列のすべて）。(c) `NaN` が 513 個。(d) `name` が `'RangeError'`。(e) どれも `name` が `'TypeError'` |
+| `UT-index_calc-77` | `paint_contour_tile` の判定の位置・色・拡大 | 計算の要素の読み込み。格子の作り方。`EXT0` は 0 の `Float32Array(66049)`、`EXTNAN` は `NaN` の同じ長さのもの。「塗った画素」は、不透明度が 0 でない画素を `[x, y, R, G, B, 不透明度]` にして添字の順に並べたもの | (a) `EXT0` の添字 1 を `100`、添字 `10 * 257 + 20` を `30` にしたものを `(<それ>, null, {major: 100, minor: 20})`、(b) `(EXTNAN, null, {major: 100, minor: 20})`、(c) `EXT0` の添字 0 を `100`、添字 `5 * 257 + 135` を `100` にしたものを `(<それ>, {x: 128, y: 0, size: 129}, {major: 100, minor: 20})`、(d) `EXT0` の添字 `66 * 257 + 195` を `100` にしたものを `(<それ>, {x: 192, y: 64, size: 65}, {major: 20, minor: 5})`、(e) `(new Float32Array(65536), null, <(a) の間隔>)`・`(EXT0, {x: 0, y: 0, size: 100}, <同>)`・`(EXT0, {x: 200, y: 0, size: 129}, <同>)`、(f) `(Array.from(EXT0), null, <同>)`・`(EXT0, null, null)`・`(EXT0, 123, <同>)`・`(EXT0, {x: '0', y: 0, size: 129}, <同>)`・`(EXT0, null, {})`、(g) `(EXT0, null, {major: 0, minor: 20})`・`(EXT0, null, {major: 100, minor: NaN})` | (a) `'[object Uint8ClampedArray]'` で長さ 262144。塗った画素が順に `[0, 0, 160, 64, 32, 75]`・`[1, 0, 160, 64, 32, 75]`・`[20, 9, 200, 120, 80, 40]`・`[19, 10, 200, 120, 80, 40]`・`[20, 10, 200, 120, 80, 40]` の 5 つ（`(20, 9)` は下が 30、`(19, 10)` は右が 30）。(b) 塗った画素が無い。(c) 塗った画素が 12 個で、すべて `160, 64, 32, 75`。その位置は `x` が 12〜15・`y` が 10〜11 の 8 個と、`x` が 14〜15・`y` が 8〜9 の 4 個（切り出しの中の `(7, 5)`・`(6, 5)`・`(7, 4)` を 2×2 に塗る。添字 0 の `100` は切り出しの外なので塗らない）。(d) 塗った画素が 48 個で、`x` が 8〜15・`y` が 8〜11 の 32 個と、`x` が 12〜15・`y` が 4〜7 の 16 個（切り出しの中の `(3, 2)`・`(2, 2)`・`(3, 1)` を 4×4 に塗る）。(e) どれも `name` が `'RangeError'`。(f) どれも `name` が `'TypeError'`。(g) どれも `name` が `'RangeError'`（0 や `NaN` の間隔で全画素を塗らない） |
+| `UT-index_calc-78` | `contour_tile_cache` の記録・合札・捨て方・取りやめ | 計算の要素の読み込み。型付き配列と `Map` の比べ方。`GA` は `FG(1)`、`GB` は `FG(2)`。各ケースは `record` を null にした最初の呼び出しで新しい記録を作り、ケースの中の後の呼び出しは、その返した `record` を渡す（下の入力では `record` を省いて書く）。`TK1` などは、その名前を付けた `'request'` の呼び出しが返した `entry`（合札） | (a) `('request', 'U1')`〈`TK1`〉→ `('request', 'U1')` → `('loaded', 'U1', TK1, GA)` → `('request', 'U1')`。(b) `('request', 'U2')`〈`TK2`〉→ `('failed', 'U2', TK2)` → `('loaded', 'U2', TK2, GA)` → `('request', 'U2')`。(c) `('request', 'U3')`〈`TK3`〉→ `('cancel', 'U3', TK3)` → `('loaded', 'U3', TK3, GA)` → `('request', 'U3')`〈`TK3B`〉→ `('loaded', 'U3', TK3, GA)` → `('failed', 'U3', TK3)` → `('cancel', 'U3', TK3)` → `('loaded', 'U3', TK3B, GB)` → `('cancel', 'U3', TK3B)`。(d) `('request', 'T0')`〈`TKT0`〉から `'T600'` まで 601 回（それぞれの合札を `TKT<n>` とする）→ `('loaded', 'T0', TKT0, GA)` → `('loaded', 'T1', TKT1, GB)` → `('request', 'X')` → `('request', 'T2')` → `('request', 'Y')` → `('request', 'T0')`〈`TKT0B`〉→ `('loaded', 'T0', TKT0, GA)` → `('loaded', 'T0', TKT0B, GB)`。(e) `(null, 'get', 'U')`、`(null, 'request', 1)`、`({}, 'request', 'U')`、`(null, 'loaded', 'U', null, GA)`、`(null, 'loaded', 'U', {status: 'loading', value: null}, [1])`、`(null, 'cancel', 'U')` | (a) 1 つ目: `read` が `true`、`record` が `'[object Map]'` で `size` 1、`entry` が `{status: 'loading', value: null}`。2 つ目: `read` が `false`、`record` は 1 つ目の `record` と `===`、`entry` は `TK1` と `===`。3 つ目: `read` が `false`、`entry.status` が `'loaded'`、`entry.value` が `GA` と `===`、`TK1.status` は `'loading'` のまま（要素を入れ替え、合札は変えない）。4 つ目: `read` が `false`、`entry.value` が `GA` と `===`。(b) 2 つ目: `entry` が `{status: 'failed', value: null}`。3 つ目: `entry` が null（`'failed'` を上書きしない）。4 つ目: `read` が `false`、`entry.status` が `'failed'`。(c) 2 つ目の後: `has('U3')` が `false`、`entry` が null。3 つ目: `entry` が null、`has('U3')` が `false`（取りやめた後の応答を採らない）。4 つ目: `read` が `true`。5 つ目: `entry` が null、`get('U3').status` が `'loading'`（読み直した後に届いた前の読み込みの応答を採らない）。6 つ目: `entry` が null、`get('U3').status` が `'loading'`（前の読み込みの失敗も採らない）。7 つ目: `entry` が null、`get('U3')` が `TK3B` と `===`（前の読み込みの取りやめで、新しい読み込みを消さない）。8 つ目: `get('U3').value` が `GB` と `===`。9 つ目: `entry` が null、`get('U3').value` が `GB` と `===`（読めた後の古い取りやめで消さない）。(d) 601 回の後: `size` 600、`has('T0')` が `false`、`[...keys()][0]` が `'T1'`。`'T0'` の `'loaded'`: `entry` が null、`has('T0')` が `false`（捨てた後の応答を採らない）。`'T1'` の `'loaded'` の後: `[...keys()][0]` が `'T1'`（位置を変えない）。`'X'` の後: `size` 600、`has('T1')` が `false`、`[...keys()][0]` が `'T2'`、`[...keys()][599]` が `'X'`（読み始めた順で捨てる）。`'T2'` の後: `read` が `false`、`[...keys()][0]` が `'T2'`（尋ねても並びを変えない）。`'Y'` の後: `has('T2')` が `false`。2 度目の `'T0'` の `'request'`: `read` が `true`、`size` 600、`has('T3')` が `false`。その後の `TKT0` の `'loaded'`: `entry` が null、`get('T0').status` が `'loading'`（捨てた後に読み直した URL に、捨てる前の読み込みの応答を採らない）。`TKT0B` の `'loaded'`: `get('T0').value` が `GB` と `===`。(e) 1 つ目は `name` が `'RangeError'`、ほかは `'TypeError'` |
+
+**タイルの選び方の期待**（`UT-index_calc-73`。`BASEURL` は `'https://cyberjapandata.gsi.go.jp/xyz'`、`CROP(<x>, <y>, <size>)` は `{x, y, size}`、`CAND(<url>, <crop>, <scale>)` は `{url, crop, scale}`。期待の `BASEURL` と URL の字句は、テストのコードが書く。文脈の定数を読まない。`Object.keys` の順も比べる）:
+
+- (a) `{base: {z: 10, x: 909, y: 403}, candidates: [CAND(BASEURL + '/dem_png/10/909/403.png', CROP(0, 0, 256), 1)], sub: null}`
+- (b) `base` が `{z: 15, x: 29105, y: 12902}`、`candidates` が `dem5a_png`・`dem5b_png`・`dem5c_png` の順に `CAND(BASEURL + '/<サービス名>/15/29105/12902.png', CROP(0, 0, 256), 1)` の 3 つと、`CAND(BASEURL + '/dem_png/14/14552/6451.png', CROP(128, 0, 128), 2)`、`sub` が null
+- (c) `base` が `{z: 16, x: 58210, y: 25807}`、`candidates` が 3 つの DEM5 の順に `CAND(BASEURL + '/<サービス名>/15/29105/12903.png', CROP(0, 128, 128), 2)` と、`CAND(BASEURL + '/dem_png/14/14552/6451.png', CROP(128, 192, 64), 4)`、`sub` が null
+- (d) `base` が `{z: 17, x: 116421, y: 51614}`、`candidates` が `CAND(BASEURL + '/dem1a_png/17/116421/51614.png', CROP(0, 0, 256), 1)`、3 つの DEM5 の順に `CAND(BASEURL + '/<サービス名>/15/29105/12903.png', CROP(64, 128, 64), 4)`、`CAND(BASEURL + '/dem_png/14/14552/6451.png', CROP(160, 192, 32), 8)` の 5 つ、`sub` が null
+- (e) `base` と `candidates` は (d) と同じ値、`sub` が `{x: 128, y: 0, size: 129}`
+- (f) `base` と `candidates` は (d) と同じ値、`sub` が `{x: 192, y: 64, size: 65}`
+- (g) `{base: {z: 0, x: 0, y: 0}, candidates: [CAND(BASEURL + '/dem_png/0/0/0.png', CROP(0, 0, 256), 1)], sub: null}`
 
 ##### 3.9 と同じ決まり（UT 候補）
 
