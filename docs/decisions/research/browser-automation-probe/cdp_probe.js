@@ -95,6 +95,7 @@ async function finish(err) {
 setTimeout(() => finish("時間切れ（90 秒）"), 90000);
 process.on("SIGINT", () => finish("SIGINT"));
 process.on("SIGTERM", () => finish("SIGTERM"));
+process.on("unhandledRejection", (e) => finish("受け手のない失敗: " + String(e && e.message || e)));
 
 async function main() {
   let port = null;
@@ -114,7 +115,7 @@ async function main() {
   const handlers = [];
   ws.onmessage = (ev) => {
     const m = JSON.parse(ev.data);
-    if (m.id && pend.has(m.id)) { pend.get(m.id).resolve(m); pend.delete(m.id); } else handlers.forEach((h) => h(m));
+    if (m.id && pend.has(m.id)) { pend.get(m.id).resolve(m); pend.delete(m.id); } else handlers.forEach((h) => { Promise.resolve().then(() => h(m)).catch((e) => finish("受け手の失敗: " + String(e && e.message || e))); });
   };
   ws.onclose = () => { for (const p of pend.values()) p.reject(new Error("WebSocket が切れた")); pend.clear(); };
   const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
