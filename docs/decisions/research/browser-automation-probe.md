@@ -25,11 +25,11 @@
 | 4 | ファイル選択に渡す | LLD 9.2 の UT（除外判断ファイルの読み込み） |
 | 5 | ダウンロードの中身を取る | LLD 9.2 の UT（申請書・ZIP・除外判断ファイルの保存）、ST のダウンロードの記録 |
 | 6 | 2 つのタブで localStorage と `storage` イベントを共有する | LLD 9.2 の UT（別の画面での変更の読み直し） |
-| 7 | フレーム時間の実測をテストのコードが読む（ページの中の `performance.now()` と `requestAnimationFrame` で測った値。確かめたのは操作の無いときのフレーム間隔まで） | ST の測定（`ST-NFR-008-01`・`ST-NFR-010-01`） |
+| 7 | フレーム間隔の実測をテストのコードが読む（ページの中の `performance.now()` と `requestAnimationFrame` で測った、操作の無いときの値。補助の値） | ST の測定（`ST-NFR-010-01`。正式な値は開発者ツールのパフォーマンス計測で、層で同じ値を読めるかは確かめていない。ADR-OPS-010 の Decision 2） |
 | 8 | メモリの値をテストのコードが読む（JS ヒープと、プロセスのグループの RSS の和。補助の値） | ST の測定（`ST-NFR-002-02`。記録だけの値。正式な値はタブのメモリの最大で、ブラウザのタスクマネージャで人が読む。ADR-OPS-010 の Decision 2） |
 | 9 | 実際の入力を送る（押す・動かす・離す） | ST の連続操作の測定（`ST-NFR-010-01`。地図を動かす） |
 
-能力 1〜6 は LLD 9.2 の画面の関数（HLD 3.7.3・3.8.3 の「置き場」が「画面」の 28 個）と、9.1 から 9.2 への伝言から挙げた。7〜9 は、ST の「ブラウザの測定」の段落がこの Issue に送った測定の分。
+能力 1〜6 は LLD 9.2 の画面の関数（HLD 3.7.3・3.8.3 の「置き場」が「画面」の 28 個）と、[#284](https://github.com/jj1xgo/findsummits/issues/284) のコメント（LLD 9.1 の各回から 9.2 への伝言）から挙げた。7〜9 は、ST の「ブラウザの測定」の段落がこの Issue に送った測定の分。
 
 ## 結果
 
@@ -52,13 +52,14 @@
 
 ## 比べた結果
 
-計画の前の試し（2026-11-15、計画者が一時の場所で行い、道具はリポジトリに置いていない）で、能力 1〜6 を次のとおり確かめた。
+決める前の試し（2026-11-15、一時の場所で行い、道具はリポジトリに置いていない）で、能力 1〜6 を次のとおり確かめた。
 
 | | Chrome 157.0.8103.78 | Brave 157.1.99.57 | Firefox 153.5.1 ESR |
 |---|---|---|---|
 | 自前（npm なし） | 6 つとも通った | 6 つとも通った | 6 つとも通った |
 | WebdriverIO 10.2.0 | 6 つとも通った | 6 つとも通った（ダウンロードは BiDi の `browser.setDownloadBehavior` が要る） | 6 つとも通った |
 
+- Firefox 153.5.1 ESR の試しで、WebDriver BiDi の `browserVersion` は `153.5.1` で、`esr` を含まなかった（`firefox --version` は `153.5.1esr` を含む）。チャンネルは `firefox --version` で見分ける。
 - Firefox 153.5.1 ESR は、その後に安定版を入れたときに外れたので、上の「結果」の表では走らせ直していない。ESR は対応ブラウザの版でない（HLD の DEC130「JavaScript はモジュールを使わない ES2020」は安定版の最新）。
 - WebdriverIO は、入れると 140 個のパッケージが入り、npm 12.2.0 が geckodriver・edgedriver の install script を止めた（`allowScripts`）。ドライバは実行のときにネットから取る。`newWindow` の後に操作の対象のタブが切り替わらず、明示的に `switchToWindow` が要った。Brave の後に、セッションを閉じても node が終わらなかった。
 
@@ -80,7 +81,7 @@ GitHub Actions の Ubuntu 24.04 のランナーの一覧（<https://github.com/a
 
 ## やり直すとき
 
-ブラウザの版を上げたとき（または Node.js を上げたとき）は、リポジトリの外に空のディレクトリを作り、次を走らせて、出力の JSON の各能力が上の「結果」の表と同じ形かを見る。
+ブラウザの版を上げたとき（または Node.js を上げたとき）は、リポジトリの根で次を走らせる。どのコマンドも、作業ディレクトリをリポジトリの外に新しく作って渡す。道具は能力ごとの合否を出力の `checks` に出し、9 つとも期待どおりなら終了コード 0、そうでなければ 1 で終わる。
 
 ```bash
 node docs/decisions/research/browser-automation-probe/cdp_probe.js google-chrome "$(mktemp -d)"
@@ -88,13 +89,14 @@ node docs/decisions/research/browser-automation-probe/cdp_probe.js brave-browser
 node docs/decisions/research/browser-automation-probe/bidi_probe.js /usr/lib/firefox/firefox "$(mktemp -d)"
 ```
 
-作業ディレクトリが空でなければ、道具は止まる（前回のダウンロードを今回の結果と取り違えないため）。走らせた後に、`ps -eo pid,pgid,cmd` で起動したブラウザが残っていないことを確かめる。
+作業ディレクトリが空でなければ、道具は止まる（前回のダウンロードを今回の結果と取り違えないため）。道具は全体 90 秒・1 つの命令 15 秒で打ち切り、打ち切り・例外・SIGINT・SIGTERM のときも起動したブラウザのグループを止める（2026-11-15 に、途中で SIGTERM を送って、`error` が `SIGTERM` の JSON が出てブラウザが残らないことを Brave と Firefox で確かめた）。走らせた後に、`ps -eo pid,pgid,cmd` で起動したブラウザが残っていないことを確かめ、作業ディレクトリを消す。
 
 ## 確かめていないこと
 
 - Safari と safaridriver（この機械には無い。[#338](https://github.com/jj1xgo/findsummits/issues/338)「Safari（持ち主の Mac）で #197 の確かめ用のページを測る」の機会に確かめる）。
 - Windows・macOS での Chrome・Brave・Firefox。
 - ヘッドありの起動。
-- 入力の処理時間と画面が変わるまでの時間（`ST-NFR-010-01`）を、入力と測りを結んで読むこと（能力 7 は操作の無いときのフレーム間隔、能力 9 は入力のイベントの数だけを確かめた）。
+- 開発者ツールの計測と同じ時間の値を層で読むこと（`ST-NFR-010-01` のフレーム時間・内訳・入力の処理時間・画面が変わるまでの時間、`ST-NFR-008-01` の操作から画面が変わるまで・ダウンロードの開始までの時間。Chrome DevTools Protocol の `Tracing` などで取れるか。能力 7 は操作の無いときのフレーム間隔、能力 9 は入力のイベントの数だけを確かめた）。
+- `ST-NFR-002-02` のタブが落ちたことを層で知ること。
 - https の配信先を開くこと（公開用ビューアのケース）。
 - CI のランナーの上で道具を走らせること。
