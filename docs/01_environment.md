@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-11-10 |
+| 最終更新日 | 2026-11-15 |
 | ステータス | ドラフト |
 
 ## 目次
@@ -135,6 +135,8 @@ CI は Python 3.13 の新しい venv で動くため、手元と選ばれる版�
 [開発ガイド](03_development.md) に従う。
 
 作業用・公開用のビューアの JavaScript の試験（`make test` の `tests/public/`。[HLD 2.6.5](30_HLD.md#265-ビルド構成)）には、Node.js 24（LTS）以上を使う（動作確認は 24.21.0）。ツールの実行には要らないので、動作前提環境には含めない。
+
+ブラウザの中で値を読むテスト（[ADR-OPS-010](decisions/ADR-OPS-010-browser-automation-without-npm.md)）には、Chrome・Brave・Firefox のどれかが要る。入っていないブラウザのケースは飛ばす（[テスト方針書 §4](02_test_policy.md#4-テスト環境)）。Firefox は安定版を使う（対応ブラウザは HLD の [DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」のとおり安定版の最新）。Debian testing には ESR の Firefox しか無いので、安定版は Mozilla 公式の APT リポジトリ（`packages.mozilla.org`）から入れる。動作確認は Chrome 157.0.8103.78・Brave 157.1.99.57・Firefox 160.0、Node.js 24.22.2（確かめの記録は [`research/browser-automation-probe.md`](decisions/research/browser-automation-probe.md)）。ツールの実行には要らないので、動作前提環境には含めない。
 
 コンテナ [c3c](https://github.com/JJ1XGO/c3c) 上でも同じ手順で動く。コンテナで動かすときは、checkout と
 データ置き場をマウントし、`params/config.ini` の `DATA_DIR` をコンテナ内のパスにする。
