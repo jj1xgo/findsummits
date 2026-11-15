@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ブラウザの駆動の確かめ（#299）</title>
+</head>
+<body>
+<p>cdp_probe.js・bidi_probe.js が file:// で開き、9 つの能力を確かめるページ。</p>
+<button id="dl" type="button">ダウンロード</button>
+<input id="f" type="file">
+<canvas id="c" width="4" height="4"></canvas>
+<div id="pad" style="width: 200px; height: 100px; background: #ccc;">入力の受け口</div>
+<script>
+  "use strict";
+  var out = {pointer: {down: 0, move: 0, up: 0}};
+  window.R = out;
+  document.getElementById("dl").onclick = function () {
+    var b = new Blob(['{"x":1}'], {type: "application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = "probe-dl.json";
+    document.body.appendChild(a);
+    a.click();
+  };
+  document.getElementById("f").onchange = function (e) {
+    e.target.files[0].text().then(function (t) { out.file = t; });
+  };
+  addEventListener("storage", function (e) { out.storage = {key: e.key, newValue: e.newValue}; });
+  var pad = document.getElementById("pad");
+  pad.addEventListener("pointerdown", function () { out.pointer.down += 1; });
+  pad.addEventListener("pointermove", function () { if (out.pointer.down > out.pointer.up) { out.pointer.move += 1; } });
+  pad.addEventListener("pointerup", function () { out.pointer.up += 1; });
+  var c = document.getElementById("c").getContext("2d");
+  c.fillStyle = "rgb(255,0,0)";
+  c.fillRect(0, 0, 4, 4);
+  window.pixel = function () { return Array.from(c.getImageData(0, 0, 1, 1).data); };
+  window.padCenter = function () {
+    var r = pad.getBoundingClientRect();
+    return {x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2)};
+  };
+  window.measure = function () {
+    return new Promise(function (resolve) {
+      var start = performance.now();
+      var last = start;
+      var frames = 0;
+      var maxMs = 0;
+      function step(t) {
+        frames += 1;
+        if (t - last > maxMs) { maxMs = t - last; }
+        last = t;
+        if (t - start < 200) { requestAnimationFrame(step); } else { resolve({frames: frames, max_ms: maxMs}); }
+      }
+      requestAnimationFrame(step);
+    });
+  };
+  window.net = async function () {
+    try {
+      var r = await fetch("https://probe.invalid/ok.txt");
+      out.ok = {status: r.status, body: await r.text()};
+    } catch (e) { out.ok = {err: e.name}; }
+    try {
+      var r2 = await fetch("https://probe.invalid/fail.txt");
+      out.fail = {status: r2.status};
+    } catch (e) { out.fail = {err: e.name}; }
+    return {ok: out.ok, fail: out.fail};
+  };
+</script>
+</body>
+</html>
