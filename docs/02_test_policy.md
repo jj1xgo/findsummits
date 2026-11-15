@@ -111,7 +111,7 @@ IT は、内部結合のつなぎ目を確かめてから、外部結合のつ�
 - Pythonスクリプトのテストは [`01_environment.md`「Python 環境セットアップ」](01_environment.md#python-環境セットアップ) に記載のvenv（`venv/bin/python3`）で行う
 - 作業用 HTML ビューアをブラウザで確かめるケース（自動・手動とも）は、対象ファイル（`merged_viewer.html` 等）を `file://` で直接開く形式で行う（[6.2.5](20_SRS.md#625-作業用-html-ビューア) の動作環境定義に準ずる。HTTPサーバ不要）
 - 公開用ビューアをブラウザで確かめるケース（自動・手動とも）は、静的ホスティングの配信先 URL を開いて行う（[6.2.7](20_SRS.md#627-公開用ビューア閲覧専用静的ホスティング配信)）
-- ブラウザの中の値を読む自動のケースのテストのコードは、Chrome・Brave を Chrome DevTools Protocol で、Firefox を WebDriver BiDi で動かす自前の層を使い、npm の依存とブラウザのドライバを使わない（[ADR-OPS-010](decisions/ADR-OPS-010-browser-automation-without-npm.md)）。層の置き場と使い方は LLD で決める。応答時間とフレーム時間はページの中で測った値を、タブのメモリは ADR-OPS-010 の Decision 2 の読み方で読む
+- ブラウザの中の値を読む自動のケースのテストのコードは、Chrome・Brave を Chrome DevTools Protocol で、Firefox を WebDriver BiDi で動かす自前の層を使い、npm の依存とブラウザのドライバを使わない（[ADR-OPS-010](decisions/ADR-OPS-010-browser-automation-without-npm.md)）。層の置き場と使い方は LLD で決める。フレーム時間はページの中で測った値を読む。タブのメモリは記録だけの値で、ST の定義（ブラウザのタスクマネージャ）のまま人が読んで記録してよい（ADR-OPS-010 の Decision 2）
 - 回すブラウザ: push・プルリクエストの CI では Chrome と Firefox で回す（CI へのつなぎ込みは実装の段で行う）。手元では、入っているもの（Chrome・Brave・Firefox）で回す。Firefox は安定版を対象の版とする。Safari は下の「人が補う操作」で行う
 - ブラウザが無いとき: 実行ファイルが見つからないブラウザのケースは、not run と明示して飛ばし、テストの実行は失敗にしない。見つかったのに起動・接続に失敗したら、テストの失敗にする。CI では Chrome と Firefox が無ければ失敗にする。テストの出力には、走らせたブラウザの版とチャンネルを出す。正式な実行で飛ばした組み合わせと、ESR の Firefox で回した結果は、[5.4](#54-未実施ケースの扱い) の未実施として記録する（ESR は安定版で再実施する）
 - 人が補う操作（Safari）: 手順書のとおり人が画面を操作し、手順書の読み取りの文を開発者ツールのコンソールで実行して値の JSON を保存する。テストのコードがその JSON を期待と照合する（[3.1](#31-自動テストと手動確認の役割分担) の「手順の一部を人が行うこと」は手動にする理由にしない）

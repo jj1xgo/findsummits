@@ -25,8 +25,8 @@
 | 4 | ファイル選択に渡す | LLD 9.2 の UT（除外判断ファイルの読み込み） |
 | 5 | ダウンロードの中身を取る | LLD 9.2 の UT（申請書・ZIP・除外判断ファイルの保存）、ST のダウンロードの記録 |
 | 6 | 2 つのタブで localStorage と `storage` イベントを共有する | LLD 9.2 の UT（別の画面での変更の読み直し） |
-| 7 | 応答時間とフレーム時間の実測をテストのコードが読む（ページの中の `performance.now()` と `requestAnimationFrame` で測った値） | ST の測定（`ST-NFR-008-01`・`ST-NFR-010-01`） |
-| 8 | タブのメモリをテストのコードが読む | ST の測定（`ST-NFR-002-02`。記録だけの値） |
+| 7 | フレーム時間の実測をテストのコードが読む（ページの中の `performance.now()` と `requestAnimationFrame` で測った値。確かめたのは操作の無いときのフレーム間隔まで） | ST の測定（`ST-NFR-008-01`・`ST-NFR-010-01`） |
+| 8 | メモリの値をテストのコードが読む（JS ヒープと、プロセスのグループの RSS の和。補助の値） | ST の測定（`ST-NFR-002-02`。記録だけの値。正式な値はタブのメモリの最大で、ブラウザのタスクマネージャで人が読む。ADR-OPS-010 の Decision 2） |
 | 9 | 実際の入力を送る（押す・動かす・離す） | ST の連続操作の測定（`ST-NFR-010-01`。地図を動かす） |
 
 能力 1〜6 は LLD 9.2 の画面の関数（HLD 3.7.3・3.8.3 の「置き場」が「画面」の 28 個）と、9.1 から 9.2 への伝言から挙げた。7〜9 は、ST の「ブラウザの測定」の段落がこの Issue に送った測定の分。
@@ -47,7 +47,7 @@
 | 8 | 通った（`Performance.getMetrics` の `JSHeapUsedSize` 984164、RSS の和 2286976 KiB） | 通った（980616、1249344 KiB） | 通った（JS ヒープは読めない。RSS の和 1384328 KiB） |
 | 9 | 通った（`Input.dispatchMouseEvent`。`pointerdown` 1・`pointermove` 2・`pointerup` 1） | 通った（同じ） | 通った（`input.performActions`。同じ） |
 
-- 能力 8 の RSS の和は、起動したプロセスのグループの `/proc/<pid>/status` の `VmRSS` を足したもの。プロセスの間で共有するページを重ねて数えるので、実際の使用量より上に偏る。JS ヒープを読む命令は Chrome DevTools Protocol にだけあり、WebDriver BiDi には無い。
+- 能力 8 の RSS の和は、起動したプロセスのグループの `/proc/<pid>/status` の `VmRSS` を足したもの。ブラウザ全体の値で、タブだけの値ではなく、プロセスの間で共有するページを重ねて数えるので、実際の使用量より上に偏る。そのため、`ST-NFR-002-02` の正式な値（タブのメモリの最大）にはしない。JS ヒープを読む命令は Chrome DevTools Protocol にだけあり、WebDriver BiDi には無い。
 - 走らせた後に、起動したブラウザのプロセスが残っていないことを `ps` で確かめた。
 
 ## 比べた結果
@@ -95,5 +95,6 @@ node docs/decisions/research/browser-automation-probe/bidi_probe.js /usr/lib/fir
 - Safari と safaridriver（この機械には無い。[#338](https://github.com/jj1xgo/findsummits/issues/338)「Safari（持ち主の Mac）で #197 の確かめ用のページを測る」の機会に確かめる）。
 - Windows・macOS での Chrome・Brave・Firefox。
 - ヘッドありの起動。
+- 入力の処理時間と画面が変わるまでの時間（`ST-NFR-010-01`）を、入力と測りを結んで読むこと（能力 7 は操作の無いときのフレーム間隔、能力 9 は入力のイベントの数だけを確かめた）。
 - https の配信先を開くこと（公開用ビューアのケース）。
 - CI のランナーの上で道具を走らせること。

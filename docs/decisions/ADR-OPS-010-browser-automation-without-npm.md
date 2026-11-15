@@ -17,17 +17,17 @@
 - 道具が要る能力は 9 つ: `file://` で開く、通信の記録と応答・失敗の注入、Canvas の画素を読む、ファイル選択に渡す、ダウンロードの中身を取る、2 つのタブで localStorage と `storage` イベントを共有する、応答時間とフレーム時間の実測を読む、タブのメモリを読む、実際の入力を送る。
 - 計算の要素の単体テストは、Node.js に同梱の `node:test` で回していて、ほかのパッケージが要らない（概要設計書の [DEC131](../30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」）。リポジトリに npm の依存は無い。
 
-確かめの記録は [`research/browser-automation-probe.md`](research/browser-automation-probe.md)。Chrome 157・Brave 157・Firefox 160.0 で、9 つの能力がどれも通った。
+確かめの記録は [`research/browser-automation-probe.md`](research/browser-automation-probe.md)。Chrome 157・Brave 157・Firefox 160.0 で、9 つの能力がどれも通った。ただし、能力 7 で確かめたのは操作の無いときのフレーム間隔を読むことまでで、システムテストの `ST-NFR-010-01` が求める入力の処理時間と画面が変わるまでの時間は確かめていない（Decision 7）。
 
 ## Decision
 
 1. **道具**: テストのコードは、Chrome・Brave を Chrome DevTools Protocol で、Firefox を WebDriver BiDi で動かす自前の薄い層を使う。層は Node.js の組み込みの `fetch` と `WebSocket` で話し、npm のパッケージとブラウザのドライバ（chromedriver・geckodriver）を使わない。テストの枠組みは `node:test` のまま。ADR-OPS-007 の Decision 6 が #299 に送った道具の決定を、本 ADR で行う。道具の名前はテスト方針書 §4 に書く。
-2. **読み方**: 応答時間とフレーム時間はページの中の `performance.now()` と `requestAnimationFrame` で測った値を読む。タブのメモリは、Chrome・Brave は Chrome DevTools Protocol の `Performance.getMetrics` の `JSHeapUsedSize` を、どのブラウザも起動したプロセスのグループの RSS の和を読む（WebDriver BiDi には JS ヒープを読む命令が無い。RSS の和は共有のページを重ねて数えるので上に偏る）。実際の入力は、Chrome・Brave は `Input.dispatchMouseEvent`、Firefox は `input.performActions` で送る。
+2. **読み方**: フレーム時間は、ページの中の `performance.now()` と `requestAnimationFrame` で測った値を読む。実際の入力は、Chrome・Brave は `Input.dispatchMouseEvent`、Firefox は `input.performActions` で送る。タブのメモリは、概要設計書の 5.2.2 の 4「測り方」と `ST-NFR-002-02` の定義（処理の始まりから終わりまでのタブのメモリの最大を、ブラウザのタスクマネージャで測る）のままとし、本 ADR では変えない。記録だけの値なので、どのブラウザでも人がタスクマネージャ（Safari は OS の道具）で読んで記録してよい（テスト方針書 3.1）。層で読める値（Chrome・Brave の Chrome DevTools Protocol の `Performance.getMetrics` の `JSHeapUsedSize` と、起動したプロセスのグループの RSS の和）は、タブのメモリとは測る対象が違う（RSS の和はブラウザ全体で、共有のページを重ねて数える）ので、正式な値にしない。
 3. **どこで回すか**: push・プルリクエストの CI では Chrome と Firefox で回す（GitHub Actions の Ubuntu のランナーにある）。手元では、入っているもの（Chrome・Brave・Firefox）で回す。Firefox は安定版を対象の版とする。Safari は持ち主の Mac で人が補う。
 4. **ブラウザが無いとき**: 実行ファイルが見つからないブラウザのケースは、not run と明示して飛ばし、テストの実行は失敗にしない（ブラウザの無いコンテナと、CI の Brave のため）。見つかったのに起動・接続に失敗したら、テストの失敗にする（起動の失敗が not run に紛れないため）。CI では Chrome と Firefox が無ければ失敗にする。走らせたブラウザの版とチャンネルを出力に出す。正式な実行で飛ばした組み合わせと、ESR の Firefox で回した結果は、テスト方針書 5.4 の未実施として記録する（ESR は安定版で再実施する）。
-5. **人が補う操作（Safari）**: 手順書のとおり人が画面を操作し、手順書の読み取りの文を開発者ツールのコンソールで実行して値の JSON を保存する。テストのコードがその JSON を期待と照合する（ADR-OPS-007 の Decision 2 の「手順の一部を人が行うこと」）。
+5. **人が補う操作（Safari）**: 手順書のとおり人が画面を操作し、手順書の読み取りの文を開発者ツールのコンソールで実行して値の JSON を保存する。テストのコードがその JSON を期待と照合する（ADR-OPS-007 の Decision 2 の「手順の一部を人が行うこと」）。読み取りの文で読めない記録だけの値（タブのメモリ）は、Decision 2 のとおり人が読んで記録する。
 6. **プロセスの扱い**: 層はブラウザを毎回新しいプロファイルで、プロセスのグループとして起動し、終わりにグループごと止める（Brave の起動のコマンドはラッパーで、子のプロセスへの `kill` が本体に届かなかった）。
-7. **決めないこと**: 層の置き場とファイル名、ブラウザのコマンド名と差し替えの方法、CI で「無ければ失敗」にする印、not run の出し方は、詳細設計書の 9.2 で決める。CI へのつなぎ込み（`make test` の段、Node.js 24 の指定）と `make test` のターゲットは、実装の段で行う。ヘッドありで起動するか、https の配信先を開くことは確かめていないので、結合テストとシステムテストのテストのコードを書くときに確かめる。
+7. **決めないこと**: 層の置き場とファイル名、ブラウザのコマンド名と差し替えの方法、CI で「無ければ失敗」にする印、not run の出し方は、詳細設計書の 9.2 で決める。CI へのつなぎ込み（`make test` の段、Node.js 24 の指定）と `make test` のターゲットは、実装の段で行う。ヘッドありで起動するか、https の配信先を開くこと、入力の処理時間と画面が変わるまでの時間（`ST-NFR-010-01`。入力と測りを結んだ値）を層で読めるかは確かめていないので、結合テストとシステムテストのテストのコードを書くときに確かめる。
 
 ## Alternatives
 
@@ -42,5 +42,6 @@
 - Safari は人が補う。safaridriver で自動にできるかは、[#338](https://github.com/jj1xgo/findsummits/issues/338)「Safari（持ち主の Mac）で #197 の確かめ用のページを測る」の機会に確かめる。
 - Firefox は安定版（160.0）で確かめた。ESR（153.5.1）では、決める前の試しで能力 1〜6 だけを確かめた。
 - ブラウザを起動するので、`make test` の時間が延びる。
+- 結合テスト仕様書には、開発者ツールで要求や応答を照合するのに `（手動）` の付いたケース（`IT-CMP7-EXT3-01` など）が残っている。その判定し直し（[#300](https://github.com/jj1xgo/findsummits/issues/300)「IT の手動のケースを、自動と手動の新しい分け方で判定し直す」）は、本 ADR の層を前提に行う。
 - ブラウザの無い環境（コンテナなど）では、画面のテストはすべて not run になる。そこで単体テストや試し書きを回すかは、詳細設計書の 9.2 を書くときに決める。
 - テスト方針書 §4、環境定義の「開発環境」、概要設計書 3.7.3 の「画面」の段落、システムテスト仕様書の「ブラウザの中で確かめるケース」と「ブラウザの測定」の段落を、本 ADR に合わせて直した。ADR-OPS-007 の Consequences に、本 ADR で決めたことを追記した。
