@@ -3,13 +3,13 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-15 |
+| 最終更新日 | 2026-11-16 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
 ---
 
-**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「保存と引き継ぎ」〈計算の 7 つすべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「出力」〈計算の 10 すべて〉と「地図の描画」〈計算の 19 すべて〉と「3.9 と同じ決まり」と「画面」〈計算の 2 つすべて〉と「公開用」〈計算の 5 つすべて〉の群。HLD 3.7.3・3.8.3 の計算の関数のすべて）と、それらが使う分の 1 章と 2.2〜2.5 だけを書いてある。ほかのモジュールの節は、書くときに足す。
+**読み方**: この文書は詳細設計書（LLD）である。概要設計書（HLD）が決めたプログラムと関数の名前、受け取るもの、返すものの上に、関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を足す（書き分けは[文書管理ルール](CLAUDE.md#hld-と-lld-の書き分け)）。LLD の次は実装フェーズ（COD）と単体テスト（UT）で、LLD の字句と上位の文書だけで、コードと単体テストのコードを書ける細かさにすることを目標にする（2026-10-18 に持ち主が決めた）。コードを書く側は、LLD に加えて、ユーザー要件定義書（URD）、ソフトウェア要件仕様書（SRS）、HLD と、関連する文書を読める前提にする。上位の文書に決まっていることは写さずにリンクで指し、どの文書にも決まっていないことをこの文書で決め切る。章立てとモジュールの単位は、アーキテクチャ決定記録（ADR）の [ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) による。今は 2.1 共通部品と 3.1 `preprocess_boundaries`（行政区域前処理）と 4.1 `fetch_tiles`（タイル取得）と 5.1 `run_pipeline`（パイプライン制御）と 5.2 `resolve_config`（設定解決）と 6.1 `analyze_terrain_launch`（地形解析エンジンの起動）と 6.2 `analyze_terrain_target`（地形解析エンジンの対象）と 6.3 `analyze_terrain_window`（地形解析エンジンの窓と省略）と 6.4 `analyze_terrain_grid`（地形解析エンジンのタイルとグリッド）と 6.5 `analyze_terrain_image`（地形解析エンジンの標高地形図）と 6.6 `analyze_terrain_scan`（地形解析エンジンの走査）と 6.7 `analyze_terrain_csv`（地形解析エンジンの CSV と早期終了）と 6.8 `analyze_terrain_zone`（地形解析エンジンのゾーン）と 6.9 `analyze_terrain_record`（地形解析エンジンの出力の記録）と 6.10 `analyze_terrain_convert`（地形解析エンジンの変換）と 6.11 `analyze_terrain_stage`（地形解析エンジンの段の進行）と 6.12 `analyze_terrain_common`（地形解析エンジンの共通部品）と 7.1 `cmp5_common`（統合・突合のコンポーネント内の共通部品）と 7.2 `merge_peaks`（ピーク候補の統合）と 7.3 `merge_zones`（ゾーンの統合）と 7.4 `check_cols`（コル充足判定）と 7.5 `match_summits`（SOTA リストとの突合）と 8.1 `generate_viewer`（HTML ビューア生成）と 9.1 `index_calc`（`index.html` の計算。今は「起動」と「編集の記録と現在の状態」〈7 つの関数すべて〉と「保存と引き継ぎ」〈計算の 7 つすべて〉と「除外判断ファイル」〈計算の 4 つすべて〉と「出力」〈計算の 10 すべて〉と「地図の描画」〈計算の 19 すべて〉と「3.9 と同じ決まり」と「画面」〈計算の 2 つすべて〉と「公開用」〈計算の 5 つすべて〉の群。HLD 3.7.3・3.8.3 の計算の関数のすべて）と 9.2 `index_screen`（`index.html` の画面。今は「起動」の 2 つと「画面」の 2 つ）と、それらが使う分の 1 章と 2.2〜2.6（2.6 はブラウザを動かすテストの層）だけを書いてある。ほかのモジュールの節は、書くときに足す。
 
 ## 目次
 
@@ -27,6 +27,7 @@
   - [2.3 ファイルの名前と書き方](#23-ファイルの名前と書き方)
   - [2.4 言語ごとに別に実装する式のテストベクトル](#24-言語ごとに別に実装する式のテストベクトル)
   - [2.5 ビルドとテストの名前](#25-ビルドとテストの名前)
+  - [2.6 ブラウザを動かすテストの層](#26-ブラウザを動かすテストの層)
 - [3. CMP1 行政区域前処理](#3-cmp1-行政区域前処理)
   - [3.1 `preprocess_boundaries`](#31-preprocess_boundaries)
     - [3.1.1 ファイル割付](#311-ファイル割付)
@@ -172,6 +173,12 @@
     - [9.1.3 関数の細部](#913-関数の細部)
     - [9.1.4 メッセージ文面](#914-メッセージ文面)
     - [9.1.5 UT 候補](#915-ut-候補)
+  - [9.2 `index_screen`](#92-index_screen)
+    - [9.2.1 ファイル割付](#921-ファイル割付)
+    - [9.2.2 型とデータ](#922-型とデータ)
+    - [9.2.3 関数の細部](#923-関数の細部)
+    - [9.2.4 メッセージ文面](#924-メッセージ文面)
+    - [9.2.5 UT 候補](#925-ut-候補)
 
 ## 1. 用語定義と規約
 
@@ -216,10 +223,10 @@
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - CMP7（申請書生成 UI）・CMP8（公開用ビューア）の `index.html` の JavaScript の規約（[9](#9-cmp7-申請書生成-ui) のモジュールが従う）:
   - ファイル: CMP7・CMP8 のプログラムは `public/index.html` 1 本（[HLD 3.7.1](30_HLD.md#371-プログラム)、[DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」）。JavaScript は HTML に書き込んだ普通の script 要素に書き、`type="module"`・`import`・`export` を使わない（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）。[9.1](#91-index_calc) の関数は計算の要素 1 つに置き、9.2 の関数はほかの要素に置く（[HLD 3.7.3](30_HLD.md#373-関数)の「置き場」）。UT のコードは、モジュールごとに `tests/public/test_<モジュール名>.js` の 1 本（9.1 は `tests/public/test_index_calc.js`。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。要素の中とテストのファイルの先頭のコメントに `// trace: LLD-<モジュール名>` を書き、テストの各ケースの直前に `// trace: UT-<モジュール名>-NN` を書く（`tools/lint_trace.py` がこの形を読むようにするのは [#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」で行う）。
-  - 言語の水準: ECMAScript 2020 までの構文と標準の組み込みだけを使う（DEC130。正はこの 1 文で、次の列挙は例）。ECMAScript の外のグローバル（`TextEncoder`・`TextDecoder` などのブラウザの API）を計算の要素で使うかと、テストの文脈への渡し方は、それを使う群を書くときに決める（9.1 の除外判断ファイルの群の決めは [9.1.1](#911-ファイル割付)）。使わないものの例（ES2021 以降）: 論理代入（`??=`・`||=`・`&&=`）、数の区切りの `_`、`String.prototype.replaceAll`、`Array.prototype.at`・`findLast`、`Object.hasOwn`、クラスのフィールドと `#` の名前、`static` のブロック、`Promise.any`、`AggregateError`、`WeakRef`、正規表現の `d`・`v` の旗、`Array.prototype.toSorted`・`toReversed`・`toSpliced`・`with`・`findLastIndex`、`Object.groupBy`、`Set.prototype.union` などの集合のメソッド。`?.`・`??` は使ってよい。各要素の中身は `// trace:` のコメントの次に `'use strict';` を置き、宣言は `const`・`let`・`function` で書く（`var` を使わない）。
+  - 言語の水準: ECMAScript 2020 までの構文と標準の組み込みだけを使う（DEC130。正はこの 1 文で、次の列挙は例）。ECMAScript の外のグローバル（`TextEncoder`・`TextDecoder` などのブラウザの API）を計算の要素で使うかと、テストの文脈への渡し方は、それを使う群を書くときに決める（9.1 の除外判断ファイルの群の決めは [9.1.1](#911-ファイル割付)）。使わないものの例（ES2021 以降）: 論理代入（`??=`・`||=`・`&&=`）、数の区切りの `_`、`String.prototype.replaceAll`、`Array.prototype.at`・`findLast`、`Object.hasOwn`、クラスのフィールドと `#` の名前、`static` のブロック、`Promise.any`、`AggregateError`、`WeakRef`、正規表現の `d`・`v` の旗、`Array.prototype.toSorted`・`toReversed`・`toSpliced`・`with`・`findLastIndex`、`Object.groupBy`、`Set.prototype.union` などの集合のメソッド。`?.`・`??` は使ってよい。各要素の中身は `// trace:` のコメントの次に `'use strict';` を置き、宣言は `const`・`let`・`function` で書く（`var` を使わない）。ただし、ページの始めの要素（[9.2.1](#921-ファイル割付)）は、関数も宣言も持たず呼び出しの 1 文だけなので、この決まりを当てない。
   - 名前（[HLD 3 章](30_HLD.md#3-プログラム構造)の冒頭の決まり）: ほかのモジュールから呼ぶ関数は [HLD 3.7.3](30_HLD.md#373-関数)・[3.8.3](30_HLD.md#383-関数)の名前（英小文字・数字・`_`）。LLD が足す内部の関数と定数は `_` と英小文字で始める（`_mesh_code_re` のように）。同じページの普通の script 要素は最上位の名前を共有するので、要素をまたいで同じ名前を宣言しない。
   - 型の書き方（上の「型は、そのモジュールの言語の書き方で書く」）: JavaScript は型を宣言しないので、関数の見出しの下に `name(arg: 型, …) -> 型` の形で、JSDoc の型の書き方（`string`・`number`・`boolean`・`Array<number>`・`[number, number]`〈長さ 2 の配列〉・`'a' | 'b'`・`*`〈何でもよい〉）で書く。コードに JSDoc のコメントは書かなくてよい。オブジェクトは `{key: 型, …}` で書き、モジュールの「型とデータ」で名前を付けた形（[9.1.2](#912-型とデータ) の `EditRecord` など）はその名前で書く。
-  - 止まり方: 計算の要素の関数は、呼び出しの誤り（HLD の表が受け取らないとした値）を見つけたら、組み込みの `RangeError` か `TypeError` を `throw` する（どちらを投げるかは関数の見出しの下に書く）。利用者への知らせは画面の要素が出す（9.2）。
+  - 止まり方: 計算の要素の関数は、呼び出しの誤り（HLD の表が受け取らないとした値）を見つけたら、組み込みの `RangeError` か `TypeError` を `throw` する（どちらを投げるかは関数の見出しの下に書く）。利用者への知らせは画面の要素が出す（9.2）。画面の要素の関数も、呼び出しの誤り（HLD の表が受け取らないとした値）は `TypeError` を `throw` する。利用者に見える失敗は `notify` で知らせ、例外にしない（[9.2](#92-index_screen)）。
   - テストの枠組み（[DEC131](30_HLD.md#4134-設計判断)「バイト列の処理は名前付き script 要素に置く」、[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）: Node.js に同梱の `node:test` と `node:assert/strict` を `require` で読む（テストのファイルは CommonJS。ES2020 の制限はテストのファイルには掛けない。Node.js の版と `make test` への組み込みは [2.5](#25-ビルドとテストの名前)）。
 - 利用者向けの Python のコマンド（[3.1](#31-preprocess_boundaries) の `preprocess_boundaries`・[4.1](#41-fetch_tiles) の `fetch_tiles`）は、起動の部分の内部の関数 `_parse_args` で引数を読み、bash の `run_pipeline`（[5.1.3](#513-関数の細部)の `parse_args`）と同じ受け方にする: 引数を左から 1 つずつ読む。値をとる名前は、次の引数（`--config a.ini`）か、名前の後の `=` の後（`--config=a.ini`。最初の `=` で分ける）で値を受け取り、次の引数で受け取る値は `-` で始まっていてもそのまま値にする。受け付けない引数（`--` で始まらない引数、知らない名前、値をとらない名前に `=` を付けたもの〈`--help=x`〉、`--` だけ）、値をとる名前が最後にあって値が無いこと、同じ名前を 2 回渡すこと（`--help` を除く。名前を読んだ時点で、値を受け取るより先に見る）は、その場で終了コード 2 で止める。名前の省略（`--conf`）は受けない。`--help` を読んだら、それより後の引数を読まずに、使い方の文を標準出力に出して終了コード 0 で終わる（設定を読まず、ロックを掛けない。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。`--help` より前の引数の誤りは、先に止まる。`argparse` は使わない（名前の省略を受け、誤りのメッセージが [2.2](#22-ログとメッセージの文面) の書き方にならないため）。メッセージの文面と使い方の文は、モジュールの節に置く。3.1 と 4.1 が共有する規約なので、横断の決まりとしてここに置く。
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
@@ -829,7 +836,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 
 ### 2.5 ビルドとテストの名前
 
-[HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分と、CMP7・CMP8 の `index.html` の UT のファイルと起動の分だけを書いてある。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
+[HLD 2.6.1](30_HLD.md#261-目的と範囲)の対象外の行は、Makefile の個々のターゲット名と変数名、テスト用の実行ファイルの名前を LLD に送っている。どのプログラムにも属さない項目なので、ここに置く（ADR-LLD-001 の Decision 7）。今は CMP4（地形解析エンジン）の C++ の分と、CMP7・CMP8 の `index.html` の UT のファイルと起動の分だけを書いてある（ブラウザを動かすテストの層の置き場と名前は [2.6](#26-ブラウザを動かすテストの層)）。コンパイルとリンクの指定の正本は [HLD 2.6.5](30_HLD.md#265-ビルド構成)の表で、ここには写さない。
 
 - CMP4 の実行ファイルは `build/analyze_terrain`（[HLD 3.4.1](30_HLD.md#341-プログラム)）。`src/` の `.cpp` をすべてコンパイルしてリンクする。`main` を持つのは `src/analyze_terrain.cpp` だけ（[6.1](#61-analyze_terrain_launch)）。
 - テスト用の実行ファイルは、`tests/src/test_<群の名前>.cpp` ごとに 1 本の `build/test_<群の名前>`（6.12 は `build/test_common`、6.1 は `build/test_launch`、6.2 は `build/test_target`、6.3 は `build/test_window`、6.4 は `build/test_grid`、6.5 は `build/test_image`、6.6 は `build/test_scan`、6.7 は `build/test_csv`、6.8 は `build/test_zone`、6.9 は `build/test_record`、6.10 は `build/test_convert`、6.11 は `build/test_stage`。`<群の名前>` は 1.2 の C++ の規約のとおり）。そのテストのファイルと、`src/` の `.cpp` のうち `main` を持たないものすべてをコンパイルし、GoogleTest の `gtest_main` とリンクする（`main` は `gtest_main` のもの）。
@@ -837,7 +844,37 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 - 呼ぶ順などを確かめる試験用の実行ファイル `build/flow_stage`（[6.11.1](#6111-ファイル割付)）: `tests/src/flow_stage.cpp`・`tests/src/stub_analysis.cpp` と、`src/stage.cpp`・`src/common.cpp`・`src/convert.cpp`・`src/target.cpp` をコンパイルし、GoogleTest の `gtest_main` とリンクする（指定はテスト用の実行ファイルと同じ）。`tests/src/test_<群の名前>.cpp` の形にしないのは、上の決まり（`main` を持たない `src/` の `.cpp` をすべてリンクする）を Makefile のパターンで当てたとき、スタブの定義が無く、本物をリンクした実行ファイルがリンクに失敗するのを避けるため（`build/test_launch_main` と同じ扱い）。この実行ファイルは `build/test_launch_main` と違い、それ自身がテストの実行ファイルなので、`make test` が実行する。
 - コンパイルとリンクの指定は HLD 2.6.5 の表のとおりで、テスト用の実行ファイルは `pkg-config --cflags --libs gtest_main` を足す。インクルードの探索先に `src` を足す（`-I src`）。中間のファイルは `build/obj/` に置く。
 - `make test` は、`build/test_launch_main`・`build/flow_stage` とテスト用の実行ファイルをすべてビルドし（`build/test_launch_main` は実行しない。`build/test_launch` が起動する）、`build/flow_stage` もテスト用の実行ファイルとして順に実行し、テスト用の実行ファイルを順に実行し、続けて `tests/scripts/` のテストを `venv/bin/python3 -m unittest discover -s tests/scripts -t .` で実行し、続けて `tests/public/` のテストを `node --test 'tests/public/test_*.js'` で実行し（グロブは引用符で囲んで Node.js に渡す）、どれかが 0 以外で終われば 0 以外で終わる（HLD 2.6.5 の表の `make test`。Node.js の版は[環境定義](01_environment.md)のとおり。Python の枠組みは[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
-- CMP7・CMP8 の `index.html` の UT は、モジュールごとに 1 本の `tests/public/test_<モジュール名>.js`（[9.1](#91-index_calc) は `tests/public/test_index_calc.js`。[1.2](#12-lld-の規約)の JavaScript の規約）で、本体ルートで `node --test tests/public/test_index_calc.js` で実行する。`make test` での実行は上の箇条のとおり。
+- CMP7・CMP8 の `index.html` の UT は、モジュールごとに 1 本の `tests/public/test_<モジュール名>.js`（[9.1](#91-index_calc) は `tests/public/test_index_calc.js`。[1.2](#12-lld-の規約)の JavaScript の規約）で、本体ルートで `node --test tests/public/test_index_calc.js` で実行する。`make test` での実行は上の箇条のとおり。[9.2](#92-index_screen) は `tests/public/test_index_screen.js` で、ブラウザを [2.6](#26-ブラウザを動かすテストの層)の層で動かす（ブラウザが見つからなければ、そのブラウザのケースは not run になる）。
+
+### 2.6 ブラウザを動かすテストの層
+
+[ADR-OPS-010](decisions/ADR-OPS-010-browser-automation-without-npm.md) の Decision 7 は、ブラウザを動かすテストの層の置き場とファイル名、ブラウザのコマンド名と差し替えの方法、CI で「無ければ失敗」にする印、not run の出し方を LLD に送った。ここで決める。層は、CMP7・CMP8 の `index.html` の画面の UT（[9.2](#92-index_screen)）と、後で書く結合テスト（IT）とシステムテスト（ST）のブラウザのケースが使う。どのプログラムにも属さないので、横断の節に置く（ADR-LLD-001 の Decision 7）。層は試験の道具で、製品のコードではない（追跡の宣言も UT 候補も持たない。層の確かめは、9.2 の UT が層を使って通ることと、調査の記録 [browser-automation-probe](decisions/research/browser-automation-probe.md) の 9 つの能力の手順で行う）。
+
+1. **置き場**: `tests/public/browser.js` の 1 本（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の `tests/public/` の行の下の、テストの補助のファイル。`tests/src/stub_stage.cpp` が `tests/src/` のテストの補助であるのと同じ扱い）。CommonJS で、`require('./browser.js')` で読む。`node --test 'tests/public/test_*.js'` の形に当たらない名前なので、テストとしては実行されない。先頭のコメントに `// 試験の道具（LLD 2.6）。製品のコードではない。` を書く（`trace:` は書かない。追跡の対象でないため）。Node.js の組み込み（`node:child_process`・`node:fs`・`node:path`・`node:os`・`node:crypto`・`node:url`、グローバルの `fetch`・`WebSocket`）だけを使う。ECMAScript 2020 の制限は掛けない（テストのファイルと同じ。[1.2](#12-lld-の規約)）。
+2. **公開する名前**: `module.exports = {BROWSERS, find_browser, required_browsers, launch, load_test_lib, lib_routes}` の 6 つ（`Session`・`Page` は `launch`・`Session.open` が返すオブジェクトで、名前としては公開しない）。`BROWSERS` は定数で、型は `Array<{name: string, command: string, env: string, protocol: 'cdp' | 'bidi'}>`。次の表の行をこの順に並べ、`Object.freeze` で凍らせる。テストのファイルはこの順で `describe` を立てる。
+
+   | 名前 | コマンド | 差し替えの環境変数 | 話し方 |
+   |---|---|---|---|
+   | `chrome` | `google-chrome` | `FINDSUMMITS_CHROME` | `cdp`（Chrome DevTools Protocol） |
+   | `brave` | `brave-browser` | `FINDSUMMITS_BRAVE` | `cdp`（Chrome DevTools Protocol） |
+   | `firefox` | `firefox` | `FINDSUMMITS_FIREFOX` | `bidi`（WebDriver BiDi） |
+
+3. **見つけ方** `find_browser(name: 'chrome' | 'brave' | 'firefox') -> string | null`: 表に無い名前は `TypeError`。差し替えの環境変数があり空でなければ、その値を実行ファイルのパスとし、絶対パスで、ファイルがあり実行できる（`fs.accessSync(<値>, fs.constants.X_OK)` が通る）ならそれを返し、そうでなければ `Error`（`<環境変数の名前> の <値> を実行できない`）を投げる（差し替えの誤りを not run に紛れさせないため）。環境変数が無いか空なら、`PATH` を `path.delimiter` で分けた各ディレクトリ（空の要素は飛ばす）の下の `<コマンド>` を順に見て、最初に実行できるものの絶対パスを返し、無ければ `null` を返す（ADR-OPS-010 の Decision 4 の「見つかるかは起動の前に確かめる」）。
+4. **CI の印** `required_browsers() -> Array<string>`: 環境変数 `FINDSUMMITS_REQUIRE_BROWSERS` を `,` で分け、前後の空白を除き、空の要素を除いた名前の配列を返す（無いか空なら `[]`）。表に無い名前があれば `TypeError`。CI の `make test` の段は `FINDSUMMITS_REQUIRE_BROWSERS=chrome,firefox` を渡す（ADR-OPS-010 の Decision 4 の「CI では Chrome と Firefox が無ければ失敗」。`ci.yml` へのつなぎ込みは実装の段で行う）。
+5. **起動** `launch(name, bin, options = {}) -> Promise<Session>`（`options.timeout_ms` は 7 の全体の時間切れ）: ADR-OPS-010 の Decision 6 のとおり。`fs.mkdtempSync(path.join(os.tmpdir(), 'findsummits-browser-'))` の作業ディレクトリの下に `profile/`・`downloads/`・`xdg-config/`・`xdg-cache/` を作る。子の環境は `process.env` を写して `XDG_CONFIG_HOME`・`XDG_CACHE_HOME` を `xdg-config/`・`xdg-cache/` にしたもの（毎回新しいプロファイルで始める決めの延長。`~/.config` が書けない環境でも起動できるため）。`detached: true` でプロセスのグループとして起動する。引数は、`chrome`・`brave` が `--headless=new --no-first-run --no-default-browser-check --user-data-dir=<profile> --remote-debugging-port=0 about:blank`、`firefox` が `--headless --no-remote --profile <profile> --remote-debugging-port=0 about:blank`（調査の記録の道具と同じ）。接続先は、`chrome`・`brave` は `<profile>/DevToolsActivePort` の 1 行目（ポート）と 2 行目（パス）、`firefox` は標準エラー出力の `WebDriver BiDi listening on (ws://127.0.0.1:[0-9]+)` の行（接続は `<その URL>/session`）から取る。待つのは 30 秒まで（200 ms ごとに見る）。起動できない（`spawn` の `error`）、接続先が出ない、接続できない、途中で終わったときは、グループを止めてから `Error` を投げる（見つかったのに起動・接続に失敗したら失敗にする。ADR-OPS-010 の Decision 4）。
+6. **版とチャンネル**: `Session.version` は、`<bin> --version` の出力の前後の空白を除いたもの（`spawnSync` で取る。取れなければ `Error`。`firefox` も同じ。WebDriver BiDi の `browserVersion` は ESR を見分けられない）。`Session.channel` は、`version` を小文字にして `esr`・`beta`・`dev`・`unstable`・`nightly` の語を含めばその語（最初に当たったもの）、どれも含まなければ `'stable'`。テストは起動の後に `t.diagnostic('browser: <名前> <version> (<channel>)')` で出す（ADR-OPS-010 の Decision 4 の「走らせたブラウザの版とチャンネルを出力に出す」）。
+7. **止め方** `Session.close() -> Promise<void>`: 接続を閉じ、グループに `SIGTERM` を送り、100 ms ごとに 20 回まで、グループが残っているか（`process.kill(-pid, 0)`）を見て、残っていれば `SIGKILL` を送り、もう一度 100 ms ごとに 20 回まで見る。それでも残っていれば、作業ディレクトリを消してから `Error`（`ブラウザのプロセスのグループが止まらない: <名前>`）を投げる（止まったことを確かめる。ADR-OPS-010 の Decision 6）。作業ディレクトリは `fs.rmSync(<作業ディレクトリ>, {recursive: true, force: true})` で消す。2 回目からの呼び出しは何もしない。層は起動したグループをモジュールの中の集合に持ち、`process.on('exit')` で残っているグループに `SIGKILL` を送り（同期で）、`SIGINT`・`SIGTERM` を受けたら残っているグループを止めてから、そのシグナルの終了コード（130・143）で終わる（ADR-OPS-010 の Decision 6 の「例外・時間切れ・中断のシグナルのときもグループを止める」）。時間切れは 3 つ。(i) 1 つの命令の応答は 15 秒まで待ち、来なければ `Error`（`応答が無い: <命令の名前>`）を投げる。ただし、読み込みの終わりまで応答を返さない `browsingContext.navigate` だけは、(ii) の 30 秒の方を先に効かせるため、40 秒まで待つ。(ii) `Session.open` の読み込みの終わりは 30 秒まで待ち、来なければタブを閉じてから `Error`（`読み込みが終わらない: <url>`）を投げる（保留したままの `handle` などで読み込みが終わらないときに、待ちが残らないため）。(iii) 全体: `launch` から 300 秒（`options.timeout_ms` で替えられる。既定 300000）を過ぎたら、層はそのセッションの待っている命令と、読み込みの終わりなどのイベントの待ちをすべて `Error`（`時間切れ（全体 <秒> 秒）`）で失敗させ、`close()` を呼ぶ（ADR-OPS-010 の Decision 6 の「時間切れ（全体と 1 つの命令ごと）」。300 秒は、1 つのテストのファイルが 1 つのブラウザで流れる時間の上限の見込み）。閉じ忘れたセッションは、この時間切れで閉じられるまで Node.js のプロセスが終わらない（接続が残るため）ので、テストのファイルは `after` で必ず `close()` を呼ぶ。
+8. **ページ** `Session.open(url: string, routes: Array<Route>) -> Promise<Page>`: 新しいタブ（`chrome`・`brave` は `Target.createTarget` と、`flatten: true` の `Target.attachToTarget`。`firefox` は `type: 'tab'` の `browsingContext.create`）を作り、要求の差し替えを付けてから `url` を開き、読み込みの終わり（`chrome`・`brave` は `Page.loadEventFired`、`firefox` は `wait: 'complete'` の `browsingContext.navigate`）を待って返す。
+   - `Route` は `{prefix: string, handle: (req: {url: string, method: string}) -> Response | Promise<Response>}`。`Response` は `{status: number, headers: Array<[string, string]>, body: string | Buffer}` か、文字列 `'fail'`（通信の失敗にする）。
+   - `https:` と `http:` の要求をすべて止め（`chrome`・`brave` は `urlPattern: 'http*://*'` の `Fetch.enable`。`firefox` は `phases: ['beforeRequestSent']` と、`{type: 'pattern', protocol: 'https'}`・`{type: 'pattern', protocol: 'http'}` の `urlPatterns` と、そのタブだけを指す `contexts` を付けた `network.addIntercept`。返った `intercept` を持ち、`Page.close` で `network.removeIntercept` する。タブごとの差し替えが前のタブに残らないため）、`url` が `prefix` で始まる最初の `Route` の `handle` の値で応える。返す応答の見出しには、`Route` の `headers` に加えて `Cache-Control: no-store` を必ず足し、タブを作ったときにブラウザのキャッシュを切る（`chrome`・`brave` は `Network.enable` の後に `cacheDisabled: true` の `Network.setCacheDisabled`。`firefox` は、そのタブの `contexts` に `cacheBehavior: 'bypass'` の `network.setCacheBehavior`）。同じ `Session` で前のタブが本物を受けた URL を、次のタブで `fail`・外れた本文・保留にできるようにするため（キャッシュから出ると差し替えが効かない）。
+   - どの `Route` にも当たらない要求は `'fail'` にする（ページから外のネットワークへ出さない）。`file:` の要求は止めない。`handle` が Promise を返したときは、決まるまで応答を待たせる（UT が「読み込み中」を作るため）。通信の失敗の注入は、`chrome`・`brave` が `errorReason: 'Failed'` の `Fetch.failRequest`、`firefox` が `network.failRequest`。
+   - `Page.requests` は、止めた要求の `{url, method}` を来た順に並べた配列（通信の記録。ADR-OPS-010 の能力 2）。
+   - `Page.evaluate(expr: string) -> Promise<*>`: ページの中で `(async () => { try { return JSON.stringify({ok: true, value: await (<expr>)}); } catch (e) { return JSON.stringify({ok: false, name: String(e && e.name), message: String(e && e.message)}); } })()` を、Promise を待って文字列の値で受け取る形で評価する（`chrome`・`brave` は `awaitPromise: true`・`returnByValue: true` の `Runtime.evaluate`、`firefox` は `awaitPromise: true` の `script.evaluate`。どちらもページの大域の文脈で評価するので、画面の要素の最上位の `let` の名前も読める）。返った文字列を `JSON.parse` し、`ok` が真なら `value` を返す（無ければ `undefined`）。偽なら `Error`（`ページの中の例外: <name>: <message>`）を作り、`page_error_name` の性質に `name` を入れて投げる（UT が `TypeError` を見分けるため）。評価そのものが失敗したとき（プロトコルの誤り）は、`page_error_name` を持たない `Error` を投げる。
+   - `Page.close() -> Promise<void>`: タブを閉じる。
+   - ファイルの選択とダウンロードの取り方、2 つ目のタブ、実際の入力は、それを使う群を書くときに足す。
+9. **ライブラリの写し** `load_test_lib(file: 'leaflet.js' | 'leaflet.css' | 'xlsx.full.min.js' | 'jszip.min.js') -> Promise<Buffer>`: [9.1.5](#915-ut-候補)の「ライブラリの取得」と同じ決まりで取る。同じディレクトリ（`path.join(__dirname, '..', '..', 'build', 'test-libs')`）と同じファイル名を共有し、Leaflet の 2 つも同じ形で取る。`build/test-libs/` の同じ名前のファイルの sha384 が HLD の [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」の `integrity` と同じならそれを返す。無いか違えば、DEC129 の URL から取って照合して書く（`<ファイル名>.<process.pid>.tmp` に書いてから `fs.renameSync`）。取れないか合わなければ、名前と理由を添えて `Error` を投げる。表に無い名前は `TypeError`。URL と `integrity` は DEC129 の字句を層のコードに書く。9.1.5 の決まりとこの 9 のどちらかを直すときは、もう一方もそろえる。`lib_routes(fail: Array<string>, wrong: Array<string>) -> Array<Route>` は、4 つの URL ごとに 1 つの `Route`（`prefix` は DEC129 の URL そのもの）を返す。`fail` にファイル名があればその URL を `'fail'` にし、`wrong` にファイル名があれば本物の最後の 1 バイトを `0x20` と排他的論理和にした本文（`integrity` に外れる）を返し、どちらでもなければ本物を返す。応答は `status: 200`、`headers: [['Content-Type', <.js は 'text/javascript'、.css は 'text/css'>], ['Access-Control-Allow-Origin', '*']]`。
+10. **not run の出し方**: テストのファイルは、読み込んだときに（ケースを定義する前に）`BROWSERS` の名前ごとに `find_browser` を呼び、名前ごとに `node:test` の `describe(<名前>, …)` を立てる（`node:test` の飛ばしは定義のときに決まり、`before` の中では決められないため）。`null` で、`required_browsers()` にその名前が無ければ、その `describe` の中のケースの `test` のそれぞれにオプション `{skip: 'not run: <コマンド> が見つからない'}` を渡す。`describe` には渡さない（渡すと、`node --test` の集計の `skipped` に中のケースが数えられないため。ケースごとに渡せば、飛ばしたケースの数が `skipped` に出て、終了コードは 0 になる。ADR-OPS-010 の Decision 4 の「not run と明示して飛ばし、テストの実行は失敗にしない」）。`null` で `required_browsers()` に名前があれば、その `describe` の中にケースを置かず、`test('<名前> が見つからない', () => assert.fail('<名前> が見つからない（FINDSUMMITS_REQUIRE_BROWSERS）'))` の 1 つだけを置く。見つかったら、`describe` の `before` で `launch` し、失敗したら `before` の失敗として落とす（not run にしない）。`find_browser` が投げたとき（差し替えの環境変数の誤り）は、読み込みで落ちてよい。ブラウザの無い環境（コンテナなど）では、画面の UT はすべて not run になる。ブラウザのある環境で UT を回すことは、ADR-OPS-010 の Consequences が 9.2 に送った。
+11. **Safari**（ADR-OPS-010 の Decision 5 が LLD に送った分）: UT では Safari を補わない。UT のケースは関数を 1 つずつ呼ぶ細かいもので、手順書と人の操作で回す形に向かない。Safari での動きは IT・ST の仕様書が決める機会で人が補う。正式な実行の記録では、UT の Safari の組み合わせを未実施に数えない（UT の対象のブラウザの組み合わせに Safari を含めないため）。この決めは IT・ST の Safari の扱いを変えない。
 
 ## 3. CMP1 行政区域前処理
 
@@ -7959,3 +7996,225 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 | `UT-index_calc-91` | `check_generated_at_mix` の混在の判定と本ごとの値 | 計算の要素の読み込み。値の比べ方。書き換えないことの確かめ。公開用の応答と結果の作り方。`GA` は `'2026-05-13T00:00:00Z'`、`GB` は `'2026-05-14T09:30:00Z'`、`GJ` は `'2026-05-13T09:00:00+09:00'`。`M(<g>)` は `{generated_at: <g>}`、`MN` は `{}`（`generated_at` が無い。ケースごとに作り直す） | (a) `[LD([], M(GA)), LD([], M(GA)), LD([], M(GA)), LD([], M(GA)), LD([], M(GA))]`、(b) `[LD([], M(GA)), NA, LD([], M(GB)), NR, NA]`、(c) `[NA, LD([], MN), NA, NA, NA]`、(d) `[LD([], MN), NA, NA, NA, LD([], MN)]`、(e) `[LD([], M(GJ)), NA, NA, LD([], M(GJ)), NA]`、(f) `[LD([], M(GA)), LD([], M(1)), NA, NA, NA]`、(g) `[LD([], M('')), LD([], M('')), NA, NA, NA]`、(h) `[NA, NR, NA, NA, NR]`、(i) `null`・`[NA, NA, NA, NA, {kind: 'x'}]`、(j) `[NA, NA, NA, NA]`、(k) `[LD([], M('')), LD([], M('不明')), NA, NA, NA]` | (a) `{mixed: false, values: [<5 つ>]}`。`values` は順に `name` が `'add'`・`'delete'`・`'band_change'`・`'no_change'`・`'review'` で、`generated_at` がどれも `'2026-05-13 00:00:00 (UTC)'`。(b) `{mixed: true, values: [{name: 'add', generated_at: '2026-05-13 00:00:00 (UTC)'}, {name: 'band_change', generated_at: '2026-05-14 09:30:00 (UTC)'}]}`。(c) `{mixed: false, values: [{name: 'delete', generated_at: '不明'}]}`（1 本だけは混在でない）。(d) `{mixed: true, values: [{name: 'add', generated_at: '不明'}, {name: 'review', generated_at: '不明'}]}`（無い本どうしも一致しない）。(e) `{mixed: false, values: [{name: 'add', generated_at: '2026-05-13T09:00:00+09:00'}, {name: 'no_change', generated_at: '2026-05-13T09:00:00+09:00'}]}`（形の違う文字列はそのまま出す）。(f) `{mixed: true, values: [{name: 'add', generated_at: '2026-05-13 00:00:00 (UTC)'}, {name: 'delete', generated_at: '不明'}]}`。(g) `{mixed: false, values: [{name: 'add', generated_at: '不明'}, {name: 'delete', generated_at: '不明'}]}`（空文字どうしは文字列として一致する）。(h) `{mixed: false, values: []}`。(i) どれも `name` が `'TypeError'`。(j) `name` が `'RangeError'`。(k) `{mixed: true, values: [{name: 'add', generated_at: '不明'}, {name: 'delete', generated_at: '不明'}]}`（元の文字列 `''` と `'不明'` は違うので混在。表示の形はどちらも `'不明'` で、表示の形で比べる実装は混在でないとする） |
 | `UT-index_calc-92` | `pick_metadata_file` の選び方 | 計算の要素の読み込み。値の比べ方。書き換えないことの確かめ。公開用の応答と結果の作り方。`MC` は `{generated_at: '2026-05-13T00:00:00Z', x: 3}`、`MD` は `{generated_at: '2026-05-14T09:30:00Z'}`、`MK` は `{k: 1}`（ケースごとに作り直す） | (a) `[NA, NR, LD([], MC), LD([], MD), NA]`、(b) `[LD([], MK), LD([], MC), LD([], MC), LD([], MC), LD([], MC)]`、(c) `[NA, NR, NA, NA, NR]`、(d) `null`・`[NA, NA, NA, NA, {kind: 'x'}]`・`[NA, NA, NA, NA, {kind: 'loaded', data: {features: []}}]`、(e) `[NA, NA, NA, NA]` | (a) `{name: 'band_change', metadata: {generated_at: '2026-05-13T00:00:00Z', x: 3}}`（返した `metadata` は渡した `MC` と `===` で同じ）。(b) `{name: 'add', metadata: {k: 1}}`。(c) `null`（`assert.strictEqual` で比べる）。(d) どれも `name` が `'TypeError'`。(e) `name` が `'RangeError'` |
 | `UT-index_calc-93` | `accept_site_json` の受け入れと区分不明 | 計算の要素の読み込み。値の比べ方。書き換えないことの確かめ。公開用の応答と結果の作り方 | (a) `SJ({channel: 'release', branch: 'main', commit: HX})`・`RS(299, JSON.stringify({channel: 'release', branch: 'main', commit: HX}))`、(b) `SJ({channel: 'dev', branch: 'devel', commit: HX})`、(c) `SJ({x: 1, commit: HX, branch: 'main', channel: 'release'})`、(d) `FAIL`・`RS(404, JSON.stringify({channel: 'release', branch: 'main', commit: HX}))`・`RS(300, JSON.stringify({channel: 'release', branch: 'main', commit: HX}))`・`RS(200, 'x')`・`RS(200, '[]')`・`RS(200, 'null')`・`SJ({channel: 'release', branch: 'devel', commit: HX})`・`SJ({channel: 'dev', branch: 'main', commit: HX})`・`SJ({channel: 'Release', branch: 'main', commit: HX})`・`SJ({channel: 'release', branch: 'main', commit: HX.toUpperCase()})`・`SJ({channel: 'release', branch: 'main', commit: HX.slice(1)})`（39 桁）・`SJ({channel: 'release', branch: 'main', commit: HX + '0'})`（41 桁）・`SJ({channel: 'release', branch: 'main', commit: 1})`・`SJ({channel: 'release', commit: HX})`（`branch` が無い）・`SJ({channel: '', branch: '', commit: HX})`、(e) `null`・`{failed: false, status: 200, body: null}`・`{failed: true, status: 404, body: null}`、(f) `{failed: false, status: <s>, body: ''}` の `<s>` を `600`・`1.5` にした 2 つ | (a) どれも `{channel: 'release', branch: 'main', commit: '0123456789abcdef0123456789abcdef01234567'}`（状態 299 も 2xx）。(b) `{channel: 'dev', branch: 'devel', commit: '0123456789abcdef0123456789abcdef01234567'}`。(c) `{channel: 'release', branch: 'main', commit: '0123456789abcdef0123456789abcdef01234567'}`（ほかのキー `x` は見ず、返す値に入れない。キーは `site.json` の並びによらず `channel`・`branch`・`commit` の順）。(d) どれも `{channel: 'unknown'}`。(e) どれも `name` が `'TypeError'`。(f) どれも `name` が `'RangeError'` |
+
+### 9.2 `index_screen`
+
+- **ID**: LLD-index_screen
+- **対応 HLD**: [3.7](30_HLD.md#37-cmp7-申請書生成-ui)・[3.8](30_HLD.md#38-cmp8-公開用ビューア)・[4.11](30_HLD.md#411-fr-011-申請書-xlsx-生成)・[4.13](30_HLD.md#413-fr-013-html-ビューア生成)・[4.19](30_HLD.md#419-fr-019-html-ビューア機能仕様)・[4.20](30_HLD.md#420-fr-020-公開用ビューア配信)・[4.21](30_HLD.md#421-fr-021-申請エビデンス-zip-生成)・[5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.8](30_HLD.md#58-nfr-008-ui-レスポンス)・[5.10](30_HLD.md#510-nfr-010-描画応答性連続操作の滑らかさ)
+- **ファイル**: `public/index.html`
+
+関数の名前と役割は、[HLD 3.7.3](30_HLD.md#373-関数)の表の「置き場」が「画面」の関数と、[3.8.3](30_HLD.md#383-関数)の表の同じ列が「画面」の関数で、処理の正本は表の「処理の正本」の列の節である。この節は、それを JavaScript で書くための細部（要素の `id` と並び、型、文言、寸法、UT 候補）だけを足す。画面の要素の関数は DOM・地図・localStorage・ファイルの選択と保存に触れ、UT は [2.6](#26-ブラウザを動かすテストの層)の層でブラウザを動かして行う（HLD 3.7.3 の「画面」の段落、[テスト方針書 §4](02_test_policy.md#4-テスト環境)）。
+
+- 「関数の細部」と「UT 候補」の中は、HLD 3.7.3 の表の群ごとの見出しで分ける（ADR-LLD-001 の Decision 2）。今は「起動」の群の `check_libraries`・`add_export_libraries` と、「画面」の群の `render_export_controls`・`notify` だけを書いてある。ほかの関数は、群ごとに書き足す。
+- 結合のつなぎ目は、`CMP7-EXT3`（CDN → `index.html`）を `check_libraries`・`add_export_libraries` が受ける（[HLD 3.7.5](30_HLD.md#375-結合のつなぎ目)）。IT のケースは `60_IT.md` の `IT-CMP7-EXT3-01`〜`04`。
+- [5.2](30_HLD.md#52-nfr-002-メモリ使用量)・[5.8](30_HLD.md#58-nfr-008-ui-レスポンス)・[5.10](30_HLD.md#510-nfr-010-描画応答性連続操作の滑らかさ)は、地図の描画と操作の応答を持つ群を書くときに受ける。
+- ADR-OPS-010 の Decision 7 が「9.2 で決める」とした層の置き場などは、IT・ST のテストのコードも使うので、横断の節の [2.6](#26-ブラウザを動かすテストの層)で決めた（ADR-LLD-001 の Decision 7）。
+
+#### 9.2.1 ファイル割付
+
+- 画面の要素は `public/index.html` の中の script 要素で、ページの並びは次の骨格で決める。9.1 の計算の要素の置き方（[9.1.1](#911-ファイル割付)）は変えない。骨格はフェンスのコードブロックで書き、要素の並びと属性の字句の正とする。`…` は中身を省いた所で、`<style>` と画面の要素の中身は 9.2.3 と下の箇条で決める。URL と `integrity` は HLD の [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」の字句をそのまま使う（Leaflet の JavaScript と CSS）。
+
+  ```html
+  <!DOCTYPE html>
+  <html lang="ja">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>findsummits viewer</title>
+  <link id="leaflet-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+  <style id="findsummits-style">
+  …
+  </style>
+  <script id="leaflet-js" src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+  </head>
+  <body>
+  <div id="app">
+  <header id="header">
+  <h1 id="title">findsummits viewer</h1>
+  <div id="meta"></div>
+  <div id="search-wrapper"></div>
+  <div id="filters"></div>
+  <div id="status-marks"></div>
+  <button id="panel-toggle" type="button">作業パネル</button>
+  </header>
+  <div id="main">
+  <div id="map-wrap">
+  <div id="map"></div>
+  <div id="export-control"></div>
+  </div>
+  <aside id="work-panel" hidden>
+  <section id="notice-history-section">
+  <h2>知らせの履歴</h2>
+  <ol id="notice-history"></ol>
+  </section>
+  </aside>
+  </div>
+  <div id="toasts"></div>
+  </div>
+  <div id="overlay" hidden></div>
+  <script src="merged_viewer_data.js"></script>
+  <script id="findsummits-calc">
+  …
+  </script>
+  <script id="findsummits-screen">
+  …
+  </script>
+  <script id="findsummits-start">
+  start_page();
+  </script>
+  </body>
+  </html>
+  ```
+
+- 並び: Leaflet の CSS の `<link>`、`<style>`、Leaflet の `<script>` の順に `<head>` に置く（[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の「ライブラリの取得の確かめ方」の「`<head>` の `<link>` と `<script>` の後に置いたテンプレートの JavaScript」）。`<body>` の終わりに、データファイル、計算の要素（9.1.1）、画面の要素、始めの要素の順に置く（データファイルはテンプレートの JavaScript より前。HLD 4.13.2 の「テンプレートの構成」）。SheetJS と JSZip の要素は骨格に置かず、`add_export_libraries` が `<head>` の終わりに足す。
+- 画面の要素は `<script id="findsummits-screen">` の 1 つで、9.2 の関数（HLD 3.7.3・3.8.3 の「置き場」が「画面」の関数と、LLD が足す内部の関数・定数）をすべて置く。開始タグと中身の形は 9.1.1 の計算の要素と同じ（開始タグの直後で改行し、次の行を `// trace: LLD-index_screen`、次の文を `'use strict';`、終了タグは行の頭、中身に `</script`・`<!--`・`<script` を書かない。最上位は関数の宣言と定数と、下の「画面の状態」の `let` だけで、読み込んだときに何も実行しない）。HLD 3.7.3・3.8.3 の関数は `function <名前>(…) { … }` の宣言で書く（9.1.1 と同じ理由。UT がページの中で名前で呼ぶため）。
+- 始めの要素 `<script id="findsummits-start">` の中身は、開始タグの次の行の `start_page();` の 1 行だけ。[1.2](#12-lld-の規約)の JavaScript の規約の「各要素の中身は `// trace:` のコメントの次に `'use strict';` を置く」は、計算の要素と画面の要素に当て、始めの要素には当てない（関数も宣言も持たず、呼び出しの 1 文だけなので）。UT は、この要素を取り除いた写しを開いて、読み込んだときに何も動かない状態で関数を呼ぶ（9.2.5 の共通の準備）。要素を分けるのは、取り除く範囲を `id` で 1 つに決めるため。
+- 画面の状態（内部。画面の要素の最上位の `let`）: `_export_lib_state`（`{sheetjs: null | 'loading' | 'load' | 'error', jszip: 同じ}`。初めは両方 `null`）、`_export_open`（`boolean`。初めは `false`）、`_overlay_queue`（`Array<function>`。初めは `[]`）、`_overlay_open`（`boolean`。初めは `false`）の 4 つ。状態を足すときは、ここに並べる。
+- 骨格の中で中身を決めてあるのは `#export-control`（`render_export_controls`）、`#status-marks`・`#toasts`・`#notice-history`・`#overlay`（`notify`）。`#meta`・`#search-wrapper`・`#filters`・`#panel-toggle`・`#work-panel` の中身と開閉、`#map` は、それを使う関数を書くときに決める。骨格の文言（題名の `findsummits viewer`、`作業パネル`、`知らせの履歴`）は [9.2.4](#924-メッセージ文面) の表に置く。
+- `<style>` の中身は、骨格の配置と、エクスポートの操作と知らせの要素の分を次の表で決める。そのほかの見た目は、それを使う関数を書くときに足す。`body` の値はモックアップ（`docs/mockup/viewer_mockup.html`）に合わせる。
+
+  | 選択子 | 性質と値 |
+  |---|---|
+  | `body` | `margin: 0`・`font-family: sans-serif`・`font-size: 13px` |
+  | `#app` | `display: flex`・`flex-direction: column`・`height: 100vh` |
+  | `#header` | `display: flex`・`align-items: center`・`gap: 16px`・`padding: 6px 12px`・`border-bottom: 1px solid #ccc`・`flex-shrink: 0` |
+  | `#main` | `display: flex`・`flex: 1`・`min-height: 0` |
+  | `#map-wrap` | `position: relative`・`flex: 1` |
+  | `#map` | `position: absolute`・`inset: 0` |
+  | `#export-control` | `position: absolute`・`top: 10px`・`right: 10px`・`z-index: 1000` |
+  | `.leaflet-top.leaflet-right` | `top: 44px` |
+  | `#export-toggle` | `width: auto`・`height: 30px`・`padding: 0 8px`・`background: #fff`・`border: 1px solid #ccc`・`border-radius: 4px`・`box-shadow: 0 1px 5px rgba(0,0,0,0.4)`・`font-size: 12px`・`cursor: pointer` |
+  | `#export-list` | `margin-top: 4px`・`background: #fff`・`border-radius: 4px`・`box-shadow: 0 1px 5px rgba(0,0,0,0.4)`・`padding: 6px 10px`・`min-width: 130px` |
+  | `.export-row` | `display: flex`・`align-items: center`・`gap: 6px` |
+  | `.export-btn` | `padding: 5px 10px`・`margin: 2px 0`・`font-size: 12px`・`cursor: pointer`・`border: 1px solid #ccc`・`background: #f5f5f5`・`border-radius: 2px`・`text-align: left`・`white-space: nowrap` |
+  | `.export-btn:hover` | `background: #e0e0e0` |
+  | `.lib-mark` | `font-size: 11px`・`white-space: nowrap` |
+  | `.lib-mark[data-state="ok"]`・`[data-state="loading"]`・`[data-state="unavailable"]` | `color` がそれぞれ `#2e7d32`・`#666`・`#c62828` |
+  | `#status-marks` | `display: flex`・`gap: 6px` |
+  | `.status-mark` | `padding: 2px 6px`・`border-radius: 3px`・`background: #fff3cd`・`border: 1px solid #e0c36a`・`font-size: 12px`・`white-space: nowrap` |
+  | `#toasts` | `position: fixed`・`left: 50%`・`bottom: 16px`・`transform: translateX(-50%)`・`display: flex`・`flex-direction: column`・`gap: 6px`・`z-index: 2500` |
+  | `.toast` | `display: flex`・`gap: 8px`・`align-items: center`・`background: #fff`・`border: 1px solid #ccc`・`border-radius: 4px`・`box-shadow: 0 2px 8px rgba(0,0,0,0.2)`・`padding: 6px 10px`・`max-width: 480px` |
+  | `#overlay` | `position: fixed`・`inset: 0`・`background: rgba(0,0,0,0.4)`・`display: flex`・`align-items: center`・`justify-content: center`・`z-index: 3000` |
+  | `#overlay[hidden]` | `display: none` |
+  | `.overlay-box` | `background: #fff`・`border-radius: 6px`・`padding: 16px 20px`・`max-width: 560px`・`max-height: 80vh`・`overflow: auto` |
+
+- 要素の `id` と並びは、モックアップとは別に、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「画面」で決めた。エクスポートの操作は、モックアップでは Leaflet の部品でマウスを乗せると開くが、HLD 4.19.2 は「クリックで開閉する（マウスを乗せるだけでは開かない）」とし、「読めないとき」の「Leaflet」の箇条は Leaflet が読めなくてもエクスポートを使えるとする。そのため、Leaflet の部品にせず、地図の上に重ねる普通の要素にする。モックアップのアイコンは Font Awesome を使っているが、DEC129 の 3 つのライブラリの外なので使わず、文字で書く。
+- UT のコードは `tests/public/test_index_screen.js` 1 本（[1.2](#12-lld-の規約)）。ブラウザを動かす層は `tests/public/browser.js`（[2.6](#26-ブラウザを動かすテストの層)）。
+
+#### 9.2.2 型とデータ
+
+- `LibState`: `'loading' | 'ok' | 'unavailable'`。`check_libraries` が返す、ライブラリごとの状態。
+- `StatusKey`: `'unsaved' | 'unsynced' | 'changed_elsewhere' | 'ledger' | 'pending_returns'`（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「状態の印」の 5 つの印の順）。
+- `StatusNotice`: `{key: StatusKey, text: string | null, action: {label: string, on_click: function} | null}`（`notify` の `'status'` 層）。
+- `ResultNotice`: `{text: string}`（`notify` の `'result'` 層。空でない文字列）。
+- `StopNotice`: `{title: string, lines: Array<string>}`（`notify` の `'stop'` 層。`title` は空でない文字列、`lines` は文字列の配列で、空の配列でよい）。
+- 画面の状態の 4 つ（`_export_lib_state`・`_export_open`・`_overlay_queue`・`_overlay_open`）は [9.2.1](#921-ファイル割付)。要素の `id` も 9.2.1。
+
+#### 9.2.3 関数の細部
+
+群ごとに `#####` の見出し、関数ごとに `######` の見出し（関数の名前だけ）を立てる。群の並びは HLD 3.7.3 の表の順。群の見出しは、9.1.3 の群の見出し「起動」「画面」と同じ文字列にするとアンカーが重なり、9.1.3 の見出しへのリンクが 9.2.3 を指しうるので、「起動（画面の要素）」「画面（画面の要素）」にする。
+
+##### 起動（画面の要素）
+
+###### `check_libraries`
+
+`check_libraries(names: Array<'leaflet' | 'sheetjs' | 'jszip'>) -> {leaflet?: LibState, sheetjs?: LibState, jszip?: LibState}`（`LibState` は [9.2.2](#922-型とデータ)）
+
+1. `names` が配列でないか、要素に 3 つの字句のほかがあるか、同じ字句が 2 度あれば `TypeError`。
+2. 返す値は `names` の順のキーを持つ新しいオブジェクト。
+3. `'leaflet'`: `typeof L === 'object' && L !== null` で、かつ `document.getElementById('leaflet-css')` が要素で、その `sheet` が `null` でなく、`sheet.cssRules.length` が 0 より大きければ `'ok'`、そうでなければ（`cssRules` を読んで例外が出たときを含む）`'unavailable'`（[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の「ライブラリの取得の確かめ方」。HLD は CSS を `sheet` の有無で確かめるとするが、Chrome・Brave・Firefox で、通信の失敗では `sheet` が `null` にならず（Chrome・Brave は `cssRules` を読むと `SecurityError`、Firefox は `cssRules.length` が 0）、SRI の照合に外れたときも Firefox では `null` にならない〈Chrome・Brave では `null`〉ので、`cssRules.length` も見る。HLD の記述は [#343](https://github.com/jj1xgo/findsummits/issues/343)「HLD 4.13.2: Leaflet の CSS の取得の失敗を link.sheet の有無で見分けられない」で直す。Leaflet は `'loading'` を返さない。`<head>` の後で呼ぶので、CSS の読み込みは終わっているか失敗している）。`L` はグローバルを `typeof L` で読む（宣言されていないので `ReferenceError` にしない）。
+4. `'sheetjs'`・`'jszip'`: `_export_lib_state` のその値が `null`（まだ足していない）か `'error'` なら `'unavailable'`、`'loading'` なら `'loading'`、`'load'` なら、グローバルが `typeof XLSX === 'object' && XLSX !== null`（`sheetjs`）・`typeof JSZip === 'function'`（`jszip`）のとき `'ok'`、そうでなければ `'unavailable'`（`load` の後にグローバル変数が無い場合）。
+5. 公開用ビューア（CMP8）は `'leaflet'` だけを渡す。
+
+###### `add_export_libraries`
+
+`add_export_libraries() -> undefined`
+
+1. `_export_lib_state.sheetjs` が `null` でなければ何もしない（2 度目の呼び出しで要素を重ねないため）。
+2. SheetJS、JSZip の順に、`document.createElement('script')` を作り、`id`（`sheetjs-js`・`jszip-js`）、`src`、`integrity`、`crossOrigin = 'anonymous'` を HLD の [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」の字句で入れる。`load` で `_export_lib_state.<名前> = 'load'`、`error` で `'error'` にして、どちらでも `_refresh_export_controls()` を呼ぶ受け手を付ける。`_export_lib_state.<名前> = 'loading'` にしてから `document.head.appendChild` で足す（受け手を付けてから足すので、イベントを取り逃がさない）。
+3. 2 つを足した後に `_refresh_export_controls()` を 1 度呼ぶ（エクスポートの操作を先に出していれば、印を「読み込み中」にするため）。
+4. 内部の関数 `_refresh_export_controls() -> undefined`: `#export-control` に子があれば（`render_export_controls` を 1 度呼んだ後なら）`render_export_controls(check_libraries(['sheetjs', 'jszip']))` を呼ぶ。無ければ何もしない。
+
+##### 画面（画面の要素）
+
+###### `render_export_controls`
+
+`render_export_controls(state: {sheetjs: LibState, jszip: LibState}) -> undefined`
+
+1. `state` が `null` か、オブジェクトでないか、`sheetjs`・`jszip` のどちらかが `LibState` の 3 つの字句でなければ `TypeError`。
+2. `#export-control` の子をすべて除き、次を作り直す（順に子として足す）。
+   - 開閉のボタン `<button id="export-toggle" type="button" aria-expanded="<_export_open>" aria-controls="export-list">エクスポート</button>`。
+   - 一覧 `<div id="export-list">`（`_export_open` が偽なら `hidden` の属性を付ける）の中に、申請書の行と申請エビデンスの行を、この順に置く。行は `<div class="export-row">` で、中にボタン `<button id="export-application" type="button" class="export-btn">申請書</button>`（申請エビデンスは `id="export-evidence"`、文字 `申請エビデンス`）と、印 `<span class="lib-mark" data-state="<印の状態>"><印の文字></span>` を置く。
+3. 印の状態は、2 つの行とも同じで、`state.sheetjs` と `state.jszip` のどちらかが `'unavailable'` なら `'unavailable'`、そうでなく、どちらかが `'loading'` なら `'loading'`、そうでなければ `'ok'`（2 つのボタンはどちらも SheetJS と JSZip を使う。HLD 3.7.3 の `build_application_xlsx`・`build_evidence_zip`）。印の文字は [9.2.4](#924-メッセージ文面) の表（`'loading'` が `読み込み中`、`'ok'` が `使える`、`'unavailable'` が `使えない`）。印の `title` の属性に `SheetJS: <sheetjs の文字>、JSZip: <jszip の文字>` を入れる（どちらが原因かを利用者が見られるため）。
+4. 開閉のボタンの `click` で `_export_open` を反転し、`aria-expanded` と一覧の `hidden` をそろえる。マウスを乗せるだけでは開かない（`mouseenter`・`mouseover` に受け手を付けない。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「地図の操作」）。作り直しても `_export_open` を保つ（ライブラリの読み込みの後の作り直しで一覧が閉じないため）。作り直す前に `document.activeElement` が `#export-control` の中の `id` のある要素なら、その `id` を控え、作り直した後に同じ `id` の要素の `focus()` を呼ぶ（キーボードで操作している利用者のフォーカスを、自動の作り直しで外さないため。HLD 4.19.2 の「タッチとキーボードでも操作できる」）。
+5. 申請書・申請エビデンスのボタンの `click` は、`run_export('application')`・`run_export('evidence')` を呼ぶ（`run_export` はまだ書いていない関数。押したときの止め方〈読み込み中か使えないときは止めた理由を出す〉と「作成中」は `run_export` が持つ）。
+6. 配置は [9.2.1](#921-ファイル割付)の `<style>` の表のとおり。`#export-control` は `#map-wrap` の右上に置く（作業パネルを開くと `#map-wrap` が狭まるので、地図の右上に付いて動く）。Leaflet のレイヤーとズームの操作は、その下に並べる（エクスポートを上、Leaflet の右上の操作を下にそろえるため）。
+
+###### `notify`
+
+`notify(layer: 'status' | 'result' | 'stop', content: StatusNotice | ResultNotice | StopNotice) -> undefined`（型は [9.2.2](#922-型とデータ)）
+
+0. どの層でも、画面に入れる文字（`text`・`label`・`title`・`lines` の各行）は `textContent` で入れ、`innerHTML`・`insertAdjacentHTML`・`outerHTML` を使わない（HTML として解釈させない。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の、入ってきた文字を HTML として解釈させない決まり）。`render_export_controls` も同じ。
+1. `layer` が 3 つの字句でなければ `TypeError`。`content` が `layer` の型に合わなければ（下の各層の決まりに外れれば）`TypeError`。
+2. `'status'`（状態の印。HLD 4.19.2 の「画面」の「状態の印」）: `TypeError` にするのは次のどれかのとき（列挙のとおりで、ほかのキーがあっても見ない）。`content` が `null` かオブジェクトでない、`key` が 5 つの字句のどれでもない、`text` が `null` でも空でない文字列でもない（空の文字列は受けない）、`action` が `null` でもオブジェクトでもない、`action` がオブジェクトで `label` が空でない文字列でないか `on_click` が関数でない。`text` が `null` なら、`#status-marks` の `data-key` がその `key` の子を除く（無ければ何もしない）。文字列なら、その子を作り直す: `<span class="status-mark" data-key="<key>"><span class="status-text"><text></span></span>`。`action` が `null` でなければ、`.status-text` の後に `<button type="button" class="status-action"><label></button>` を足し、`click` で `on_click()` を呼ぶ。子の並びは、呼んだ順によらず `StatusKey` の順にする（同じ `key` を 2 度出さない）。印は利用者が消せない（閉じる操作を置かない）。
+3. `'result'`（結果。「知らせ」の「結果」）: `content` が `null` かオブジェクトでない、または `text` が空でない文字列でなければ `TypeError`。`#toasts` の終わりに `<div class="toast" role="status"><span class="toast-text"><text></span><button type="button" class="toast-close" aria-label="閉じる">×</button></div>` を足し、閉じるボタンの `click` でその `div` を除く。`#toasts` の `.toast` が 5 つを超えたら、最も古い（最初の）ものから除いて 5 つにする（画面を覆わないため。履歴には残る）。`document.getElementById('notice-history')` が要素なら、その終わりに `<li><text></li>` を足す（履歴は消さない。ページを開いている間だけで、保存しない）。無ければ履歴には足さない。公開用ビューア（CMP8）は作業パネルを持たず、知らせの履歴も持たない（[HLD 4.20.2](30_HLD.md#4202-処理の流れ)の「知らせ」）。公開用で骨格から作業パネルなどを除くのは、公開用の始めの関数の受け持ちで、除くものは HLD 4.20.2 の「画面に出すもの」が決めている。`notify` は開き方を見ず、要素の有無だけで決める（開き方の状態を画面の関数の間で持ち回らないため）。時刻は付けない（時刻の表し方を決める上位の決まりが無く、UT の期待を時計に依らせないため）。
+4. `'stop'`（止めた理由。「知らせ」の「止めた理由」）: `content` が `null` かオブジェクトでない、`title` が空でない文字列でない、または `lines` が文字列の配列でなければ `TypeError`。内部の関数 `_show_overlay` に、`#overlay` の中に `<div class="overlay-box" role="alertdialog" aria-modal="true"><h2 class="overlay-title"><title></h2><ul class="overlay-lines"><li><行></li>…</ul><button type="button" class="overlay-close">閉じる</button></div>` を作る組み立てを渡し、閉じるボタンの `click` で閉じる。閉じるまで残す（自動で閉じない）。
+5. 内部の関数 `_show_overlay(build: (box_parent: HTMLElement, close: () => void) -> undefined) -> undefined`（オーバーレイの共通の出し方。引き継ぎの確認・読み込みの差分・警告の確認・キーの一覧を書くときも使う）: `_overlay_open` が真なら `build` を `_overlay_queue` の終わりに足して返す（1 つずつ出し、来た順に出す）。偽なら `_overlay_open = true`、`#overlay` の子を除いて `hidden` を外し、`#app` に `inert` の属性を付け（後ろの画面のクリックとキーボードの操作を受けない。HLD 4.19.2 の「オーバーレイ」の「閉じるまで、後ろの画面の操作は受けない」）、`build(<#overlay>, close)` を呼ぶ。`build` が例外を投げたら、`close()` を呼んでから同じ例外を投げ直す（`inert` のまま画面が操作できなくならないため。待っている次の組み立ては `close` が出す）。`close` は 1 度だけ効き（2 度目からは何もしない）、`#overlay` の子を除いて `hidden` を付け、`#app` の `inert` を外し、`_overlay_open = false` にし、`_overlay_queue` が空でなければ先頭を取り出して `_show_overlay` に渡す。`window.alert`・`window.confirm` を使わない。
+6. 公開用ビューア（CMP8）は `'result'` だけを使う（HLD 3.7.3 の CMP8 の列）。CMP8 の関数は `'status'` と `'stop'` を呼ばない。
+7. 配置は [9.2.1](#921-ファイル割付)の `<style>` の表のとおり。
+
+#### 9.2.4 メッセージ文面
+
+画面の文言の正は次の表。`notify` が出す文の中身（状態の印、結果、止めた理由）は、呼ぶ側の関数の節で決める。
+
+| 場所 | 文言 |
+|---|---|
+| `<title>` と `#title` | `findsummits viewer` |
+| `#panel-toggle` | `作業パネル` |
+| `#notice-history-section` の見出し | `知らせの履歴` |
+| `#export-toggle` | `エクスポート` |
+| `#export-application` | `申請書` |
+| `#export-evidence` | `申請エビデンス` |
+| 印の文字（`'loading'`） | `読み込み中` |
+| 印の文字（`'ok'`） | `使える` |
+| 印の文字（`'unavailable'`） | `使えない` |
+| 印の `title` の形 | `SheetJS: <文字>、JSZip: <文字>`（`<文字>` は上の印の文字） |
+| オーバーレイの閉じるボタンの字 | `閉じる` |
+| 知らせの閉じるボタンの `aria-label` | `閉じる` |
+| 知らせの閉じるボタンの字 | `×` |
+
+#### 9.2.5 UT 候補
+
+すべて自動（合否をテストのコードが判定できる）。UT のコードは `tests/public/test_index_screen.js`。群ごとに `#####` の見出し（9.2.3 と同じ群の名前に `（UT 候補）` を添えたもの。9.1.5 の見出しと重ならないよう、「起動（画面の要素）（UT 候補）」「画面（画面の要素）（UT 候補）」）を立てて表を分ける。要素の全体を見るケースは、最初の群の見出しより前の表に置く。ID は通し番号にする。ブラウザで動かすケース（`UT-index_screen-02` から）は、[2.6](#26-ブラウザを動かすテストの層)の `BROWSERS` の名前ごとの `describe` の中に、同じ ID のケースを 1 つずつ置く（ID の後に空白 1 つと `<名前>` を添えた名前で `test` を呼ぶ。`// trace:` はケースごとに同じ ID）。次の共通の準備を使う。
+
+- **ページの写し**（`UT-index_screen-02` から使う）: ケースごとに `fs.mkdtempSync(path.join(os.tmpdir(), 'findsummits-ut-'))` の新しいディレクトリを作り、本体ルートの `public/index.html`（`path.join(__dirname, '..', '..', 'public', 'index.html')`）を UTF-8 で読み、`<script id="findsummits-start">` の開始タグから、その後の最初の `</script>` の終わりまでを取り除いた文字列を `index.html` として書く（開始タグかその後の終了タグが無ければ、書く前に `assert` で落とす）。データファイルは置かない。ページの URL は `url.pathToFileURL(<そのファイル>).href`。ケースの終わりに `Page.close()` を呼び、ディレクトリを `fs.rmSync(…, {recursive: true, force: true})` で消す。ブラウザはその `describe` の `before` で 1 度 `launch` し、`after` で `close` する（ケースごとに新しいタブ。localStorage はここにあるケースの関数が使わないので消さない。使うケースを書くときに決める）。始めの要素を取り除くのは、取り除かずにデータファイルを置かずに開くと、始めの要素の `start_page` が読めない旨を出し、エクスポートと検索を使えなくする（HLD 4.19.2 の「読めないとき」）ので、`render_export_controls` などの結果が `start_page` の動きに左右されるため。`start_page` の UT は、取り除かない写しで開く。
+- **ライブラリの写し**（`UT-index_screen-02` から使う）: テストのファイルの先頭の `before`（`describe` の外）で一度、`load_test_lib` で 4 つのファイル（`leaflet.js`・`leaflet.css`・`xlsx.full.min.js`・`jszip.min.js`）を取っておく（ケースの待ちが、ライブラリを初めて取る時間で時間切れにならないため。取れなければ、その `before` が落ちて、ブラウザのケースも落ちる）。
+- **差し替え**: 特に書かないケースは `lib_routes([], [])`（4 つとも本物）を渡す。`fail`・`wrong` の指定は各ケースの「準備」の列に書く。
+- **呼び方と値の比べ方**: ページの中の関数は `Page.evaluate('<式>')` で呼ぶ。DOM の確かめは、ページの中で値を集めて JSON にできるオブジェクトにして返す式で行う（例 `Page.evaluate("[...document.querySelectorAll('#export-list .export-btn')].map(b => [b.id, b.textContent])")`）。返った値は Node.js の値なので、`assert.deepStrictEqual` でそのまま比べる（9.1.5 の別の realm の写しは要らない）。例外は層の `Error` の `page_error_name` で見る（`assert.rejects(<呼び出し>, (e) => e.page_error_name === 'TypeError')`）。
+- **待ち**: `add_export_libraries` の後の `load`・`error` は非同期に起きるので、ケースは `Page.evaluate` の式の中で、`_export_lib_state.sheetjs` と `_export_lib_state.jszip` の両方が `'loading'` でなくなるまで 50 ms ごとに 100 回まで見て待つ（`await new Promise(…)`。100 回で変わらなければ、式が `'timeout'` を返し、`assert` で落とす）。
+- **読み込み中を作る**: SheetJS か JSZip の URL の `handle` が、ケースが持つ Promise を返すようにして応答を止め、確かめた後に本物の応答で決める（[2.6](#26-ブラウザを動かすテストの層)の 8 の「決まるまで応答を待たせる」）。
+
+列は 9.1.5 と同じ（ID・確かめること・準備・入力・期待）。
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_screen-01` | 骨格の要素と並び（ブラウザなし） | `public/index.html` を UTF-8 で読む（ページの写しはしない） | なし | (a) 次の名前ごとに、`id="<名前>"` の字句が文字列の中にちょうど 1 回現れる（`leaflet-css`・`findsummits-style`・`leaflet-js`・`app`・`header`・`title`・`meta`・`search-wrapper`・`filters`・`status-marks`・`panel-toggle`・`main`・`map-wrap`・`map`・`export-control`・`work-panel`・`notice-history-section`・`notice-history`・`toasts`・`overlay`・`findsummits-calc`・`findsummits-screen`・`findsummits-start`）。(b) `<link id="leaflet-css" …>` と `<script id="leaflet-js" …>` の `href`・`src`・`integrity`・`crossorigin` が DEC129 の字句と `anonymous`。(c) 文字列の中で最初に現れる位置が、`id="leaflet-css"` < `id="findsummits-style"` < `id="leaflet-js"` < `</head>` < `<body>` < `id="app"` < `id="overlay"` < `src="merged_viewer_data.js"` < `id="findsummits-calc"` < `id="findsummits-screen"` < `id="findsummits-start"` の順。(d) 画面の要素の開始タグの次の行が `// trace: LLD-index_screen`、その次の空でない行が `'use strict';`、中身に `</script`・`<!--`・`<script` を大文字・小文字を問わず含まない。(e) 始めの要素の中身が `start_page();` の 1 行（前後の改行を除く）。(f) `id="sheetjs-js"`・`id="jszip-js"` の字句が文字列の中に無い（2 つの要素は骨格に無く、`add_export_libraries` が `id` の性質に入れて足す。JavaScript の中の `'sheetjs-js'` の文字列はこの字句に当たらない） |
+
+##### 起動（画面の要素）（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_screen-02` | `check_libraries` の Leaflet | ページの写し。ライブラリの写し。呼び方と値の比べ方。差し替え: (a) 指定なし (b) `fail: ['leaflet.js']` (c) `fail: ['leaflet.css']` (d) `wrong: ['leaflet.js']` (e) `wrong: ['leaflet.css']`（別々のタブ） | `check_libraries(['leaflet'])` | (a) `{leaflet: 'ok'}` (b)〜(e) `{leaflet: 'unavailable'}`。どれも返した値のキーが `['leaflet']` だけ |
+| `UT-index_screen-03` | `check_libraries` の受けない入力 | ページの写し。ライブラリの写し。呼び方と値の比べ方 | (a) `check_libraries('leaflet')` (b) `check_libraries(['leaflet', 'x'])` (c) `check_libraries(['jszip', 'jszip'])` (d) `check_libraries(null)` | (a)〜(d) どれも `TypeError`（`page_error_name`） |
+| `UT-index_screen-04` | 足す前と、キーの順 | ページの写し。ライブラリの写し。呼び方と値の比べ方 | (a) `check_libraries(['jszip', 'sheetjs', 'leaflet'])`（`add_export_libraries` を呼ばない） (b) `check_libraries([])` | (a) `{jszip: 'unavailable', sheetjs: 'unavailable', leaflet: 'ok'}` で、`Object.keys` が `['jszip', 'sheetjs', 'leaflet']` (b) `{}` |
+| `UT-index_screen-05` | `add_export_libraries` が足す要素と読み込み中 | ページの写し。ライブラリの写し。呼び方と値の比べ方。待ち。SheetJS と JSZip の URL の応答を止める（読み込み中を作る） | `add_export_libraries()` を呼び、応答を止めたまま `check_libraries(['sheetjs', 'jszip'])` と要素を読む。続けて `add_export_libraries()` をもう 1 度呼んで要素の数を読む。最後に 2 つの応答を本物で決め、待ちの後に `check_libraries(['sheetjs', 'jszip'])` を読む | (a) 止めている間: `{sheetjs: 'loading', jszip: 'loading'}`。`document.head` の最後の 2 つの子が、順に `id` `sheetjs-js`・`jszip-js` の `script` で、`src`・`integrity` が DEC129 の SheetJS CE・JSZip の字句、`crossOrigin` が `anonymous`。(b) 2 度目の後: `#sheetjs-js` と `#jszip-js` がそれぞれ 1 つ（`document.querySelectorAll('script[id$="-js"]').length` が 3〈`leaflet-js` を含む〉）。(c) 決めた後: `{sheetjs: 'ok', jszip: 'ok'}`。(d) `Page.requests` に SheetJS と JSZip の URL がそれぞれ 1 度だけある |
+| `UT-index_screen-06` | `add_export_libraries` の使えない場合 | ページの写し。ライブラリの写し。呼び方と値の比べ方。待ち。差し替え: (a) `fail: ['xlsx.full.min.js']` (b) `wrong: ['jszip.min.js']` (c) `fail: ['xlsx.full.min.js', 'jszip.min.js']`（別々のタブ） | `add_export_libraries()`、待ちの後に `check_libraries(['sheetjs', 'jszip'])`。(d) だけは別のタブで、差し替えの指定なしで `add_export_libraries()`、待ちの後に `window.XLSX = undefined` としてから `check_libraries(['sheetjs', 'jszip'])` | (a) `{sheetjs: 'unavailable', jszip: 'ok'}` (b) `{sheetjs: 'ok', jszip: 'unavailable'}` (c) `{sheetjs: 'unavailable', jszip: 'unavailable'}` (d) `{sheetjs: 'unavailable', jszip: 'ok'}`（`load` の後にグローバル変数が無い） |
+
+##### 画面（画面の要素）（UT 候補）
+
+| ID | 確かめること | 準備 | 入力 | 期待 |
+|---|---|---|---|---|
+| `UT-index_screen-07` | `render_export_controls` の形と印 | ページの写し。ライブラリの写し。呼び方と値の比べ方 | (a) `render_export_controls({sheetjs: 'ok', jszip: 'ok'})` (b) `({sheetjs: 'loading', jszip: 'ok'})` (c) `({sheetjs: 'loading', jszip: 'unavailable'})` (d) `({sheetjs: 'ok', jszip: 'unavailable'})`（同じタブで順に呼び、そのたびに読む） | どれも `#export-control` の子が `#export-toggle`（文字 `エクスポート`、`aria-expanded` が `false`）と `#export-list`（`hidden` あり）の 2 つで、一覧の行が `[['export-application', '申請書'], ['export-evidence', '申請エビデンス']]` の順。2 つの行の印の `data-state`・文字・`title` が、(a) `ok`・`使える`・`SheetJS: 使える、JSZip: 使える` (b) `loading`・`読み込み中`・`SheetJS: 読み込み中、JSZip: 使える` (c) `unavailable`・`使えない`・`SheetJS: 読み込み中、JSZip: 使えない` (d) `unavailable`・`使えない`・`SheetJS: 使える、JSZip: 使えない`。`#export-toggle` が 1 つだけ（作り直しで重ならない） |
+| `UT-index_screen-08` | 開閉と、作り直しで開いたままのこと、Leaflet が無くても出ること | ページの写し。ライブラリの写し。呼び方と値の比べ方。(e) だけ `fail: ['leaflet.js']` の別のタブ | (a) `render_export_controls({sheetjs: 'ok', jszip: 'ok'})` の後、`#export-toggle` に `mouseenter` と `mouseover` の `MouseEvent` を送る (b) `#export-toggle` の `click()` (c) (b) の後に `render_export_controls({sheetjs: 'loading', jszip: 'ok'})` (d) (c) の後に `#export-toggle` の `click()` (e) `render_export_controls({sheetjs: 'ok', jszip: 'ok'})` (f) (d) の後に `window.__calls = []; window.run_export = (kind) => { window.__calls.push(kind); };` としてから、`#export-application`・`#export-evidence` の順に `click()` する (g) (f) の後に `#export-toggle` の `focus()`、`render_export_controls({sheetjs: 'ok', jszip: 'ok'})` を呼び、`document.activeElement.id` を読む | (a) 一覧は `hidden` のまま、`aria-expanded` が `false` (b) `hidden` が無く `true` (c) `hidden` が無く `true`（印は `loading`） (d) `hidden` があり `false` (e) `check_libraries(['leaflet'])` が `{leaflet: 'unavailable'}` で、`#export-control` に `#export-toggle` と 2 つのボタンがある (f) `window.__calls` が `['application', 'evidence']` (g) `'export-toggle'` |
+| `UT-index_screen-09` | 読み込みの後の自動の作り直し | ページの写し。ライブラリの写し。呼び方と値の比べ方。待ち。SheetJS と JSZip の URL の応答を止める | (a) `render_export_controls({sheetjs: 'unavailable', jszip: 'unavailable'})` の後に印を読む (b) `add_export_libraries()` の後、応答を止めたまま印を読む (c) SheetJS を本物で、JSZip を `'fail'` で決め、待ちの後に印を読む | 2 つの行とも、(a) `data-state` が `unavailable`、`title` が `SheetJS: 使えない、JSZip: 使えない` (b) `loading`、`SheetJS: 読み込み中、JSZip: 読み込み中` (c) `unavailable`、`SheetJS: 使える、JSZip: 使えない` |
+| `UT-index_screen-10` | `notify` の 3 つの層 | ページの写し。ライブラリの写し。呼び方と値の比べ方 | (a) `notify('result', {text: 'r1'})` から `'r6'` まで 6 回 (b) 最初の `.toast` の閉じるボタンの `click()` (c) `notify('status', {key: 'ledger', text: '台帳 1', action: null})`、`notify('status', {key: 'pending_returns', text: '戻し', action: null})`、`notify('status', {key: 'unsaved', text: '未保存', action: {label: '押す', on_click: () => { window.__clicked = (window.__clicked || 0) + 1; }}})`、`notify('status', {key: 'ledger', text: '台帳 2', action: null})` (d) `.status-action` の `click()` (e) `notify('status', {key: 'unsaved', text: null, action: null})` (f) `notify('stop', {title: 'T1', lines: ['a', 'b']})`、`notify('stop', {title: 'T2', lines: []})` (g) `.overlay-close` の `click()` (h) もう一度 `.overlay-close` の `click()` (i) `notify('x', {text: 'r'})`、`notify('result', {text: ''})`、`notify('status', {key: 'other', text: 't', action: null})`、`notify('status', {key: 'ledger', text: '', action: null})`、`notify('status', {key: 'ledger', text: 't', action: {label: '', on_click: () => {}}})`、`notify('stop', {title: 'T', lines: 'a'})`、`notify('result', null)`（それぞれ別の呼び出し） (j) 新しいタブで `document.getElementById('work-panel').remove()` の後に `notify('result', {text: 'p1'})` (k) 新しいタブで `notify('result', {text: '<b>x</b>&'})`、`notify('stop', {title: '<i>t</i>', lines: ['<u>l</u>']})` (l) (k) のタブで `.overlay-close` を `click()` した後に、`_show_overlay(() => { throw new TypeError('b'); })` を呼ぶ | (a) `.toast-text` の文字が `['r2', 'r3', 'r4', 'r5', 'r6']`、`#notice-history` の `li` が `['r1', 'r2', 'r3', 'r4', 'r5', 'r6']` (b) `.toast-text` が `['r3', 'r4', 'r5', 'r6']`、履歴は (a) のまま (c) `#status-marks` の子ごとの `[<data-key の値>, <その子の .status-text の textContent>]` が `[['unsaved', '未保存'], ['ledger', '台帳 2'], ['pending_returns', '戻し']]`（呼んだ順は `ledger`・`pending_returns`・`unsaved`・`ledger` で、`StatusKey` の順と違う）、`.status-action` が 1 つで文字 `押す` (d) `window.__clicked` が `1` (e) 子が `[['ledger', '台帳 2'], ['pending_returns', '戻し']]` (f) `#overlay` に `hidden` が無く、`#app` に `inert` があり、`.overlay-title` が `T1`、`.overlay-lines li` が `['a', 'b']`、`.overlay-box` が 1 つ (g) `.overlay-title` が `T2`、`li` が 0 個、`#app` に `inert` がある (h) `#overlay` に `hidden` があり子が 0 個、`#app` に `inert` が無い (i) 7 つのどれも `TypeError`（`page_error_name`）で、呼ぶ前と後で `#toasts`・`#status-marks`・`#overlay` の子の数が変わらない (j) 例外が出ず、`.toast-text` が `['p1']`、`#notice-history` が文書に無い (k) `.toast-text` の `textContent` が `'<b>x</b>&'` で、`#toasts b` が 0 個。`.overlay-title` の `textContent` が `'<i>t</i>'`、`.overlay-lines li` の `textContent` が `['<u>l</u>']`、`#overlay i`・`#overlay u` が 0 個 (l) `TypeError`（`page_error_name`）で、その後に `#overlay` に `hidden` があり、`#app` に `inert` が無く、`_overlay_open` が `false` |
