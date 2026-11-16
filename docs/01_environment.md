@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-11-15 |
+| 最終更新日 | 2026-11-16 |
 | ステータス | ドラフト |
 
 ## 目次
@@ -148,7 +148,12 @@ c3c の README の[利用側プロジェクトの設定](https://github.com/JJ1X
   [ハードウェアと OS](#ハードウェアと-os) の「ネットワーク」行の接続先として、`cyberjapandata.gsi.go.jp`（標高タイル）と
   `pypi.org`・`files.pythonhosted.org`（`make venv`）を書く
 - `packages.txt`: [ソフトウェア](#ソフトウェア) の依存を Debian の apt パッケージ名で書く（`gcc`・`libc6-dev`・`make`・`libpng-dev`・`python3-venv`）。
-  `libc6-dev` は推奨依存を入れないビルドでは明示が要る
+  `libc6-dev` は推奨依存を入れないビルドでは明示が要る。ブラウザの中で値を読むテスト（[開発環境](#開発環境)）をコンテナで回すときは、
+  `google-chrome-stable`・`brave-browser`・`firefox` も書く（次の `apt-sources.txt` の取得元から入る）
+- `apt-sources.txt`: 任意。ブラウザの中で値を読むテストをコンテナで回すときに、Google Chrome・Brave・Mozilla Firefox の
+  公式の APT 取得元を、署名の鍵の主鍵の指紋と一緒に書く。書式と行の例は c3c の README の
+  [利用側プロジェクトの設定](https://github.com/JJ1XGO/c3c#利用側プロジェクトの設定)節にある。外部の取得元を足すと、
+  その提供元のパッケージのインストールスクリプトが、イメージのビルドのときに root で走る
 - `env`: データ置き場を `EXTRA_MOUNT` でコンテナ内の `/data` にマウントする。キーは c3c の README の
   [環境変数](https://github.com/JJ1XGO/c3c#環境変数)節を参照
 - `requirements.txt`: 空ファイルを置く（置かないと c3c が WARNING を出す）。Python の依存は `make venv` が venv に入れる
