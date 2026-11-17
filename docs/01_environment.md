@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-30 |
-| 最終更新日 | 2026-11-16 |
+| 最終更新日 | 2026-11-17 |
 | ステータス | ドラフト |
 
 ## 目次
@@ -146,7 +146,10 @@ c3c の README の[利用側プロジェクトの設定](https://github.com/JJ1X
 
 - `allowed-domains.txt`: c3c の組み込み（Claude Code 用の API・GitHub 等）に加えて許可する通信先。
   [ハードウェアと OS](#ハードウェアと-os) の「ネットワーク」行の接続先として、`cyberjapandata.gsi.go.jp`（標高タイル）と
-  `pypi.org`・`files.pythonhosted.org`（`make venv`）を書く
+  `pypi.org`・`files.pythonhosted.org`（`make venv`）を書く。ブラウザの中で値を読むテストが使うライブラリの取得先（HLD の
+  [DEC129](30_HLD.md#4134-設計判断)「ライブラリは 3 つに限り、版を固定して CDN から取る」の CDN）は書かない。そのテストをコンテナで回すときは、
+  先にホストで同じテストを走らせて、checkout の `build/test-libs/` にライブラリを置く（テストは、置いてあるものの sha384 が
+  DEC129 の `integrity` と合えば取りに行かない）
 - `packages.txt`: [ソフトウェア](#ソフトウェア) の依存を Debian の apt パッケージ名で書く（`gcc`・`libc6-dev`・`make`・`libpng-dev`・`python3-venv`）。
   `libc6-dev` は推奨依存を入れないビルドでは明示が要る。ブラウザの中で値を読むテスト（[開発環境](#開発環境)）をコンテナで回すときは、
   `google-chrome-stable`・`brave-browser`・`firefox` も書く（次の `apt-sources.txt` の取得元から入る）
