@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-17 |
+| 最終更新日 | 2026-11-18 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -6854,7 +6854,7 @@ HLD 4.19.2 の「新しい解析結果での引き継ぎ」の 3 つの場合分
 3. `parsed.record` の `names`・`manual_deletes`・`exclusions`・`pending_returns` の数がどれも 0 で、`names_ignored` と `manual_deletes_ignored` が空で、`exclusions_failure` と `pending_returns_failure` が null なら `{kind: 'none'}`（確かめずに空の記録で始める）。除外理由の下書きと `exclusions_unsynced` は見ない（下書きは引き継がず、HLD の場合分けも 4 種だけを挙げる）。示さずに除いた名前の要素と下書きの要素は「外れたもの」に数えない（結果に入っていない）。申請に戻した記録だけを持つ世代は、ここに当たらない。
 4. それ以外は `{kind: 'ask', counts: {names, manual_deletes, exclusions, pending_returns}, names_ignored, manual_deletes_ignored, exclusions_failure, pending_returns_failure}`（`counts` は 3 の 4 つの数。後ろの 4 つは `parsed` の値そのもので、写さない）。
 
-[DEC137](30_HLD.md#4194-設計判断)「引き継ぎ元は今回より前の世代のうち直前の 1 つ」の字句は「その世代の記録が 3 種とも空で」と書くが、4.19.2 の本文は `names`・`manual_deletes`・`exclusions`・`pending_returns` の 4 種を挙げる（申請に戻した記録を足した後の文）。この関数は正本の本文に従い、4 種を見る。
+[DEC137](30_HLD.md#4194-設計判断)「引き継ぎ元は今回より前の世代のうち直前の 1 つ」と 4.19.2 の本文のとおり、`names`・`manual_deletes`・`exclusions`・`pending_returns` の 4 種を見る。
 
 ###### inherit_records
 
