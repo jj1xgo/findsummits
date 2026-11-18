@@ -1,5 +1,9 @@
 name: lint (latest tools)
 
+# schedule と workflow_dispatch は、既定のブランチ（main）にあるこのファイルだけを動かす。
+# devel にしか無い間は動かず、最初のリリース（release/* → main）で main に入ってから動き始める
+# （findsummits#346。2026-11-19 にメンテナが、それまで動かないことを受け入れると決めた）。
+
 on:
   schedule:
     - cron: '0 0 1 * *'  # 毎月1日 00:00 UTC（JST 09:00）
