@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-18 |
+| 最終更新日 | 2026-11-19 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -8503,7 +8503,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 
 ###### `show_search`
 
-`show_search(leaflet: LibState) -> undefined`（HLD 3.7.3 の受け取るもの「なし」に、Leaflet が使えるかを足す。`init_map` の `leaflet_state` と同じ理由で、検索は地図を動かすので Leaflet が使えるときだけ有効にする。HLD の表の直しは [#345](https://github.com/jj1xgo/findsummits/issues/345)「HLD 3.7.3: show_search と jump_to の受け取るものを LLD 9.2 に合わせて直す」で行う）
+`show_search(leaflet: LibState) -> undefined`（`leaflet` は HLD 3.7.3 の受け取るもの「`check_libraries` の返した Leaflet の状態」。`init_map` の `leaflet_state` と同じ理由で、検索は地図を動かすので Leaflet が使えるときだけ有効にする）
 
 1. `leaflet` が `'loading' | 'ok' | 'unavailable'` でなければ `TypeError`。`#search-wrapper` の子をすべて除き、`<input id="search" type="search" autocomplete="off" placeholder="<表の「検索の placeholder」>">` と `<div id="suggest" role="listbox" hidden>` を作る。`leaflet` が `'ok'` でなければ `input.disabled = true` にして終わる（受け手を付けない）。
 2. `input` の `input` で、`_close_suggest()` を呼んで前の入力の候補を閉じてから（待ちの間に、前の入力の候補を押して別の山へ移れないため。`_close_suggest` が `_search_timer` も消す。持ち主が 2026-11-18 に決定）、`_search_timer = setTimeout(_run_search, 250)` を入れる。待ちは 250 ミリ秒とする: 全国の件数で 1 文字ごとに探さず、打ち終えてから 0.25 秒で候補を出す（HLD 5.8.2 の実測で確かめる）。内部の `_close_suggest() -> undefined` は、`_search_timer` があれば `clearTimeout` して `null` にし、`#suggest` の子をすべて除いて `hidden` にする（選んでいる候補は、候補の `active` の class で持つので、子を除けば無くなる。画面の状態には足さない）。Esc・`#search-wrapper` の外の `mousedown`・確定は、どれも `_close_suggest()` を通す（待ちの間に閉じても、後から候補が出ない）。
@@ -8603,7 +8603,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 
 ###### `jump_to`
 
-`jump_to(kind: 'key_col' | 'peak' | 'parent_add' | 'group_member', from: Feature, member_code: string | null, missing: Array<string> | null) -> undefined`（HLD 3.7.3 の受け取るもの「移り先の種類、元のフィーチャ、（CMP8）欠けた本」に、同じ組の登録を 1 つに決める `member_code` を足す。`missing` は公開用の欠けた本の名前、作業用は `null`。HLD の表の直しは [#345](https://github.com/jj1xgo/findsummits/issues/345)「HLD 3.7.3: show_search と jump_to の受け取るものを LLD 9.2 に合わせて直す」で行う）
+`jump_to(kind: 'key_col' | 'peak' | 'parent_add' | 'group_member', from: Feature, member_code: string | null, missing: Array<string> | null) -> undefined`（HLD 3.7.3 の受け取るもの「移り先の種類、元のフィーチャ、（保留組の登録への移動だけ）移り先の登録のコード、（CMP8）欠けた本」の順。`member_code` は同じ組の登録を 1 つに決めるコードで、`group_member` のときだけ使う（ほかの種類では、呼び手の `build_popup` が `null` を渡す）。`missing` は公開用の欠けた本の名前、作業用は `null`）
 
 1. 誤り（`kind` が 4 つの字句のどれでもない、`from` が `_all_features` の要素でない、`kind` が `'group_member'` で `member_code` が空でない文字列でない、`missing` が `null` でも文字列の配列でもない）は `TypeError`。`_map` が `null` なら何もしない。
 2. 移り先は `_all_features` の並びの最初の 1 つ:
