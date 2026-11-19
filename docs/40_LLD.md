@@ -8419,7 +8419,7 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 3. `_on_exclusion_file_chosen() -> Promise<undefined>`: `files[0]` が無ければ何もしない。先に `const file = <input>.files[0]` で `File` を控え、`name = file.name` を控えてから `value` を `''` にし（`value` を空にすると `files` の一覧も空になるので、この順にする）、`await file.arrayBuffer()` で読む。読めなければ（例外）、下の「読み込めない」の箱に、理由の行 `ファイルを読めない` を出す。読めたら、`_readonly` が真なら（読む間に別の画面で変わった）`_check_writable()` を呼んで終わる。そうでなければ `parse_exclusion_file(new Uint8Array(<読んだもの>))` の結果で分ける。
    - `ok` が偽: 情報のオーバーレイ（`on_discard` なし）に、題 `除外判断ファイルを読み込めません`、行 `<name>`・`_failure_text(failure)`（読めないときは `ファイルを読めない`）・[9.2.4](#924-メッセージ文面)の「変えていない」、ボタン `data-action="close"` の `閉じる` を出す。
    - `ok` が真: 確認のオーバーレイ（`on_discard` は何もしない関数）を出す。差分 `d = diff_exclusion_ledgers({exclusions: _record.exclusions, pending_returns: _record.pending_returns}, <結果>, _batch, _record)` は、オーバーレイの組み立て（`build`）の中で、出す時点の `_record` で求める（ほかのオーバーレイが開いていて待ち行列に入ったときに、待つ間に台帳が変わっても、示す差分と置き換えがずれないため）。オーバーレイに、題 `除外判断ファイルを読み込みますか（<name>）`、行を次の順に出す: 台帳の件数の行 `除外台帳: 足す <n>・変える <n>・消す <n>`、`d.exclusions` の `added`・`changed`・`removed` の順に、`added` の各要素 `r` は `足す:` と半角の空白 1 つに続けて `_record_label(r)`、`changed` の各要素 `c` は `変える:` と半角の空白 1 つに続けて `_record_label(c.after)`（`before` は見ない）、`removed` の各要素 `r` は `消す:` と半角の空白 1 つに続けて `_record_label(r)`、`置き換えた後の除外台帳: 適用 <n>・未適用 <n>`（`d.counts.exclusions`）、続けて申請に戻した記録の同じ 3 種（`申請に戻した記録: 足す …`、要素の行、`置き換えた後の申請に戻した記録: 適用 <n>・未適用 <n>`）。ボタンは `data-action="replace"` の `置き換える`、`data-action="save_current"` の `今の判断を保存`、`data-action="cancel"` の `やめる` の順。
-     - `置き換える`: `_check_writable()` が `false` なら `close()` して終わる（記録も保存も変えない）。そうでなければ `close()` し、`_commit_record(<_record の 6 つのキーを 9.1.2 の順に持ち、exclusions・pending_returns を結果のもの、exclusions_unsynced を false にした新しいオブジェクト>)` を呼び、[9.2.4](#924-メッセージ文面)の「読み込んだ」を出す（名前と根拠、担当者指定削除、除外理由の下書きは変えない。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「除外判断を読み込む」の 5）。
+     - `置き換える`: 先に `_check_writable()` を呼ぶ（`close()` より前）。`false` なら `close()` して終わる（記録も保存も変えない）。そうでなければ `close()` し、`_commit_record(<_record の 6 つのキーを 9.1.2 の順に持ち、exclusions・pending_returns を結果のもの、exclusions_unsynced を false にした新しいオブジェクト>)` を呼び、[9.2.4](#924-メッセージ文面)の「読み込んだ」を出す（名前と根拠、担当者指定削除、除外理由の下書きは変えない。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「除外判断を読み込む」の 5）。
      - `今の判断を保存`: `save_exclusion_file()` を呼ぶ（オーバーレイは開いたまま。この画面から今の台帳と申請に戻した記録を除外判断ファイルとして保存できる）。
      - `やめる`: `close()` するだけ（何も変えない）。
 4. 版 1 のファイルで消える申請に戻した記録は、`d.pending_returns.removed` の件数と行で示す（`diff_exclusion_ledgers` の 4）。
@@ -8642,7 +8642,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 1. 不正な `change` は `TypeError`。`change` が `null` か、オブジェクトでない。`kind` が 4 つ（`setup`・`toggle`・`reveal`・`apply`）のどれでもない。`setup` で `leaflet` が `LibState` の 3 つの字句のどれでもない、または `public_files` が `null` でも `'pending'` でも `PublicCombined` でもない（ここでの `PublicCombined` は、`null` でないオブジェクトで、`overall` が `'complete'`・`'partial'`・`'none'` のどれかで、`missing` が配列で、その各要素が `null` でないオブジェクトで `name` が文字列であるもの。`missing` の要素の `kind` と `features` は見ない）。`toggle` で `target` が 7 つ（`add`・`band_change`・`no_change`・`delete`・`review`・`excluded`・`pending`）のどれでもない、または `on` が真偽値でない。`reveal` で `index` が `_all_features` の範囲の整数でない。
 2. `kind` が `'setup'`: `#filters` を組み立て直す（何度呼んでもよい。公開用は `'pending'` の後に `PublicCombined` でもう 1 度呼ばれる）。`_filter_state.enabled` と `unavailable` は呼ぶたびに引数だけから決め直し、前の値を持ち越さない。
    - `enabled` は、`leaflet` が `'ok'` で、かつ `public_files` が `null`（作業用）か、`overall` が `'none'` でない `PublicCombined` のとき `true`。ほか（`leaflet` が `'ok'` でない、`public_files` が `'pending'`、`overall` が `'none'`）は `false`。
-   - `unavailable` は、`PublicCombined` で `overall` が `'partial'` のとき `missing` の各要素の `name` の並び。ほかは `[]`。`unavailable` のカテゴリは `_filter_state.categories` を `false` にする（作業用と `overall` が `'complete'` のときは変えない）。
+   - `unavailable` は、`PublicCombined` で `overall` が `'partial'` のとき `missing` の各要素の `name` の並び（`name` は `category` の値と同じ字句。[9.1.3](#913-関数の細部)の `combine_public_files`）。ほかは `[]`。`unavailable` のカテゴリは `_filter_state.categories` を `false` にする（作業用と `overall` が `'complete'` のときは変えない）。
    - チェックボックスの `checked` は `_filter_state` の値、`disabled` は `enabled` が偽か、そのカテゴリが `unavailable` にあるとき真。`unavailable` のカテゴリの件数の場所には表の「フィルターの件数」を出す。
    - `#search` があれば `disabled = !enabled`（HLD 3.7.3 の `apply_filters` の「CMP8 では、5 本がそろうまで検索とフィルターを使えなくし」。作業用で `leaflet` が `'ok'` でないときも、`show_search` と同じく使えない）。
    - 最後に `'apply'` と同じことをする。
@@ -8867,7 +8867,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 | 消して保存した（結果） | `<key> を消して、今回の記録を保存した` |
 | 消せなかった（結果） | `<key> を消せなかった` |
 | 保存させた（結果） | `除外判断ファイル exclusion_decisions.json のダウンロードを始めた` |
-| 読み込めない題と行 | 題 `除外判断ファイルを読み込めません`、行 `ファイルを読めない`、変えていない `除外台帳と申請に戻した記録は変えていない`、ボタン `閉じる` |
+| 読み込めない題と行 | 題 `除外判断ファイルを読み込めません`。行は 3 つで、この順: 選んだファイルの名前、理由（`_failure_text(failure)`。読めないときは `ファイルを読めない`）、変えていない `除外台帳と申請に戻した記録は変えていない`。ボタン `閉じる` |
 | 拒む理由の `kind` の文 | `not_utf8` は `UTF-8 として読めない`、`not_json` は `JSON として読めない`、`unsupported_version` は `対応していない版`、`missing_key` は `キーが無い`、`extra_key` は `余分なキー`、`bad_value` は `値が決まりに合わない`、`duplicate_key` は `識別キーが重なる` |
 | 読み込みの確認 | 題 `除外判断ファイルを読み込みますか（<name>）`、行の頭は `足す:`・`変える:`・`消す:` と半角の空白 1 つ、件数の行は `除外台帳: 足す <n>・変える <n>・消す <n>`・`置き換えた後の除外台帳: 適用 <n>・未適用 <n>`・`申請に戻した記録: 足す <n>・変える <n>・消す <n>`・`置き換えた後の申請に戻した記録: 適用 <n>・未適用 <n>`、ボタン `置き換える`・`今の判断を保存`・`やめる` |
 | 読み込んだ（結果） | `除外判断ファイル <name> を読み込んだ` |
@@ -8940,7 +8940,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 | `kind` | 文 |
 |---|---|
 | `missing_property` | `フィーチャのプロパティが無い: 位置 <index>・<feature_type>・<summit_code>・<property>` |
-| `coord_diff_count_mismatch` | `削除候補の数と座標差の線の数が合わない: 親 <parent_summit_code>・削除候補 <summit_codes を「、」でつないだもの>（点 <summit_count>・線 <line_count>）` |
+| `coord_diff_count_mismatch` | `削除候補の数と座標差の線の数が合わない: 親 <parent_summit_code>・削除候補 <summit_codes を「、」でつないだもの>（点 <summit_count>・線 <line_count>）`。キーの形は 9.1.2 の `ProgramError` の節に無く、[9.1.3](#913-関数の細部)の `apply_exclusions` の「通常の削除の線の結び方（DEC135）」にある |
 | `row_join_mismatch` | `行に結ぶ相手の数が合わない: 位置 <row>・<summit_code>・<partner の名前> が <count> 個`。`partner` の名前は `peak` が `ピーク`、`key_col` が `Keyコル`、`activation_zone` が `AZ`、`az_summit` が `AZ の中のサミット` |
 | `row_missing_property` | `行に要るプロパティが無い: 位置 <row>・<summit_code>・取り元の位置 <index>（<feature_type>）・<property>` |
 | `missing_category` | `カテゴリが無い: 位置 <index>・<feature_type>・<summit_code>` |
