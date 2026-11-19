@@ -8260,7 +8260,7 @@ ID は通し番号で、表の並びは見出しの並びと違ってよい（�
 `write_storage(key: string, value: string) -> 'ok' | 'unavailable' | 'failed'`
 
 1. どちらかが文字列でなければ `TypeError`。
-2. `_storage_unreadable` が真なら、`localStorage` に触れずに `notify('status', {key: 'unsaved', text: '未保存', action: null})` を呼び、`'unavailable'` を返す（[HLD 3.7.3](30_HLD.md#373-関数)の表の `write_storage` の行。[DEC195](30_HLD.md#4194-設計判断)「開いて読めなかったページは閉じるまで書かない」）。編集のたびの `_commit_record` と、`show_storage_keys` の保存のやり直しも、これで書かない（呼ぶ側は変えない。`show_storage_keys` は結果が `'ok'` でないので「消した」を出す）。
+2. `_storage_unreadable` が真なら、`localStorage` に触れずに `notify('status', {key: 'unsaved', text: '未保存', action: null})` を呼び、`'unavailable'` を返す（[HLD 3.7.3](30_HLD.md#373-関数)の表の `write_storage` の行と、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「保存の失敗と古い世代の削除」）。編集のたびの `_commit_record` と、`show_storage_keys` の保存のやり直しも、これで書かない（呼ぶ側は変えない。`show_storage_keys` は結果が `'ok'` でないので「消した」を出す）。
 3. `localStorage.setItem(key, value)` を呼ぶ（`window.localStorage` を読むことを含め、`try` の中）。
    - 例外が出なければ `'ok'` を返す。返す前に `notify('status', {key: 'unsaved', text: null, action: null})` で「未保存」を消す。
    - 例外が出て `_is_quota_error(<例外>)` が真なら `'failed'`（書き込みの失敗）を返す。返す前に `notify('status', {key: 'unsaved', text: '未保存', action: {label: 'キーの一覧', on_click: show_storage_keys}})` を呼ぶ（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「保存の失敗と古い世代の削除」の、書き込みの失敗ならキーの一覧の入口を出す。[DEC138](30_HLD.md#4194-設計判断)「保存に失敗したら選んだ古い世代を消してやり直す」）。
