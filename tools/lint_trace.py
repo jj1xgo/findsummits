@@ -1123,7 +1123,11 @@ def check_lld(repo, hld_sections, confirmed):
         covered = set().union(*(m['hld'] for m in modules.values()))
         for sec in sorted(x for x in hld_sections if x.startswith(('3.', '4.', '5.')) and x not in covered):
             out.append(finding('T3', f'LLD:{sec}', LLD, f'HLD {sec} を対応 HLD に持つ LLD のモジュールがありません'))
-    out += check_lld_ut_candidates(repo.read(LLD))
+    ut_out, ut_info = check_lld_ut_candidates(repo.read(LLD))
+    out += ut_out
+    for mid, m in modules.items():
+        u = ut_info.get(mid, {})
+        m.update(ut_number=u.get('number'), ut_rows=u.get('rows'), ut_refs=u.get('refs', []))
     return out, modules
 
 
@@ -1140,9 +1144,14 @@ def check_lld_ut_candidates(text):
     表も読み、ヘッダーの 1 列目が ID でない字下げした表は準備の表として、1 列目の UT の ID だけを止める。
     小節の外の表は、どの行でも 1 列目に UT の ID があれば止める（見出しの書き方がずれて、検査が黙って外れない
     ため）。並び順と欠番は見ない。
+
+    2 つ目の戻り値は、宣言を読んだモジュールごとの {'number': モジュールの見出しの頭の節の番号,
+    'rows': UT 候補の小節の表で 1 列目が UT の ID の最初の行（ほかの指摘の有無によらない）,
+    'refs': UT 候補の小節の表でない行の、50_UT.md へのアンカー付きのリンクの (行, アンカー)}。
+    check_ut_moved が単体テスト仕様書との突き合わせに使う。
     """
-    out, seen = [], set()
-    module = module_level = ut_level = head_level = None
+    out, seen, info = [], set(), {}
+    module = module_level = ut_level = head_level = head_text = None
     decl_seen, table, prev_no, header_no = False, None, None, None
 
     def no_second_row():
@@ -1161,7 +1170,7 @@ def check_lld_ut_candidates(text):
             if table == 'sep':
                 out.append(no_second_row())
             n = len(h.group(1))
-            head_level, decl_seen, table = n, False, None
+            head_level, head_text, decl_seen, table = n, h.group(2), False, None
             if module_level is not None and n <= module_level:
                 module = module_level = None
             if ut_level is not None and n > ut_level:
@@ -1178,6 +1187,13 @@ def check_lld_ut_candidates(text):
             d = DECL_RE.match(line)
             if d and d.group(1) == 'ID' and head_level is not None and not decl_seen:
                 module, module_level, decl_seen = d.group(2).strip(), head_level, True
+                number = SECTION_NUMBER_RE.match(head_text)
+                info.setdefault(module, {'number': number.group(1) if number else None, 'rows': None, 'refs': []})
+            elif ut_level is not None and module is not None:
+                for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', line)):
+                    dest = os.path.normpath(os.path.join(os.path.dirname(LLD), unquote(m.group(2))))
+                    if m.group(2) and m.group(3) and dest == CASE_DOCS['UT']:
+                        info[module]['refs'].append((no, unquote(m.group(3))))
             continue
         first = row[1:].split('|')[0].strip()
         where = f'{LLD}:{no}'
@@ -1220,6 +1236,8 @@ def check_lld_ut_candidates(text):
             out.append(finding('T1', f'LLD-UT:{no}:表', where,
                                'LLD の UT 候補の小節の表の 2 行目が区切りの行ではありません'))
             # 区切りが無い表の 2 行目はデータの行として読む
+        if cell and module is not None and info[module]['rows'] is None:
+            info[module]['rows'] = no
         if not (cell and cell.group(2) in ('', MANUAL_MARK)):
             if not cell and bare and bare.group(1).startswith('UT-'):
                 cid = bare.group(1)
@@ -1247,6 +1265,42 @@ def check_lld_ut_candidates(text):
                                f'LLD の UT 候補の ID {cid} のモジュール名がその節の {module} と違います'))
     if table == 'sep':
         out.append(no_second_row())
+    return out, info
+
+
+def check_ut_moved(modules, cases, ut_text):
+    """LLD の UT 候補と単体テスト仕様書（50_UT.md）の突き合わせ（ADR-LLD-001 の追記、#244）。
+
+    1. 50_UT.md にケースがあるモジュールは、LLD の UT 候補の小節に表の行を持たない（T1）
+    2. LLD の UT 候補の小節が 50_UT.md を指しているなら、50_UT.md にそのモジュールのケースがある（T2）
+    3. 50_UT.md にケースがあるモジュールは、LLD の UT 候補の小節から 50_UT.md の同じ番号の節を指している（T1）
+
+    参照は、UT 候補の小節の表でない行（コード表記を除く）の、LLD から解いて 50_UT.md になり、アンカーの
+    見出しの頭の節の番号がそのモジュールの節の番号と同じリンク。番号の違う節へのリンクとアンカーの無い
+    リンクは数えない。ケースの無いモジュールは止めない（UT を確定にした後は T3 が止める）。
+    """
+    numbers = anchors_of(ut_text) if ut_text is not None else {}
+    with_cases = set()
+    for cid, c in cases.items():
+        m = CASE_FORMAT['UT'].match(cid) if c['level'] == 'UT' else None
+        if m and f'LLD-{m.group(1)}' in modules:
+            with_cases.add(f'LLD-{m.group(1)}')
+    out = []
+    for mid in sorted(modules):
+        mod = modules[mid]
+        refs = [no for no, anchor in mod['ut_refs']
+                if mod['ut_number'] is not None and numbers.get(anchor) == mod['ut_number']]
+        if mid in with_cases and mod['ut_rows'] is not None:
+            out.append(finding('T1', f'UT-move:{mid}:二重', f'{LLD}:{mod["ut_rows"]}',
+                               f'{mid} のケースは 50_UT.md にあるのに、LLD の UT 候補の小節にも表の行があります'))
+        if refs and mid not in with_cases:
+            out.append(finding('T2', f'UT-move:{mid}->50_UT', f'{LLD}:{refs[0]}',
+                               f'{mid} の UT 候補の小節は 50_UT.md を指しているのに、'
+                               '50_UT.md にそのモジュールのケースがありません'))
+        if mid in with_cases and not refs:
+            out.append(finding('T1', f'UT-move:{mid}:参照', mod['where'],
+                               f'{mid} のケースが 50_UT.md にあるのに、LLD の UT 候補の小節から'
+                               ' 50_UT.md の同じ番号の節を指していません'))
     return out
 
 
@@ -1435,6 +1489,8 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, implemented=IMPLEMENTED_STAGES,
         out += check_hld_seam_tables(repo.read(HLD), repo.has(CASE_DOCS['IT']))
     cases, case_out = load_cases(repo)
     out += case_out + check_cases(cases, req_ids, urs, modules, seams, confirmed)
+    if modules is not None:
+        out += check_ut_moved(modules, cases, repo.read(CASE_DOCS['UT']) if repo.has(CASE_DOCS['UT']) else None)
     out += check_st_matrix(repo, urs, declared, cases)
     out += check_it_moved(repo, cases)
     out += check_code(repo, modules, cases, confirmed, implemented)

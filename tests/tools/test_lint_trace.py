@@ -1094,7 +1094,15 @@ LLD_TWO = '''
 |---|---|
 '''
 
+LLD_REF = LLD + '''
+#### 1.1.5 UT 候補
+
+ケースは単体テスト仕様書の [1.1](50_UT.md#11-一)（`UT-one-001`〜`UT-one-002`）にある。
+'''
+
 UT = '''# UT
+
+### 1.1 一
 
 | ID | 手順 |
 |---|---|
@@ -1301,12 +1309,59 @@ class ItTest(TraceTestCase):
 class LldTest(TraceTestCase):
     def files(self, **over):
         files = dict(BASE, **{
-            'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD, 'docs/50_UT.md': UT,
+            'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD_REF, 'docs/50_UT.md': UT,
             'src/one.cpp': '// trace: LLD-one\nint one() { return 1; }\n',
             'tests/src/test_one.cpp': '// trace: UT-one-001\n',
         })
         files.update(over)
         return files
+
+    def moved_keys(self, lld, ut=UT):
+        return [k for k in self.keys(self.files(**{'docs/40_LLD.md': lld, 'docs/50_UT.md': ut})) if ':UT-move:' in k]
+
+    def test_ut_moved_clean(self):
+        self.assertEqual(self.moved_keys(LLD_REF), [])
+
+    def test_ut_moved_rows_and_cases(self):  # 規則 1
+        lld = LLD_REF + '\n| ID | 確かめること |\n|---|---|\n| `UT-one-003` | c |\n'
+        self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:二重'])
+
+    def test_ut_moved_ref_without_cases(self):  # 規則 2（表もある小節に参照だけ足した）
+        lld = LLD_UT + '\n[1.1](50_UT.md#11-一) も見る。\n'
+        self.assertEqual(self.moved_keys(lld, ut='# UT\n\n### 1.1 一\n'), ['T2:UT-move:LLD-one->50_UT'])
+
+    def test_ut_moved_cases_without_ref(self):  # 規則 3（小節が無い）
+        self.assertEqual(self.moved_keys(LLD), ['T1:UT-move:LLD-one:参照'])
+
+    def test_ut_moved_not_yet(self):  # 未移行（表だけ、50_UT.md にケースなし）
+        self.assertEqual(self.moved_keys(LLD_UT, ut='# UT\n'), [])
+
+    def test_ut_moved_deep_heading(self):  # 深い見出しの下の参照も小節の中
+        lld = LLD + '\n#### 1.1.5 UT 候補\n\n##### 群（UT 候補）\n\n[1.1](50_UT.md#11-一) にある。\n'
+        self.assertEqual(self.moved_keys(lld), [])
+
+    def test_ut_moved_dot_slash(self):  # ./50_UT.md も ../docs/50_UT.md も参照（パスを正規化して解く）
+        for target in ('./50_UT.md', '../docs/50_UT.md'):
+            with self.subTest(target=target):
+                self.assertEqual(self.moved_keys(LLD_REF.replace('(50_UT.md#', f'({target}#')), [])
+
+    def test_ut_moved_other_number_not_ref(self):  # 番号の違う節へのリンクは参照でない
+        ut = UT + '\n### 2.1 二\n'
+        lld = LLD + '\n#### 1.1.5 UT 候補\n\n[2.1](50_UT.md#21-二) と同じ分け方。\n'
+        self.assertEqual(self.moved_keys(lld, ut=ut), ['T1:UT-move:LLD-one:参照'])
+
+    def test_ut_moved_link_in_table_or_code_not_ref(self):  # 表のセルとコード表記の中は参照でない
+        lld = LLD + ('\n#### 1.1.5 UT 候補\n\n`[1.1](50_UT.md#11-一)` は書き方の例。\n\n'
+                     '| 名 | 値 |\n|---|---|\n| a | [1.1](50_UT.md#11-一) |\n')
+        self.assertIn('T1:UT-move:LLD-one:参照', self.moved_keys(lld))
+
+    def test_ut_moved_link_outside_subsection_not_ref(self):  # 小節の外のリンクは参照でない
+        lld = LLD + '\n#### 1.1.3 関数の細部\n\n[1.1](50_UT.md#11-一) を見る。\n'
+        self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
+
+    def test_ut_moved_preparation_table_not_rows(self):  # 準備の表は表の行に数えない
+        lld = LLD_REF + '\n- 準備:\n\n  | 名 | 値 |\n  |---|---|\n  | a | b |\n'
+        self.assertEqual(self.moved_keys(lld), [])
 
     def lld_keys(self, lld):
         return [k for k in self.keys(self.files(**{'docs/40_LLD.md': lld})) if ':LLD-UT:' in k]
@@ -1491,7 +1546,7 @@ class LldTest(TraceTestCase):
         self.assertIn('T3:LLD:4.1', self.keys(self.files(**{'docs/40_LLD.md': lld}), confirmed={'LLD'}))
 
     def test_lld_can_point_to_program_chapter(self):
-        lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)',
+        lld = LLD_REF.replace('[4.1](30_HLD.md#41-fr-001-一)',
                           '[4.1](30_HLD.md#41-fr-001-一)・[3.1](30_HLD.md#31-cmp1-一)')
         files = self.files(**{'docs/30_HLD.md': HLD_PROGRAM, 'docs/40_LLD.md': lld})
         keys = self.keys(files, confirmed={'LLD', 'UT'})
