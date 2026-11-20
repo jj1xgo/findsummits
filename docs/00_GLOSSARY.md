@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-10-25 |
+| 最終更新日 | 2026-11-20 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -253,7 +253,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
 | HLD | High-Level Design | 概要設計。アーキテクチャ、プログラム構造（プログラム・関数の一覧・共通部品・結合のつなぎ目）、FR/NFR ごとの処理方式を記述（[`docs/30_HLD.md`](30_HLD.md)） |
 | LLD | Low-Level Design | 詳細設計。関数ごとの細部（型、内部のデータの持ち方、メッセージの文面、ファイルへの割り付け）を記述（[`docs/40_LLD.md`](40_LLD.md)） |
 | COD | Coding | 実装フェーズ。成果物: `src/*.c`・`scripts/*.py` |
-| UT | Unit Test | 単体テスト（`docs/50_UT.md`、未作成） |
+| UT | Unit Test | 単体テスト（[`docs/50_UT.md`](50_UT.md)） |
 | IT | Integration Test | 結合テスト。プログラムの境界をまたぐ受け渡しを、内部結合と外部結合の 2 段で確かめる（用語の定義は [HLD 1 章](30_HLD.md#1-用語定義)。[`docs/60_IT.md`](60_IT.md)） |
 | ST | System Test | システムテスト（[`docs/70_ST.md`](70_ST.md)） |
 | OPS | Operations | 運用フェーズ（`docs/80_OPS.md`、未作成） |
