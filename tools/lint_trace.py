@@ -1143,13 +1143,23 @@ def check_lld_ut_candidates(text):
     """
     out, seen = [], set()
     module = module_level = ut_level = head_level = None
-    decl_seen, table, prev_no = False, None, None
+    decl_seen, table, prev_no, header_no = False, None, None, None
+
+    def no_second_row():
+        # ヘッダーの行の後に 2 行目が無いまま表が切れた
+        return finding('T1', f'LLD-UT:{header_no}:表', f'{LLD}:{header_no}',
+                       'LLD の UT 候補の小節の表に 2 行目（区切りの行）がありません')
+
     for no, line in iter_lines(text):
         if prev_no is not None and no != prev_no + 1:
+            if table == 'sep':
+                out.append(no_second_row())
             table = None  # iter_lines がコードブロックを飛ばした。表はそこで切れる
         prev_no = no
         h = HEADING_RE.match(line)
         if h:
+            if table == 'sep':
+                out.append(no_second_row())
             n = len(h.group(1))
             head_level, decl_seen, table = n, False, None
             if module_level is not None and n <= module_level:
@@ -1162,6 +1172,8 @@ def check_lld_ut_candidates(text):
             continue
         row = line.lstrip()  # 箇条の中の字下げした表も読む
         if not row.startswith('|'):
+            if table == 'sep':
+                out.append(no_second_row())
             table = None
             d = DECL_RE.match(line)
             if d and d.group(1) == 'ID' and head_level is not None and not decl_seen:
@@ -1171,6 +1183,7 @@ def check_lld_ut_candidates(text):
         where = f'{LLD}:{no}'
         cell = UT_CELL_RE.match(first)
         bare = BARE_CASE_ROW_RE.match(row)
+        has_ut = bool(cell or (bare and bare.group(1).startswith('UT-')))
         if ut_level is None:
             # 小節の外は、表のどの行（ヘッダー・区切りを含む）でも 1 列目の UT の ID を止める
             cid = cell.group(1) if cell else (bare.group(1) if bare and bare.group(1).startswith('UT-') else None)
@@ -1180,9 +1193,13 @@ def check_lld_ut_candidates(text):
             continue
         if table is None:
             if first == 'ID':
-                table = 'sep'
+                table, header_no = 'sep', no
             elif row != line:
                 table = 'prep'  # 箇条の中に字下げした準備の表（`| 名 | 値 |` など）
+                if has_ut:
+                    out.append(finding('T1', f'LLD-UT:{no}:表', where,
+                                       'LLD の UT 候補の小節の準備の表（ヘッダーの 1 列目が ID でない字下げした表）の'
+                                       ' 1 列目に UT のケース ID があります'))
             else:
                 out.append(finding('T1', f'LLD-UT:{no}:表', where,
                                    'LLD の UT 候補の小節の表のヘッダーの 1 列目が ID ではありません'))
@@ -1191,7 +1208,7 @@ def check_lld_ut_candidates(text):
         if table == 'skip':
             continue
         if table == 'prep':
-            if cell or (bare and bare.group(1).startswith('UT-')):
+            if has_ut:
                 out.append(finding('T1', f'LLD-UT:{no}:表', where,
                                    'LLD の UT 候補の小節の準備の表（ヘッダーの 1 列目が ID でない字下げした表）の'
                                    ' 1 列目に UT のケース ID があります'))
@@ -1228,6 +1245,8 @@ def check_lld_ut_candidates(text):
         elif f'LLD-{m.group(1)}' != module:
             out.append(finding('T2', f'LLD-UT:{cid}->{module}', where,
                                f'LLD の UT 候補の ID {cid} のモジュール名がその節の {module} と違います'))
+    if table == 'sep':
+        out.append(no_second_row())
     return out
 
 

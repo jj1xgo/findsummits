@@ -1355,6 +1355,15 @@ class LldTest(TraceTestCase):
         outside = LLD + '\n- 群 A:\n\n  | ID | x |\n  |---|---|\n  | `UT-one-001` | x |\n'
         self.assertIn('T1:LLD-UT:UT-one-001:小節の外', self.lld_keys(outside))
 
+    def test_lld_ut_candidate_header_without_second_row(self):
+        for tail in ('\n| ID | x |\n\n', '\n| ID | x |'):
+            keys = self.lld_keys(LLD_UT + tail)
+            self.assertEqual(len([k for k in keys if k.endswith(':表')]), 1, tail)
+
+    def test_lld_ut_candidate_preparation_table_header_with_ut_id(self):
+        lld = LLD_UT + '\n- 準備の値:\n\n  | `UT-one-004` | x |\n'
+        self.assertEqual(len([k for k in self.lld_keys(lld) if k.endswith(':表')]), 1)
+
     def test_lld_ut_candidate_indented_preparation_table(self):
         prep = LLD_UT + '\n- 準備の値:\n\n  | 名 | 値 |\n  |---|---|\n  | `MD0` | x |\n'
         self.assertEqual(self.lld_keys(prep), [])
