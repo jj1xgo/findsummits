@@ -273,14 +273,14 @@ class GapTest(TraceTestCase):
         self.assertIn('T4:SRS-matrix:FR-002', self.keys(dict(BASE, **{'docs/20_SRS.md': srs})))
 
     def test_python_that_does_not_tokenize_falls_back_to_lines(self):
-        files = dict(BASE, **{'tests/scripts/test_bad.py': "x = '''\n# trace: UT-one-09\n"})
-        self.assertIn('T2:tests/scripts/test_bad.py->UT-one-09', self.keys(files))
+        files = dict(BASE, **{'tests/scripts/test_bad.py': "x = '''\n# trace: UT-one-009\n"})
+        self.assertIn('T2:tests/scripts/test_bad.py->UT-one-009', self.keys(files))
 
     def test_manual_mark_must_follow_the_id(self):
-        ut = UT.replace('| `UT-one-01` | a |', '| `UT-one-01` 説明（手動） | a |')
+        ut = UT.replace('| `UT-one-001` | a |', '| `UT-one-001` 説明（手動） | a |')
         files = self.lld_files(LLD)
-        files.update({'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// trace: UT-one-02\n'})
-        self.assertIn('T5:UT-one-01', self.keys(files, confirmed={'SRS', 'HLD', 'LLD', 'UT'}, implemented={'UT'}))
+        files.update({'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// trace: UT-one-002\n'})
+        self.assertIn('T5:UT-one-001', self.keys(files, confirmed={'SRS', 'HLD', 'LLD', 'UT'}, implemented={'UT'}))
 
 
 class StageTest(TraceTestCase):
@@ -1068,8 +1068,8 @@ UT = '''# UT
 
 | ID | 手順 |
 |---|---|
-| `UT-one-01` | a |
-| `UT-one-02`（手動） | b |
+| `UT-one-001` | a |
+| `UT-one-002`（手動） | b |
 '''
 
 
@@ -1273,10 +1273,25 @@ class LldTest(TraceTestCase):
         files = dict(BASE, **{
             'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD, 'docs/50_UT.md': UT,
             'src/one.cpp': '// trace: LLD-one\nint one() { return 1; }\n',
-            'tests/src/test_one.cpp': '// trace: UT-one-01\n',
+            'tests/src/test_one.cpp': '// trace: UT-one-001\n',
         })
         files.update(over)
         return files
+
+    def test_ut_id_three_digits(self):
+        ut = UT + ''.join(f'| `{i}` | x |\n' for i in (
+            'UT-one-100', 'UT-one-999', 'UT-one-01', 'UT-one-000', 'UT-one-1000', 'UT-one-1', 'UT-one-10９'))
+        keys = self.keys(self.files(**{'docs/50_UT.md': ut}))
+        for ok in ('UT-one-100', 'UT-one-999'):
+            self.assertNotIn(f'T1:{ok}', keys)
+        for bad in ('UT-one-01', 'UT-one-000', 'UT-one-1000', 'UT-one-1', 'UT-one-10９'):
+            self.assertIn(f'T1:{bad}', keys)
+
+    def test_it_st_keep_two_digits(self):
+        self.assertTrue(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-01'))
+        self.assertFalse(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-001'))
+        self.assertTrue(lt.CASE_FORMAT['ST'].match('ST-FR-001-01'))
+        self.assertFalse(lt.CASE_FORMAT['ST'].match('ST-FR-001-001'))
 
     def test_clean_when_confirmed(self):
         keys = self.keys(self.files(), confirmed={'LLD', 'UT'}, implemented={'UT'})
@@ -1333,27 +1348,27 @@ class LldTest(TraceTestCase):
     def test_unimplemented_automated_case(self):
         files = self.files(**{'tests/src/test_one.cpp': '// 空\n'})
         keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
-        self.assertIn('T5:UT-one-01', keys)
-        self.assertNotIn('T5:UT-one-02', keys)
+        self.assertIn('T5:UT-one-001', keys)
+        self.assertNotIn('T5:UT-one-002', keys)
 
     def test_unknown_case_in_test_code(self):
-        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-01\n// trace: UT-one-09\n'})
-        self.assertIn('T2:tests/src/test_one.cpp->UT-one-09', self.keys(files))
+        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-001\n// trace: UT-one-009\n'})
+        self.assertIn('T2:tests/src/test_one.cpp->UT-one-009', self.keys(files))
 
     def test_ut_for_unknown_module(self):
-        ut = UT + '| `UT-two-01` | c |\n'
-        self.assertIn('T2:UT-two-01', self.keys(self.files(**{'docs/50_UT.md': ut})))
+        ut = UT + '| `UT-two-001` | c |\n'
+        self.assertIn('T2:UT-two-001', self.keys(self.files(**{'docs/50_UT.md': ut})))
 
     def test_trace_in_string_literal_is_ignored(self):
-        files = self.files(**{'tests/scripts/test_x.py': "X = '// trace: UT-one-09'\n"})
-        self.assertNotIn('T2:tests/scripts/test_x.py->UT-one-09', self.keys(files))
+        files = self.files(**{'tests/scripts/test_x.py': "X = '// trace: UT-one-009'\n"})
+        self.assertNotIn('T2:tests/scripts/test_x.py->UT-one-009', self.keys(files))
 
     def test_trace_in_multiline_string_is_ignored(self):
-        files = self.files(**{'tests/scripts/test_y.py': "X = '''\n# trace: UT-one-09\n'''\n",
-                              'tests/scripts/test_z.py': "# trace: UT-one-08\n"})
+        files = self.files(**{'tests/scripts/test_y.py': "X = '''\n# trace: UT-one-009\n'''\n",
+                              'tests/scripts/test_z.py': "# trace: UT-one-008\n"})
         keys = self.keys(files)
-        self.assertNotIn('T2:tests/scripts/test_y.py->UT-one-09', keys)
-        self.assertIn('T2:tests/scripts/test_z.py->UT-one-08', keys)
+        self.assertNotIn('T2:tests/scripts/test_y.py->UT-one-009', keys)
+        self.assertIn('T2:tests/scripts/test_z.py->UT-one-008', keys)
 
     def test_missing_id_in_module_section(self):
         lld = LLD.replace('- **ID**: LLD-one\n', '')
@@ -1378,23 +1393,23 @@ class LldTest(TraceTestCase):
         self.assertIn('T5:tests/scripts/test_it_helper.py', self.keys(files, confirmed={'UT'}, implemented={'UT'}))
 
     def test_module_without_ut_when_confirmed(self):
-        ut = UT.replace('| `UT-one-01` | a |\n| `UT-one-02`（手動） | b |\n', '')
+        ut = UT.replace('| `UT-one-001` | a |\n| `UT-one-002`（手動） | b |\n', '')
         files = self.files(**{'docs/50_UT.md': ut, 'tests/src/test_one.cpp': '// 空\n'})
         self.assertIn('T3:UT:LLD-one', self.keys(files, confirmed={'UT'}))
 
 
     def test_several_ids_in_one_trace_comment(self):
-        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-01, UT-one-09\n'})
+        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-001, UT-one-009\n'})
         keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
-        self.assertIn('T2:tests/src/test_one.cpp->UT-one-09', keys)
-        self.assertNotIn('T5:UT-one-01', keys)
+        self.assertIn('T2:tests/src/test_one.cpp->UT-one-009', keys)
+        self.assertNotIn('T5:UT-one-001', keys)
 
     def test_trailing_comment_counts_except_in_bash(self):
-        files = self.files(**{'tests/scripts/test_e.py': 'x = 1  # trace: UT-one-09\n',
-                              'tests/scripts/t.sh': 'echo a  # trace: UT-one-08\n'})
+        files = self.files(**{'tests/scripts/test_e.py': 'x = 1  # trace: UT-one-009\n',
+                              'tests/scripts/t.sh': 'echo a  # trace: UT-one-008\n'})
         keys = self.keys(files)
-        self.assertIn('T2:tests/scripts/test_e.py->UT-one-09', keys)
-        self.assertNotIn('T2:tests/scripts/t.sh->UT-one-08', keys)
+        self.assertIn('T2:tests/scripts/test_e.py->UT-one-009', keys)
+        self.assertNotIn('T2:tests/scripts/t.sh->UT-one-008', keys)
 
 class ParserHardeningTest(TraceTestCase):
     """実装完了時のレビュー（Codex）の指摘: 宣言・コメント・フェンスの解析の抜け"""
@@ -1476,19 +1491,19 @@ class ParserHardeningTest(TraceTestCase):
                              'src/one.cpp': '// trace: LLD-one\n', 'tests/src/test_raw.cpp': source})
 
     def test_trace_in_cpp_raw_string_is_ignored(self):
-        keys = self.keys(self.files_with_cpp('const char* s = R"(\n// trace: UT-one-09\n)";\n'))
-        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-09', keys)
+        keys = self.keys(self.files_with_cpp('const char* s = R"(\n// trace: UT-one-009\n)";\n'))
+        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-009', keys)
 
     def test_trace_in_cpp_raw_string_with_delimiter_is_ignored(self):
-        keys = self.keys(self.files_with_cpp('auto s = R"x(\n)"\n// trace: UT-one-09\n)x";\n'))
-        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-09', keys)
+        keys = self.keys(self.files_with_cpp('auto s = R"x(\n)"\n// trace: UT-one-009\n)x";\n'))
+        self.assertNotIn('T2:tests/src/test_raw.cpp->UT-one-009', keys)
 
     def test_trace_in_cpp_string_and_block_comment(self):
-        source = ('const char* u = "http://x"; // trace: UT-one-07\n'
-                  '/* x\n * trace: UT-one-08\n */\n'
-                  "int k = 1'000; // trace: UT-one-06\n")
+        source = ('const char* u = "http://x"; // trace: UT-one-007\n'
+                  '/* x\n * trace: UT-one-008\n */\n'
+                  "int k = 1'000; // trace: UT-one-006\n")
         keys = self.keys(self.files_with_cpp(source))
-        for case_id in ('UT-one-07', 'UT-one-08', 'UT-one-06'):
+        for case_id in ('UT-one-007', 'UT-one-008', 'UT-one-006'):
             self.assertIn(f'T2:tests/src/test_raw.cpp->{case_id}', keys)
 
 
