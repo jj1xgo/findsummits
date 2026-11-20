@@ -1363,6 +1363,25 @@ class LldTest(TraceTestCase):
         lld = LLD_REF + '\n- 準備:\n\n  | 名 | 値 |\n  |---|---|\n  | a | b |\n'
         self.assertEqual(self.moved_keys(lld), [])
 
+    def test_ut_moved_hidden_link_not_ref(self):  # 表示されないリンク（コメント・エスケープ・画像）は参照でない
+        ref = '[1.1](50_UT.md#11-一)'
+        for hidden in (f'<!-- {ref} -->', f'<!--\n{ref}\n-->', f'\\{ref}', f'!{ref}'):
+            with self.subTest(hidden=hidden):
+                lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
+                self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
+
+    def test_ut_moved_percent_encoded_anchor(self):  # %-符号化したアンカーも参照（unquote して照らす）
+        lld = LLD_REF.replace('#11-一)', '#11-%E4%B8%80)')
+        self.assertEqual(self.moved_keys(lld), [])
+
+    def test_ut_moved_cases_outside_numbered_section(self):  # ケースが同じ番号の節の外にある
+        ut = '# UT\n\n### 1.1 一\n\n前置き。\n\n### 3.1 三\n\n| ID | 手順 |\n|---|---|\n| `UT-one-001` | a |\n'
+        self.assertEqual(self.moved_keys(LLD_REF, ut=ut), ['T2:UT-move:LLD-one:置き場'])
+
+    def test_ut_moved_cases_in_deeper_heading(self):  # 同じ番号の節のより深い見出しの下は節の中
+        ut = '# UT\n\n### 1.1 一\n\n#### 群\n\n| ID | 手順 |\n|---|---|\n| `UT-one-001` | a |\n'
+        self.assertEqual(self.moved_keys(LLD_REF, ut=ut), [])
+
     def lld_keys(self, lld):
         return [k for k in self.keys(self.files(**{'docs/40_LLD.md': lld})) if ':LLD-UT:' in k]
 

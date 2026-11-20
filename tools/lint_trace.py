@@ -1153,6 +1153,7 @@ def check_lld_ut_candidates(text):
     out, seen, info = [], set(), {}
     module = module_level = ut_level = head_level = head_text = None
     decl_seen, table, prev_no, header_no = False, None, None, None
+    in_comment = False
 
     def no_second_row():
         # ヘッダーの行の後に 2 行目が無いまま表が切れた
@@ -1160,6 +1161,7 @@ def check_lld_ut_candidates(text):
                        'LLD の UT 候補の小節の表に 2 行目（区切りの行）がありません')
 
     for no, line in iter_lines(text):
+        visible, in_comment = strip_html_comments(line, in_comment)
         if prev_no is not None and no != prev_no + 1:
             if table == 'sep':
                 out.append(no_second_row())
@@ -1190,7 +1192,10 @@ def check_lld_ut_candidates(text):
                 number = SECTION_NUMBER_RE.match(head_text)
                 info.setdefault(module, {'number': number.group(1) if number else None, 'rows': None, 'refs': []})
             elif ut_level is not None and module is not None:
-                for m in LINK_RE.finditer(INLINE_CODE_RE.sub('', line)):
+                shown = INLINE_CODE_RE.sub('', visible)
+                for m in LINK_RE.finditer(shown):
+                    if m.start() > 0 and shown[m.start() - 1] in '!\\':
+                        continue  # 画像の記法とエスケープした [ は、表示されるリンクでない
                     dest = os.path.normpath(os.path.join(os.path.dirname(LLD), unquote(m.group(2))))
                     if m.group(2) and m.group(3) and dest == CASE_DOCS['UT']:
                         info[module]['refs'].append((no, unquote(m.group(3))))
@@ -1268,23 +1273,65 @@ def check_lld_ut_candidates(text):
     return out, info
 
 
+def strip_html_comments(line, in_comment):
+    """行から HTML のコメント（<!-- … -->。行をまたぐものを含む）を除いた文字列と、行の終わりでコメントの中かを返す"""
+    out, i = [], 0
+    while i < len(line):
+        if in_comment:
+            j = line.find('-->', i)
+            if j < 0:
+                return ''.join(out), True
+            i, in_comment = j + 3, False
+        else:
+            j = line.find('<!--', i)
+            if j < 0:
+                out.append(line[i:])
+                break
+            out.append(line[i:j])
+            i, in_comment = j + 4, True
+    return ''.join(out), in_comment
+
+
+def ut_case_sections(ut_text):
+    """50_UT.md の UT のケース ID → そのケースの表の上にある、いちばん近い番号付きの見出しの番号"""
+    found, number = {}, None
+    for _, line in iter_lines(ut_text or ''):
+        h = HEADING_RE.match(line)
+        if h:
+            m = SECTION_NUMBER_RE.match(h.group(2))
+            if m:
+                number = m.group(1)
+            continue
+        c = CASE_ROW_RE.match(line)
+        if c and c.group(1).startswith('UT-'):
+            found.setdefault(c.group(1), number)
+    return found
+
+
 def check_ut_moved(modules, cases, ut_text):
     """LLD の UT 候補と単体テスト仕様書（50_UT.md）の突き合わせ（ADR-LLD-001 の追記、#244）。
 
     1. 50_UT.md にケースがあるモジュールは、LLD の UT 候補の小節に表の行を持たない（T1）
     2. LLD の UT 候補の小節が 50_UT.md を指しているなら、50_UT.md にそのモジュールのケースがある（T2）
     3. 50_UT.md にケースがあるモジュールは、LLD の UT 候補の小節から 50_UT.md の同じ番号の節を指している（T1）
+    4. 3 の参照があるとき、そのモジュールのケースが 50_UT.md の同じ番号の節（とその下の見出し）の下にある（T2）
 
-    参照は、UT 候補の小節の表でない行（コード表記を除く）の、LLD から解いて 50_UT.md になり、アンカーの
-    見出しの頭の節の番号がそのモジュールの節の番号と同じリンク。番号の違う節へのリンクとアンカーの無い
-    リンクは数えない。ケースの無いモジュールは止めない（UT を確定にした後は T3 が止める）。
+    参照は、UT 候補の小節の表でない行（コード表記・HTML のコメント・画像の記法・エスケープした [ を
+    除く）の、LLD から解いて 50_UT.md になり、アンカーの見出しの頭の節の番号がそのモジュールの節の
+    番号と同じリンク。番号の違う節へのリンクとアンカーの無いリンクは数えない。ケースの無いモジュールは
+    止めない（UT を確定にした後は T3 が止める）。
     """
     numbers = anchors_of(ut_text) if ut_text is not None else {}
-    with_cases = set()
+    sections = ut_case_sections(ut_text)
+    with_cases, placed = set(), set()
     for cid, c in cases.items():
         m = CASE_FORMAT['UT'].match(cid) if c['level'] == 'UT' else None
         if m and f'LLD-{m.group(1)}' in modules:
-            with_cases.add(f'LLD-{m.group(1)}')
+            mid = f'LLD-{m.group(1)}'
+            with_cases.add(mid)
+            sec, num = sections.get(cid), modules[mid]['ut_number']
+            if sec is not None and num is not None and (sec == num or sec.startswith(num + '.')):
+                placed.add(mid)
     out = []
     for mid in sorted(modules):
         mod = modules[mid]
@@ -1301,6 +1348,9 @@ def check_ut_moved(modules, cases, ut_text):
             out.append(finding('T1', f'UT-move:{mid}:参照', mod['where'],
                                f'{mid} のケースが 50_UT.md にあるのに、LLD の UT 候補の小節から'
                                ' 50_UT.md の同じ番号の節を指していません'))
+        if mid in with_cases and refs and mid not in placed:
+            out.append(finding('T2', f'UT-move:{mid}:置き場', f'{LLD}:{refs[0]}',
+                               f'{mid} のケースが、50_UT.md の同じ番号の節（{mod["ut_number"]}）の下にありません'))
     return out
 
 
