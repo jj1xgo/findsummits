@@ -1324,7 +1324,11 @@ class LldTest(TraceTestCase):
 
     def test_lld_ut_candidate_duplicate_across_modules(self):
         keys = self.lld_keys(LLD_UT + LLD_TWO + '| `UT-one-001` | x |\n')
-        self.assertIn('T1:LLD-UT:UT-one-001:重複', keys)
+        self.assertEqual(keys, ['T1:LLD-UT:UT-one-001:重複'])
+
+    def test_lld_ut_candidate_duplicate_checked_before_format(self):
+        keys = self.lld_keys(LLD_UT + '| `UT-one-04` | x |\n| `UT-one-04` | y |\n')
+        self.assertCountEqual(keys, ['T1:LLD-UT:UT-one-04', 'T1:LLD-UT:UT-one-04:重複'])
 
     def test_lld_ut_candidate_bare(self):
         self.assertIn('T1:LLD-UT:UT-one-004:コード表記', self.lld_keys(LLD_UT + '| UT-one-004 | x |\n'))
@@ -1335,8 +1339,66 @@ class LldTest(TraceTestCase):
         self.assertEqual(len([k for k in keys if k.endswith(':1列目')]), 4)
 
     def test_lld_ut_candidate_table_without_id_header(self):
-        lld = LLD_UT + '\n| 番号 | x |\n|---|---|\n| `UT-one-004` | e |\n'
-        self.assertEqual(len([k for k in self.lld_keys(lld) if k.endswith(':表')]), 1)
+        lld = LLD_UT + '\n| 番号 | x |\n|---|---|\n| `UT-one-04` | e |\n'
+        keys = self.lld_keys(lld)
+        self.assertEqual(len([k for k in keys if k.endswith(':表')]), 1)
+        self.assertNotIn('T1:LLD-UT:UT-one-04', keys)
+
+    def test_lld_ut_candidate_missing_separator(self):
+        keys = self.lld_keys(LLD_UT + '\n| ID | x |\n| `UT-one-04` | a |\n')
+        self.assertEqual(len([k for k in keys if k.endswith(':表')]), 1)
+        self.assertIn('T1:LLD-UT:UT-one-04', keys)
+
+    def test_lld_ut_candidate_indented_table(self):
+        inside = LLD_UT + '\n- 群 A:\n\n  | ID | x |\n  |---|---|\n  | `UT-one-04` | x |\n'
+        self.assertIn('T1:LLD-UT:UT-one-04', self.lld_keys(inside))
+        outside = LLD + '\n- 群 A:\n\n  | ID | x |\n  |---|---|\n  | `UT-one-001` | x |\n'
+        self.assertIn('T1:LLD-UT:UT-one-001:小節の外', self.lld_keys(outside))
+
+    def test_lld_ut_candidate_indented_preparation_table(self):
+        prep = LLD_UT + '\n- 準備の値:\n\n  | 名 | 値 |\n  |---|---|\n  | `MD0` | x |\n'
+        self.assertEqual(self.lld_keys(prep), [])
+        stray = LLD_UT + '\n- 準備の値:\n\n  | 名 | 値 |\n  |---|---|\n  | `UT-one-004` | x |\n'
+        self.assertEqual(len([k for k in self.lld_keys(stray) if k.endswith(':表')]), 1)
+
+    def test_lld_ut_candidate_fence_between_tables(self):
+        lld = (LLD_UT + '\n| ID | x |\n|---|---|\n| `UT-one-004` | a |\n```text\nx\n```\n'
+               '| ID | x |\n|---|---|\n| `UT-one-005` | b |\n')
+        self.assertEqual(self.lld_keys(lld), [])
+
+    def test_lld_ut_candidate_numbered_deep_heading_keeps_subsection(self):
+        lld = (LLD_UT + '\n###### 1.1.5.1 UT 候補\n\n| ID | x |\n|---|---|\n| `UT-one-004` | a |\n'
+               '\n##### 群2\n\n| ID | x |\n|---|---|\n| `UT-one-05` | b |\n')
+        keys = self.lld_keys(lld)
+        self.assertIn('T1:LLD-UT:UT-one-05', keys)
+        self.assertNotIn('T1:LLD-UT:UT-one-05:小節の外', keys)
+
+    def test_lld_ut_candidate_module_ends_at_deep_heading(self):
+        lld = (LLD_UT + '\n##### A\n\n- **ID**: LLD-two\n\n##### B\n\n'
+               '| ID | x |\n|---|---|\n| `UT-two-004` | e |\n')
+        keys = self.lld_keys(lld)
+        self.assertIn('T2:LLD-UT:UT-two-004->なし', keys)
+        self.assertNotIn('T2:LLD-UT:UT-two-004->LLD-two', keys)
+
+    def test_lld_ut_candidate_outside_header_row(self):
+        lld = LLD + '\n#### 1.1.5 UT候補\n\n| `UT-one-001` | x |\n|---|---|\n'
+        self.assertIn('T1:LLD-UT:UT-one-001:小節の外', self.lld_keys(lld))
+
+    def test_lld_ut_candidate_bare_outside_subsection(self):
+        lld = LLD + '\n#### 1.1.6 その他\n\n| ID | x |\n|---|---|\n| UT-one-004 | e |\n'
+        self.assertIn('T1:LLD-UT:UT-one-004:小節の外', self.lld_keys(lld))
+
+    def test_lld_ut_candidate_first_id_declaration_wins(self):
+        lld = LLD_UT.replace('- **ID**: LLD-one\n', '- **ID**: LLD-one\n- **ID**: LLD-two\n')
+        self.assertEqual(self.lld_keys(lld), [])
+
+    def test_lld_ut_candidate_declaration_before_first_heading(self):
+        lld = ('- **ID**: LLD-one\n\n# LLD\n\n## 1. モジュール\n\n#### 1.9.5 UT 候補\n\n'
+               '| ID | x |\n|---|---|\n| `UT-one-004` | a |\n')
+        self.assertIn('T2:LLD-UT:UT-one-004->なし', self.lld_keys(lld))
+
+    def test_lld_ut_candidate_declaration_value_stripped(self):
+        self.assertEqual(self.lld_keys(LLD_UT.replace('- **ID**: LLD-one\n', '- **ID**: LLD-one  \n')), [])
 
     def test_lld_ut_candidate_outside_module(self):
         lld = LLD_UT + '\n### 1.3 横断\n\n#### 1.3.5 UT 候補\n\n| ID | x |\n|---|---|\n| `UT-one-005` | e |\n'

@@ -1135,55 +1135,74 @@ def check_lld_ut_candidates(text):
     """LLD の UT 候補の表の UT のケース ID を見る（ADR-LLD-001 の追記、#349）。
 
     UT 候補の小節（見出しが「<節番号> UT 候補」で、それより深い見出しの下を含む）の表は、ヘッダーの
-    1 列目が ID で、データの行の 1 列目がコード表記の ID 1 つ（とその後の（手動））であること、ID の書式、
-    LLD の中の重なり、ID のモジュール名とその節の LLD の ID を見る。小節の外の表の 1 列目に UT の ID が
-    あれば止める（見出しの書き方がずれて、検査が黙って外れないため）。並び順と欠番は見ない。
+    1 列目が ID で、2 行目が区切りの行で、データの行の 1 列目がコード表記の ID 1 つ（とその後の（手動））で
+    あること、ID の書式、LLD の中の重なり、ID のモジュール名とその節の LLD の ID を見る。箇条の中に字下げした
+    表も読み、ヘッダーの 1 列目が ID でない字下げした表は準備の表として、1 列目の UT の ID だけを止める。
+    小節の外の表は、どの行でも 1 列目に UT の ID があれば止める（見出しの書き方がずれて、検査が黙って外れない
+    ため）。並び順と欠番は見ない。
     """
     out, seen = [], set()
     module = module_level = ut_level = head_level = None
-    decl_seen, table = False, None
+    decl_seen, table, prev_no = False, None, None
     for no, line in iter_lines(text):
+        if prev_no is not None and no != prev_no + 1:
+            table = None  # iter_lines がコードブロックを飛ばした。表はそこで切れる
+        prev_no = no
         h = HEADING_RE.match(line)
         if h:
             n = len(h.group(1))
             head_level, decl_seen, table = n, False, None
+            if module_level is not None and n <= module_level:
+                module = module_level = None
             if ut_level is not None and n > ut_level:
                 continue
             ut_level = None
-            if module_level is not None and n <= module_level:
-                module = module_level = None
             if UT_CANDIDATE_HEAD_RE.match(h.group(2)):
                 ut_level = n
             continue
-        if not line.startswith('|'):
+        row = line.lstrip()  # 箇条の中の字下げした表も読む
+        if not row.startswith('|'):
             table = None
             d = DECL_RE.match(line)
             if d and d.group(1) == 'ID' and head_level is not None and not decl_seen:
                 module, module_level, decl_seen = d.group(2).strip(), head_level, True
             continue
-        first = line.strip()[1:].split('|')[0].strip()
+        first = row[1:].split('|')[0].strip()
         where = f'{LLD}:{no}'
-        if table is None:
-            if ut_level is not None and first != 'ID':
-                out.append(finding('T1', f'LLD-UT:{no}:表', where,
-                                   'LLD の UT 候補の小節の表のヘッダーの 1 列目が ID ではありません'))
-                table = 'skip'
-            else:
-                table = 'sep'
-            continue
-        if table == 'sep':
-            table = 'data'
-            continue
-        if table == 'skip':
-            continue
         cell = UT_CELL_RE.match(first)
-        bare = BARE_CASE_ROW_RE.match(line)
+        bare = BARE_CASE_ROW_RE.match(row)
         if ut_level is None:
+            # 小節の外は、表のどの行（ヘッダー・区切りを含む）でも 1 列目の UT の ID を止める
             cid = cell.group(1) if cell else (bare.group(1) if bare and bare.group(1).startswith('UT-') else None)
             if cid:
                 out.append(finding('T1', f'LLD-UT:{cid}:小節の外', where,
                                    f'UT のケース ID {cid} の行が、LLD の UT 候補の小節の外にあります'))
             continue
+        if table is None:
+            if first == 'ID':
+                table = 'sep'
+            elif row != line:
+                table = 'prep'  # 箇条の中に字下げした準備の表（`| 名 | 値 |` など）
+            else:
+                out.append(finding('T1', f'LLD-UT:{no}:表', where,
+                                   'LLD の UT 候補の小節の表のヘッダーの 1 列目が ID ではありません'))
+                table = 'skip'
+            continue
+        if table == 'skip':
+            continue
+        if table == 'prep':
+            if cell or (bare and bare.group(1).startswith('UT-')):
+                out.append(finding('T1', f'LLD-UT:{no}:表', where,
+                                   'LLD の UT 候補の小節の準備の表（ヘッダーの 1 列目が ID でない字下げした表）の'
+                                   ' 1 列目に UT のケース ID があります'))
+            continue
+        if table == 'sep':
+            table = 'data'
+            if all(SEPARATOR_CELL_RE.match(c.strip()) for c in row.strip().strip('|').split('|')):
+                continue
+            out.append(finding('T1', f'LLD-UT:{no}:表', where,
+                               'LLD の UT 候補の小節の表の 2 行目が区切りの行ではありません'))
+            # 区切りが無い表の 2 行目はデータの行として読む
         if not (cell and cell.group(2) in ('', MANUAL_MARK)):
             if not cell and bare and bare.group(1).startswith('UT-'):
                 cid = bare.group(1)
