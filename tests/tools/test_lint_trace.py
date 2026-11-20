@@ -1280,9 +1280,10 @@ class LldTest(TraceTestCase):
 
     def test_ut_id_three_digits(self):
         ut = UT + ''.join(f'| `{i}` | x |\n' for i in (
-            'UT-one-100', 'UT-one-999', 'UT-one-01', 'UT-one-000', 'UT-one-1000', 'UT-one-1', 'UT-one-10９'))
+            'UT-one-010', 'UT-one-099', 'UT-one-100', 'UT-one-999', 'UT-one-01', 'UT-one-000', 'UT-one-1000',
+            'UT-one-1', 'UT-one-10９'))
         keys = self.keys(self.files(**{'docs/50_UT.md': ut}))
-        for ok in ('UT-one-100', 'UT-one-999'):
+        for ok in ('UT-one-010', 'UT-one-099', 'UT-one-100', 'UT-one-999'):
             self.assertNotIn(f'T1:{ok}', keys)
         for bad in ('UT-one-01', 'UT-one-000', 'UT-one-1000', 'UT-one-1', 'UT-one-10９'):
             self.assertIn(f'T1:{bad}', keys)
