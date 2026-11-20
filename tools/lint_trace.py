@@ -531,8 +531,8 @@ def apply_exemptions(findings, exemptions, repo):
 
 
 CASE_ROW_RE = re.compile(r'^\|\s*`((?:UT|IT|ST)-[^`]+)`([^|]*)\|')
-CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_-]+)(.*)$')
-BARE_CASE_ROW_RE = re.compile(r'^\|\s*((?:UT|IT|ST)-[A-Za-z0-9_-]+)')
+CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_０-９-]+)(.*)$')
+BARE_CASE_ROW_RE = re.compile(r'^\|\s*((?:UT|IT|ST)-[A-Za-z0-9_０-９-]+)')
 CASE_FORMAT = {
     'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-(?:00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})$'),
     'IT': re.compile(r'^IT-(CMP[1-8]-(?:INT|EXT)[1-9]\d*)-(?:0[1-9]|[1-9]\d)$'),
@@ -1063,7 +1063,7 @@ def check_hld_program_table(repo, req_ids, comps):
 LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
 ANY_HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*$')
 CODE_SPAN_RE = re.compile(r'`([^`]+)`')
-TRACE_ID = r'(?:LLD|UT|IT|ST)-[A-Za-z0-9_-]+'
+TRACE_ID = r'(?:LLD|UT|IT|ST)-[A-Za-z0-9_０-９-]+'
 # コメントの trace: だけを拾う。Python と C/C++ は行末のコメントも、bash は行頭の # の行だけ（comment_texts）。
 # 1 つのコメントに複数の ID を「,」で並べられる。文字列リテラルの中の trace: は拾わない
 TRACE_RE = re.compile(rf'^\s*(?://+|#+|/?\*+)\s*trace:\s*({TRACE_ID}(?:\s*,\s*{TRACE_ID})*)', re.M)

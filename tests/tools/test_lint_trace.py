@@ -1287,6 +1287,17 @@ class LldTest(TraceTestCase):
         for bad in ('UT-one-01', 'UT-one-000', 'UT-one-1000', 'UT-one-1', 'UT-one-10９'):
             self.assertIn(f'T1:{bad}', keys)
 
+    def test_ut_id_fullwidth_digit_in_heading(self):
+        # 見出しの ID を全角の数字の手前で切ると、誤記が別の有効なケースの宣言になる
+        ut = UT + '\n### UT-one-100９: x\n'
+        keys = self.keys(self.files(**{'docs/50_UT.md': ut}))
+        self.assertIn('T1:UT-one-100９', keys)
+
+    def test_ut_id_fullwidth_digit_in_trace(self):
+        # trace: の ID を全角の数字の手前で切ると、誤記が別の有効なケースの実装になる
+        files = self.files(**{'tests/src/test_one.cpp': '// trace: UT-one-001９\n'})
+        self.assertIn('T2:tests/src/test_one.cpp->UT-one-001９', self.keys(files))
+
     def test_it_st_keep_two_digits(self):
         self.assertTrue(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-01'))
         self.assertFalse(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-001'))
