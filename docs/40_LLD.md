@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-19 |
+| 最終更新日 | 2026-11-20 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -201,7 +201,7 @@
 - 型は、そのモジュールの言語の書き方で書く（Python は型ヒント。例 `set[str]`。C++ は宣言の形。例 `std::set<std::string>`）。
 - Python のプログラム（2.1 の内部の関数を除く）は、`sys.exit(<終了コード>)` を `sys` の属性として呼ぶか、最後まで進んで終わる。`raise SystemExit`・`os._exit`・組み込みの `exit()`・`quit()`・`from sys import exit` を書かない。`except BaseException`、裸の `except:`、`SystemExit`・`LogWriteError`・`SignalStop` を捕まえる `except` を書かない（2.1 の `start_log` が `sys.exit` の差し替えで終了コードを記録し、ログの書き込みの失敗とシグナルを `BaseException` の子の例外で伝えるため）。後始末と結果の要約は `finally` で書く（書き方の型は [2.1.3](#213-関数の細部) の前置き）。`os._exit` を呼ぶのは 2.1 の内部の関数 `_finish_log` だけ。
 - CMP4（地形解析エンジン）の C++ の規約（[6](#6-cmp4-地形解析エンジン) のモジュールが従う）:
-  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。6.11 だけは、これに加えて、呼ぶ順などを確かめる `tests/src/flow_stage.cpp` とスタブの 2 本を持つ（[6.11.1](#6111-ファイル割付)）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
+  - ファイル: 群ごとのモジュールは `src/<群の名前>.hpp` と `src/<群の名前>.cpp` の 2 本（`<群の名前>` はモジュールの ID の `LLD-analyze_terrain_` の後の部分。6.12 は `src/common.hpp`・`src/common.cpp`。6.5 だけは、この 2 本に gist_earth の表のファイル `src/image_gist_earth.hpp` を足した 3 本〈[6.5.1](#651-ファイル割付)〉）。`main` は [6.1](#61-analyze_terrain_launch) の `src/analyze_terrain.cpp` に置く（6.1 だけは、この 2 本に `main` のファイルを足した 3 本）。UT のコードは `tests/src/test_<群の名前>.cpp`（[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。6.11 だけは、これに加えて、呼ぶ順などを確かめる `tests/src/flow_stage.cpp` とスタブの 2 本を持つ（[6.11.1](#6111-ファイル割付)）。どのファイルも先頭のコメントに `// trace: LLD-analyze_terrain_<群の名前>` を書き、テストの各ケースには `// trace: UT-analyze_terrain_<群の名前>-NNN` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする。
   - 名前: ほかのモジュールから使う名前（HLD 3.4.3 の関数、LLD が足す型・定数・例外）はヘッダーに宣言し、名前空間に入れない。内部の関数・状態・定数は `.cpp` の無名の名前空間に置き、名前を `_` と英小文字で始める（`_zone_key`・`_nb_dy` のように。`k` で始めたり、大文字だけで書いたりしない。内部の型は、無名の名前空間に置き、`_` を付けずに下の `PascalCase` で書く。`_` と英大文字で始まる名前になるため。`_` で始まる名前はグローバルの名前空間では予約されているので、無名の名前空間の外に置かない。`_` と英大文字で始まる名前と、`__` を含む名前は、どこにも使わない）。型は `PascalCase`、関数と変数は `snake_case`、ほかのモジュールから使う定数は HLD の名前（`EXIT_OK` など）。
   - 使う機能: [ADR-SRS-010](decisions/ADR-SRS-010-cpp-opencv-migration.md) の「C++ 利用の方針」のとおり。標準ライブラリの型（`std::string`・`std::vector`・`std::set`・`std::map`・`std::chrono`）は使ってよい。`std::variant`・`std::any` は使わない。`std::optional` も使わない（値の有無は `bool` の印で持つ）。
   - 止まり方（[HLD 3.4.3](30_HLD.md#343-関数) の「止まり方は LLD で決める」）: 止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(<終了コード>)` する（`ExitRequest` は 6.12 の型）。プログラム（`src/`）で `std::exit`・`exit`・`_Exit`・`_exit`・`quick_exit`・`abort` を呼ぶのは 6.12 の内部の関数だけ。`ExitRequest` を捕まえるのは `main` の最上位だけで、`catch (...)` は後始末をしてから `throw;` で投げ直す（握りつぶさない）。`main` は、最後まで進んだら `EXIT_OK` を返し、`ExitRequest` を捕まえたらその `code` を返す（それ以外の値を返さない。終わりの行の終了コードを `ExitRequest` が記録するため。6.12 の `ExitRequest`）。ただし、`start_log` の前に誤りのメッセージを画面に書けずに `std::system_error` が出たときは `EXIT_USAGE` を返す（[6.1](#61-analyze_terrain_launch) の `main`。`start_log` の前は終わりの行が無い）。`ExitRequest` は `std::exception` の子にしない（呼ぶ側の `catch (const std::exception&)` に捕まらないようにする。Python の `SignalStop`・`LogWriteError` を `BaseException` の子にしたのと同じ理由）。ADR-SRS-010 が採らないとした独自の例外の「階層」（継承で分けた複数の型）には当たらない。
@@ -222,7 +222,7 @@
   - `{reason}`: ファイルの読み書きの失敗の理由は、失敗した POSIX の呼び出しの `errno` を `std::strerror` に渡した文（Python の `OSError` の `strerror` と同じ文）。
   - ビルドと警告: ビルドとテストの名前は [2.5](#25-ビルドとテストの名前)。警告はゼロにする（[HLD 2.6.5](30_HLD.md#265-ビルド構成)の DEC23「警告はゼロにするがビルドは止めない」）。
 - CMP7（申請書生成 UI）・CMP8（公開用ビューア）の `index.html` の JavaScript の規約（[9](#9-cmp7-申請書生成-ui) のモジュールが従う）:
-  - ファイル: CMP7・CMP8 のプログラムは `public/index.html` 1 本（[HLD 3.7.1](30_HLD.md#371-プログラム)、[DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」）。JavaScript は HTML に書き込んだ普通の script 要素に書き、`type="module"`・`import`・`export` を使わない（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）。[9.1](#91-index_calc) の関数は計算の要素 1 つに置き、9.2 の関数はほかの要素に置く（[HLD 3.7.3](30_HLD.md#373-関数)の「置き場」）。UT のコードは、モジュールごとに `tests/public/test_<モジュール名>.js` の 1 本（9.1 は `tests/public/test_index_calc.js`。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。要素の中とテストのファイルの先頭のコメントに `// trace: LLD-<モジュール名>` を書き、テストの各ケースの直前に `// trace: UT-<モジュール名>-NN` を書く（`tools/lint_trace.py` がこの形を読むようにするのは [#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」で行う）。
+  - ファイル: CMP7・CMP8 のプログラムは `public/index.html` 1 本（[HLD 3.7.1](30_HLD.md#371-プログラム)、[DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」）。JavaScript は HTML に書き込んだ普通の script 要素に書き、`type="module"`・`import`・`export` を使わない（[DEC130](30_HLD.md#4134-設計判断)「JavaScript はモジュールを使わない ES2020」）。[9.1](#91-index_calc) の関数は計算の要素 1 つに置き、9.2 の関数はほかの要素に置く（[HLD 3.7.3](30_HLD.md#373-関数)の「置き場」）。UT のコードは、モジュールごとに `tests/public/test_<モジュール名>.js` の 1 本（9.1 は `tests/public/test_index_calc.js`。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)の DEC18「テストは対象と同じ名前で分ける」）。要素の中とテストのファイルの先頭のコメントに `// trace: LLD-<モジュール名>` を書き、テストの各ケースの直前に `// trace: UT-<モジュール名>-NNN` を書く（`tools/lint_trace.py` がこの形を読むようにするのは [#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」で行う）。
   - 言語の水準: ECMAScript 2020 までの構文と標準の組み込みだけを使う（DEC130。正はこの 1 文で、次の列挙は例）。ECMAScript の外のグローバル（`TextEncoder`・`TextDecoder` などのブラウザの API）を計算の要素で使うかと、テストの文脈への渡し方は、それを使う群を書くときに決める（9.1 の除外判断ファイルの群の決めは [9.1.1](#911-ファイル割付)）。使わないものの例（ES2021 以降）: 論理代入（`??=`・`||=`・`&&=`）、数の区切りの `_`、`String.prototype.replaceAll`、`Array.prototype.at`・`findLast`、`Object.hasOwn`、クラスのフィールドと `#` の名前、`static` のブロック、`Promise.any`、`AggregateError`、`WeakRef`、正規表現の `d`・`v` の旗、`Array.prototype.toSorted`・`toReversed`・`toSpliced`・`with`・`findLastIndex`、`Object.groupBy`、`Set.prototype.union` などの集合のメソッド。`?.`・`??` は使ってよい。各要素の中身は `// trace:` のコメントの次に `'use strict';` を置き、宣言は `const`・`let`・`function` で書く（`var` を使わない）。ただし、ページの始めの要素（[9.2.1](#921-ファイル割付)）は、関数も宣言も持たず呼び出しの 1 文だけなので、この決まりを当てない。
   - 名前（[HLD 3 章](30_HLD.md#3-プログラム構造)の冒頭の決まり）: ほかのモジュールから呼ぶ関数は [HLD 3.7.3](30_HLD.md#373-関数)・[3.8.3](30_HLD.md#383-関数)の名前（英小文字・数字・`_`）。LLD が足す内部の関数と定数は `_` と英小文字で始める（`_mesh_code_re` のように）。同じページの普通の script 要素は最上位の名前を共有するので、要素をまたいで同じ名前を宣言しない。
   - 型の書き方（上の「型は、そのモジュールの言語の書き方で書く」）: JavaScript は型を宣言しないので、関数の見出しの下に `name(arg: 型, …) -> 型` の形で、JSDoc の型の書き方（`string`・`number`・`boolean`・`Array<number>`・`[number, number]`〈長さ 2 の配列〉・`'a' | 'b'`・`*`〈何でもよい〉）で書く。コードに JSDoc のコメントは書かなくてよい。オブジェクトは `{key: 型, …}` で書き、モジュールの「型とデータ」で名前を付けた形（[9.1.2](#912-型とデータ) の `EditRecord` など）はその名前で書く。
@@ -232,7 +232,7 @@
 - 2.1 の `start_log`・`log_info`・`log_warning`・`log_error` は、メインのスレッドからだけ呼ぶ（`start_log` はシグナルのハンドラを付けるのに `signal.signal` を使い、これはメインのスレッドでしか呼べない）。ほかのスレッドで動く処理は、知らせたいことをメインのスレッドに返し、メインのスレッドが出す（行が混ざらないようにし、ログの書き込みの失敗とシグナルをメインのスレッドで受けるため）。スレッドを使うかと、シグナルで止まるときにスレッドをどう終えるかは、使うモジュールの節で決める（CMP2（タイル取得）の並列取得の形は [4.1.3](#413-関数の細部) の前置きで決めた。[HLD 2.9.1](30_HLD.md#291-目的と範囲) の対象外の行で LLD に送られていた）。
 - LLD の記号（メッセージの記号など）は、`tools/lint_docs.py` の検査 H（1 文字の記号の残り。`C1`〜`C8`・`D` と数字・`K1`〜`K6`。バッククォートで囲んだ短いコード表記の中は検査しない。フェンスのコードブロックは検査する）に当たらない名前にする。2.1 と 2.2 の記号は、設定の誤り CF1〜CF7、`--mesh` の誤り A1〜A5、メッシュのリストの誤り R1〜R3、共通の場面 G1〜G7、ログファイルの行 L1〜L3、設定の相互制約 CX1、取得完了の記録の誤り FC2（4.1 と 5.1 が出す）である。5.2 の記号は、引数の誤り RA1・RA2、パスの改行 RP1、標準出力に書けないとき RW1 である。5.1 の記号は、引数の誤り PA1〜PA5、設定解決の出力の誤り RS1、起動前提条件の不足 PC1・PC2、取得完了の記録の不足 FC1（FC2 は 2.2）、前回の出力を消せないとき CO1、単独起動の案内 PG1〜PG3、ログの行 PL1〜PL9 である。2.1.3 のメッシュの読み方のテストベクトルの ID は MV-01〜MV-21、設定ファイルの書式のテストベクトルの ID は CV-01〜CV-27 である。3.1 の記号は、引数の誤り BA1〜BA4、N03 行政区域 ZIP が無いか探せない BZ1・BZ2、入力の検証 BV1〜BV8、生成と書き込みと置き換えの失敗 BF1〜BF4、新しい版の警告 BW1、ログの行 BL1〜BL5 である。4.1 の記号は、引数の誤り TA1〜TA4、起動前提条件の不足 TP1〜TP3、`--mesh` のコードを飛ばすときと版を取れないときの警告 TW1〜TW3、取得を止める応答 TG1・TG2、DEM10b がすべて未整備のメッシュ TD1、ファイルの書き込みと削除の失敗 TF1〜TF3、ログの行 TL1〜TL6、2.4 の取得範囲のテストベクトルの表 4 である。6.1 の記号は、引数の誤り LA1〜LA8 である。6.2 の記号は、`--mesh` のコードを飛ばすときの警告 TM1・TM2、対象にしなかった北方領土除外メッシュのログの行 TM3、コル未確定ピーク座標リストを読めないときと書式が違うとき UP1・UP2、対象ピークの所属メッシュが解析の対象でないとき UP3 である。6.3 の記号は、省略の判定に使う `.meshset` を読めないとき・書式が違うとき・置き場を読めないとき MS1〜MS3、タイルが 1 枚も無いメッシュがあるとき TT1、DEM10b のタイルの欠けが 1% を超える解析対象メッシュがあるとき TT2、パターンを省略したログの行 WN1 である。6.4 の記号は、読めない標高タイルがあるとき TR1 と、2.4 の bounding box の取得範囲のテストベクトルの表 8 である。6.5 の記号は、グリッドに陸地の画素が無いとき IM1、標高地形図を書けないとき IW1 である。6.6 はメッセージの記号を持たない（メッセージを出さない）。6.7 の記号は、per-mesh CSV を書けないとき CW1、早期終了の判定に読み戻す per-mesh CSV を読めないとき・書式が違うとき RB1・RB2 である。6.8 の記号は、per-mesh ピーク候補 GeoJSON を書けないとき ZW1 である。6.9 の記号は、`.meshset` を書けないとき MW1 である。6.10 はメッセージの記号を持たない（2.4 の変換のテストベクトルの表 5〜7 を使う）。6.11 の記号は、出力のディレクトリを作れないとき SD1、通常のログの行 SL1〜SL9 である。6.12 は新しいメッセージの記号を持たない（2.1・2.2 の記号を使う）。7.1 の記号は、`merged_peak.csv` を読めないとき・書式が違うとき MP1〜MP3、ピーク候補 GeoJSON を読めないとき・書式が違うとき・同じピークの同じ種類のゾーンが 2 つ以上あるとき ZF1〜ZF4 である。7.2 の記号は、引数の誤り MA1〜MA6、陸地最高峰リストの誤りと警告 LP1〜LP4・LW1・LW2、per-mesh CSV の誤りと警告 PM1〜PM3・PW1・PW2、広域で確定したピークを落としたときの警告 FW1、`merged_peak.csv` を書けないとき MF1、結果の要約 ML1〜ML3 である。7.3 の記号は、引数の誤り ZA1〜ZA5、対象の per-mesh ピーク候補 GeoJSON が無いときと置き場を読めないとき ZG1・ZG2、`merged_peak.csv` の座標が JSON の数の書き方でないとき ZN1、ゾーンの欠けたピークがあるとき ZM1、`merged_peak.geojson` を書けないとき ZO1、結果の要約 ZL1・ZL2 である。7.4 の記号は、引数の誤り KA1〜KA7、未確定のリストを書けないとき KW1・KW2、結果の要約 KL1〜KL3 である。7.5 の記号は、`merged_peak.geojson` のゾーンが `merged_peak.csv` と食い違うとき MZ1、SOTA サミットリスト CSV が無い・読めない・書式が違う・値が読めない・同じ SummitCode が重なるとき SS1〜SS5、登録変更リストが無い・読めない・XHTML として読めない・表を読めず列を特定できないとき UX1〜UX4、地域と市区町村の GeoJSON を読めない・書式が違うとき BD1・BD2、無いとき BN1・BN2、登録変更リストの知らせる行 UN1、2 つ以上の確定したピークの AZ に含まれるサミットがあるとき AO1、確定していないピークの AZ の重なり AO2、仮サミットコードの連番上限を超えるエリアがあるとき PN1・PN2、地域か市区町村のどれにも入らない点 RG1、`unmatched` のサミット UM1、SOTA 既存サミット GeoJSON を使わない・読めない・`name` を読めない Feature を飛ばした・同じコードに違う山岳名があるとき SN1〜SN4、算出表に無い標高 PT1、1 つの AZ に 2 件以上の登録 MR1、`software_version` か `gsi_tile_latest_date` を求められない MT1・MT2、XLSX の行を結べないか取り元のプロパティが無い XS1、XLSX に値を変えずに書けない文字列がある XS2、引数の誤り SA1〜SA5、出力を書けないとき SW1・SW2、不備ゲート GT1、結果の要約 SM1〜SM4 である。8.1 の記号は、引数の誤り VA1〜VA5、入力の誤り VR1〜VR3、テンプレートの誤り VT1、書き出しの失敗と中断 VW1〜VW3、結果の要約 VL1・VL2 である。9.1 はメッセージの記号を持たない（メッセージを出さない）。
 - メッセージの文面は、[2.2](#22-ログとメッセージの文面) の書き方で、置き換える部分を `{名前}` で書く。
-- UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NN`（2 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
+- UT 候補は、`ID`・確かめること・準備・入力・期待 の 5 列の表で、`UT-<モジュール名>-NNN`（3 桁の連番。[テスト方針書 §6](02_test_policy.md#6-テストケースid命名の大枠)）ごとに 1 行で書く。節の中で番号だけで指すとき（`UT 18`、表の中の `04 の (a)`）は、連番を数として読む（`UT 18` は `UT-<モジュール名>-018`。[ADR-LLD-001 の追記](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md#追記2026-11-20-ut-のケース-id-の連番を-3-桁にする)）。準備には、入力を与える前に整えること（置くファイル、起こすプロセス、差し替えるもの、捕まえる出力）を書く。小節の前置きに名前を付けて書いた共通の準備で足りるときは、その名前を書き、ケースに固有の準備だけを足す。手動のケースは ID の直後に `（手動）` を付ける。単体テスト仕様書（`50_UT.md`）を作るときは、準備はケースの手順へ移る。
 - 規則は、実装者が読むその関数の見出し（関数の細部の `#####` の見出し。群の見出しで分けたモジュールでは `######` の見出し）の下に置く。2 章の横断の節には、2 つ以上のモジュールで共有するものと、どのプログラムにも属さない項目（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 7。Makefile のターゲット名など）だけを置き、関数の見出しの下からリンクで指す。横断の節にある規則に関数ごとの扱いがあれば、その関数の見出しの下にも書く（実装者は関数の見出しの下を読み、横断の節の段落の奥までは読まないことがあるため）。
 
 ## 2. 共通部品と横断
@@ -894,7 +894,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 #### 3.1.1 ファイル割付
 
 - 関数はすべて `scripts/preprocess_boundaries.py` 1 本に置く。`venv/bin/python3 scripts/preprocess_boundaries.py` で起動され（[HLD 3.1.1](30_HLD.md#311-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。shapely は `import shapely` と `from shapely.geometry import box, mapping, shape, MultiPolygon, Polygon`・`from shapely.geometry.polygon import orient`・`from shapely.errors import GEOSException` で読む（[環境定義](01_environment.md) の既存の依存。[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の 5「市区町村の GeoJSON を展開する」）。ファイルの先頭のコメントに `# trace: LLD-preprocess_boundaries` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_preprocess_boundaries.py` に置く。各テストに `# trace: UT-preprocess_boundaries-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
+- UT のコードは `tests/scripts/test_preprocess_boundaries.py` に置く。各テストに `# trace: UT-preprocess_boundaries-NNN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
 
 #### 3.1.2 型とデータ
 
@@ -1189,7 +1189,7 @@ N03 行政区域 ZIP から、地域と市区町村の GeoJSON、北方領土除
 #### 4.1.1 ファイル割付
 
 - 関数はすべて `scripts/fetch_tiles.py` 1 本に置く。`venv/bin/python3 scripts/fetch_tiles.py` で起動され（[HLD 3.2.1](30_HLD.md#321-プログラム)）、共通部品は `import common` で読む（2.1.1 と同じ）。HTTP は標準の `http.client`（と `ssl`・`urllib.parse`）で行う（[環境定義](01_environment.md) の依存を足さない。`requests` は使わない。理由は 4.1.3 の `_Gate`）。並列は標準の `threading`・`queue` で行う。ファイルの先頭のコメントに `# trace: LLD-fetch_tiles` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_fetch_tiles.py` に置く。各テストに `# trace: UT-fetch_tiles-NN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
+- UT のコードは `tests/scripts/test_fetch_tiles.py` に置く。各テストに `# trace: UT-fetch_tiles-NNN` のコメントを付ける。テストの枠組みは 2.1.1 と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。
 
 #### 4.1.2 型とデータ
 
@@ -1592,7 +1592,7 @@ TF1 の「この書き換え」は、2 つの場面のどちらかを指す。�
 #### 5.1.1 ファイル割付
 
 - 関数と本体はすべて `scripts/run_pipeline.sh` 1 本に置く。1 行目は `#!/usr/bin/env bash`、2 行目は `# trace: LLD-run_pipeline`、3 行目は `set -euo pipefail`。ファイルは実行できる権限で git に入れる（利用者は `scripts/run_pipeline.sh` で起動する。[HLD 2.6.4](30_HLD.md#264-ディレクトリ構成)）。並びは、定数、関数の定義、本体の順。
-- UT のコードは `tests/scripts/test_run_pipeline.py` に置き、`scripts/run_pipeline.sh` を子のプロセスで起動して確かめる（[5.1.5](#515-ut-候補)の共通の準備）。各テストに `# trace: UT-run_pipeline-NN` のコメントを付ける。テストの枠組みは[2.1.1](#211-ファイル割付)と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。Python から子のプロセスで起動する形は、テスト方針書 3.4 が CMP3 の bash のテストのしかたとして選んだもの。
+- UT のコードは `tests/scripts/test_run_pipeline.py` に置き、`scripts/run_pipeline.sh` を子のプロセスで起動して確かめる（[5.1.5](#515-ut-候補)の共通の準備）。各テストに `# trace: UT-run_pipeline-NNN` のコメントを付ける。テストの枠組みは[2.1.1](#211-ファイル割付)と同じく[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)で選んだ。Python から子のプロセスで起動する形は、テスト方針書 3.4 が CMP3 の bash のテストのしかたとして選んだもの。
 
 UT のコードを Python で書く理由: UT 候補はどれも、起動の引数・終了コード・画面の出力・ログファイル・内部の起動口に渡した引数・消したファイルを、プログラムの外から見るものなので、子のプロセスで起動して確かめる。テストを動かす環境は 2.1・5.2 と同じ venv にする。bash のテストの枠組み（bats など）は新しい依存になり、[HLD 2.6.3](30_HLD.md#263-ライブラリと使う範囲)の判断が要るので使わない。
 
@@ -1978,7 +1978,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 #### 5.2.1 ファイル割付
 
 - 関数はすべて `scripts/resolve_config.py` 1 本に置く。`venv/bin/python3 scripts/resolve_config.py` で起動され（[HLD 3.3.1](30_HLD.md#331-プログラム)）、共通部品は `import common` で読む（[2.1.1](#211-ファイル割付)と同じ）。ファイルの先頭のコメントに `# trace: LLD-resolve_config` を書く。
-- UT のコードは `tests/scripts/test_resolve_config.py` に置く。各テストに `# trace: UT-resolve_config-NN`（確かめる UT 候補の ID）のコメントを付ける。
+- UT のコードは `tests/scripts/test_resolve_config.py` に置く。各テストに `# trace: UT-resolve_config-NNN`（確かめる UT 候補の ID）のコメントを付ける。
 
 #### 5.2.2 型とデータ
 
@@ -2090,7 +2090,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 - `src/analyze_terrain.cpp`: `int main(int argc, char* argv[])` と、無名の名前空間の `_check_cross`。プログラムの名前（[HLD 3.4.1](30_HLD.md#341-プログラム)）にそろえた名前で、ヘッダーを持たない。`#include <opencv2/core.hpp>`（`cv::setNumThreads`。[HLD 2.6.5](30_HLD.md#265-ビルド構成)のモジュールごとのヘッダ）、`"common.hpp"`・`"launch.hpp"`・`"stage.hpp"`（6.11 のヘッダー。宣言の形は [6.1.2](#612-型とデータ)）。6.1 の 3 本のうち OpenCV を読むのはこのファイルだけで、`src/launch.hpp`・`src/launch.cpp` は OpenCV のヘッダーを読まず、OpenCV の関数を直接使わない。`build/test_launch` がどのファイルをリンクするかは [2.5](#25-ビルドとテストの名前)のとおりで、6.1 では決めない。
 - `main` を `src/launch.cpp` に置かず別のファイルに分けるのは、2.5 の決まり（テスト用の実行ファイルに `main` を持たない `.cpp` をすべてリンクする）のまま、`parse_args` を `build/test_launch` から直接呼べるようにするため。
 - 3 本とも先頭のコメントに `// trace: LLD-analyze_terrain_launch` を書く。ヘッダーは、先頭の trace のコメントの次の行を `#pragma once` にする（1.2）。
-- UT のコードは `tests/src/test_launch.cpp`（`build/test_launch`。2.5）と、`main` の振る舞いを確かめる試験用の実行ファイル `build/test_launch_main`（2.5 の `build/test_<群の名前>` のテスト用の実行ファイルとは別のもの）にだけリンクする段の進行のスタブ `tests/src/stub_stage.cpp` に置く。`tests/src/test_launch.cpp` の各テストに `// trace: UT-analyze_terrain_launch-NN`（確かめる UT 候補の ID）を書く。`tests/src/stub_stage.cpp` の先頭のコメントには、スタブを使うケースの ID を並べて書く: `// trace: UT-analyze_terrain_launch-16, UT-analyze_terrain_launch-17, UT-analyze_terrain_launch-20, UT-analyze_terrain_launch-21, UT-analyze_terrain_launch-22, UT-analyze_terrain_launch-23`（`tools/lint_trace.py` は `tests/src/` の下のファイルごとにテストケースの ID を求め、無ければ単体テスト（UT）の段で T5 で止めるため。`LLD-` の trace はここで数えない）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_launch.cpp`（`build/test_launch`。2.5）と、`main` の振る舞いを確かめる試験用の実行ファイル `build/test_launch_main`（2.5 の `build/test_<群の名前>` のテスト用の実行ファイルとは別のもの）にだけリンクする段の進行のスタブ `tests/src/stub_stage.cpp` に置く。`tests/src/test_launch.cpp` の各テストに `// trace: UT-analyze_terrain_launch-NNN`（確かめる UT 候補の ID）を書く。`tests/src/stub_stage.cpp` の先頭のコメントには、スタブを使うケースの ID を並べて書く: `// trace: UT-analyze_terrain_launch-16, UT-analyze_terrain_launch-17, UT-analyze_terrain_launch-20, UT-analyze_terrain_launch-21, UT-analyze_terrain_launch-22, UT-analyze_terrain_launch-23`（`tools/lint_trace.py` は `tests/src/` の下のファイルごとにテストケースの ID を求め、無ければ単体テスト（UT）の段で T5 で止めるため。`LLD-` の trace はここで数えない）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.1.2 型とデータ
 
@@ -2189,7 +2189,7 @@ Args parse_args(const std::vector<std::string>& args);   // args は argv[1] か
 
 #### 6.1.5 UT 候補
 
-すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_launch-NN` を付ける。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。期待の「誤りの 2 行」は、6.1.4 の文面に値を入れた `ERROR:` と `対処:` の 2 行で、そのとき標準出力は空。G7（2.2）の 2 行も同じ形で、標準エラー出力でも、ログファイルの行（時刻と空白を除いた文面）でも、1 行目は `ERROR:` と空白 1 つで、2 行目は `対処:` と空白 1 つで始まる。表の中の「01」「04 の (a)」のように番号だけで指すものは、この表のその番号のケースの入力を指す。
+すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_launch-NNN` を付ける。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。期待の「誤りの 2 行」は、6.1.4 の文面に値を入れた `ERROR:` と `対処:` の 2 行で、そのとき標準出力は空。G7（2.2）の 2 行も同じ形で、標準エラー出力でも、ログファイルの行（時刻と空白を除いた文面）でも、1 行目は `ERROR:` と空白 1 つで、2 行目は `対処:` と空白 1 つで始まる。表の中の「01」「04 の (a)」のように番号だけで指すものは、この表のその番号のケースの入力を指す。
 
 - **同じプロセス**: 6.12.5 の「同じプロセス」と同じ（記述子 1・2 を一時のファイルに付け替えて捕まえ、`ExitRequest` を捕まえて `code` を確かめる）。`parse_args` を直接呼ぶ。`--mesh` のファイルを使うケースは、一時のディレクトリにファイルを書く。
 - **起動**: `build/test_launch_main` を子のプロセスで起動する。パスは、テストの実行ファイルの置き場（`readlink("/proc/self/exe")` の親のディレクトリ）の `test_launch_main`。親は `std::fflush(nullptr)` の後に `fork` し、子は記述子 1・2 を親が読む 2 つのパイプの書く側に付け替えて元の 4 つの記述子を閉じ、`unsetenv("STUB_STAGE")` で親から受け継いだ値を必ず消してから、ケースが `STUB_STAGE`（下のスタブの動き）を書いたときだけ `setenv` で付けて、`execv(<パス>, <argv>)` する（`argv[0]` は `analyze_terrain`）。`execv` が戻ったら子は `_exit(127)`。親は 6.12.5 の「子のプロセス」と同じく、2 つのパイプを `poll` で EOF まで読み、`waitpid` の終了状態（シグナルで死んでいたら、そのシグナルの番号を期待と比べる。期待に無ければケースの失敗）とログファイル（`<log_dir>` の下の `analyze_terrain_*_<子の PID>.log`）を確かめる。設定ファイルは、親が一時のディレクトリ `<tmp>` に置く（ケースが書かなければ `[paths]` に `data_dir = <tmp>/data` と `log_dir = <tmp>/logs` だけ）。1 つの ID の中で入力を (a)(b) などに分けたケースは、入力ごとに `<tmp>` を新しく作る（先の入力が `start_log` で作った `<tmp>/logs` を、後の入力の「`<tmp>/logs` が無い」の確かめに残さないため）。引数はケースが書かなければ、通常の `--config <tmp>/config.ini --mode normal --japan-mesh-list /nonexistent/j.txt`（スタブは日本全土のリストを読まないので、ファイルは無くてよい）。
@@ -2234,7 +2234,7 @@ Args parse_args(const std::vector<std::string>& args);   // args は argv[1] か
 
 - 公開の宣言は `src/target.hpp`、定義と内部の関数は `src/target.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_target` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/target.hpp` は `"convert.hpp"`（`Z15Pixel`）・`<map>`・`<set>`・`<string>`・`<vector>` を読む。`src/target.cpp` は `"target.hpp"`・`"common.hpp"`・`"convert.hpp"`・`<cerrno>`・`<charconv>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<system_error>`・`<unistd.h>`・`<utility>` を読む。OpenCV のヘッダーは読まない。
-- UT のコードは `tests/src/test_target.cpp` に置き、`build/test_target` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_target-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 6` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_target.cpp` に置き、`build/test_target` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_target-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 6` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.2.2 型とデータ
 
@@ -2360,7 +2360,7 @@ PeakGroups group_peaks_by_mesh(const std::vector<UnresolvedPeak>& peaks,
 
 #### 6.2.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_target-NN` を付ける。共通の準備は 1 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_target-NNN` を付ける。共通の準備は 1 つ。
 
 - **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ（`start_log` を呼ばない。6.12.5 の「同じプロセス」と同じく、一時のディレクトリを `mkdtemp` で作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は `dup`・`dup2` で記述子 2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる。メッセージの期待は、標準エラー出力の 2 行（`ERROR: …` と `対処: …`）の全文。
 
@@ -2393,7 +2393,7 @@ PeakGroups group_peaks_by_mesh(const std::vector<UnresolvedPeak>& peaks,
 
 - 公開の宣言は `src/window.hpp`、定義と内部の関数は `src/window.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_window` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/window.hpp` は `<set>`・`<string>` を読む。`src/window.cpp` は `"window.hpp"`・`"common.hpp"`・`"convert.hpp"`・`<algorithm>`・`<cerrno>`・`<cmath>`・`<cstdio>`・`<cstring>`・`<dirent.h>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<sys/stat.h>`・`<unistd.h>`・`<vector>` を読む。OpenCV のヘッダーは読まない。
-- UT のコードは `tests/src/test_window.cpp` に置き、`build/test_window` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_window-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 4` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_window.cpp` に置き、`build/test_window` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_window-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 4` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.3.2 型とデータ
 
@@ -2530,7 +2530,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 #### 6.3.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_window-NN` を付ける。共通の準備は 6.2.5 の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。タイルのファイルは空のファイルでよい（あるかだけを見るため）。`csv_dir`・`tiles_dir` は一時のディレクトリの下に作った絶対パス。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_window-NNN` を付ける。共通の準備は 6.2.5 の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。タイルのファイルは空のファイルでよい（あるかだけを見るため）。`csv_dir`・`tiles_dir` は一時のディレクトリの下に作った絶対パス。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -2571,7 +2571,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 - 公開の宣言は `src/grid.hpp`、定義と内部の関数は `src/grid.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_grid` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/grid.hpp` は `<opencv2/core.hpp>`（`cv::Mat`・`cv::Vec3b`）・`"convert.hpp"`（`MeshBounds`・`TileXY`・`Z15Pixel`）・`"target.hpp"`（`TargetPeak`）・`<compare>`・`<cstdint>`・`<map>`・`<set>`・`<string>`・`<vector>` を読む。`src/grid.cpp` は `"grid.hpp"`・`"common.hpp"`・`"convert.hpp"`・`<opencv2/imgcodecs.hpp>`・`<algorithm>`・`<cerrno>`・`<cmath>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<unistd.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは core と imgcodecs のものだけを読む（[HLD 2.6.5](30_HLD.md#265-ビルド構成) のモジュールごとのヘッダー。imgproc は使わない）。
-- UT のコードは `tests/src/test_grid.cpp` に置き、`build/test_grid` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_grid-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 4`・`2.4 の表 7` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。テストは PNG のファイルを `cv::imwrite` で一時のディレクトリに作り、リポジトリに画像を置かない。
+- UT のコードは `tests/src/test_grid.cpp` に置き、`build/test_grid` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_grid-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 4`・`2.4 の表 7` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。テストは PNG のファイルを `cv::imwrite` で一時のディレクトリに作り、リポジトリに画像を置かない。
 
 #### 6.4.2 型とデータ
 
@@ -2780,7 +2780,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 
 #### 6.4.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_grid-NN`。共通の準備は 3 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_grid-NNN`。共通の準備は 3 つ。
 
 - **同じプロセス**: 6.2.5 の同じ名前の準備と同じ（`mkdtemp`、絶対パス、記述子 2 の付け替えで標準エラー出力を捕まえる、止まるケースは `ExitRequest` の `code` とメッセージの 2 行の全文）。
 - **タイルを置く**: `tiles_dir` は一時のディレクトリの下の `tiles`（作る）。タイルは `<tiles_dir>/<サービス名>/<z>/<x>/<y>.png` に、ディレクトリを作ってから、`cv::Mat(256, 256, CV_8UC3, cv::Scalar(b, g, r))` を `cv::imwrite` で書く（RGB で書いた色を B・G・R の順に渡す）。ケースが一部の画素の色を書くときは、書く前にその画素を `at<cv::Vec3b>(行, 列)` で替える。標高の色: 50m は RGB (0, 19, 136)、70m は (0, 27, 88)、100m は (0, 39, 16)、200m は (0, 78, 32)、300m は (0, 117, 48)、400m は (0, 156, 64)、500m は (0, 195, 80)（それぞれ x が 5000・7000・10000・20000・30000・40000・50000）。NODATA は (128, 0, 0)。期待の標高は `static_cast<float>(x) / 100.0f` と `EXPECT_EQ`（`50.0f` などに等しい）。
@@ -2832,7 +2832,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 
   表の 0 行目は `{0.0, 0.0, 0.0}`、255 行目は `{0.9922, 0.9843, 0.9843}` である。表の中身は UT 候補の 01〜03・05 の色で確かめる。
 - `src/image.hpp` は `"grid.hpp"`（`ElevationGrid`・`GridRange`）・`<cstdint>`・`<string>`・`<vector>` を読む。`src/image.cpp` は `"image.hpp"`・`"common.hpp"`・`"convert.hpp"`（`tile_to_latlon`）・`"image_gist_earth.hpp"`・`<opencv2/core.hpp>`・`<opencv2/imgcodecs.hpp>`・`<cerrno>`・`<cmath>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<numbers>`・`<stdexcept>`・`<string>`・`<unistd.h>`・`<vector>` を読む。
-- UT のコードは `tests/src/test_image.cpp` に置き、`build/test_image` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_image-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_image.cpp` に置き、`build/test_image` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_image-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.5.2 型とデータ
 
@@ -2928,7 +2928,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 
 #### 6.5.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_image-NN` を付ける。共通の準備は 2 つで、[6.9.5](#695-ut-候補) の「同じプロセス」と「子のプロセス（書けない）」と同じ（`csv_dir` を `images_dir` に読み替える）。`range` は、`meshes = {5339}`、`z14 = false`、`box.y_min = 12900`（ほかの欄は 0）を基本とし、ケースが替える欄だけを書く。`analysis_id` は書かなければ `3-5339`。グリッドは行ごとに北から、`values[py * W + px]` の並びで書く。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_image-NNN` を付ける。共通の準備は 2 つで、[6.9.5](#695-ut-候補) の「同じプロセス」と「子のプロセス（書けない）」と同じ（`csv_dir` を `images_dir` に読み替える）。`range` は、`meshes = {5339}`、`z14 = false`、`box.y_min = 12900`（ほかの欄は 0）を基本とし、ケースが替える欄だけを書く。`analysis_id` は書かなければ `3-5339`。グリッドは行ごとに北から、`values[py * W + px]` の並びで書く。
 
 **色の比べ方**: 期待の画素は `RRGGBB` の 16 進で書く。`FFFFFF` の画素は 3 チャンネルとも一致、ほかの画素は各チャンネルの差が 1 以下（`EXPECT_LE(std::abs(actual - expected), 1)`）にする。期待値は 2026-10-28 に、matplotlib 3.11.2・numpy 2.5.4 で、6.5.3 の前置きの呼び出し（`E` は手順 4 の値を倍精度の配列にしたもの、`vmin`・`vmax`・`dx`・`dy` は手順 5・6 の式を Python の float で計算したもの）の結果の赤・緑・青に、`E` が 0 の画素を 1.0 にしてから `(x * 255).astype(np.uint8)` を当てて求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)の箇条による。表の値は、同じ版の matplotlib の結果と許容差つきで比べる形で、[DEC65](30_HLD.md#4154-設計判断)「色と陰影は `LightSource.shade()` と同じ」の「参照実装の結果と許容差つきで比べるテスト」を満たす）。採用のサンプルは `imshow` と `savefig` を通っているので、画素の比べ先にしない。出来上がりの絵は、グラデーションに違和感が無く細部が見えるかを持ち主が目で見る（実装フェーズの段で行う）。
 
@@ -2962,7 +2962,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 
 - 公開の宣言は `src/scan.hpp`、定義と内部の関数は `src/scan.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_scan` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/scan.hpp` は `<cstdint>`・`<vector>`・`"grid.hpp"`（`ElevationGrid`・`GridRange`・`GridXY`）を読む。`src/scan.cpp` は `"scan.hpp"`・`"common.hpp"`（`check_signal`）・`"convert.hpp"`（`LatLon`・`Z15Pixel`・`tile_to_latlon`・`z15_pixel_center_latlon`）・`<algorithm>`・`<cmath>`・`<cstdint>`・`<stdexcept>`・`<string>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーを直接読まない（`grid.hpp` が core を読む）。
-- UT のコードは `tests/src/test_scan.cpp` に置き、`build/test_scan` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_scan-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 12・13・16）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_scan.cpp` に置き、`build/test_scan` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_scan-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 12・13・16）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.6.2 型とデータ
 
@@ -3094,7 +3094,7 @@ std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
 
 #### 6.6.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_scan-NN`。共通の準備は 3 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_scan-NNN`。共通の準備は 3 つ。
 
 - **同じプロセス**: [6.2.5](#625-ut-候補) の同じ名前の準備と同じ。
 - **小さいグリッド**: `ElevationGrid` の `width`・`height` をケースの W・H にし、`values` を W × H 個の `0.0f` で作ってから、ケースが挙げた画素 (px, py) の値を書く（`values[py * W + px]`）。挙げない画素は海面か人工ボーダー（0）。画素の番号は `py × W + px`。成分ごとのデータを確かめるときは、成分ごとに `peak_pixel`・`peak_elevation`・`parent`・`key_col`・`col_pixel`・`col_elevation`・`key_col_resolved` を比べ、`border` は根（`parent` が自分）だけを比べる。値は `EXPECT_EQ`（標高は表の整数の値の `float` か、ケースが書いた `float` の式に等しい）。
@@ -3133,7 +3133,7 @@ std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
 
 - 公開の宣言は `src/csv.hpp`、定義と内部の関数は `src/csv.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_csv` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/csv.hpp` は `"convert.hpp"`（`Z15Pixel`）・`"grid.hpp"`（`GridRange`）・`"scan.hpp"`（`PeakColRow`）・`"target.hpp"`（`TargetPeak`）・`<set>`・`<string>`・`<vector>` を読む。`src/csv.cpp` は `"csv.hpp"`・`"common.hpp"`・`"convert.hpp"`・`<cerrno>`・`<charconv>`・`<cmath>`・`<cstdint>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<system_error>`・`<unistd.h>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
-- UT のコードは `tests/src/test_csv.cpp` に置き、`build/test_csv` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_csv-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテスト（UT-analyze_terrain_csv-01）には、写した表の名前（`2.4 の表 7` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_csv.cpp` に置き、`build/test_csv` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_csv-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテスト（UT-analyze_terrain_csv-01）には、写した表の名前（`2.4 の表 7` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.7.2 型とデータ
 
@@ -3254,7 +3254,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 #### 6.7.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_csv-NN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'`・`f'{x:.2f}'`（`float` の値は `struct` で 32 ビットに丸めた正確な値を使う）と、2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ値は `std::to_chars` でも同じ文字列になることを、C++ のプログラムで確かめた。入力と期待の「N 行目」は、見出しの行を 1 行目とするファイルの行の番号である（6.7.3 の `{line_no}` と同じ）。共通の準備は 3 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_csv-NNN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'`・`f'{x:.2f}'`（`float` の値は `struct` で 32 ビットに丸めた正確な値を使う）と、2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ値は `std::to_chars` でも同じ文字列になることを、C++ のプログラムで確かめた。入力と期待の「N 行目」は、見出しの行を 1 行目とするファイルの行の番号である（6.7.3 の `{line_no}` と同じ）。共通の準備は 3 つ。
 
 - **同じプロセス**: [6.9.5](#695-ut-候補) の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
 - **子のプロセス（書けない）**: 6.9.5 の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える）。
@@ -3298,7 +3298,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 - 公開の宣言は `src/zone.hpp`、定義と内部の関数は `src/zone.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_zone` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/zone.hpp` は `"csv.hpp"`（`PeakCsvRow`）・`"grid.hpp"`（`ElevationGrid`・`GridRange`）・`<cstdint>`・`<set>`・`<string>`・`<vector>` を読む。`src/zone.cpp` は `"zone.hpp"`・`"common.hpp"`・`"convert.hpp"`・`"csv.hpp"`（`format_coord`）・`"grid.hpp"`（`pixel_center_mesh`）・`<algorithm>`・`<cerrno>`・`<charconv>`・`<cmath>`・`<cstdint>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<map>`・`<stdexcept>`・`<string>`・`<system_error>`・`<unistd.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
-- UT のコードは `tests/src/test_zone.cpp` に置き、`build/test_zone` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp`・`grid.cpp`・`csv.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_zone-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 15）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_zone.cpp` に置き、`build/test_zone` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp`・`convert.cpp`・`grid.cpp`・`csv.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_zone-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 15）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.8.2 型とデータ
 
@@ -3511,7 +3511,7 @@ GeoJSON の書き方（[HLD 4.16.1](30_HLD.md#4161-目的と範囲) の対象外
 
 #### 6.8.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_zone-NN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'` と 2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ角の文字列は `std::to_chars` でも同じになることを、C++ のプログラムで確かめた。ID の列の `01` などは、`UT-analyze_terrain_zone-01` のことである。共通の準備は 5 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_zone-NNN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'` と 2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ角の文字列は `std::to_chars` でも同じになることを、C++ のプログラムで確かめた。ID の列の `01` などは、`UT-analyze_terrain_zone-01` のことである。共通の準備は 5 つ。
 
 - **同じプロセス**: [6.9.5](#695-ut-候補) の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
 - **子のプロセス（書けない）**: 6.9.5 の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える）。
@@ -3593,7 +3593,7 @@ UT 20 の期待（13 行。各行は `\n` で終わる）:
 
 - 公開の宣言は `src/record.hpp`、定義と内部の関数は `src/record.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_record` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/record.hpp` は `<set>`・`<string>` を読む。`src/record.cpp` は `"record.hpp"`・`"common.hpp"`・`<cerrno>`・`<cstdio>`・`<cstring>`・`<fcntl.h>`・`<stdexcept>`・`<string>`・`<unistd.h>` を読む。OpenCV のヘッダーは読まない。
-- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_record.cpp` に置き、`build/test_record` にビルドする（[2.5](#25-ビルドとテストの名前)。`src/` の `main` を持たない `.cpp` をすべてリンクするので、`common.cpp` も入る）。各テストに `// trace: UT-analyze_terrain_record-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.9.2 型とデータ
 
@@ -3646,7 +3646,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 
 #### 6.9.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_record-NN` を付ける。共通の準備は 2 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_record-NNN` を付ける。共通の準備は 2 つ。
 
 - **同じプロセス**: 6.3.5 の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、`csv_dir` はその下に作ったディレクトリの絶対パス。ファイルの中身はバイト列で読んで比べる。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。
 - **子のプロセス（書けない）**: 親が `csv_dir` と、ケースが前もって置くファイルを作ってから、`std::fflush(nullptr)` の後に `fork` する。子は記述子 2 を、親が読むパイプの書く側に付け替えて元の 2 つの記述子を閉じ、`SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` をケースの値（0 か 5）にしてから（[6.12.5](#6125-ut-候補) の「ログファイルに書けない場面」と同じ。0 なら以後のファイルへの `write` が `EFBIG`〔`File too large`〕で失敗する。5 なら最初の `write` は 5 バイトだけ書けて、書いた数を返し、続く `write` が `EFBIG` で失敗する。パイプには効かない。`rlim_max` は変えない）、`try { write_meshset(...); } catch (const ExitRequest& e) { std::_Exit(e.code); } catch (...) { std::_Exit(99); } std::_Exit(EXIT_OK);` を行う（`start_log` を呼ばないので、終わりの行も `atexit` も無い。`std::_Exit` は GoogleTest の後始末を子の中で動かさないため）。親は `fork` の後、読み始める前に、パイプの書く側を閉じる（閉じないと、子が終わっても EOF にならない）。パイプを EOF まで読み切ってから `waitpid` し、終了コードと標準エラー出力を確かめる。
@@ -3676,7 +3676,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 
 - 公開の宣言は `src/convert.hpp`、定義は `src/convert.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_convert` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/convert.hpp` は `<compare>`・`<string>` を読む。`src/convert.cpp` は `"convert.hpp"`・`<cmath>`・`<numbers>`・`<stdexcept>`・`<string>` を読む。`"common.hpp"` と OpenCV のヘッダーは読まない（ログを出さず、止まらず、画像を扱わない）。
-- UT のコードは `tests/src/test_convert.cpp` に置き、`build/test_convert` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_convert-NN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 5` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_convert.cpp` に置き、`build/test_convert` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_convert-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の表の行を写したテストには、写した表の名前（`2.4 の表 5` など）もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.10.2 型とデータ
 
@@ -3764,7 +3764,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 
 #### 6.10.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_convert-NN` を付け、2.4 の表の行を写したケースは表の名前もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。共通の準備は 1 つ。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_convert-NNN` を付け、2.4 の表の行を写したケースは表の名前もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。共通の準備は 1 つ。
 
 - **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ファイルも出力も使わない。倍精度の値の期待は、2.4 の表の 10 進の表記を C++ の倍精度の字句としてそのまま書く（最短の 10 進表記なので、同じ倍精度の値になる）。`==` で比べるものは `EXPECT_EQ`、緯度の許容差のものは `EXPECT_NEAR(<値>, <期待>, 1e-12)`（`EXPECT_DOUBLE_EQ` は 4 ULP の比べ方で 2.4 の決まりと違うので使わない）。
 
@@ -3796,7 +3796,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 
 - 公開の宣言は `src/stage.hpp`、定義と内部の関数は `src/stage.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_stage` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/stage.hpp` は `"common.hpp"`（`Config`）・`<set>`・`<string>` を読む。`src/stage.cpp` は `"stage.hpp"`・`"common.hpp"`・`"target.hpp"`・`"window.hpp"`・`"grid.hpp"`・`"image.hpp"`・`"scan.hpp"`・`"csv.hpp"`・`"zone.hpp"`・`"record.hpp"` と、`<algorithm>`・`<cerrno>`・`<cstdint>`・`<cstring>`・`<set>`・`<string>`・`<sys/stat.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
-- UT のコードは 2 本の実行ファイルに分ける（理由は [6.11.5](#6115-ut-候補) の前置き）。各テストに `// trace: UT-analyze_terrain_stage-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは 2 本の実行ファイルに分ける（理由は [6.11.5](#6115-ut-候補) の前置き）。各テストに `// trace: UT-analyze_terrain_stage-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
   - `tests/src/test_stage.cpp` → `build/test_stage`（[2.5](#25-ビルドとテストの名前)の決まりどおり、`main` を持たない `src/` の `.cpp` をすべてリンクする。2 つのモジュールの関数のつながりを確かめるケース）。
   - `tests/src/flow_stage.cpp` と、スタブの `tests/src/stub_analysis.hpp`・`tests/src/stub_analysis.cpp` → `build/flow_stage`（呼ぶ順などを確かめるケース。[2.5](#25-ビルドとテストの名前)）。スタブの 2 本は、先頭のコメントにスタブを使うケースの ID を並べて書く（`// trace: UT-analyze_terrain_stage-01, …, UT-analyze_terrain_stage-16`。`tools/lint_trace.py` が `tests/src/` の下のファイルごとにテストケースの ID を求めるため。[6.1.1](#611-ファイル割付) の `stub_stage.cpp` と同じ）。
   - 名前を `test_<群の名前>` の形にしないのは、[2.5](#25-ビルドとテストの名前)の「`tests/src/test_<群の名前>.cpp` ごとに 1 本、`main` を持たない `src/` の `.cpp` をすべてリンクする」を Makefile のパターンで当てたとき、本物をリンクした実行ファイルが別にできて、スタブの定義が無くリンクに失敗するのを避けるため（6.1 の `build/test_launch_main`・`tests/src/stub_stage.cpp` も形の外の名前）。
@@ -4059,7 +4059,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 #### 6.12.1 ファイル割付
 
 - 公開の宣言は `src/common.hpp`、定義と内部の関数は `src/common.cpp` に置く。ファイルの先頭のコメントに `// trace: LLD-analyze_terrain_common` を書く。
-- UT のコードは `tests/src/test_common.cpp` に置き、`build/test_common` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_common-NN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_common.cpp` に置き、`build/test_common` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_common-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
 
 #### 6.12.2 型とデータ
 
@@ -4259,7 +4259,7 @@ void check_signal();
 
 #### 6.12.5 UT 候補
 
-すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_common-NN` を付ける。ログファイルの行の期待は、先頭の時刻と空白を除いた文面で書く。`start_log` を呼ぶと標準出力に L1・L2 の行が時刻なしで出るので、標準出力の期待にはこれらも含める。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。
+すべて自動。GoogleTest のテストのケースごとに `// trace: UT-analyze_terrain_common-NNN` を付ける。ログファイルの行の期待は、先頭の時刻と空白を除いた文面で書く。`start_log` を呼ぶと標準出力に L1・L2 の行が時刻なしで出るので、標準出力の期待にはこれらも含める。表の準備の列の共通の準備は次の 3 つ。ケースに固有の準備は、その後に書く。
 
 - **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ケースごとに一時のディレクトリ（`mkdtemp`）を作る。設定ファイルを使うケースは、その下に設定ファイルを書いて絶対パスを渡す（`data_dir`・`log_dir` を書くときは、一時のディレクトリの下の絶対パス）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる（`start_log` を呼ばないので、シグナルのハンドラも `atexit` も付かない）。標準出力と標準エラー出力は、呼ぶ前に `dup`・`dup2` で記述子 1・2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す。
 - **子のプロセス**: 親は `fork` の直前に `std::fflush(nullptr)` を呼ぶ（GoogleTest が標準出力のバッファにためた行を、子が受け継いで付け替えた先へ書き出さないようにするため）。子の設定ファイルは、親が一時のディレクトリに置く（`data_dir` と `log_dir` を、一時のディレクトリの下の絶対パスで書く）。`fork` した子の中で、記述子 1・2 を親が読む 2 つのパイプの書く側に付け替えて、2 つのパイプの元の 4 つの記述子を閉じ、`StartTime::now()` と `load_config`（ケースが書かなければ `keys` は `data_dir` と `log_dir`、`required` は `data_dir`）を呼んでから、入力の列の処理を、1.2 の `main` の形に捕まらない例外の経路を足した形（`try { <処理>; } catch (const ExitRequest& e) { std::exit(e.code); } catch (...) { std::terminate(); } std::exit(EXIT_OK);`）で行う。`catch (...)` の中で `std::terminate()` を呼ぶのは、子の中にも GoogleTest のテストの呼び出しが残っていて、例外をそのまま外へ出すと GoogleTest が捕まえてしまうため（`catch` の中から呼べば、`_on_terminate` の `std::current_exception()` がその例外を返し、`main` から例外が出たときと同じ経路になる）。`UT-analyze_terrain_common-31` だけは `catch (const ExitRequest& e)` を置かず、`catch (...) { std::terminate(); }` だけにする（捕まえ忘れた `ExitRequest`）。`start_log` は入力の列が書く位置で 1 回だけ、`start_log(<config の log_dir>, config, "test_common", <ケースの引数>, start)` の形で呼ぶ（入力の列が `start_log` の位置を書いていないケースは、処理の最初に呼ぶ。ケースの引数が書いていなければ空）。親は `fork` の後に 2 つのパイプの書く側を閉じ、2 つのパイプを `poll` で両方が終わり（EOF）になるまで読み、`waitpid` の終了状態（シグナルで死んでいたらケースの失敗）とログファイル（`<log_dir>` の下の `test_common_*_<子の PID>.log`）を確かめる。
@@ -4328,7 +4328,7 @@ Python の `UT-common-24`（ロック）・`-25`（取得完了の記録のパ�
 - 部品はすべて `scripts/cmp5_common.py` 1 本に置く（ADR-LLD-001 の Decision 5 の「名前は LLD で決める」。名前はモジュール名と同じにする）。CMP5 の 4 本のプログラムは `venv/bin/python3 scripts/<名前>.py` で起動される（[HLD 3.5.1](30_HLD.md#351-プログラム)）ので、`scripts/` が import の探索先の先頭になり、`import cmp5_common` で読む（[2.1.1](#211-ファイル割付)と同じ）。
 - `scripts/cmp5_common.py` は、共通部品を `import common` で読む（使うのは `latlon_to_tile` だけ）。ほかに読むのは、標準の `csv`・`decimal`・`json`・`math`・`os`・`re` と、`dataclasses` の `dataclass`、`typing` の `Iterable`・`Iterator` である。
 - ファイルの先頭のコメントに `# trace: LLD-cmp5_common` を書く。起動の部分（`if __name__ == '__main__':`）は持たない（プログラムでなく部品のため）。
-- UT のコードは `tests/scripts/test_cmp5_common.py` に置く。各テストに `# trace: UT-cmp5_common-NN` のコメントを付ける。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 6 を写したテストには、`2.4 の表 6` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_cmp5_common.py` に置く。各テストに `# trace: UT-cmp5_common-NNN` のコメントを付ける。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 6 を写したテストには、`2.4 の表 6` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.1.2 型とデータ
 
@@ -4584,7 +4584,7 @@ return 2 * _EARTH_RADIUS_M * math.asin(min(1.0, math.sqrt(h)))
 
 - 関数はすべて `scripts/merge_peaks.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/merge_peaks.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品は `cmp5_common.great_circle_m(...)` のようにモジュールの属性として呼ぶ（`from cmp5_common import …` で名前を写さない。UT 17 が `merge_peaks.cmp5_common.great_circle_m` を差し替えて、距離を求める処理と 30m と比べる処理を分けて確かめるため）。ほかに読むのは、標準の `csv`・`decimal`・`math`・`os`・`re`・`shlex`・`sys` と、`dataclasses` の `dataclass`・`replace`、`typing` の `Iterator`・`Sequence` である。
 - ファイルの先頭のコメントに `# trace: LLD-merge_peaks` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_merge_peaks.py` に置く。各テストに `# trace: UT-merge_peaks-NN` のコメントを付ける。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 5 を写したテストには、`2.4 の表 5` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_merge_peaks.py` に置く。各テストに `# trace: UT-merge_peaks-NNN` のコメントを付ける。[2.4](#24-言語ごとに別に実装する式のテストベクトル)の表 5 を写したテストには、`2.4 の表 5` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.2.2 型とデータ
 
@@ -4941,7 +4941,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 - 関数はすべて `scripts/merge_zones.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/merge_zones.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.read_zone_features(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)と同じ形にそろえる）。ほかに読むのは、標準の `decimal`・`json`・`os`・`re`・`shlex`・`sys` と、`dataclasses` の `dataclass`、`typing` の `Sequence` である。
 - ファイルの先頭のコメントに `# trace: LLD-merge_zones` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_merge_zones.py` に置く。各テストに `# trace: UT-merge_zones-NN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_merge_zones.py` に置く。各テストに `# trace: UT-merge_zones-NNN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.3.2 型とデータ
 
@@ -5142,7 +5142,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 - 関数はすべて `scripts/check_cols.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/check_cols.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.read_merged_peak(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)と同じ形）。ほかに読むのは、標準の `os`・`shlex`・`sys` と、`dataclasses` の `dataclass`、`typing` の `Iterable`・`Iterator`・`Sequence` である。
 - ファイルの先頭のコメントに `# trace: LLD-check_cols` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_check_cols.py` に置く。各テストに `# trace: UT-check_cols-NN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_check_cols.py` に置く。各テストに `# trace: UT-check_cols-NNN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.4.2 型とデータ
 
@@ -5301,7 +5301,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 - 関数はすべて `scripts/match_summits.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/match_summits.py` で起動され（[HLD 3.5.1](30_HLD.md#351-プログラム)）、共通部品は `import common`、CMP5 の共通部品は `import cmp5_common` で読む（[2.1.1](#211-ファイル割付)・[7.1.1](#711-ファイル割付)と同じ）。7.1 の部品と型は `cmp5_common.is_valid_coord(...)` のようにモジュールの属性として使う（[7.2.1](#721-ファイル割付)・[7.3.1](#731-ファイル割付)・[7.4.1](#741-ファイル割付)と同じ形）。
 - 7.5 の関数が読む標準のモジュールは、`csv`・`datetime`・`decimal`・`json`・`math`・`os`・`re`・`shlex`（`_config_opt`。[main](#mainmatch_summits)の 5）・`subprocess`・`sys`・`unicodedata`・`xml.etree.ElementTree`（`ET` として）・`xml.parsers.expat`、`dataclasses` の `dataclass`（型と `_Args` が使う）、`collections.abc` の `Sequence`（`build_pending_note`・`build_metadata`・`_parse_args` の宣言が使う。`typing` からは読まない。`ruff.toml` が選ぶ `UP` の UP035 が、`typing` の `Sequence` の import を止めるため）である（`collections.abc` の `Iterable` は、7.5 の関数の宣言が使わないので読まない）。ほかに `shapely`（`import shapely`・`import shapely.errors`・`import shapely.geometry`。`requirements.txt` にある。使う版は 2.x で、`STRtree` の `query` が添字の配列を返す。突き合わせと照合の関数が使う `shapely.Point`・`shapely.contains_xy`・`shapely.covers` と `STRtree` の `geometries` は、`import shapely` で使える）。`subprocess` は `build_metadata` の `git describe` が使う。ほかに `openpyxl`（`import openpyxl` と `import openpyxl.cell.cell`。`requirements.txt` にある。使う版は 3.1。`build_summit_sheets` が `openpyxl.Workbook` と `openpyxl.cell.cell.ILLEGAL_CHARACTERS_RE` を使う）。import の並びは `ruff` の I001（isort の既定）が決めるとおりにする: 標準のモジュール、その次に `cmp5_common`・`common`・`openpyxl`・`shapely` を同じ区画に名前の順で並べる（`common`・`cmp5_common` は `ruff` から見て第三者のモジュールで、`shapely` と区画を分けない）。
 - ファイルの先頭のコメントに `# trace: LLD-match_summits` を書く。起動の部分は `if __name__ == '__main__': main()`（[main](#mainmatch_summits)を呼ぶ）。
-- UT のコードは `tests/scripts/test_match_summits.py` に置く。各テストに `# trace: UT-match_summits-NN` のコメントを付ける。ID は 01 から通しで付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_match_summits.py` に置く。各テストに `# trace: UT-match_summits-NNN` のコメントを付ける。ID は 001 から通しで付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 7.5.2 型とデータ
 
@@ -6257,7 +6257,7 @@ dominant_peak = min(candidates, key=key)
 
 - 関数はすべて `scripts/generate_viewer.py` 1 本に置く（ADR-LLD-001 の Decision 5）。`venv/bin/python3 scripts/generate_viewer.py` で起動され（[HLD 3.6.1](30_HLD.md#361-プログラム)）、共通部品は `import common` で読む（[2.1.1](#211-ファイル割付)と同じ）。CMP6 にコンポーネント内の共通部品は無い（[HLD 3.6.4](30_HLD.md#364-コンポーネント内の共通部品)）。ほかに読むのは、標準の `json`・`os`・`shlex`・`sys` と、`dataclasses` の `dataclass`、`collections.abc` の `Sequence`（`_parse_args` の宣言が使う。[7.5.1](#751-ファイル割付)と同じく `typing` からは読まない）である。
 - ファイルの先頭のコメントに `# trace: LLD-generate_viewer` を書く。起動の部分は `if __name__ == '__main__': main()`。
-- UT のコードは `tests/scripts/test_generate_viewer.py` に置く。各テストに `# trace: UT-generate_viewer-NN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
+- UT のコードは `tests/scripts/test_generate_viewer.py` に置く。各テストに `# trace: UT-generate_viewer-NNN` のコメントを付ける。テストの枠組みは [2.1.1](#211-ファイル割付)と同じく標準の `unittest`。
 
 #### 8.1.2 型とデータ
 
@@ -9007,7 +9007,7 @@ popup の行の見出しと値の書き方（[9.2.3](#923-関数の細部)の `b
 - **選択の画面の差し替え**: `load_exclusion_file` を呼ぶケースは、先に `(() => { window.__chooser = 0; document.getElementById('exclusion-file').click = () => { window.__chooser += 1; }; })()` を評価する（そのインスタンスの `click` だけを差し替え、選択の画面を開かない。開いたら止まるブラウザがあるかを確かめずに済むため）。続けて `Page.set_files('#exclusion-file', [<判断ファイル>])` で選んだことにする。`#exclusion-file` の `onchange` を付けるのは `load_exclusion_file()` だけなので、判断ファイルを選ぶときは、毎回 `load_exclusion_file()` を呼んでから `Page.set_files` を呼ぶ（`set_files` だけを呼んでも `change` を受ける関数が無く、確認のオーバーレイは開かない。同じファイルを選び直すときも、この 2 つをこの順に呼ぶ）。
 - **オーバーレイのボタン**: `document.querySelector('#overlay [data-action="<名>"]').click()`。行は `[...document.querySelectorAll('#overlay .overlay-lines li')].map(li => li.textContent)`。
 - **答えを待たない呼び出し**: `confirm_inherit` のように、ボタンを押すまで決まらない Promise を返す関数は、`Page.evaluate('(() => { window.__p = confirm_inherit(…); })()')` の形で呼ぶ（値を `undefined` にする）。`window.__p = confirm_inherit(…)` をそのまま渡すと、層の包みの `await` がその Promise を待ち、1 つの命令の時間切れ（15 秒）で落ちるため（[2.6](#26-ブラウザを動かすテストの層)の 8）。答えは、ボタンを押した後に `Page.evaluate('window.__p')` で受ける。
-- **trace のコメント**: ブラウザごとの `describe` の中は、ケースをループで作るので、`// trace: UT-index_screen-NN` を `test(…)` を呼ぶ行の直前に置く（[1.2](#12-lld-の規約)の「各ケースの直前」はこの位置を指す）。
+- **trace のコメント**: ブラウザごとの `describe` の中は、ケースをループで作るので、`// trace: UT-index_screen-NNN` を `test(…)` を呼ぶ行の直前に置く（[1.2](#12-lld-の規約)の「各ケースの直前」はこの位置を指す）。
 - **新しいタブ**: ケースの入力の「新しいタブで」は、前のタブを `Page.close()` で閉じ、同じ写しの URL を `Session.open` で開き直し、`localStorage.clear()`、作業の状態、その UT の「準備」の列の残り（`_record` の変更、選択の画面の差し替え、`watch_other_tabs` など）を同じ順にもう一度行うこと。ほかのケースの入力の「別のタブ」（`UT-index_screen-15`・`27`・`29`・`44`・`71`・`75` など）は「新しいタブで」と同じ。`UT-index_screen-08` の (e) の「別のタブ」は「新しいタブで」に当たらず、前のタブを閉じずに別に開く（(f)(g) は (a)〜(d) のタブで行う）。`UT-index_screen-17` の 2 つ目のタブだけは別で、1 つ目のタブを閉じずに開き、`localStorage.clear()` も作業の状態も行わない（1 つ目のタブで `watch_other_tabs` を呼ぶより前に開く）。「どのケースも `Session.open` の直後に `localStorage.clear()`」は、この 2 つ目のタブには当てない。どのタブの `open` にも `lib_routes([], [])` を渡す。
 - **申請に戻した記録の要素 P1**: `{target: 'existing', lon: null, lat: null, summit_code: 'JA/TK-005', action: 'delete', decided_generated_at: '2026-01-01T00:00:00Z', conditions: {applications: [{action: 'delete', summit_code: 'JA/TK-005', lat: null, lon: null, new_points: null, applicant: 'a', applied_on: '2026-01-10'}], origin: 'normal'}}`。
 - **編集の要素 N1・M1**（`UT-index_screen-22` が使う）: N1 は `{target: 'existing', summit_code: 'JA/TK-001', action: 'band_change', rationale: 'r'}`（`names` の要素）、M1 は `{summit_code: 'JA/TK-040', decision: 'delete', note_draft: 'm', previous_decision: ''}`（`manual_deletes` の要素）。ページの式に入れるときは、R1 などと同じく `JSON.stringify(<値>)` の字句にする。
