@@ -9099,7 +9099,7 @@ bash の規約（この節の関数と本体のすべてに当てる）: [1.2](#
 
 `read_commit_id` を `copy_public_tree` の後に置くのは、HLD 3.8.3 の呼ぶ順のとおり。commit の ID の誤りで止まったときは、出力先に `index.html` と 5 本が残り、`site.json` は無い（終了コードが 1 なので配信されない）。
 
-確かめた事実（bash 5.3.9、GNU coreutils・findutils、2026-11-21 に Linux で確かめた）: {{FACTS}}
+確かめた事実（bash 5.3.15、GNU coreutils・findutils、2026-11-21 に Linux で確かめた）: `mapfile -d ''` で process substitution から読んだ次の `wait $!` は、その process substitution の終了状態を返す（中のパイプは `pipefail` を受け継ぎ、0 以外で終わったコマンドの値になる）。`find` の `-printf '%P\0'` は、`-mindepth 1` の下の相対パスを NUL で区切って出し、並びはディレクトリを読んだ順で、バイト順ではない。シンボリックリンクはたどらず、リンクそのものを出す。GNU の `rm -rf` は、通常のファイルの下のパスを渡されると、何も消さずに終了状態 0 で終わる（`mkdir -p` は `Not a directory` で失敗する）。`[[ =~ ]]` の `$` は文字列の終わりにだけ合い、末尾の LF の前には合わない。環境変数の `BASHOPTS=nocasematch` を受け継ぐと、`[[ ABC =~ ^[abc]{3}$ ]]` と `case MAIN in main)` が一致し、`shopt -u nocasematch` の後は一致しない。
 
 #### 10.1.4 メッセージ文面
 
