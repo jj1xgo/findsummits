@@ -535,8 +535,8 @@ CASE_HEAD_RE = re.compile(r'^#{2,6}\s+((?:UT|IT|ST)-[A-Za-z0-9_０-９-]+)(.*)$'
 BARE_CASE_ROW_RE = re.compile(r'^\|\s*((?:UT|IT|ST)-[A-Za-z0-9_０-９-]+)')
 CASE_FORMAT = {
     'UT': re.compile(r'^UT-([A-Za-z0-9_]+)-(?:00[1-9]|0[1-9][0-9]|[1-9][0-9]{2})$'),
-    'IT': re.compile(r'^IT-(CMP[1-8]-(?:INT|EXT)[1-9]\d*)-(?:0[1-9]|[1-9]\d)$'),
-    'ST': re.compile(r'^ST-((?:FR|NFR|UR)-\d{3})-(?:0[1-9]|[1-9]\d)$'),
+    'IT': re.compile(r'^IT-(CMP[1-8]-(?:INT|EXT)[1-9][0-9]*)-(?:0[1-9]|[1-9][0-9])$'),
+    'ST': re.compile(r'^ST-((?:FR|NFR|UR)-[0-9]{3})-(?:0[1-9]|[1-9][0-9])$'),
 }
 ST_COVERAGE_HEAD_RE = re.compile(r'^## \d+\. URカバレッジ表')
 CASE_REF_RE = re.compile(r'`(ST-(?:FR|NFR|UR)-\d{3}-)(\d{2}|\*)`(?:〜`(\d{2})`)?')

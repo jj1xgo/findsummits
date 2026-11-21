@@ -1519,10 +1519,18 @@ class LldTest(TraceTestCase):
         self.assertIn('T2:tests/src/test_one.cpp->UT-one-001９', self.keys(files))
 
     def test_it_st_keep_two_digits(self):
-        self.assertTrue(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-01'))
-        self.assertFalse(lt.CASE_FORMAT['IT'].match('IT-CMP5-INT1-001'))
-        self.assertTrue(lt.CASE_FORMAT['ST'].match('ST-FR-001-01'))
-        self.assertFalse(lt.CASE_FORMAT['ST'].match('ST-FR-001-001'))
+        # IT・ST の連番は 2 桁のまま。ASCII の数字だけを通し、全角の数字は書式の誤り（T1）にする
+        it = IT.replace('| `IT-CMP1-INT1-01` | a | b | c | d |\n', ''.join(
+            f'| `{i}` | a | b | c | d |\n' for i in ('IT-CMP1-INT1-01', 'IT-CMP1-INT1-001', 'IT-CMP1-INT1-1０',
+                                                     'IT-CMP1-INT1０-01')))
+        st = ST_MOVED.replace('| `ST-FR-001-01` | a |', ''.join(
+            f'| `{i}` | a |\n' for i in ('ST-FR-001-01', 'ST-FR-001-001', 'ST-FR-００１-01', 'ST-FR-001-0１'))[:-1])
+        keys = self.keys(dict(BASE, **{'docs/30_HLD.md': HLD_SEAM, 'docs/60_IT.md': it, 'docs/70_ST.md': st}))
+        for ok in ('IT-CMP1-INT1-01', 'ST-FR-001-01'):
+            self.assertNotIn(f'T1:{ok}', keys)
+        for bad in ('IT-CMP1-INT1-001', 'IT-CMP1-INT1-1０', 'IT-CMP1-INT1０-01',
+                    'ST-FR-001-001', 'ST-FR-００１-01', 'ST-FR-001-0１'):
+            self.assertIn(f'T1:{bad}', keys)
 
     def test_clean_when_confirmed(self):
         keys = self.keys(self.files(), confirmed={'LLD', 'UT'}, implemented={'UT'})
