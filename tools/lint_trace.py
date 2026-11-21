@@ -1287,6 +1287,16 @@ def strip_html_comments(line, in_comment):
             if j < 0:
                 out.append(line[i:])
                 break
+            k = line.find('`', i, j)
+            if k >= 0:
+                # コード表記が先に始まるなら、その中の <!-- はコメントでない（CommonMark）。
+                # 同じ長さのバッククォートの並びで閉じるところまでをそのまま写す
+                n = len(line) - len(line[k:].lstrip('`'))
+                close = re.search(r'(?<!`)' + '`' * (n - k) + r'(?!`)', line[n:])
+                end = n + close.end() if close else n
+                out.append(line[i:end])
+                i = end
+                continue
             out.append(line[i:j])
             i, in_comment = j + 4, True
     return ''.join(out), in_comment

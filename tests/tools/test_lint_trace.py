@@ -1370,6 +1370,13 @@ class LldTest(TraceTestCase):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
 
+    def test_ut_moved_comment_opener_in_code_span_hides_nothing(self):  # コード表記の中の <!-- はコメントでない
+        ref_part = LLD_REF[len(LLD):]
+        for span in ('`<!--`', '``a `<!--` b``'):
+            with self.subTest(span=span):
+                lld = LLD + f'\n中身に {span} を書かない。\n' + ref_part
+                self.assertEqual(self.moved_keys(lld), [])
+
     def test_ut_moved_percent_encoded_anchor(self):  # %-符号化したアンカーも参照（unquote して照らす）
         lld = LLD_REF.replace('#11-一)', '#11-%E4%B8%80)')
         self.assertEqual(self.moved_keys(lld), [])
