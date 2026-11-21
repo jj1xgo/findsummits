@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-21 |
+| 最終更新日 | 2026-11-22 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -9031,7 +9031,7 @@ bash の規約（この節の関数と本体のすべてに当てる）: [1.2](#
 
 1. 確かめの 1 回目: `rc=0; err=$( LC_ALL=C readlink -f -- "${BASH_SOURCE[0]}" 2>&1 >/dev/null ) || rc=$?`。`rc` が 0 以外なら SB12（`{path}` は `${BASH_SOURCE[0]}` のまま、`{reason}` は `err` から前置きの 2 のとおりに取ったもの）で止まる。
 2. 値の 2 回目: `rc=0; p=$( LC_ALL=C readlink -f -- "${BASH_SOURCE[0]}" 2>/dev/null ) || rc=$?`。`rc` が 0 以外なら SB12（`{reason}` は `readlink が終了コード <rc> で終わった`。1 回目が通ったのに 2 回目が失敗するのは前置きの 5 の前提の外なので、診断を取り直さない）で止まる。2 回に分けるのは、1 回の起動から、値（標準出力）と理由（標準エラー出力）を一時ファイル無しで別々の変数に受けられないため。
-3. 置き場を確かめる: `p` の最後の `/` より後が `build_public_site.sh` で、`d=${p%/*}` の最後の `/` より後が `scripts` で、`${d%/*}` が空でないことを確かめる。どれかが外れたら SB12（`{reason}` は `置き場が <根>/scripts/build_public_site.sh の形でない: <p>`。`<p>` は 2 の値）で止まる（別の置き場に写したもの〈`/scripts/build_public_site.sh` なら根が空で `/build/site` を、`~/bin/build_public_site.sh` なら `$HOME/build/site` を消す〉と、標準入力から読ませた起動〈`${BASH_SOURCE[0]}` が `main` などになり、作業ディレクトリの親を根と読む〉で、checkout の外を読み書きしないため。[HLD 3.8.1](30_HLD.md#381-プログラム)の「checkout したリポジトリだけを読み書き」）。
+3. 置き場を確かめる: `p` の最後の `/` より後が `build_public_site.sh` で、`d=${p%/*}` の最後の `/` より後が `scripts` で、`${d%/*}` が空でないことを確かめる。どれかが外れたら SB12（`{reason}` は `置き場が <根>/scripts/build_public_site.sh の形でない: <p>`。`<p>` は 2 の値に置き換え、`<根>` は置き換えずに字のとおり出す）で止まる（別の置き場に写したもの〈`/scripts/build_public_site.sh` なら根が空で `/build/site` を、`~/bin/build_public_site.sh` なら `$HOME/build/site` を消す〉と、標準入力から読ませた起動〈`${BASH_SOURCE[0]}` が `main` などになり、作業ディレクトリの親を根と読む〉で、checkout の外を読み書きしないため。[HLD 3.8.1](30_HLD.md#381-プログラム)の「checkout したリポジトリだけを読み書き」）。
 4. `${d%/*}` を `SOURCE_ROOT` に入れる。続けて `PUBLIC_DIR`・`BUILD_DIR`・`OUT_DIR` を 10.1.2 の表のとおりに入れる。
 
 ##### check_public_tree
@@ -9056,7 +9056,7 @@ bash の規約（この節の関数と本体のすべてに当てる）: [1.2](#
 
 `copy_public_tree`（受け取るものは `PUBLIC_DIR`・`BUILD_DIR`・`OUT_DIR`・`HAS_DATA`）。HLD 4.20.2 の「組み立て」の 3。
 
-1. 出力先の親を確かめる: `[[ -L $BUILD_DIR ]]` が真か、`-L` が偽で `[[ -e $BUILD_DIR ]]` が真で `[[ -d $BUILD_DIR ]]` が偽なら、SB8 の 1 つ目（出力先の親がディレクトリでない。`{path}` は `BUILD_DIR`）で止まり、何も消さない（`build` がリポジトリの外へのリンクのときに、リンクの先の `site/` を消さないため。[HLD 3.8.1](30_HLD.md#381-プログラム)の「checkout したリポジトリだけを読み書き」）。無ければ、次の 3 で作る。続けて、マウントの点を確かめる（前置きの 5）: `rc=0; err=$( { LC_ALL=C; : </proc/self/mountinfo; } 2>&1 ) || rc=$?`。0 以外なら SB13 の 1 つ目（`{path}` は `/proc/self/mountinfo`、`{reason}` は `err` から前置きの 2 のとおりに取ったもの）で止まり、何も消さない（確かめられないときは消さない）。読めたら `mapfile -t _mounts </proc/self/mountinfo` で行を受け、各行の 5 つ目の欄（空白で区切った欄。マウントの点のパスで、空白・タブ・LF・`\` は `\040`・`\011`・`\012`・`\134` に逃がしてある）を、外部のコマンドを使わずに取り出す（頭から `${f#* }` を 4 回、続けて `${f%% *}`）。`BUILD_DIR`・`OUT_DIR` を同じ形に逃がしたもの（`\` を先に替える）を `b`・`o` とし、5 つ目の欄が `b` と同じなら SB13 の 2 つ目（`{path}` は `BUILD_DIR`）、`o` と同じか `o/` で始まるなら SB13 の 2 つ目（`{path}` は `OUT_DIR`）で止まり、何も消さない。`BUILD_DIR` は 1 でリンクでないと確かめ、`SOURCE_ROOT` は `readlink -f` の値から求めたので、mountinfo のパス（リンクを解いたもの）と字で比べてよい。
+1. 出力先の親を確かめる: `[[ -L $BUILD_DIR ]]` が真か、`-L` が偽で `[[ -e $BUILD_DIR ]]` が真で `[[ -d $BUILD_DIR ]]` が偽なら、SB8 の 1 つ目（出力先の親がディレクトリでない。`{path}` は `BUILD_DIR`）で止まり、何も消さない（`build` がリポジトリの外へのリンクのときに、リンクの先の `site/` を消さないため。[HLD 3.8.1](30_HLD.md#381-プログラム)の「checkout したリポジトリだけを読み書き」）。無ければ、次の 3 で作る。続けて、マウントの点を確かめる（前置きの 5）: `rc=0; err=$( { LC_ALL=C; : </proc/self/mountinfo; } 2>&1 ) || rc=$?`。0 以外なら SB13 の 1 つ目（`{path}` は `/proc/self/mountinfo`、`{reason}` は `err` から前置きの 2 のとおりに取ったもの。`err` が空なら、前置きの 2 の `<コマンドの名前>` は `:` で、`: が終了コード <rc> で終わった`）で止まり、何も消さない（確かめられないときは消さない）。読めたら `mapfile -t _mounts </proc/self/mountinfo` で行を受け、各行の 5 つ目の欄（空白で区切った欄。マウントの点のパスで、空白・タブ・LF・`\` は `\040`・`\011`・`\012`・`\134` に逃がしてある）を、外部のコマンドを使わずに取り出す（頭から `${f#* }` を 4 回、続けて `${f%% *}`）。`BUILD_DIR`・`OUT_DIR` を同じ形に逃がしたもの（`\` を先に替える）を `b`・`o` とし、5 つ目の欄が `b` と同じなら SB13 の 2 つ目（`{path}` は `BUILD_DIR`）、`o` と同じか `o/` で始まるなら SB13 の 2 つ目（`{path}` は `OUT_DIR`）で止まり、何も消さない。`BUILD_DIR` は 1 でリンクでないと確かめ、`SOURCE_ROOT` は `readlink -f` の値から求めたので、mountinfo のパス（リンクを解いたもの）と字で比べてよい。
 2. 出力先を空にする: `rc=0; err=$( LC_ALL=C rm -rf -- "$OUT_DIR" 2>&1 ) || rc=$?`。`rc` が 0 以外なら SB8 の 2 つ目（空にできない。`{path}` は `OUT_DIR`）で止まる。出力先がシンボリックリンクなら、`rm` はリンクだけを消し、リンクの先は消さない。
 3. 出力先を作る: `rc=0; err=$( LC_ALL=C mkdir -p -- "$OUT_DIR" 2>&1 ) || rc=$?`。0 以外なら SB8 の 3 つ目（用意できない。`{path}` は `OUT_DIR`）で止まる。
 4. 写す（どれも同じ形で受け、0 以外なら止まる）: `LC_ALL=C cp -- "$PUBLIC_DIR/index.html" "$OUT_DIR/index.html"`。`HAS_DATA` が `1` なら、続けて `LC_ALL=C mkdir -- "$OUT_DIR/data"`（失敗は SB8 の 3 つ目、`{path}` は `"$OUT_DIR/data"`）と、`PUBLIC_DATA_NAMES` の順に 1 本ずつ `LC_ALL=C cp -- "$PUBLIC_DIR/data/<名前>" "$OUT_DIR/data/<名前>"`。`HAS_DATA` が `0` なら `data/` を作らない。`cp` の失敗は SB8 の 4 つ目（写せない。`{path}` は写し先）。`cp` に `--` のほかのオプションを付けない（バイト列だけを写す）。出力先の中のパスは `public/` の中と同じ（`index.html` と `data/<名前>`）。
