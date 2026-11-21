@@ -9047,7 +9047,7 @@ bash の規約（この節の関数と本体のすべてに当てる）: [1.2](#
    2. `"$PUBLIC_DIR/$p"` の種類を決める: `[[ -L ]]` が真ならシンボリックリンク（**`-L` を先に見る**。`-f`・`-d` はリンクの先をたどるため）、偽なら `[[ -f ]]` が真で通常のファイル、`[[ -d ]]` が真でディレクトリ、どちらでもなければそのほか（FIFO など）。
    3. 許すのは次の 3 つの形だけ: 通常のファイルの `index.html`、ディレクトリの `data`、通常のファイルの `data/<名前>`（`<名前>` は `PUBLIC_DATA_NAMES` のどれか）。ほかはすべて許可していないもの（ほかのファイル、`.` で始まるもの、ほかのディレクトリ、シンボリックリンク、そのほか。`index.html` がディレクトリ、`data` が通常のファイル、`data/` の下のディレクトリも含む）。
    4. 許可していないものは数え、最初に数えたものの相対パスを控える。それがディレクトリ（シンボリックリンクでない）なら、相対パスを `_bad_dirs` のキーに入れる。許した `index.html` と、許した `data/<名前>` の名前を控える。
-4. 許可していないものが 1 つ以上なら SB5 で止まる（`{path}` は並びで最初に数えたものの絶対パス `"$PUBLIC_DIR/$p"`。シンボリックリンクはたどらず、リンクそのもののパス。`{more}` は数えた数から 1 を引いた数で、0 なら `（ほかに {more} 件）` を付けない）。
+4. 許可していないものが 1 つ以上なら SB5 で止まる（`{path}` は並びで最初に数えたものの絶対パス `"$PUBLIC_DIR/$p"`。シンボリックリンクはたどらず、リンクそのもののパス。`{more}` は数えた数から 1 を引いた数で、1 以上なら 1 行目の末尾に空白も改行も入れずに `（ほかに {more} 件）` を付け、0 なら付けない）。
 5. 3 で通常のファイルの `index.html` を控えていなければ SB6（`{path}` は `"$PUBLIC_DIR/index.html"`）で止まる。
 6. 控えた `data/<名前>` の数が 1〜4 なら SB7（`{count}` は無い本の数、`{names}` は無い本の名前を `PUBLIC_DATA_NAMES` の順に `・` でつないだもの）で止まる。5 なら `HAS_DATA=1`、0 なら `HAS_DATA=0`（`data/` が無いときと、空のディレクトリのときも 0）。ファイルの中身（JSON か、空か）は見ない。
 
@@ -9113,7 +9113,7 @@ bash の規約（この節の関数と本体のすべてに当てる）: [1.2](#
 | SB2 | `--branch` の値が無い（`ERROR:`） | `--branch の値が無い` | `組み立てのコマンドを bash scripts/build_public_site.sh --branch "$WORKERS_CI_BRANCH" にする（使える引数は --branch だけ）` | 2 |
 | SB3 | `--branch` が無い・値が違う（`ERROR:`） | 1 つ目は `--branch が無い`、2 つ目は `--branch の値が main でも devel でもない: {value}` | `組み立ての対象を main と devel だけにし（Builds API の branch_includes）、組み立てのコマンドを bash scripts/build_public_site.sh --branch "$WORKERS_CI_BRANCH" にする` | 2 |
 | SB4 | `--branch` を 2 回（`ERROR:`） | `--branch を 2 回渡した` | `--branch は 1 回だけ渡す` | 2 |
-| SB5 | 許可していないものがある（`ERROR:`） | `公開用に許可していないものがある: {path}`。`{more}` が 1 以上なら、続けて `（ほかに {more} 件）`（最初の 1 つと残りの件数だけを示し、全部は並べない） | `public/ には index.html と、data/ の下の add.geojson・delete.geojson・band_change.geojson・no_change.geojson・review.geojson だけを置く。ほかを外して commit し、push し直す（作業用のデータファイル merged_viewer_data.js は public/ に置かない）` | 1 |
+| SB5 | 許可していないものがある（`ERROR:`） | `公開用に許可していないものがある: {path}`。`{more}` が 1 以上なら、同じ 1 行目の末尾に、空白も改行も入れずに `（ほかに {more} 件）` を付ける（例 `公開用に許可していないものがある: /repo/public/B.txt（ほかに 4 件）`。最初の 1 つと残りの件数だけを示し、全部は並べない） | `public/ には index.html と、data/ の下の add.geojson・delete.geojson・band_change.geojson・no_change.geojson・review.geojson だけを置く。ほかを外して commit し、push し直す（作業用のデータファイル merged_viewer_data.js は public/ に置かない）` | 1 |
 | SB6 | テンプレートが無い（`ERROR:`） | `公開用のテンプレートが無い: {path}` | `public/index.html を戻して commit し、push し直す` | 1 |
 | SB7 | 5 本の一部だけがある（`ERROR:`） | `公開用データの 5 本のうち {count} 本が無い: {names}` | `申請エビデンス ZIP から取り出した 5 本をそろえて public/data/ に置くか、5 本とも外してから commit し、push し直す` | 1 |
 | SB8 | 出力先を作れない（`ERROR:`） | 1 つ目は `出力先の親がディレクトリでない: {path}`（`{reason}` を付けない）、2 つ目は `出力先を空にできない: {path}: {reason}`、3 つ目は `出力先を用意できない: {path}: {reason}`、4 つ目は `写せない: {path}: {reason}`、5 つ目は `site.json を書けない: {path}: {reason}` | `組み立ての環境の build/ の権限と空きを確かめてから、組み立てをやり直す（Workers Builds の Retry build）` | 1 |
