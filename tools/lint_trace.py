@@ -1274,8 +1274,20 @@ def check_lld_ut_candidates(text):
 
 
 def strip_html_comments(line, in_comment):
-    """行から HTML のコメント（<!-- … -->。行をまたぐものを含む）を除いた文字列と、行の終わりでコメントの中かを返す"""
+    """行から HTML のコメント（<!-- … -->。行をまたぐものを含む）を除いた文字列と、行の終わりの状態を返す。
+
+    状態は False（どちらの中でもない）・True（コメントの中）・バッククォートの並びの文字列（その長さの
+    並びで開いたコード表記の中。行をまたぐ。空行〈段落の切れ目〉で閉じたものとする）。前の行の状態を渡す。
+    """
     out, i = [], 0
+    if isinstance(in_comment, str):
+        if not line.strip():
+            return line, False
+        close = re.search(r'(?<!`)' + in_comment + r'(?!`)', line)
+        if not close:
+            return line, in_comment
+        out.append(line[:close.end()])
+        i, in_comment = close.end(), False
     while i < len(line):
         if in_comment:
             j = line.find('-->', i)
@@ -1294,7 +1306,10 @@ def strip_html_comments(line, in_comment):
                 # 同じ長さのバッククォートの並びで閉じるところまでをそのまま写す
                 n = len(line) - len(line[k:].lstrip('`'))
                 close = re.search(r'(?<!`)' + '`' * (n - k) + r'(?!`)', line[n:])
-                end = n + close.end() if close else n
+                if not close:  # 次の行へまたぐ
+                    out.append(line[i:])
+                    return ''.join(out), '`' * (n - k)
+                end = n + close.end()
                 out.append(line[i:end])
                 i = end
                 continue

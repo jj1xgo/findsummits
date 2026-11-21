@@ -1367,14 +1367,15 @@ class LldTest(TraceTestCase):
         ref = '[1.1](50_UT.md#11-一)'
         # `x` の後と、\ で逃がしたバッククォート（コード表記を始めない）の後の <!-- も、本物のコメントの始まり
         for hidden in (f'<!-- {ref} -->', f'<!--\n{ref}\n-->', f'\\{ref}', f'!{ref}',
-                       f'`x` <!-- {ref} -->', f'\\` <!-- \\` {ref} -->', f'\\`\\` <!-- {ref} -->'):
+                       f'`x` <!-- {ref} -->', f'\\` <!-- \\` {ref} -->', f'\\`\\` <!-- {ref} -->',
+                       f'`x\n\n<!-- {ref} -->'):  # 閉じないバッククォートは、空行（段落の切れ目）で終わる
             with self.subTest(hidden=hidden):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
 
     def test_ut_moved_comment_opener_in_code_span_hides_nothing(self):  # コード表記の中の <!-- はコメントでない
         ref_part = LLD_REF[len(LLD):]
-        for span in ('`<!--`', '``a `<!--` b``'):
+        for span in ('`<!--`', '``a `<!--` b``', '`<!--\nb`', '``a\n`<!--` b``'):  # 行をまたぐコード表記も
             with self.subTest(span=span):
                 lld = LLD + f'\n中身に {span} を書かない。\n' + ref_part
                 self.assertEqual(self.moved_keys(lld), [])
