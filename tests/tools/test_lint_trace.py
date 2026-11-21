@@ -1365,7 +1365,9 @@ class LldTest(TraceTestCase):
 
     def test_ut_moved_hidden_link_not_ref(self):  # 表示されないリンク（コメント・エスケープ・画像）は参照でない
         ref = '[1.1](50_UT.md#11-一)'
-        for hidden in (f'<!-- {ref} -->', f'<!--\n{ref}\n-->', f'\\{ref}', f'!{ref}'):
+        # `x` の後と、\ で逃がしたバッククォート（コード表記を始めない）の後の <!-- も、本物のコメントの始まり
+        for hidden in (f'<!-- {ref} -->', f'<!--\n{ref}\n-->', f'\\{ref}', f'!{ref}',
+                       f'`x` <!-- {ref} -->', f'\\` <!-- \\` {ref} -->', f'\\`\\` <!-- {ref} -->'):
             with self.subTest(hidden=hidden):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])

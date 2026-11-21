@@ -1287,7 +1287,8 @@ def strip_html_comments(line, in_comment):
             if j < 0:
                 out.append(line[i:])
                 break
-            k = line.find('`', i, j)
+            # \ で逃がしたバッククォート（直前の \ が奇数個）はコード表記を始めない（CommonMark）
+            k = next((m.start(1) for m in re.finditer(r'(?<!\\)(?:\\\\)*(`)', line[:j]) if m.start(1) >= i), -1)
             if k >= 0:
                 # コード表記が先に始まるなら、その中の <!-- はコメントでない（CommonMark）。
                 # 同じ長さのバッククォートの並びで閉じるところまでをそのまま写す
