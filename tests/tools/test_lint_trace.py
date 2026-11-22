@@ -1373,10 +1373,19 @@ class LldTest(TraceTestCase):
                        f'`x <!-- {ref} -->', f'x ` y <!-- c -->\n<!-- {ref} -->',
                        f'x ` y <!-- c -->\n##### 群\n<!-- {ref} -->',
                        f'`a {ref}\nb` の続き',  # 行をまたいで閉じるコード表記の中のリンクは表示されない
-                       f'a | b\n---|---\nx ` y | z\n<!-- ` {ref} -->'):  # 頭の | を省いた表の行も越えない
+                       f'a | b\n---|---\nx ` y | z\n<!-- ` {ref} -->',  # 頭の | を省いた表の行も越えない
+                       # 行頭の <!--（HTML のブロック）も段落を切る（前の行の閉じないバッククォートは字のまま）
+                       f'x ` y\n<!-- ` {ref} -->', f'x ` y <!-- c -->\n<!-- ` {ref} -->'):
             with self.subTest(hidden=hidden):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
+
+    def test_ut_moved_block_start_ends_code_span(self):  # 引用・区切り線も段落を切り、後ろの表示される参照を残す
+        ref = '[1.1](50_UT.md#11-一)'
+        for shown in (f'x ` y\n> {ref} `', f'x ` y\n***\n{ref} `', f'x ` y\n  > {ref} `', f'x ` y\n_ _ _\n{ref} `'):
+            with self.subTest(shown=shown):
+                lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{shown} にある。\n'
+                self.assertEqual(self.moved_keys(lld), [])
 
     def test_ut_moved_comment_opener_in_code_span_hides_nothing(self):  # コード表記の中の <!-- はコメントでない
         ref_part = LLD_REF[len(LLD):]

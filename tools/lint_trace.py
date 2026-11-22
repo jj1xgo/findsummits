@@ -1272,8 +1272,12 @@ def check_lld_ut_candidates(text):
     return out, info
 
 
-BLOCK_START_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\||(?:[-*+]|\d+[.)])(?:\s|$))')
-ONE_LINE_BLOCK_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\|)')
+# 区切り線（3 つ以上の同じ - か * か _ と空白だけの行。CommonMark の thematic break）
+THEMATIC_BREAK = r' {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$'
+# 段落を切る行の頭: 見出し、表の行、箇条、区切り線、引用（>）、HTML のコメントで始まるブロック（行頭の <!--）
+BLOCK_START_RE = re.compile(r'^(?:\s*(?:#{1,6}(?:\s|$)|\||(?:[-*+]|\d+[.)])(?:\s|$))'
+                            r'|' + THEMATIC_BREAK + r'| {0,3}>| {0,3}<!--)')
+ONE_LINE_BLOCK_RE = re.compile(r'^(?:\s*(?:#{1,6}(?:\s|$)|\|)|' + THEMATIC_BREAK + r')')
 ESCAPABLE = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 TABLE_DELIMITER_RE = re.compile(r'^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$')
 
@@ -1302,9 +1306,10 @@ def _table_rows(pairs):
 def _paragraphs(pairs):
     """(行番号, 行) の並びを、コード表記が閉じうる範囲（段落）ごとの番号の並びに分ける。
 
-    段落は、空行、iter_lines が飛ばしたコードブロック（行番号の飛び）で切れ、見出し・表の行・箇条の頭の行の
-    前でも切れる。見出しと表の行（頭の | を省いた GFM の表の行を含む）は、それだけで 1 つの段落にする
-    （CommonMark と GFM の表で、コード表記はこれらの境目を越えない）。
+    段落は、空行、iter_lines が飛ばしたコードブロック（行番号の飛び）で切れ、見出し・表の行・箇条の頭・
+    区切り線・引用（>）・行頭の <!--（HTML のブロック）の行の前でも切れる。見出しと表の行（頭の | を省いた
+    GFM の表の行を含む）と区切り線は、それだけで 1 つの段落にする（CommonMark と GFM の表で、コード表記は
+    これらの境目を越えない）。
     """
     table = _table_rows(pairs)
     block, prev = [], None
