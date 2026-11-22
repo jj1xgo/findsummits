@@ -1368,7 +1368,11 @@ class LldTest(TraceTestCase):
         # `x` の後と、\ で逃がしたバッククォート（コード表記を始めない）の後の <!-- も、本物のコメントの始まり
         for hidden in (f'<!-- {ref} -->', f'<!--\n{ref}\n-->', f'\\{ref}', f'!{ref}',
                        f'`x` <!-- {ref} -->', f'\\` <!-- \\` {ref} -->', f'\\`\\` <!-- {ref} -->',
-                       f'`x\n\n<!-- {ref} -->'):  # 閉じないバッククォートは、空行（段落の切れ目）で終わる
+                       f'`x\n\n<!-- {ref} -->',  # 閉じないバッククォートは、空行（段落の切れ目）で終わる
+                       # 段落の中で閉じないバッククォートは字のまま（同じ行の後のコメントも本物）。見出しも越えない
+                       f'`x <!-- {ref} -->', f'x ` y <!-- c -->\n<!-- {ref} -->',
+                       f'x ` y <!-- c -->\n##### 群\n<!-- {ref} -->',
+                       f'`a {ref}\nb` の続き'):  # 行をまたいで閉じるコード表記の中のリンクは表示されない
             with self.subTest(hidden=hidden):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])

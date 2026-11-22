@@ -1153,15 +1153,14 @@ def check_lld_ut_candidates(text):
     out, seen, info = [], set(), {}
     module = module_level = ut_level = head_level = head_text = None
     decl_seen, table, prev_no, header_no = False, None, None, None
-    in_comment = False
 
     def no_second_row():
         # ヘッダーの行の後に 2 行目が無いまま表が切れた
         return finding('T1', f'LLD-UT:{header_no}:表', f'{LLD}:{header_no}',
                        'LLD の UT 候補の小節の表に 2 行目（区切りの行）がありません')
 
-    for no, line in iter_lines(text):
-        visible, in_comment = strip_html_comments(line, in_comment)
+    pairs = list(iter_lines(text))
+    for (no, line), visible in zip(pairs, strip_html_comments(pairs), strict=True):
         if prev_no is not None and no != prev_no + 1:
             if table == 'sep':
                 out.append(no_second_row())
@@ -1273,50 +1272,78 @@ def check_lld_ut_candidates(text):
     return out, info
 
 
-def strip_html_comments(line, in_comment):
-    """行から HTML のコメント（<!-- … -->。行をまたぐものを含む）を除いた文字列と、行の終わりの状態を返す。
+BLOCK_START_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\||(?:[-*+]|\d+[.)])(?:\s|$))')
+ONE_LINE_BLOCK_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\|)')
+ESCAPABLE = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 
-    状態は False（どちらの中でもない）・True（コメントの中）・バッククォートの並びの文字列（その長さの
-    並びで開いたコード表記の中。行をまたぐ。空行〈段落の切れ目〉で閉じたものとする）。前の行の状態を渡す。
+
+def _paragraphs(pairs):
+    """(行番号, 行) の並びを、コード表記が閉じうる範囲（段落）ごとの番号の並びに分ける。
+
+    段落は、空行、iter_lines が飛ばしたコードブロック（行番号の飛び）で切れ、見出し・表の行・箇条の頭の行の
+    前でも切れる。見出しと表の行は、それだけで 1 つの段落にする（CommonMark と GFM の表で、コード表記は
+    これらの境目を越えない）。
     """
-    out, i = [], 0
-    if isinstance(in_comment, str):
-        if not line.strip():
-            return line, False
-        close = re.search(r'(?<!`)' + in_comment + r'(?!`)', line)
-        if not close:
-            return line, in_comment
-        out.append(line[:close.end()])
-        i, in_comment = close.end(), False
-    while i < len(line):
-        if in_comment:
-            j = line.find('-->', i)
-            if j < 0:
-                return ''.join(out), True
-            i, in_comment = j + 3, False
-        else:
-            j = line.find('<!--', i)
-            if j < 0:
-                out.append(line[i:])
-                break
-            # \ で逃がしたバッククォート（直前の \ が奇数個）はコード表記を始めない（CommonMark）
-            k = next((m.start(1) for m in re.finditer(r'(?<!\\)(?:\\\\)*(`)', line[:j]) if m.start(1) >= i), -1)
-            if k >= 0:
-                # コード表記が先に始まるなら、その中の <!-- はコメントでない（CommonMark）。
-                # 同じ長さのバッククォートの並びで閉じるところまでをそのまま写す
-                n = len(line) - len(line[k:].lstrip('`'))
-                close = re.search(r'(?<!`)' + '`' * (n - k) + r'(?!`)', line[n:])
-                if not close:  # 次の行へまたぐ
-                    out.append(line[i:])
-                    return ''.join(out), '`' * (n - k)
-                end = n + close.end()
-                out.append(line[i:end])
-                i = end
-                continue
-            out.append(line[i:j])
-            i, in_comment = j + 4, True
-    return ''.join(out), in_comment
+    block, prev = [], None
+    for k, (no, line) in enumerate(pairs):
+        if not line.strip() or (prev is not None and no != prev + 1) or BLOCK_START_RE.match(line):
+            if block:
+                yield block
+            block = []
+        if line.strip():
+            block.append(k)
+            if ONE_LINE_BLOCK_RE.match(line):
+                yield block
+                block = []
+        prev = no
+    if block:
+        yield block
 
+
+def strip_html_comments(pairs):
+    """各行から、HTML のコメント（<!-- … -->。行と段落をまたぐものを含む）とコード表記を除いた文字列を返す。
+
+    pairs は iter_lines の (行番号, 行) の並びで、戻り値は同じ長さの文字列の並び。コード表記は、同じ長さの
+    バッククォートの並びで閉じるところまで（段落の中なら行をまたぐ）で、閉じなければバッククォートは字のまま
+    （CommonMark）。コード表記の中の <!-- はコメントでなく、コード表記の中のリンクも表示されるリンクでないので、
+    どちらも除く。\\ で逃がした字（バッククォートを含む）は字のまま残す。
+    """
+    out = [''] * len(pairs)
+    in_comment = False
+    for block in _paragraphs(pairs):
+        s = '\n'.join(pairs[k][1] for k in block)
+        kept, i = [], 0
+        while i < len(s):
+            if in_comment:
+                j = s.find('-->', i)
+                if j < 0:
+                    kept.append('\n' * s.count('\n', i))
+                    i = len(s)
+                    break
+                kept.append('\n' * s.count('\n', i, j))
+                i, in_comment = j + 3, False
+                continue
+            c = s[i]
+            if c == '\\' and i + 1 < len(s) and s[i + 1] in ESCAPABLE:
+                kept.append(s[i:i + 2])
+                i += 2
+            elif c == '`':
+                n = len(s) - len(s[i:].lstrip('`')) - i
+                close = re.compile(r'(?<!`)' + '`' * n + r'(?!`)').search(s, i + n)
+                if close:  # コード表記: 中身ごと除き、行の切れ目だけ残す
+                    kept.append('\n' * s.count('\n', i, close.end()))
+                    i = close.end()
+                else:  # 閉じないバッククォートの並びは字のまま
+                    kept.append(s[i:i + n])
+                    i += n
+            elif s.startswith('<!--', i):
+                i, in_comment = i + 4, True
+            else:
+                kept.append(c)
+                i += 1
+        for k, text in zip(block, ''.join(kept).split('\n'), strict=True):
+            out[k] = text
+    return out
 
 def ut_case_sections(ut_text):
     """50_UT.md の UT のケース ID → そのケースの表の上にある、いちばん近い番号付きの見出しの番号"""
