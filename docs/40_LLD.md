@@ -2088,26 +2088,7 @@ PeakGroups group_peaks_by_mesh(const std::vector<UnresolvedPeak>& peaks,
 
 #### 6.2.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_target-NNN` を付ける。共通の準備は 1 つ。
-
-- **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ（`start_log` を呼ばない。単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common) の「同じプロセス」と同じく、一時のディレクトリを `mkdtemp` で作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は `dup`・`dup2` で記述子 2 を一時のファイルに付け替えて捕まえ、呼んだ後に戻す）。止まるケースは `ExitRequest` を捕まえて `code` を確かめる。メッセージの期待は、標準エラー出力の 2 行（`ERROR: …` と `対処: …`）の全文。
-
-| ID | 確かめること | 準備 | 入力 | 期待 |
-|---|---|---|---|---|
-| `UT-analyze_terrain_target-001` | `--mesh` が無いとき | 同じプロセス | `japan` は `{5339, 5340, 6841, 6842}`、`excluded` は `{6841, 6848}`、`has_mesh` は偽、`mesh_codes` は空 | `targets` が `[5339, 5340, 6842]`、`skipped` が空、`not_targeted` が `[6841]`（`6848` は `japan` に無いので入らない）。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_target-002` | `--mesh` があるとき | 同じプロセス | `japan`・`excluded` は 01 と同じ、`has_mesh` は真、`mesh_codes` は `{1234, 5339, 6841, 6848}` | `targets` が `[5339]`、`skipped` が `[{1234, 偽}, {6841, 真}, {6848, 偽}]`（`6848` は `japan` に無いので偽）、`not_targeted` が `[6841]` |
-| `UT-analyze_terrain_target-003` | `--mesh` のコードがすべて飛ぶとき | 同じプロセス | `japan`・`excluded` は 01 と同じ、`has_mesh` は真、`mesh_codes` は `{1234, 6841}` | 止まらない。`targets` が空、`skipped` が 2 件、`not_targeted` が `[6841]` |
-| `UT-analyze_terrain_target-004` | 呼ぶ側の誤り | 同じプロセス | (a) `has_mesh` が偽で `mesh_codes` が `{5339}` の `select_target_meshes`、(b) 正しいリストのファイルで `n` が 3 の `read_unresolved_peaks`、(c) 同じく `n` が 7 | どれも `std::invalid_argument`（`ExitRequest` でない）。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_target-005` | リストを読む | 同じプロセス。リストのファイル `peak_lat,peak_lon\n35.12345678,139.12345678\n-0.50000000,+140.5\n` | `read_unresolved_peaks(<パス>, 4)` | 2 件。1 件目の `lat_text`・`lon_text` が `35.12345678`・`139.12345678`、`lat`・`lon` が `35.12345678`・`139.12345678`（C++ の倍精度の字句と `==`）。2 件目の文字列が `-0.50000000`・`+140.5`、値が `-0.5`・`140.5` |
-| `UT-analyze_terrain_target-006` | 読み方の幅 | 同じプロセス。10 のファイル | (a) 改行が `\r\n` のファイル、(b) 先頭に BOM（`EF BB BF`）を付けたファイル、(c) 見出しが `foo,peak_lon,peak_lat` で行が `x,139.5,35.5`、(d) `peak_lat,peak_lon\n\n35.5,139.5\n\n36.0,140.0\n\n`（2 行目・4 行目・6 行目が空）、(e) 見出しの後に `35.5,139.5`・`36.0,140.0`・`35.50,139.500` の 3 行（3 行目は 1 行目と同じ座標）、(f) 見出しの行だけ、(g) 05 の中身から末尾の `\n` を除いたもの、(h) `peak_lat,peak_lon\n-0.0,139.5\n0.0,139.5\n`、(i) `peak_lat,peak_lon,foo\n35.5,139.5,\n`（末尾の列が空）、(j) `peak_lat,peak_lon\r\n\r\n35.5,139.5\r\n`（2 行目は `\r` だけ） | (a)(b)(g) は 05 と同じ結果。(c) は 1 件で `lat` が 35.5、`lon` が 139.5。(d) は 2 件（`35.5,139.5`・`36.0,140.0`）。(e) は 2 件で、1 件目の文字列は `35.5`・`139.5`。(f) は空の並び。(h) は 1 件で文字列が `-0.0`（`-0.0 == 0.0` なので 3 行目は重なり）。(i) は 1 件（空の列も 1 列に数え、列の数は 3 で見出しと同じ）。(j) は 1 件。どれも標準エラー出力に何も出ない |
-| `UT-analyze_terrain_target-007` | 見出しの誤り | 同じプロセス。6 つのファイル | (a) 0 バイト、(b) 1 行目が空で 2 行目が `peak_lat,peak_lon`、(c) 見出しが `lat,lon`、(d) 見出しが `peak_lat,peak_lon,peak_lat`、(e) 見出しが `"peak_lat","peak_lon"`、(f) BOM（`EF BB BF`）の 3 バイトだけ。どれも `n` は 4 | どれも `code` が 1 の UP2。`{detail}` は (a)(b)(f) が `見出しの行が無い`、(c)(d)(e) が `見出しの行に peak_lat と peak_lon の列が 1 つずつ無い:` と空白 1 つの後に見出しの行のまま |
-| `UT-analyze_terrain_target-008` | 値の誤り | 同じプロセス。値ごとに別のファイル（見出しは `peak_lat,peak_lon`、2 行目が `35.5,139.5`、3 行目が誤り） | 3 行目の `peak_lat` の値が (a) `1e5`、(b) `35.`、(c) `.5`、(d) `NaN`、(e) `inf`、(f) 空白 1 つの後に `35.0`、(g) 全角の数字 2 字（U+FF13、U+FF15。UTF-8 で 6 バイト。16 進で `EF BC 93 EF BC 95`、バイトの間の空白は区切り）、(h) 空、(i) `"35.0"`、(j) `1` の後に `0` を 400 個並べた数、(k) `--5`。ほかに (l) 3 行目が `35.5,139.5,1`（列の数が違う）、(m) 3 行目と 5 行目が誤り（3 行目が `x,139.5`、4 行目が正しい行 `36.0,140.0`、5 行目が `y,139.5`） | (a)〜(k) は `code` が 1 の UP2 で、`{detail}` が `3 行目の peak_lat か peak_lon が数として読めない:` と空白 1 つの後に 3 行目のまま。(l) は `3 行目の列の数が見出しの行と違う: 35.5,139.5,1`。(m) は 3 行目だけを挙げる |
-| `UT-analyze_terrain_target-009` | リストを読めない | 同じプロセス | (a) 一時のディレクトリの下の存在しないパス、(b) 一時のディレクトリそのもの。どちらも `n` は 4 | どちらも `code` が 1。標準エラー出力が `ERROR: コル未確定ピーク座標リストを読めない: <パス>: No such file or directory`（(b) は `Is a directory`）と、`対処: scripts/run_pipeline.sh --phase 2 を起動し直して、このリストを作り直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` の 2 行 |
-| `UT-analyze_terrain_target-010` | やり直しの案内と N | 同じプロセス。09 の (a) のパス | `n` を 5、6 にしてそれぞれ呼ぶ | 2 行目が `対処: scripts/run_pipeline.sh --phase 3 --n 4 を起動し直して、…`（`n` が 6 なら `--n 5`）。1 行目は 09 の (a) と同じ |
-| `UT-analyze_terrain_target-011` | 所属メッシュごとの組 | 同じプロセス | `peaks` は 2.4 の表 6 の 3 行目〜5 行目と 2 行目の 4 点を、この順に `{lat_text, lon_text, lat, lon}` にしたもの（`34.99999777,134.99997854`・`34.99999777,135.00002146`・`35.0,135.0`・`36.00465613,139.99880075`）、`japan` は `{5234, 5235, 5439}`、`excluded` は空 | 鍵が `[5234, 5235, 5439]` の順。`5234` の組は 1 件目の点で、画素は表 6 の (7340031, 3322709)。`5235` の組は 2 件目と 3 件目の点がこの順で、画素はどちらも (7340032, 3322709)（座標が違うので重ならない）。`5439` の組は 4 件目の点で、画素は (7456512, 3293952)。各 `TargetPeak` の `peak` は、渡した対応する点と同じ（`lat_text`・`lon_text`・`lat`・`lon` の 4 項目すべてが、4 つの `TargetPeak` のすべてで等しい）。画素は 4 つの `TargetPeak` のすべてで上のとおり |
-| `UT-analyze_terrain_target-012` | 所属メッシュが解析の対象でない | 同じプロセス | `peaks` は順に `35.0,135.0`（`5235`）、`35.5,139.5`（`5339`）、`45.5,141.5`（`6841`）、`-10.0,139.0`（範囲の外）、`japan` は `{5235, 6841}`、`excluded` は `{6841}` | `code` が 1。標準エラー出力の 1 行目が `ERROR: 所属メッシュが解析の対象でない対象ピークがある: 3 件: 35.5,139.5（5339、日本全土1次メッシュコードリストに無い）、45.5,141.5（6841、北方領土除外メッシュ）、-10.0,139.0（1 次メッシュの範囲の外）`、2 行目が 6.2.4 の UP3 の対処の文 |
-| `UT-analyze_terrain_target-013` | 経度 180 以上 | 同じプロセス | `peaks` は `35.0,135.0`（`5235`）と `35.5,180.5`（コードは `5380`）、`japan` は `{5235, 5380}`、`excluded` は空 | `code` が 1。1 行目が `ERROR: 所属メッシュが解析の対象でない対象ピークがある: 1 件: 35.5,180.5（5380、経度が 180 以上で 1 次メッシュの範囲の外）`（`japan` にあっても範囲の外。`latlon_to_z15_pixel` を呼ばない） |
-| `UT-analyze_terrain_target-014` | 対象ピークが無い | 同じプロセス | `peaks` は空、`japan` は `{5235}`、`excluded` は空 | 空の `PeakGroups`。標準エラー出力に何も出ない |
+ケースは単体テスト仕様書の [6.2](50_UT.md#62-analyze_terrain_target)（`UT-analyze_terrain_target-001`〜`UT-analyze_terrain_target-014`）にある。
 
 ### 6.3 `analyze_terrain_window`
 
@@ -2258,7 +2239,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 #### 6.3.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_window-NNN` を付ける。共通の準備は 6.2.5 の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。タイルのファイルは空のファイルでよい（あるかだけを見るため）。`csv_dir`・`tiles_dir` は一時のディレクトリの下に作った絶対パス。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_window-NNN` を付ける。共通の準備は単体テスト仕様書の [6.2](50_UT.md#62-analyze_terrain_target) の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、ファイルはその下にバイト列で書いて絶対パスを渡す。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。タイルのファイルは空のファイルでよい（あるかだけを見るため）。`csv_dir`・`tiles_dir` は一時のディレクトリの下に作った絶対パス。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
 |---|---|---|---|---|
@@ -2510,7 +2491,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 
 すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_grid-NNN`。共通の準備は 3 つ。
 
-- **同じプロセス**: 6.2.5 の同じ名前の準備と同じ（`mkdtemp`、絶対パス、記述子 2 の付け替えで標準エラー出力を捕まえる、止まるケースは `ExitRequest` の `code` とメッセージの 2 行の全文）。
+- **同じプロセス**: 単体テスト仕様書の [6.2](50_UT.md#62-analyze_terrain_target) の同じ名前の準備と同じ（`mkdtemp`、絶対パス、記述子 2 の付け替えで標準エラー出力を捕まえる、止まるケースは `ExitRequest` の `code` とメッセージの 2 行の全文）。
 - **タイルを置く**: `tiles_dir` は一時のディレクトリの下の `tiles`（作る）。タイルは `<tiles_dir>/<サービス名>/<z>/<x>/<y>.png` に、ディレクトリを作ってから、`cv::Mat(256, 256, CV_8UC3, cv::Scalar(b, g, r))` を `cv::imwrite` で書く（RGB で書いた色を B・G・R の順に渡す）。ケースが一部の画素の色を書くときは、書く前にその画素を `at<cv::Vec3b>(行, 列)` で替える。標高の色: 50m は RGB (0, 19, 136)、70m は (0, 27, 88)、100m は (0, 39, 16)、200m は (0, 78, 32)、300m は (0, 117, 48)、400m は (0, 156, 64)、500m は (0, 195, 80)（それぞれ x が 5000・7000・10000・20000・30000・40000・50000）。NODATA は (128, 0, 0)。期待の標高は `static_cast<float>(x) / 100.0f` と `EXPECT_EQ`（`50.0f` などに等しい）。
 - **子のプロセス**: 単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common) の同じ名前の準備と同じ。
 
@@ -2824,7 +2805,7 @@ std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
 
 すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_scan-NNN`。共通の準備は 3 つ。
 
-- **同じプロセス**: [6.2.5](#625-ut-候補) の同じ名前の準備と同じ。
+- **同じプロセス**: 単体テスト仕様書の [6.2](50_UT.md#62-analyze_terrain_target) の同じ名前の準備と同じ。
 - **小さいグリッド**: `ElevationGrid` の `width`・`height` をケースの W・H にし、`values` を W × H 個の `0.0f` で作ってから、ケースが挙げた画素 (px, py) の値を書く（`values[py * W + px]`）。挙げない画素は海面か人工ボーダー（0）。画素の番号は `py × W + px`。成分ごとのデータを確かめるときは、成分ごとに `peak_pixel`・`peak_elevation`・`parent`・`key_col`・`col_pixel`・`col_elevation`・`key_col_resolved` を比べ、`border` は根（`parent` が自分）だけを比べる。値は `EXPECT_EQ`（標高は表の整数の値の `float` か、ケースが書いた `float` の式に等しい）。
 - **子のプロセス**: 単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common) の同じ名前の準備と同じ。
 
