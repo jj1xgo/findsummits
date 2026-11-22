@@ -76,6 +76,8 @@ lint: lint-md lint-py lint-geojson lint-html lint-trace
 # archives/ は凍結スナップショット、spec-findings/ は spec-panel レビュー成果物のため除外。
 # plans/ は docs/ の本文を逐語で写し、相対リンクが解決できないため除外（findsummits-ops#54）。
 # LINT_MD_PATHS を指定した場合はそのパスを再帰走査する（override、この場合 .claude/ 側は対象外）。
+# pymarkdown は対象ごとに並列で走らせる（tools/pymarkdown_parallel.py。並列数は環境変数 LINT_JOBS、既定は CPU 数）。
+# 1 本ずつ順に走らせると 2MB の docs/40_LLD.md だけで約 90 秒かかるため。
 LINT_MD_PATHS ?=
 lint-md: venv
 	@if [ -n "$(LINT_MD_PATHS)" ]; then targets="$(LINT_MD_PATHS)"; ropt="-r"; \
@@ -85,7 +87,7 @@ lint-md: venv
 	  ops_targets=$$(git -C .claude ls-files '*.md' ':!:archives/**' ':!:spec-findings/**' ':!:plans/**' | sed 's#^#.claude/#'); \
 	fi; \
 	targets="$$targets $$ops_targets"; ropt=""; fi; \
-	venv/bin/python3 -m pymarkdown -c .pymarkdown scan $$ropt $$targets; s1=$$?; \
+	venv/bin/python3 tools/pymarkdown_parallel.py -c .pymarkdown $$ropt $$targets; s1=$$?; \
 	venv/bin/python3 tools/lint_docs.py $$targets; s2=$$?; \
 	exit $$([ $$s1 -ge $$s2 ] && echo $$s1 || echo $$s2)
 
