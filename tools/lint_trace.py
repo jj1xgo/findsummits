@@ -1275,24 +1275,48 @@ def check_lld_ut_candidates(text):
 BLOCK_START_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\||(?:[-*+]|\d+[.)])(?:\s|$))')
 ONE_LINE_BLOCK_RE = re.compile(r'^\s*(?:#{1,6}(?:\s|$)|\|)')
 ESCAPABLE = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+TABLE_DELIMITER_RE = re.compile(r'^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$')
+
+
+def _table_rows(pairs):
+    """GFM の表の行（頭の | を省いた表を含む）の番号の集合を返す。
+
+    区切りの行（| を含み、- と : と | と空白だけの行）と、その直前の見出しの行と、区切りの行に続く行を、
+    空行・行番号の飛び・見出しの行までを表の行とする。
+    """
+    rows = set()
+    for k in range(1, len(pairs)):
+        no, line = pairs[k]
+        head_no, head = pairs[k - 1]
+        if '|' not in line or not TABLE_DELIMITER_RE.match(line) or no != head_no + 1 or '|' not in head:
+            continue
+        rows.update((k - 1, k))
+        j = k + 1
+        while (j < len(pairs) and pairs[j][1].strip() and pairs[j][0] == pairs[j - 1][0] + 1
+               and not HEADING_RE.match(pairs[j][1])):
+            rows.add(j)
+            j += 1
+    return rows
 
 
 def _paragraphs(pairs):
     """(行番号, 行) の並びを、コード表記が閉じうる範囲（段落）ごとの番号の並びに分ける。
 
     段落は、空行、iter_lines が飛ばしたコードブロック（行番号の飛び）で切れ、見出し・表の行・箇条の頭の行の
-    前でも切れる。見出しと表の行は、それだけで 1 つの段落にする（CommonMark と GFM の表で、コード表記は
-    これらの境目を越えない）。
+    前でも切れる。見出しと表の行（頭の | を省いた GFM の表の行を含む）は、それだけで 1 つの段落にする
+    （CommonMark と GFM の表で、コード表記はこれらの境目を越えない）。
     """
+    table = _table_rows(pairs)
     block, prev = [], None
     for k, (no, line) in enumerate(pairs):
-        if not line.strip() or (prev is not None and no != prev + 1) or BLOCK_START_RE.match(line):
+        if (not line.strip() or (prev is not None and no != prev + 1) or BLOCK_START_RE.match(line)
+                or k in table):
             if block:
                 yield block
             block = []
         if line.strip():
             block.append(k)
-            if ONE_LINE_BLOCK_RE.match(line):
+            if ONE_LINE_BLOCK_RE.match(line) or k in table:
                 yield block
                 block = []
         prev = no

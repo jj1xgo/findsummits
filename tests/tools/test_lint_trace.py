@@ -1372,7 +1372,8 @@ class LldTest(TraceTestCase):
                        # 段落の中で閉じないバッククォートは字のまま（同じ行の後のコメントも本物）。見出しも越えない
                        f'`x <!-- {ref} -->', f'x ` y <!-- c -->\n<!-- {ref} -->',
                        f'x ` y <!-- c -->\n##### 群\n<!-- {ref} -->',
-                       f'`a {ref}\nb` の続き'):  # 行をまたいで閉じるコード表記の中のリンクは表示されない
+                       f'`a {ref}\nb` の続き',  # 行をまたいで閉じるコード表記の中のリンクは表示されない
+                       f'a | b\n---|---\nx ` y | z\n<!-- ` {ref} -->'):  # 頭の | を省いた表の行も越えない
             with self.subTest(hidden=hidden):
                 lld = LLD + f'\n#### 1.1.5 UT 候補\n\n{hidden} にある。\n'
                 self.assertEqual(self.moved_keys(lld), ['T1:UT-move:LLD-one:参照'])
