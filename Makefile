@@ -77,7 +77,7 @@ lint: lint-md lint-py lint-geojson lint-html lint-trace
 # plans/ は docs/ の本文を逐語で写し、相対リンクが解決できないため除外（findsummits-ops#54）。
 # LINT_MD_PATHS を指定した場合はそのパスを再帰走査する（override、この場合 .claude/ 側は対象外）。
 # pymarkdown は対象ごとに並列で走らせる（tools/pymarkdown_parallel.py。並列数は環境変数 LINT_JOBS、既定は CPU 数）。
-# 1 本ずつ順に走らせると 2MB の docs/40_LLD.md だけで約 90 秒かかるため。
+# 1 本ずつ順に走らせると、全体で約 27 秒（並列なら約 16 秒。2MB の docs/40_LLD.md 1 本が下限の約 14 秒。静かなマシンでの実測）。
 LINT_MD_PATHS ?=
 lint-md: venv
 	@if [ -n "$(LINT_MD_PATHS)" ]; then targets="$(LINT_MD_PATHS)"; ropt="-r"; \
