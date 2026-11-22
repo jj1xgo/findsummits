@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-22 |
+| 最終更新日 | 2026-11-23 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -3256,21 +3256,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 
 #### 6.10.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_convert-NNN` を付け、2.4 の表の行を写したケースは表の名前もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。共通の準備は 1 つ。
-
-- **同じプロセス**: テストのプロセスの中で対象の関数を直接呼ぶ。ファイルも出力も使わない。倍精度の値の期待は、2.4 の表の 10 進の表記を C++ の倍精度の字句としてそのまま書く（最短の 10 進表記なので、同じ倍精度の値になる）。`==` で比べるものは `EXPECT_EQ`、緯度の許容差のものは `EXPECT_NEAR(<値>, <期待>, 1e-12)`（`EXPECT_DOUBLE_EQ` は 4 ULP の比べ方で 2.4 の決まりと違うので使わない）。
-
-| ID | 確かめること | 準備 | 入力 | 期待 |
-|---|---|---|---|---|
-| `UT-analyze_terrain_convert-001` | メッシュ → 緯度経度 | 同じプロセス | 2.4 の表 1 の 6 行 | `south`・`west`・`north`・`east` の 4 つとも期待の値と `==` |
-| `UT-analyze_terrain_convert-002` | メッシュコードの形の誤り | 同じプロセス | (a) `533`、(b) `53390`、(c) `53a9`、(d) 空、(e) 全角の数字 4 字（UTF-8 で 12 バイト。16 進で `EF BC 95 EF BC 93 EF BC 93 EF BC 99`、バイトの間の空白は区切り）、(f) `-339` | どれも `std::invalid_argument`。`what()` は `mesh_to_latlon の引数が 4 桁の数字でない:` と空白 1 つの後に入力をそのまま続けたもの |
-| `UT-analyze_terrain_convert-003` | 緯度経度 → メッシュ | 同じプロセス | 2.4 の表 5 の 12 行 | 期待のコードと等しい（4 バイト） |
-| `UT-analyze_terrain_convert-004` | メッシュの範囲の外 | 同じプロセス | (a) `(-10.0, 139.0)`、(b) `(35.0, 99.5)`、(c) `(35.0, 200.0)`、(d) `(66.7, 139.0)`、(e) `(0.5, 100.0)`、(f) 緯度が NaN（`std::numeric_limits<double>::quiet_NaN()`）で経度 139.0、(g) 緯度 35.0 で経度が正の無限大 | (a)〜(d)・(f)・(g) は空の文字列。(e) は `0000`（`aa`・`bb` が 0 のときも 2 桁ずつ） |
-| `UT-analyze_terrain_convert-005` | 緯度経度 → タイル | 同じプロセス | 2.4 の表 2 の 16 行 | `x`・`y` が期待の値と等しい |
-| `UT-analyze_terrain_convert-006` | タイル → 緯度経度 | 同じプロセス | 2.4 の表 3 の 9 行（`x`・`y` は表の 10 進の値を `double` で渡す） | 経度は期待の値と `==`、緯度は差の絶対値が `1e-12` 以下 |
-| `UT-analyze_terrain_convert-007` | 緯度経度 → Z15 の画素 | 同じプロセス | 2.4 の表 6 の 11 行 | `gx`・`gy` が期待の値と等しい |
-| `UT-analyze_terrain_convert-008` | Z15 の画素の中心 | 同じプロセス | 2.4 の表 7 の 9 行 | 経度は期待の値と `==`、緯度は差の絶対値が `1e-12` 以下 |
-| `UT-analyze_terrain_convert-009` | 画素の座標の比べ方 | 同じプロセス | `Z15Pixel{1, 2}` と `Z15Pixel{1, 2}`、`Z15Pixel{1, 3}` と `Z15Pixel{2, 0}`、`TileXY{5, 1}` と `TileXY{5, 2}` | 1 組目は `==` が真。2 組目は前が小さい（`<` が真。`gx` が先に比べられる）。3 組目は前が小さい。`std::set<Z15Pixel>` に `{1, 2}` を 2 回入れると大きさが 1 |
+ケースは単体テスト仕様書の [6.10](50_UT.md#610-analyze_terrain_convert)（`UT-analyze_terrain_convert-001`〜`UT-analyze_terrain_convert-009`）にある。
 
 ### 6.11 `analyze_terrain_stage`
 
