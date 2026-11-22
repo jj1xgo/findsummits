@@ -2579,7 +2579,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 
 #### 6.5.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_image-NNN` を付ける。共通の準備は 2 つで、[6.9.5](#695-ut-候補) の「同じプロセス」と「子のプロセス（書けない）」と同じ（`csv_dir` を `images_dir` に読み替える）。`range` は、`meshes = {5339}`、`z14 = false`、`box.y_min = 12900`（ほかの欄は 0）を基本とし、ケースが替える欄だけを書く。`analysis_id` は書かなければ `3-5339`。グリッドは行ごとに北から、`values[py * W + px]` の並びで書く。
+すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_image-NNN` を付ける。共通の準備は 2 つで、単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record) の「同じプロセス」と「子のプロセス（書けない）」と同じ（`csv_dir` を `images_dir` に読み替える）。`range` は、`meshes = {5339}`、`z14 = false`、`box.y_min = 12900`（ほかの欄は 0）を基本とし、ケースが替える欄だけを書く。`analysis_id` は書かなければ `3-5339`。グリッドは行ごとに北から、`values[py * W + px]` の並びで書く。
 
 **色の比べ方**: 期待の画素は `RRGGBB` の 16 進で書く。`FFFFFF` の画素は 3 チャンネルとも一致、ほかの画素は各チャンネルの差が 1 以下（`EXPECT_LE(std::abs(actual - expected), 1)`）にする。期待値は 2026-10-28 に、matplotlib 3.11.2・numpy 2.5.4 で、6.5.3 の前置きの呼び出し（`E` は手順 4 の値を倍精度の配列にしたもの、`vmin`・`vmax`・`dx`・`dy` は手順 5・6 の式を Python の float で計算したもの）の結果の赤・緑・青に、`E` が 0 の画素を 1.0 にしてから `(x * 255).astype(np.uint8)` を当てて求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)の箇条による。表の値は、同じ版の matplotlib の結果と許容差つきで比べる形で、[DEC65](30_HLD.md#4154-設計判断)「色と陰影は `LightSource.shade()` と同じ」の「参照実装の結果と許容差つきで比べるテスト」を満たす）。採用のサンプルは `imshow` と `savefig` を通っているので、画素の比べ先にしない。出来上がりの絵は、グラデーションに違和感が無く細部が見えるかを持ち主が目で見る（実装フェーズの段で行う）。
 
@@ -2907,8 +2907,8 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_csv-NNN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'`・`f'{x:.2f}'`（`float` の値は `struct` で 32 ビットに丸めた正確な値を使う）と、2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ値は `std::to_chars` でも同じ文字列になることを、C++ のプログラムで確かめた。入力と期待の「N 行目」は、見出しの行を 1 行目とするファイルの行の番号である（6.7.3 の `{line_no}` と同じ）。共通の準備は 3 つ。
 
-- **同じプロセス**: [6.9.5](#695-ut-候補) の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
-- **子のプロセス（書けない）**: 6.9.5 の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える）。
+- **同じプロセス**: 単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record) の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
+- **子のプロセス（書けない）**: 単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record) の同じ名前の準備と同じ（`write_meshset` を `write_peak_csv` に読み替える）。
 - **範囲と行**: `PeakColRow` は、書いた欄のほかは既定の値（`col_lat`・`col_lon`・`col_elevation`・`prominence`・`col_margin_px` は 0）。`TargetPeak` の `peak` は、`lat_text`・`lon_text`・`lat`・`lon` に画素の中心の 8 桁の値を入れる。**通常の範囲**は `meshes = {5235}`、`z14 = false`、`box.x_min = 28671`、`box.y_min = 12979`（ほかの欄は 0）で、グリッドの画素 (px, 86) は Z15 の画素 (7339775 + px, 3322709)。**広域の範囲**は `meshes = {5439}`、`z14 = true`、`picks = {GridXY{10, 10} → Z15Pixel{7456512, 3293952}, GridXY{11, 10} → Z15Pixel{7456514, 3293952}}`、`peaks` は画素 (7456512, 3293952) の 1 件（`36.00465613`・`139.99880075`）。
 
 | ID | 確かめること | 準備 | 入力 | 期待 |
@@ -3164,8 +3164,8 @@ GeoJSON の書き方（[HLD 4.16.1](30_HLD.md#4161-目的と範囲) の対象外
 
 すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_zone-NNN` を付ける。期待値は、2026-10-30 に CPython 3 の `f'{x:.8f}'` と 2.4 の式で求めた（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。同じ角の文字列は `std::to_chars` でも同じになることを、C++ のプログラムで確かめた。ID の列の `01` などは、`UT-analyze_terrain_zone-001` のことである。共通の準備は 5 つ。
 
-- **同じプロセス**: [6.9.5](#695-ut-候補) の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
-- **子のプロセス（書けない）**: 6.9.5 の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える）。
+- **同じプロセス**: 単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record) の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える。`csv_dir` は一時のディレクトリの下に作ったディレクトリの絶対パス）。
+- **子のプロセス（書けない）**: 単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record) の同じ名前の準備と同じ（`write_meshset` を `write_zone_geojson` に読み替える）。
 - **子のプロセス**: 単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common) の同じ名前の準備と同じ（単体テスト仕様書の [6.4](50_UT.md#64-analyze_terrain_grid) の UT 21 と同じ形）。
 - **基本の範囲**: `meshes = {5235}`、`z14 = false`、`box.x_min = 28671`、`box.x_max = 28672`、`box.y_min = 12979`、`box.y_max = 12979`、`box.bbox = mesh_to_latlon("5235")`、`picks` は空。W = 514、H = 258。グリッドの画素 (px, py) の中心のメッシュは、px 0〜256 が `5234`、px 257〜513 が `5235`。グリッドの角 (cx, cy) は Z15 の角 (7339775 + cx, 3322623 + cy)。**広い bbox** は、基本の範囲の `box.bbox` を `{south: 34.666666666666664, west: 134.0, north: 35.333333333333336, east: 136.0}`（`5234` と `5235` を囲む矩形）にしたもの。
 - **小さいグリッド**: `ElevationGrid` の W = 514・H = 258、`values` を W × H 個の `0.0f` で作ってから、ケースが挙げた画素の値を書く。印は `(514 × 258 + 63) / 64` 個の 0。画素の番号は `py × 514 + px`。ケースの行（`PeakCsvRow`）は、書いた欄のほかは既定の値（`lat_text`・`lon_text` は `34.99952318`・`135.00184536` など空でない文字列。`fill_zone` は読まない）。行の `row.peak` はケースのピークの画素、`peak_elevation` はその画素の値と同じ（UT 03 の (e) は 200）。設定は `activation_zone_drop_m` 25、`delete_zone_max_drop_m` 250。
@@ -3297,23 +3297,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 
 #### 6.9.5 UT 候補
 
-すべて自動。GoogleTest のケースごとに `// trace: UT-analyze_terrain_record-NNN` を付ける。共通の準備は 2 つ。
-
-- **同じプロセス**: 単体テスト仕様書の [6.3](50_UT.md#63-analyze_terrain_window) の「同じプロセス」と同じ（`mkdtemp` で一時のディレクトリを作り、`csv_dir` はその下に作ったディレクトリの絶対パス。ファイルの中身はバイト列で読んで比べる。標準エラー出力は記述子 2 の付け替えで捕まえる。止まるケースは `ExitRequest` を捕まえて `code` を確かめ、メッセージの期待は標準エラー出力の 2 行の全文）。
-- **子のプロセス（書けない）**: 親が `csv_dir` と、ケースが前もって置くファイルを作ってから、`std::fflush(nullptr)` の後に `fork` する。子は記述子 2 を、親が読むパイプの書く側に付け替えて元の 2 つの記述子を閉じ、`SIGXFSZ` を無視にし、`setrlimit(RLIMIT_FSIZE, ...)` の `rlim_cur` をケースの値（0 か 5）にしてから（単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common) の「ログファイルに書けない場面」と同じ。0 なら以後のファイルへの `write` が `EFBIG`〔`File too large`〕で失敗する。5 なら最初の `write` は 5 バイトだけ書けて、書いた数を返し、続く `write` が `EFBIG` で失敗する。パイプには効かない。`rlim_max` は変えない）、`try { write_meshset(...); } catch (const ExitRequest& e) { std::_Exit(e.code); } catch (...) { std::_Exit(99); } std::_Exit(EXIT_OK);` を行う（`start_log` を呼ばないので、終わりの行も `atexit` も無い。`std::_Exit` は GoogleTest の後始末を子の中で動かさないため）。親は `fork` の後、読み始める前に、パイプの書く側を閉じる（閉じないと、子が終わっても EOF にならない）。パイプを EOF まで読み切ってから `waitpid` し、終了コードと標準エラー出力を確かめる。
-
-| ID | 確かめること | 準備 | 入力 | 期待 |
-|---|---|---|---|---|
-| `UT-analyze_terrain_record-001` | 通常の `.meshset` を書く | 同じプロセス | `write_meshset({5238, 5239, 5339}, "3-5339", csv_dir)` | `<csv_dir>/3-5339.meshset` の中身が `5238\n5239\n5339\n`。`<csv_dir>/3-5339.meshset.tmp` が無い。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-002` | 広域の `.meshset` を書く | 同じプロセス | `write_meshset({5135, 5136, 5235, 5236}, "4-5135-NW", csv_dir)` | `<csv_dir>/4-5135-NW.meshset` の中身が `5135\n5136\n5235\n5236\n`。`.tmp` が無い。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-003` | 昇順で書く | 同じプロセス | `write_meshset({5340, 0099, 5339}, "3-5339", csv_dir)`（初期化子の並びをわざと崩す） | 中身が `0099\n5339\n5340\n`。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-004` | 置き換える | 同じプロセス。`<csv_dir>/3-5339.meshset` に `9999\n`、`<csv_dir>/3-5339.meshset.tmp` に `5238\n5239\n5240\n5338\n`（前の起動の残り。新しい中身より長い） | `write_meshset({5339}, "3-5339", csv_dir)` | `3-5339.meshset` の中身が `5339\n`。`.tmp` が無い。標準エラー出力に何も出ない |
-| `UT-analyze_terrain_record-005` | 置き場が無い、案内の分け方 | 同じプロセス。`csv_dir` は一時のディレクトリの下の、存在しないパス | (a) `write_meshset({5339}, "3-5339", csv_dir)`、(b) `write_meshset({5135}, "5-5135-SE", csv_dir)` | どちらも `code` 1。(a) は `ERROR: .meshset を書けない: <csv_dir>/3-5339.meshset: No such file or directory` と `対処: <csv_dir> の空きと権限を確かめてから、止まったコマンドを同じ引数で起動し直す（それより前のメッシュの出力は残っていて、起動し直すと書き直す）`。(b) は 1 行目のパスが `<csv_dir>/5-5135-SE.meshset`、2 行目が `対処: <csv_dir> の空きと権限を確かめてから、scripts/run_pipeline.sh --phase 3 --n 5 を起動し直す（設定ファイルを指定して起動したときは、同じ --config を付ける）` |
-| `UT-analyze_terrain_record-006` | 置き換えに失敗する | 同じプロセス。`<csv_dir>/3-5339.meshset` という名前の空のディレクトリ | `write_meshset({5339}, "3-5339", csv_dir)` | `code` 1 の MW1（`{reason}` は `Is a directory`、`{path}` は `<csv_dir>/3-5339.meshset`）。`.tmp` が無い。ディレクトリは残る |
-| `UT-analyze_terrain_record-007` | 書く途中で失敗する | 子のプロセス（書けない）。親が `<csv_dir>/3-5339.meshset` に `5339\n` を置く。上限は (a) 0、(b) 5（中身 `5238\n5339\n` の 10 バイトのうち 5 バイトだけ書けて、残りで失敗する） | 子で `write_meshset({5238, 5339}, "3-5339", csv_dir)` | (a)(b) とも、子の終了コード 1。標準エラー出力が MW1（`{reason}` は `File too large`）の 2 行。`3-5339.meshset` の中身は `5339\n` のまま。`.tmp` が無い（(b) は、`write` を 1 回だけ呼んで書いた数を見ない実装を落とす） |
-| `UT-analyze_terrain_record-008` | 呼ぶ側の誤り | 同じプロセス | (a) `meshes` が空、(b) `meshes` が `{5238, 5239, 5339, 53a9}`、(c) `meshes` が `{5238, 5239, 5339, 53390}`、(d) `analysis_id` が `3-533`、(e) `7-5135-NW`、(f) `4-5135`、(g) `3-5339-NW`、(h) `4-5135-nw`、(i) `csv_dir` が空、(j) `csv_dir` の末尾が `/`。ほかの引数は UT-analyze_terrain_record-001 と同じ | どれも `std::invalid_argument`。標準エラー出力に何も出ない。`csv_dir` の下にファイルができない（(i)(j) を除く） |
-
-- 書いた `.meshset` を 6.3 の `read_meshset` で読み戻して、同じ集合になることを確かめるケースは、2 つのモジュールの関数のつながりを確かめるので、6.11 の UT 候補（`UT-analyze_terrain_stage-017`）に置く（[ADR-LLD-001](decisions/ADR-LLD-001-lld-format-module-granularity-and-t2-timing.md) の Decision 2）。ここでは、出力のバイト列（UT-analyze_terrain_record-001〜003）で、6.3 の `read_meshset` が受ける形を確かめる。
+ケースは単体テスト仕様書の [6.9](50_UT.md#69-analyze_terrain_record)（`UT-analyze_terrain_record-001`〜`UT-analyze_terrain_record-008`）にある。
 
 ### 6.10 `analyze_terrain_convert`
 
