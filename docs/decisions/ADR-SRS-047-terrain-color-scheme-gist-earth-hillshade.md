@@ -6,6 +6,8 @@
 | 決定日 | 2026-07-06 |
 | 調査資料 | [`research/terrain-colormap-hillshade-research.md`](research/terrain-colormap-hillshade-research.md) |
 
+2026-11-23 追記: 海マスクの色は、[ADR-SRS-088](ADR-SRS-088-terrain-image-sea-color-dark-blue.md) で白から濃い青 `#12407A` に改めた。
+
 ---
 
 ## Context
@@ -110,3 +112,7 @@ gist_earth標準方式（カラーマップ全体をgist_earthのみで完結さ
 ## 追記（2026-10-12）: 記号の改名
 
 [ADR-HLD-007](ADR-HLD-007-hld-symbol-prefixes-and-decision-links.md) で HLD の記号の頭を改めたので、本文の記号を書き換えた（`C<N>` → `CMP<N>`、`D<N>` → `DEC<N>`、`K<N>` → `PRE<N>`、`C<N>-E<n>`・`C<N>-I<n>` → `CMP<N>-EXT<n>`・`CMP<N>-INT<n>`）。番号と意味は変えていない。
+
+## 追記（2026-11-23）: 海マスクの色の変更
+
+海マスクの色は、[ADR-SRS-088](ADR-SRS-088-terrain-image-sea-color-dark-blue.md) で白 `#FFFFFF` から濃い青 `#12407A` に改めた。本文の「白マスク」と採用サンプルの白は、2026-07-06 の決定時の色である。ほかの決定は変わらない。

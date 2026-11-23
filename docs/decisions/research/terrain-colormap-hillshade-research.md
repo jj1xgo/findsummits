@@ -139,3 +139,7 @@ Fable の指摘（「`cv::applyColorMap` は8bit入力前提でカスタム標�
 - `analysis/colormap_test/gen_terrain_hillshade.py`（matplotlib試作: terrain/gist_earth + hillshade）
 - `src/mesh_analyze.c` の `elev_to_rgb()`（本番実装、45-91行付近）
 - [`ADR-SRS-010`](../ADR-SRS-010-cpp-opencv-migration.md)（C++/OpenCV移行、Phase 3が本テーマの本実装先）
+
+## 追記（2026-11-23）: 海の色を濃い青に変更
+
+海の色は [ADR-SRS-088](../ADR-SRS-088-terrain-image-sea-color-dark-blue.md) で濃い青 `#12407A` に改めた。陸地の色との距離は、ADR-SRS-088 の Context の求め方で、gist_earth の表を取り出した matplotlib 3.11.2 を使って求めた。範囲ごとの画素の数は、matplotlib の参照計算で長辺 6000 に縮めた絵から数えたもので、宮古島は DEM10b だけ、伊豆諸島は一部のタイルが無いので、目安である。
