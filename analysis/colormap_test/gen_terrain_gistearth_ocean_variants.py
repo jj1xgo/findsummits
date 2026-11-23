@@ -15,6 +15,9 @@ vmax(=elevs.max())はこのメッシュの実測最大標高であり、固定�
 (`5338_hillshade_gist_earth_ve8_alt77.7_t0-0.25_mask-white.png`)。
 customoceanマスク・他のt0値は採用検討時の比較用サンプル。
 本番パイプライン外の一時調査用スクリプト。
+
+海マスクの色は 2026-11-23 に濃い青 #12407A に変更(ADR-SRS-088)。現行の見本 docs/figures/5338_terrain.png は、
+mask_colors をその 1 色、T0_LIST を 0.25 だけにして描き、幅 1600 に縮めたもの。
 """
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt

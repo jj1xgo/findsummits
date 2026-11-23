@@ -15,6 +15,8 @@ gist_earth は深海〜高山という地球規模の標高レンジを想定し
 実測最大標高を使う相対値）+ 標高0m以下を白 `#FFFFFF` でマスク）。生成スクリプトは
 `gen_terrain_gistearth_ocean_variants.py`。SRS（`docs/20_SRS.md` 6.2.3節）への反映は
 `ADR-SRS-047-terrain-color-scheme-gist-earth-hillshade.md` を参照。
+
+海マスクの色は 2026-11-23 に濃い青 #12407A に変更(ADR-SRS-088)。
 """
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
