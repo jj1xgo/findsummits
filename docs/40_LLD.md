@@ -2239,7 +2239,7 @@ void check_mesh_tiles(const std::set<std::string>& meshes, const std::string& ti
 
 #### 6.3.5 UT 候補
 
-ケースは単体テスト仕様書の [6.3](50_UT.md#63-analyze_terrain_window)（`UT-analyze_terrain_window-001`〜`UT-analyze_terrain_window-024`）にある。
+ケースは単体テスト仕様書の [6.3](50_UT.md#63-analyze_terrain_window)（`UT-analyze_terrain_window-001`〜`UT-analyze_terrain_window-025`）にある。
 
 ### 6.4 `analyze_terrain_grid`
 
@@ -2733,7 +2733,7 @@ std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
 - **対応 HLD**: [3.4](30_HLD.md#34-cmp4-地形解析エンジン)・[4.7](30_HLD.md#47-fr-007-per-mesh-csv-出力プロミネンス閾値適用)・[4.14](30_HLD.md#414-fr-014-広域結合解析オーケストレーション)・[4.16](30_HLD.md#416-fr-016-ピーク域ポリゴン生成)・[5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)
 - **ファイル**: `src/csv.hpp`・`src/csv.cpp`
 
-関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「CSV と早期終了」の群である。処理の正本は、フィルタが [HLD 4.7.2](30_HLD.md#472-処理の流れ) の 1〜5、per-mesh CSV の書き方が同じ節の「残った行を、入力のリストの順に…」から始まる段落、読み戻しが同じ節の「早期終了への受け渡し」と [4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10 で、列と精度は [FR-007](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用) の出力カラムである。止まる場面は [4.7.3](30_HLD.md#473-異常系) と [4.14.3](30_HLD.md#4143-異常系) の「書き込みに失敗する」「早期終了の判定で、書き終えた per-mesh CSV を読み戻せないか、書式が違う」の行、書き込みの失敗は [HLD 2.5.5](30_HLD.md#255-書き込みの失敗) である。[HLD 4.16](30_HLD.md#416-fr-016-ピーク域ポリゴン生成)（ピーク域ポリゴン）は、`format_coord` を 6.8 の群が頂点の緯度経度に使うことで受ける（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の頂点の段落）。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、フィルタの後の行を入力の順のまま書くことと、数の書き方（`std::to_chars` が値を正しく丸める。ロケールに依存しない）で受ける。[HLD 4.7.1](30_HLD.md#471-目的と範囲) の対象外の行が LLD に送った、書き込みの途中で失敗したときに書きかけのファイルを残さない書き方は、[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりで受ける。4 つの関数は `check_signal` を呼ばない（[HLD 3.4.3](30_HLD.md#343-関数) の表の後の段落が挙げる群に「CSV と早期終了」は入っていない。行を順に処理して文字列を作るか読むだけで、時間がかからない。6.9 と同じ）。関数を呼ぶ順は 6.11 の `run_normal_mode`・`run_wide_mode` で決まる（通常は `filter_peak_rows` → `write_peak_csv`、広域はその後に 6.9 の `write_meshset` → `read_back_peak_csv`。[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順）。通常モードの出力は、`filter_peak_rows` が返した行を [HLD 4.4.2](30_HLD.md#442-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 8 が 6.8 の群へ渡す。この節は、それを C++ で書くための細部を足す。1.2 の C++ の規約に従う。
+関数の名前と役割は [HLD 3.4.3](30_HLD.md#343-関数) の表の「CSV と早期終了」の群である。処理の正本は、フィルタが [HLD 4.7.2](30_HLD.md#472-処理の流れ) の 1〜5、per-mesh CSV の書き方が同じ節の「残った行を、入力のリストの順に…」から始まる段落、読み戻しが同じ節の「早期終了への受け渡し」と [4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10 で、列と精度は [FR-007](20_SRS.md#fr-007-per-mesh-csv-出力プロミネンス閾値適用) の出力カラムである。止まる場面は [4.7.3](30_HLD.md#473-異常系) と [4.14.3](30_HLD.md#4143-異常系) の「書き込みに失敗する」「早期終了の判定で、書き終えた per-mesh CSV を読み戻せないか、書式が違う」の行、書き込みの失敗は [HLD 2.5.5](30_HLD.md#255-書き込みの失敗) である。[HLD 4.16](30_HLD.md#416-fr-016-ピーク域ポリゴン生成)（ピーク域ポリゴン）は、`format_coord` を 6.8 の群が頂点の緯度経度に使うことで受ける（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の頂点の段落）。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)（再現性）は、フィルタの後の行を入力の順のまま書くことと、数の書き方（`std::to_chars` が値を正しく丸める。ロケールに依存しない）で受ける。[HLD 4.7.1](30_HLD.md#471-目的と範囲) の対象外の行が LLD に送った、書き込みの途中で失敗したときに書きかけのファイルを残さない書き方は、[2.3](#23-ファイルの名前と書き方) の一時ファイルの決まりで受ける。5 つの関数は `check_signal` を呼ばない（[HLD 3.4.3](30_HLD.md#343-関数) の表の後の段落が挙げる群に「CSV と早期終了」は入っていない。行を順に処理して文字列を作るか読むだけで、時間がかからない。6.9 と同じ）。関数を呼ぶ順は 6.11 の `run_normal_mode`・`run_wide_mode` で決まる（通常は `filter_peak_rows` → `write_peak_csv`、広域はその後に 6.9 の `write_meshset` → `read_back_peak_csv`。[HLD 3.4.3](30_HLD.md#343-関数) の呼ぶ順）。通常モードの出力は、`filter_peak_rows` が返した行を [HLD 4.4.2](30_HLD.md#442-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 8 が 6.8 の群へ渡す。この節は、それを C++ で書くための細部を足す。1.2 の C++ の規約に従う。
 
 #### 6.7.1 ファイル割付
 
@@ -2766,6 +2766,8 @@ std::vector<PeakCsvRow> filter_peak_rows(const std::vector<PeakColRow>& rows,
                                          const std::string& analysis_id,
                                          long long prominence_primary_m,
                                          const std::vector<TargetPeak>& peaks);
+bool is_in_analysis_meshes(const std::string& lat_text, const std::string& lon_text,
+                           const std::set<std::string>& meshes);
 std::string format_coord(double value);
 void write_peak_csv(const std::vector<PeakCsvRow>& rows, const std::string& analysis_id,
                     const std::string& csv_dir);
@@ -2774,6 +2776,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 ```
 
 - 引数の並びは [HLD 3.4.3](30_HLD.md#343-関数) の表の受け取るものの順。`rows` は 6.6 の `build_col_list` の戻り値、`range` は 6.4 の `GridRange`、`analysis_id` は解析識別子。`prominence_primary_m` は 6.12 の `ConfigValue::integer`（`long long`）をそのまま受ける（通常モードだけが読む。広域モードでは読まないので、6.11 は設定の値をそのまま渡してよい）。`peaks` は 6.2 の `PeakGroups` のその対象メッシュの組で、通常モードでは空の並びを渡す。`csv_dir` は `data_dir` の下の `results/csv` の絶対パスで、末尾に `/` を付けない（6.3・6.9 と同じ。6.11 が組み立てて渡す）。`path` は 6.11 が `csv_dir + "/" + analysis_id + ".csv"` で組み立てて渡す。`n` は `--n` の値。
+- `is_in_analysis_meshes` を呼ぶのは `filter_peak_rows` だけである。ほかのモジュールは呼ばないが、実際の Z15 の画素の中心は 1次メッシュの境目ちょうどに来ないので、境目の値を直接渡して確かめる（`ST-FR-007-07`）ために、`filter_peak_rows` から分けて公開の宣言にする。`meshes` は `range.meshes`（`box` は渡さない）。
 - `PeakCsvRow` が HLD の「フィルタの後のリスト」の 1 行（各行はグリッドの画素の位置と、ピークの座標の文字列を持つ）。6.8 の群の `fill_zone`・`write_zone_geojson` がこの型を受ける。join キーは `lat_text`・`lon_text`（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の「書いた行と同じ集合を、フィルタの後のリストとして返す」の段落、[4.16.2](30_HLD.md#4162-処理の流れ)）。
 - `read_back_peak_csv` の返すものは、`key_col_resolved` が `true` の行に一致した対象ピークの Z15 の画素の集合（HLD の「確定して出た対象ピークの集合」）。照合は画素で行うので、画素の集合で表す（同じ画素の対象ピークは一緒に確定する）。6.11 は、パターンをまたいでこの集合を和で積み上げ、組のすべての対象ピークの `pixel` が入れば、残りのパターンを行わない（[HLD 4.14.2](30_HLD.md#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10）。
 - 内部（`src/csv.cpp` の無名の名前空間）:
@@ -2805,11 +2808,18 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 3. `rows` を順に、各行に次を当てる。落とした行は、その後の判定を行わない（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 1〜5 の順）。
    1. 一次フィルタ（通常だけ）: `key_col_resolved` が真で、`static_cast<double>(prominence) < static_cast<double>(prominence_primary_m)` なら落とす（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 1 の字句どおり、6.6 が求めた値で比べる。CSV に書く 2 桁の値では比べない。たとえば `prominence` が `129.996f` の行は、CSV では `130.00` と書く値だが、130 未満なので閾値 130 で落ちる）。`prominence` が NaN の行は、比べた結果が偽になって残り、`write_peak_csv` の 1 が止める（6.6 の行は有限なので起きない）。
    2. Z15 の画素: 通常は `Z15Pixel{256 * range.box.x_min + peak.px - 1, 256 * range.box.y_min + peak.py - 1}`（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 2「ピークの Z15 の画素を求める」。`peak` は行の `GridXY`）。広域は `range.picks` を `peak` で引き、無ければ落とす（控えの無い 2×2 で検出された行は、どの対象ピークとも一致しない。[DEC50](30_HLD.md#4144-設計判断)「縮約で採った画素の座標は対象ピークを含む 2×2 だけ控える」）。
-   3. 座標: `c = z15_pixel_center_latlon(pixel)`、`lat_text = format_coord(c.lat)`、`lon_text = format_coord(c.lon)`。`lat`・`lon` は、その文字列を `_parse_decimal` で読み戻した値（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 3「ピークの緯度経度を求める」の「この文字列を数として読み戻した値」。`format_coord` の文字列はいつも読める）。
-   4. 地理的範囲フィルタ: `latlon_to_mesh(lat, lon)` が `range.meshes` に無ければ落とす（空の文字列も、無いコードとして落ちる。6.10.3。[DEC55](30_HLD.md#474-設計判断)「地理的範囲フィルタは CSV に書く値で判定する」）。範囲は `range.box.bbox` でなく `range.meshes`（解析対象メッシュの矩形を合わせたもの）。
+   3. 座標: `c = z15_pixel_center_latlon(pixel)`、`lat_text = format_coord(c.lat)`、`lon_text = format_coord(c.lon)`（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 3「ピークの緯度経度を求める」）。
+   4. 地理的範囲フィルタ: `is_in_analysis_meshes(lat_text, lon_text, range.meshes)` が偽なら落とす（`format_coord` の文字列はいつも読めるので、ここで `std::invalid_argument` にはならない）。範囲は `range.box.bbox` でなく `range.meshes`（解析対象メッシュの矩形を合わせたもの）。
    5. 対象ピークの照合（広域だけ）: `pixel` が `targets` に無ければ落とす。
    6. 残った行を `{row, lat_text, lon_text}` にして、末尾に足す（入力の順のまま。並べ替えない。[HLD 5.3](30_HLD.md#53-nfr-003-再現性決定論的出力)）。
 4. 返す。0 件でも返す（見出しだけの CSV を書くのは `write_peak_csv`）。
+
+##### is_in_analysis_meshes
+
+`bool is_in_analysis_meshes(const std::string& lat_text, const std::string& lon_text, const std::set<std::string>& meshes)`
+
+1. `lat_text` か `lon_text` が `_parse_decimal` で読めなければ（空を含む）、`std::invalid_argument`。
+2. 読んだ値（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 3 の「この文字列を数として読み戻した値」）をそのまま `latlon_to_mesh(lat, lon)` に渡し、得たコードが `meshes` にあれば真、無ければ偽を返す（[HLD 4.7.2](30_HLD.md#472-処理の流れ) の 4。[DEC55](30_HLD.md#474-設計判断)「地理的範囲フィルタは CSV に書く値で判定する」）。範囲の外の緯度経度は空の文字列になり（6.10.3）、`meshes` に無いコードとして偽になる。`meshes` が空なら偽。
 
 ##### format_coord
 
@@ -2860,7 +2870,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 #### 6.7.5 UT 候補
 
-ケースは単体テスト仕様書の [6.7](50_UT.md#67-analyze_terrain_csv)（`UT-analyze_terrain_csv-001`〜`UT-analyze_terrain_csv-023`）にある。
+ケースは単体テスト仕様書の [6.7](50_UT.md#67-analyze_terrain_csv)（`UT-analyze_terrain_csv-001`〜`UT-analyze_terrain_csv-030`）にある。
 
 ### 6.8 `analyze_terrain_zone`
 
@@ -3275,7 +3285,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 - 公開の宣言は `src/stage.hpp`、定義と内部の関数は `src/stage.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_stage` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/stage.hpp` は `"common.hpp"`（`Config`）・`<set>`・`<string>` を読む。`src/stage.cpp` は `"stage.hpp"`・`"common.hpp"`・`"target.hpp"`・`"window.hpp"`・`"grid.hpp"`・`"image.hpp"`・`"scan.hpp"`・`"csv.hpp"`・`"zone.hpp"`・`"record.hpp"` と、`<algorithm>`・`<cerrno>`・`<cstdint>`・`<cstring>`・`<set>`・`<string>`・`<sys/stat.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
 - UT のコードは 2 本の実行ファイルに分ける（理由は単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage) の「実行ファイルを 2 本に分ける理由」）。各テストに `// trace: UT-analyze_terrain_stage-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
-  - `tests/src/test_stage.cpp` → `build/test_stage`（[2.5](#25-ビルドとテストの名前)の決まりどおり、`main` を持たない `src/` の `.cpp` をすべてリンクする。2 つのモジュールの関数のつながりを確かめるケース）。
+  - `tests/src/test_stage.cpp` → `build/test_stage`（[2.5](#25-ビルドとテストの名前)の決まりどおり、`main` を持たない `src/` の `.cpp` をすべてリンクする。2 つのモジュールの関数のつながりを確かめるケースと、本物をつないで `run_normal_mode`・`run_wide_mode` を動かすケース〈UT 22〜25〉。UT 22 は、このテストのファイルが定める `rename` を使う。単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage) の「差し替える `rename`」）。
   - `tests/src/flow_stage.cpp` と、スタブの `tests/src/stub_analysis.hpp`・`tests/src/stub_analysis.cpp` → `build/flow_stage`（呼ぶ順などを確かめるケース。[2.5](#25-ビルドとテストの名前)）。スタブの 2 本は、先頭のコメントにスタブを使うケースの ID を並べて書く（`// trace: UT-analyze_terrain_stage-001, …, UT-analyze_terrain_stage-016, UT-analyze_terrain_stage-019, …, UT-analyze_terrain_stage-021`。`tools/lint_trace.py` が `tests/src/` の下のファイルごとにテストケースの ID を求めるため。[6.1.1](#611-ファイル割付) の `stub_stage.cpp` と同じ）。
   - 名前を `test_<群の名前>` の形にしないのは、[2.5](#25-ビルドとテストの名前)の「`tests/src/test_<群の名前>.cpp` ごとに 1 本、`main` を持たない `src/` の `.cpp` をすべてリンクする」を Makefile のパターンで当てたとき、本物をリンクした実行ファイルが別にできて、スタブの定義が無くリンクに失敗するのを避けるため（6.1 の `build/test_launch_main`・`tests/src/stub_stage.cpp` も形の外の名前）。
 
@@ -3422,7 +3432,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 
 #### 6.11.5 UT 候補
 
-ケースは単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage)（`UT-analyze_terrain_stage-001`〜`UT-analyze_terrain_stage-021`）にある。
+ケースは単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage)（`UT-analyze_terrain_stage-001`〜`UT-analyze_terrain_stage-025`）にある。
 
 ### 6.12 `analyze_terrain_common`
 

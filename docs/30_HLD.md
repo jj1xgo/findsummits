@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-09-28 |
-| 最終更新日 | 2026-11-23 |
+| 最終更新日 | 2026-11-24 |
 | ステータス | 確定 |
 | 参照 SRS | [`20_SRS.md`](20_SRS.md) |
 
@@ -1594,6 +1594,7 @@ CMP2 は、取得するタイルの範囲を、メッシュ 1 つの範囲を求
 | 走査 | `apply_sea_level_rule` | 走査の後に海面確定規則を当てる | 成分ごとのデータ | 海面確定規則を当てた成分ごとのデータ | [4.6.2](#462-処理の流れ) の「走査の後（海面確定規則）」 |
 | 走査 | `build_col_list` | ピーク候補・コル情報リストを作る | 成分ごとのデータ、グリッドの大きさ、解析対象メッシュ範囲情報 | ピーク候補・コル情報リスト | [4.6.2](#462-処理の流れ) の「コルの座標」「`col_margin_px`」「ピーク候補・コル情報リスト」 |
 | CSV と早期終了 | `filter_peak_rows` | 一次フィルタ・地理的範囲フィルタ・対象ピークの照合を当てる | ピーク候補・コル情報リスト、解析対象メッシュ範囲情報、解析識別子、`prominence_primary_m`（通常）、組の対象ピーク（広域。Z15 の画素の座標を持つ） | フィルタの後のリスト（各行はグリッドの画素の位置と、ピークの座標の文字列を持つ） | [4.7.2](#472-処理の流れ) の 1〜5 |
+| CSV と早期終了 | `is_in_analysis_meshes` | 地理的範囲フィルタの判定をする（CSV に書く緯度経度が、解析対象メッシュの範囲に入るか） | 緯度と経度の文字列（CSV に書く小数点 8 桁の 10 進）、解析対象メッシュの集合 | 真偽 | [4.7.2](#472-処理の流れ) の 4「地理的範囲フィルタ」 |
 | CSV と早期終了 | `format_coord` | 緯度か経度を小数点 8 桁の 10 進の文字列にする | 緯度か経度 | 文字列 | [4.7.2](#472-処理の流れ) の 3「ピークの緯度経度を求める」、[4.16.2](#4162-処理の流れ) の頂点の段落 |
 | CSV と早期終了 | `write_peak_csv` | per-mesh CSV を書く | フィルタの後のリスト、解析識別子、出力のディレクトリ | なし | [4.7.2](#472-処理の流れ) の、残った行を書く段落 |
 | CSV と早期終了 | `read_back_peak_csv` | 書き終えた per-mesh CSV を読み戻し、確定して出た対象ピークを求める | per-mesh CSV のパス、組の対象ピーク、N（読めないときと書式が違うときの、その段をやり直す案内に使う。[4.14.3](#4143-異常系) の表の「CMP4 の広域解析で、早期終了の判定のために読み戻した per-mesh CSV が読めないか、書式が違う」の行） | 確定して出た対象ピークの集合 | [4.7.2](#472-処理の流れ) の「早期終了への受け渡し」、[4.14.2](#4142-処理の流れ) の 4「対象メッシュごとに、昇順に次を行う」の 2 の 10 |
@@ -1624,7 +1625,7 @@ CMP2 は、取得するタイルの範囲を、メッシュ 1 つの範囲を求
 - `run_normal_mode`: `read_mesh_list_file`（日本全土と北方領土除外）→ `select_target_meshes`（0 件なら結果の要約を出して終了コード 0）→ 対象メッシュごとに、`normal_window` → `check_mesh_tiles`（欠けの割合を見る）→ `build_grid_z15` → `render_terrain` → `write_terrain_png` → `make_scan_order` → `scan_peaks_and_cols` → `apply_sea_level_rule` → `build_col_list` → `filter_peak_rows` → `write_peak_csv` →（フィルタの後のリストの行ごとに、アクティベーションゾーン、delete判定ゾーンの順に `fill_zone` → `judge_area_complete` → `trace_outline`）→ `write_zone_geojson` → `write_meshset`。
 - `run_wide_mode`: `read_mesh_list_file`（日本全土と北方領土除外）→ `read_unresolved_peaks`（データの行が無ければ結果の要約を出して終了コード 0）→ `group_peaks_by_mesh` → 対象メッシュごとに、`normal_window`（存在メッシュの集合を渡す）→ `check_mesh_tiles`（欠けの割合は見ない）→ コーナーのパターンごとに、`pattern_window` → `is_pattern_covered`（真なら、省略したことと含んでいた `.meshset` をログに出して次のパターンへ）→ `check_mesh_tiles`（欠けの割合を見る）→ `build_grid_z14` → `render_terrain` → `write_terrain_png` → `make_scan_order` → `scan_peaks_and_cols` → `apply_sea_level_rule` → `build_col_list` → `filter_peak_rows` → `write_peak_csv` → `write_meshset` → `read_back_peak_csv`（組の対象ピークがすべて確定済みになれば、残りのパターンを行わない）。
 
-`is_pattern_covered` は `read_meshset` を、`build_grid_z15`・`build_grid_z14` は `tile_range` と `build_tile_elevation` を、`build_tile_elevation` は `read_tile`・`select_dem_rgb`・`decode_signed_elevation`・`clamp_to_sea_level`・`pixel_center_mesh` を呼ぶ。`fill_zone`・`judge_area_complete` も `pixel_center_mesh` を呼ぶ。「変換」の群の関数は、各群の関数が呼ぶ。各段の始まりのログは `run_normal_mode`・`run_wide_mode` が出す。どの関数も、止まるときは [4.4.3](#443-異常系)・[4.14.3](#4143-異常系) と、後段の各節の異常系の終了コードで止まる。止まり方（例外を使うか、その場で終えるか）は LLD で決める。`start_log` の後に `SIGINT`・`SIGTERM` を受けたときは、時間のかかる処理（「タイルとグリッド」「走査」「ゾーン」「段の進行」の群）が区切りで `check_signal` を呼んで止まる。区切りの置き場と、受けてから止まるまでの遅れの上限は LLD で決める（[5.7.1](#571-目的と範囲) の対象外の行）。
+`is_pattern_covered` は `read_meshset` を、`build_grid_z15`・`build_grid_z14` は `tile_range` と `build_tile_elevation` を、`build_tile_elevation` は `read_tile`・`select_dem_rgb`・`decode_signed_elevation`・`clamp_to_sea_level`・`pixel_center_mesh` を呼ぶ。`fill_zone`・`judge_area_complete` も `pixel_center_mesh` を呼ぶ。`filter_peak_rows` は `is_in_analysis_meshes` を呼ぶ。「変換」の群の関数は、各群の関数が呼ぶ。各段の始まりのログは `run_normal_mode`・`run_wide_mode` が出す。どの関数も、止まるときは [4.4.3](#443-異常系)・[4.14.3](#4143-異常系) と、後段の各節の異常系の終了コードで止まる。止まり方（例外を使うか、その場で終えるか）は LLD で決める。`start_log` の後に `SIGINT`・`SIGTERM` を受けたときは、時間のかかる処理（「タイルとグリッド」「走査」「ゾーン」「段の進行」の群）が区切りで `check_signal` を呼んで止まる。区切りの置き場と、受けてから止まるまでの遅れの上限は LLD で決める（[5.7.1](#571-目的と範囲) の対象外の行）。
 
 #### 3.4.4 コンポーネント内の共通部品
 
