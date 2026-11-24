@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-24 |
+| 最終更新日 | 2026-11-25 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -3097,7 +3097,7 @@ GeoJSON の書き方（[HLD 4.16.1](30_HLD.md#4161-目的と範囲) の対象外
 
 #### 6.8.5 UT 候補
 
-ケースは単体テスト仕様書の [6.8](50_UT.md#68-analyze_terrain_zone)（`UT-analyze_terrain_zone-001`〜`UT-analyze_terrain_zone-027`）にある。
+ケースは単体テスト仕様書の [6.8](50_UT.md#68-analyze_terrain_zone)（`UT-analyze_terrain_zone-001`〜`UT-analyze_terrain_zone-033`）にある。
 
 ### 6.9 `analyze_terrain_record`
 
