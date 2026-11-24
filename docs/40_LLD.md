@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-10-18 |
-| 最終更新日 | 2026-11-23 |
+| 最終更新日 | 2026-11-24 |
 | ステータス | ドラフト |
 | 参照 HLD | [`30_HLD.md`](30_HLD.md) |
 
@@ -2462,7 +2462,7 @@ DEM5a、DEM5b、DEM5c、DEM10b の順に見て、`!= cv::Vec3b(0, 0, 128)`（RGB
 
 #### 6.4.5 UT 候補
 
-ケースは単体テスト仕様書の [6.4](50_UT.md#64-analyze_terrain_grid)（`UT-analyze_terrain_grid-001`〜`UT-analyze_terrain_grid-022`）にある。
+ケースは単体テスト仕様書の [6.4](50_UT.md#64-analyze_terrain_grid)（`UT-analyze_terrain_grid-001`〜`UT-analyze_terrain_grid-023`）にある。
 
 ### 6.5 `analyze_terrain_image`
 
@@ -2579,7 +2579,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 
 #### 6.5.5 UT 候補
 
-ケースは単体テスト仕様書の [6.5](50_UT.md#65-analyze_terrain_image)（`UT-analyze_terrain_image-001`〜`UT-analyze_terrain_image-015`）にある。
+ケースは単体テスト仕様書の [6.5](50_UT.md#65-analyze_terrain_image)（`UT-analyze_terrain_image-001`〜`UT-analyze_terrain_image-019`）にある。
 
 ### 6.6 `analyze_terrain_scan`
 
@@ -4470,7 +4470,7 @@ R1〜R3 の案内（`read_target_meshes` が `guidance` に渡す文。[HLD 4.8.
 
 #### 7.4.5 UT 候補
 
-ケースは単体テスト仕様書の [7.4](50_UT.md#74-check_cols)（`UT-check_cols-001`〜`UT-check_cols-009`）にある。
+ケースは単体テスト仕様書の [7.4](50_UT.md#74-check_cols)（`UT-check_cols-001`〜`UT-check_cols-010`）にある。
 
 ### 7.5 `match_summits`
 
@@ -5305,7 +5305,7 @@ dominant_peak = min(candidates, key=key)
 
 #### 7.5.5 UT 候補
 
-ケースは単体テスト仕様書の [7.5](50_UT.md#75-match_summits)（`UT-match_summits-001`〜`UT-match_summits-079`）にある。
+ケースは単体テスト仕様書の [7.5](50_UT.md#75-match_summits)（`UT-match_summits-001`〜`UT-match_summits-080`）にある。
 
 ## 8. CMP6 可視化生成
 
