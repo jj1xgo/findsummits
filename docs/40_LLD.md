@@ -2593,7 +2593,7 @@ void write_terrain_png(const TerrainImage& image, const std::string& analysis_id
 
 - 公開の宣言は `src/scan.hpp`、定義と内部の関数は `src/scan.cpp` に置く。どちらも先頭のコメントに `// trace: LLD-analyze_terrain_scan` を書き、ヘッダーは次の行を `#pragma once` にする。
 - `src/scan.hpp` は `<cstdint>`・`<vector>`・`"grid.hpp"`（`ElevationGrid`・`GridRange`・`GridXY`）を読む。`src/scan.cpp` は `"scan.hpp"`・`"common.hpp"`（`check_signal`）・`"convert.hpp"`（`LatLon`・`Z15Pixel`・`tile_to_latlon`・`z15_pixel_center_latlon`）・`<algorithm>`・`<cmath>`・`<cstdint>`・`<stdexcept>`・`<string>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーを直接読まない（`grid.hpp` が core を読む）。
-- UT のコードは `tests/src/test_scan.cpp` に置き、`build/test_scan` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_scan-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 12・13・16）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
+- UT のコードは `tests/src/test_scan.cpp` に置き、`build/test_scan` にビルドする（[2.5](#25-ビルドとテストの名前)）。各テストに `// trace: UT-analyze_terrain_scan-NNN`（確かめる UT 候補の ID）のコメントを付ける。2.4 の式で期待値を求めたテスト（UT 12・13・16・18・23・24・26・27）には、`2.4 の tile_to_latlon` もコメントに書く（[テスト方針書 3.3](02_test_policy.md#33-期待値の根拠)）。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。UT 22 は、約 32GiB のメモリを使うので、環境変数 `FINDSUMMITS_LARGE_TESTS` が `1` のときだけ動かし、ほかは `GTEST_SKIP()` にする（飛ばした UT は合格に数えず、UT の正式な実行では `1` にして動かす。[テスト方針書 5.4](02_test_policy.md#54-未実施ケースの扱い)）。
 
 #### 6.6.2 型とデータ
 
@@ -2725,7 +2725,7 @@ std::vector<PeakColRow> build_col_list(const std::vector<Component>& components,
 
 #### 6.6.5 UT 候補
 
-ケースは単体テスト仕様書の [6.6](50_UT.md#66-analyze_terrain_scan)（`UT-analyze_terrain_scan-001`〜`UT-analyze_terrain_scan-016`）にある。
+ケースは単体テスト仕様書の [6.6](50_UT.md#66-analyze_terrain_scan)（`UT-analyze_terrain_scan-001`〜`UT-analyze_terrain_scan-027`）にある。
 
 ### 6.7 `analyze_terrain_csv`
 
@@ -2860,7 +2860,7 @@ std::set<Z15Pixel> read_back_peak_csv(const std::string& path,
 
 #### 6.7.5 UT 候補
 
-ケースは単体テスト仕様書の [6.7](50_UT.md#67-analyze_terrain_csv)（`UT-analyze_terrain_csv-001`〜`UT-analyze_terrain_csv-021`）にある。
+ケースは単体テスト仕様書の [6.7](50_UT.md#67-analyze_terrain_csv)（`UT-analyze_terrain_csv-001`〜`UT-analyze_terrain_csv-023`）にある。
 
 ### 6.8 `analyze_terrain_zone`
 
@@ -3276,7 +3276,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 - `src/stage.hpp` は `"common.hpp"`（`Config`）・`<set>`・`<string>` を読む。`src/stage.cpp` は `"stage.hpp"`・`"common.hpp"`・`"target.hpp"`・`"window.hpp"`・`"grid.hpp"`・`"image.hpp"`・`"scan.hpp"`・`"csv.hpp"`・`"zone.hpp"`・`"record.hpp"` と、`<algorithm>`・`<cerrno>`・`<cstdint>`・`<cstring>`・`<set>`・`<string>`・`<sys/stat.h>`・`<utility>`・`<vector>` を読む。OpenCV のヘッダーは直接読まない（`grid.hpp` が core を読む）。
 - UT のコードは 2 本の実行ファイルに分ける（理由は単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage) の「実行ファイルを 2 本に分ける理由」）。各テストに `// trace: UT-analyze_terrain_stage-NNN`（確かめる UT 候補の ID）のコメントを付ける。テストの枠組みは GoogleTest（[テスト方針書 3.4](02_test_policy.md#34-テストを先に書く進め方)）。
   - `tests/src/test_stage.cpp` → `build/test_stage`（[2.5](#25-ビルドとテストの名前)の決まりどおり、`main` を持たない `src/` の `.cpp` をすべてリンクする。2 つのモジュールの関数のつながりを確かめるケース）。
-  - `tests/src/flow_stage.cpp` と、スタブの `tests/src/stub_analysis.hpp`・`tests/src/stub_analysis.cpp` → `build/flow_stage`（呼ぶ順などを確かめるケース。[2.5](#25-ビルドとテストの名前)）。スタブの 2 本は、先頭のコメントにスタブを使うケースの ID を並べて書く（`// trace: UT-analyze_terrain_stage-001, …, UT-analyze_terrain_stage-016`。`tools/lint_trace.py` が `tests/src/` の下のファイルごとにテストケースの ID を求めるため。[6.1.1](#611-ファイル割付) の `stub_stage.cpp` と同じ）。
+  - `tests/src/flow_stage.cpp` と、スタブの `tests/src/stub_analysis.hpp`・`tests/src/stub_analysis.cpp` → `build/flow_stage`（呼ぶ順などを確かめるケース。[2.5](#25-ビルドとテストの名前)）。スタブの 2 本は、先頭のコメントにスタブを使うケースの ID を並べて書く（`// trace: UT-analyze_terrain_stage-001, …, UT-analyze_terrain_stage-016, UT-analyze_terrain_stage-019, …, UT-analyze_terrain_stage-021`。`tools/lint_trace.py` が `tests/src/` の下のファイルごとにテストケースの ID を求めるため。[6.1.1](#611-ファイル割付) の `stub_stage.cpp` と同じ）。
   - 名前を `test_<群の名前>` の形にしないのは、[2.5](#25-ビルドとテストの名前)の「`tests/src/test_<群の名前>.cpp` ごとに 1 本、`main` を持たない `src/` の `.cpp` をすべてリンクする」を Makefile のパターンで当てたとき、本物をリンクした実行ファイルが別にできて、スタブの定義が無くリンクに失敗するのを避けるため（6.1 の `build/test_launch_main`・`tests/src/stub_stage.cpp` も形の外の名前）。
 
 #### 6.11.2 型とデータ
@@ -3422,7 +3422,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 
 #### 6.11.5 UT 候補
 
-ケースは単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage)（`UT-analyze_terrain_stage-001`〜`UT-analyze_terrain_stage-018`）にある。
+ケースは単体テスト仕様書の [6.11](50_UT.md#611-analyze_terrain_stage)（`UT-analyze_terrain_stage-001`〜`UT-analyze_terrain_stage-021`）にある。
 
 ### 6.12 `analyze_terrain_common`
 
