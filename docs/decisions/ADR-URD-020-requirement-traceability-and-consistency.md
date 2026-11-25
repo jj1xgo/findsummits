@@ -44,3 +44,7 @@ Consequences の「HLD 末尾の追跡マトリクスと §2.2.4 の置き換え
 ## 追記（2026-10-15）: テスト文書の段の T3 とテストのコードの T5 の時期
 
 Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通った後に効かせる」のうち、テストのコードとテスト文書の T5 は、そのテストのレベルのテストのコードがそろった段（`tools/lint_trace.py` の `IMPLEMENTED_STAGES`）から効かせるように改めた。テスト文書の段（UT・IT・ST）は、ゲートの判定ではなく、ヘッダーのステータスを「確定」にしたときに `CONFIRMED_STAGES` に入れ、T3 を効かせる。Consequences の「フェーズゲートの判定のたびに `CONFIRMED_STAGES` を書き換える」は、テスト文書の段ではヘッダーを確定にする変更と、テストのコードをそろえる変更（`IMPLEMENTED_STAGES`）に読み替える。製品のコードの T5 は変えていない（[ADR-OPS-005](ADR-OPS-005-test-document-status-and-t5-timing.md)）。
+
+## 追記（2026-11-25）: 製品のコードの T5 の時期
+
+Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通った後に効かせる」のうち、製品のコードの T5 は、名乗ったモジュールの「ファイル」の欄にそのファイルが無いことと LLD に無いモジュールを名乗ることを LLD を `CONFIRMED_STAGES` に入れたときから、どのモジュールも名乗らないファイルなどを LLD を `IMPLEMENTED_STAGES` に入れたとき（製品のコードがそろったとき）から効かせるように改めた（[ADR-OPS-011](ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。Consequences の「フェーズゲートの判定のたびに `CONFIRMED_STAGES` を書き換える作業が増える」は、LLD ではゲート 4 の判定の変更と、製品のコードをそろえる変更（`IMPLEMENTED_STAGES`）に読み替える。

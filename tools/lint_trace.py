@@ -44,7 +44,10 @@ RETIRED_IDS = {
 }
 
 # 構造上の例外。Finding.key → 根拠の ADR。ADR が git に無い項目は例外にならない。
-EXEMPTIONS = {}
+EXEMPTIONS = {
+    # ブラウザを動かす試験の道具（LLD 2.6）は、どのテストケースにも属さない
+    'T5:tests/public/browser.js': 'docs/decisions/ADR-OPS-011-separate-lld-confirmation-from-code-checks.md',
+}
 
 URD = 'docs/10_URD.md'
 SRS = 'docs/20_SRS.md'

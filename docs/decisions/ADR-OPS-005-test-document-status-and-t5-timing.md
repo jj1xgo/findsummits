@@ -59,3 +59,12 @@
 ## 追記（2026-10-15）: 段を外す場面
 
 Consequences の最後の箇条の「本 ADR では、`CONFIRMED_STAGES`・`IMPLEMENTED_STAGES` から段を外す場面を想定しない」のうち、ゲートの判定で `CONFIRMED_STAGES` に足す段が再審査で No-Go になったときは、その段と、それを上位に持つ段（下位へたどった先まで。テスト文書の段を含む。たとえば HLD を外すなら LLD・UT・IT も）を `CONFIRMED_STAGES` から外し（`IMPLEMENTED_STAGES` にあれば、そこからも外す）、外した段の文書のヘッダーのステータスを「ドラフト」に戻すことにした（[ADR-OPS-006](ADR-OPS-006-conditional-go-deadlines-and-gate-re-review.md)）。テスト文書自身の再評価による取り消しは決めていないが、上位の段の取り消しに伴う連鎖は対象になる。
+
+## 追記（2026-11-25）: UT の確定の時機と T5 の対象
+
+ADR-OPS-011（[#246](https://github.com/jj1xgo/findsummits/issues/246)）で、次を改めた。
+
+- Decision 2 と Consequences の最後から 2 番目の箇条（UT の確定の時機は #246 の段取りに縛られる）: UT の確定は、ゲート 4（LLD → COD）の判定と同じ場で承認者が認め、LLD を足す変更と同じ変更で `CONFIRMED_STAGES` に足す（上位の段が入っていることは、同じ変更の中で満たしていればよい）。
+- Decision 3 と、どのケースも名乗らないファイルの箇条: 検査の対象のファイルに `tests/public/` を足した。中身が空白だけのファイルは除く。ブラウザを動かす試験の道具 `tests/public/browser.js` は `EXEMPTIONS` で除く。
+- Decision 4 と検査の表の T1 の行: `IMPLEMENTED_STAGES` の段は LLD か UT・IT・ST のどれかで、`CONFIRMED_STAGES` にも入っていなければならない。
+- Decision 6、検査の表の T2・T5 の行、Alternatives の最後の案: 製品のコードの T5 と LLD の「ファイル」の実在は、LLD を `IMPLEMENTED_STAGES` に入れたときから効く。名乗りの誤りだけは LLD を `CONFIRMED_STAGES` に入れたときから効く。

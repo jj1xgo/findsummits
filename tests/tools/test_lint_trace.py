@@ -1695,6 +1695,19 @@ class LldTest(TraceTestCase):
         self.assertNotIn('T5:tests/scripts/__init__.py', keys)
         self.assertIn('T5:tests/public/browser.js', keys)
 
+    def test_browser_tool_is_exempted_by_the_adr_only(self):
+        # LLD 2.6 の試験の道具は、どのケースにも属さないので EXEMPTIONS で除く（ADR-OPS-011）。実際の EXEMPTIONS で見る
+        key = 'T5:tests/public/browser.js'
+        adr = lt.EXEMPTIONS.get(key, 'docs/decisions/ADR-OPS-011-separate-lld-confirmation-from-code-checks.md')
+        files = self.files(**{'tests/public/browser.js': '// 道具\n', 'tests/public/other.js': '// 道具\n',
+                              'tests/public/test_one.js': '// trace: UT-one-009\n'})
+        kw = dict(confirmed={'UT'}, implemented={'UT'}, exemptions=lt.EXEMPTIONS)
+        keys = self.keys(dict(files, **{adr: '# X\n'}), **kw)
+        self.assertNotIn(key, keys)
+        self.assertIn('T5:tests/public/other.js', keys)
+        self.assertIn('T2:tests/public/test_one.js->UT-one-009', keys)
+        self.assertIn(key, self.keys(files, **kw))
+
     def test_tool_tests_and_prototype_tests_are_not_test_code(self):
         files = self.files(**{'tests/tools/test_t.py': 'x = 1\n', 'tests/test_proto.c': 'int x;\n'})
         keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
