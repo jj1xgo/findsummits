@@ -1700,15 +1700,15 @@ class LldTest(TraceTestCase):
         # 正規表現リテラルの中のバッククォートや /* は、文字列やコメントの始まりではない（視点5 の指摘）
         for head in ("const tick = /`/;\n", "const r = /[/*]/;\n", "foo(/'/);\n", "x = a / b; y = /`/g;\n",
                      "return /`/.test(x);\n"):
-            files = self.files(**{'tests/public/test_one.js':
-                                  head + "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-008\n"})
-            keys = self.keys(files)
+            keys = self.js_trace_keys(head + "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-001\n")
             self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, head)
-            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, head)
+            self.assertNotIn('T5:UT-one-001', keys, head)
 
     def js_trace_keys(self, js):
-        files = self.files(**{'tests/public/test_one.js': js})
-        return self.keys(files)
+        # UT-one-001 は、このファイルの名乗りだけが実装を示す（ほかのテストのコードは名乗らない）。
+        # 名乗りを読めなければ T5 が出る
+        files = self.files(**{'tests/public/test_one.js': js, 'tests/src/test_one.cpp': '// 空\n'})
+        return self.keys(files, confirmed={'UT'}, implemented={'UT'})
 
     def test_js_division_is_not_a_regex(self):
         # 割り算を正規表現の始まりと誤ると、後ろの引用符やコメントの読み取りがずれて 009 を拾う
@@ -1716,31 +1716,31 @@ class LldTest(TraceTestCase):
                    "x = a / b /* c\n// trace: UT-one-009\n*/;\n",
                    "x = a++ / b /* c\n// trace: UT-one-009\n*/;\n",
                    "x = o[i] / 2 /* c\n// trace: UT-one-009\n*/;\n"):
-            keys = self.js_trace_keys(js + "// trace: UT-one-008\n")
+            keys = self.js_trace_keys(js + "// trace: UT-one-001\n")
             self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, js)
-            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, js)
+            self.assertNotIn('T5:UT-one-001', keys, js)
 
     def test_js_regex_after_control_paren_or_comment_or_keyword(self):
-        tail = "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-008\n"
+        tail = "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-001\n"
         for head in ("if (ready) /`/.test(value);\n", "while (x) /`/.test(y);\n",
                      "const r = [\n  // 説明\n  /`/,\n];\n", "const r = [\n  /* 説明 */ /`/,\n];\n",
                      "switch (x) { case /`/.test(y): break; }\n", "const f = (x) => /`/.test(x);\n",
                      "if (a) {}\n/`/.test(b);\n"):
             keys = self.js_trace_keys(head + tail)
             self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, head)
-            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, head)
+            self.assertNotIn('T5:UT-one-001', keys, head)
 
     def test_js_nested_template_literals(self):
         for js in ("const s = `<td>${a ? `<b>${x}</b>` : ''}</td>`;\n",
                    "const s = `a${`b${`c`}`}d // trace: UT-one-009`;\n",
                    "const s = `${ /* ` */ x }`;\n"):
-            keys = self.js_trace_keys(js + "// trace: UT-one-008\n")
+            keys = self.js_trace_keys(js + "// trace: UT-one-001\n")
             self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, js)
-            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, js)
+            self.assertNotIn('T5:UT-one-001', keys, js)
 
     def test_js_bom_and_unicode_line_terminators(self):
-        keys = self.js_trace_keys("\ufeff// trace: UT-one-008\n// ordinary\u2028// trace: UT-one-007\n")
-        self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys)
+        keys = self.js_trace_keys("\ufeff// trace: UT-one-001\n// ordinary\u2028// trace: UT-one-007\n")
+        self.assertNotIn('T5:UT-one-001', keys)
         self.assertIn('T2:tests/public/test_one.js->UT-one-007', keys)
 
     def test_test_code_t5_needs_a_test_level_in_implemented_stages(self):
