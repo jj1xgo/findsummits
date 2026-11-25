@@ -18,7 +18,7 @@
 - 製品の `public/index.html` とそのテストの `tests/public/`、拡張子の `.html`・`.js` は、T5 の対象に入っていない（ADR-LLD-001 の Consequences）。LLD 1.2 が定める `trace:` の置き方（JavaScript は `// trace:`、`public/index.html` は 1 本が 2 つのモジュールを名乗る）を読む検査は、[#198](https://github.com/jj1xgo/findsummits/issues/198) の (2) に回してあった。
 - `tests/public/browser.js`（ブラウザを動かす試験の道具。LLD 2.6）と、空の `tests/scripts/__init__.py`（テスト方針書 3.4）は、どのテストケースにも属さない。
 
-このままでは、ゲート 4 の判定が Go でも、LLD を `CONFIRMED_STAGES` に足すと CI が止まる。持ち主が 2026-11-25 に、次のとおり決めた。
+このままでは、ゲート 4 の判定が Go でも、LLD を `CONFIRMED_STAGES` に足すと CI が止まる。jj1xgo が 2026-11-25 に、次のとおり決めた。
 
 ## Decision
 

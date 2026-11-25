@@ -1,4 +1,4 @@
-"""headless_probe.js の出力（JSON の行）や、持ち主が貼った JSON を、1 行 1 項目に並べる（#197）。
+"""headless_probe.js の出力（JSON の行）や、jj1xgo が貼った JSON を、1 行 1 項目に並べる（#197）。
 
 使い方: venv/bin/python3 docs/decisions/research/library-file-scheme-probe/summarize.py <ファイル>...
 ファイルは 1 行 1 つの JSON（headless_probe.js の出力）か、ページの JSON 1 つ。

@@ -93,7 +93,7 @@ node docs/decisions/research/browser-automation-probe/bidi_probe.js /usr/lib/fir
 
 ## 確かめていないこと
 
-- Safari と safaridriver（この機械には無い。[#338](https://github.com/jj1xgo/findsummits/issues/338)「Safari（持ち主の Mac）で #197 の確かめ用のページを測る」の機会に確かめる）。
+- Safari と safaridriver（この機械には無い。[#338](https://github.com/jj1xgo/findsummits/issues/338)「Safari（Mac）で #197 の確かめ用のページを測る」の機会に確かめる）。
 - Windows・macOS での Chrome・Brave・Firefox。
 - ヘッドありの起動。
 - 開発者ツールの計測と同じ時間の値を層で読むこと（`ST-NFR-010-01` のフレーム時間・内訳・入力の処理時間・画面が変わるまでの時間、`ST-NFR-008-01` の操作から画面が変わるまで・ダウンロードの開始までの時間。Chrome DevTools Protocol の `Tracing` などで取れるか。能力 7 は操作の無いときのフレーム間隔、能力 9 は入力のイベントの数だけを確かめた）。

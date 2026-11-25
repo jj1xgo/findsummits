@@ -95,14 +95,14 @@ DEC124 の「端末の現地時刻として書く」は、補正して渡せば�
 
 ## `file://` と `http://localhost` での動き
 
-`https://` の置き場（Cloudflare Pages）はやめた（持ち主の判断、2026-11-08。リモートの端末からでは wrangler login の許可の戻り先が届かなかった）。代わりに、2026-11-10 にホストの `python3 -m http.server`（`127.0.0.1:8197`）から `build/probe-site/` を配信し、`http://localhost:8197/` で測った（持ち主の判断、2026-11-10）。localhost は安全なコンテキストなので `https://` に近いが、本物の `https://` の配信ではない。
+`https://` の置き場（Cloudflare Pages）はやめた（jj1xgo の判断、2026-11-08。リモートの端末からでは wrangler login の許可の戻り先が届かなかった）。代わりに、2026-11-10 にホストの `python3 -m http.server`（`127.0.0.1:8197`）から `build/probe-site/` を配信し、`http://localhost:8197/` で測った（jj1xgo の判断、2026-11-10）。localhost は安全なコンテキストなので `https://` に近いが、本物の `https://` の配信ではない。
 
 測った組み合わせ:
 
 - 2026-11-08: Chrome 157 と Brave（どちらもヘッドレス、新しいプロファイル）の `file://`。`library-file-scheme-probe/headless_probe.js` から、「保存する → `a/` → `b/` → 確かめる → 見本を落とす」の後、同じプロファイルで起動し直して「確かめる」。
 - 2026-11-10: 同じ道具と手順で、Chrome と Brave（ヘッドレス）の `http://localhost`。
-- 2026-11-10: 持ち主がホストの画面で、Firefox 153.0（ESR、既定の設定）と Brave（Chrome/157、持ち主のプロファイル、Shields は既定）を操作した。`http://localhost` は「確かめる」だけ。`file://` は `probe.zip` を展開して Ctrl+O で開き、「保存する → `a/` → `b/` → `index.html` で確かめる」の後、ブラウザを完全に終了して開き直し「確かめる」。結果の JSON は持ち主が貼った。
-- not run: Safari（持ち主の Mac が要る。[#338](https://github.com/jj1xgo/findsummits/issues/338) で行う）、本物の `https://` の配信。
+- 2026-11-10: jj1xgo がホストの画面で、Firefox 153.0（ESR、既定の設定）と Brave（Chrome/157、jj1xgo のプロファイル、Shields は既定）を操作した。`http://localhost` は「確かめる」だけ。`file://` は `probe.zip` を展開して Ctrl+O で開き、「保存する → `a/` → `b/` → `index.html` で確かめる」の後、ブラウザを完全に終了して開き直し「確かめる」。結果の JSON は jj1xgo が貼った。
+- not run: Safari（Mac が要る。[#338](https://github.com/jj1xgo/findsummits/issues/338) で行う）、本物の `https://` の配信。
 
 ### ブラウザでのやり直しの手順
 
@@ -164,12 +164,12 @@ P11・P12 の画素（タイルの真ん中の RGBA と、全画素の値の合�
 
 ## 見込みと違った行の扱い
 
-- **Brave の Canvas の雑音**（持ち主の判断、2026-11-10）: 標高タイルの PNG を Canvas を通さずに復号する。Brave は対応に残し、Shields は既定のままで等高線が正しく出る。HLD の DEC194 に書いた。
+- **Brave の Canvas の雑音**（jj1xgo の判断、2026-11-10）: 標高タイルの PNG を Canvas を通さずに復号する。Brave は対応に残し、Shields は既定のままで等高線が正しく出る。HLD の DEC194 に書いた。
   - 確かめ 1: 雑音は自分で書いた画素の読み返しでも入る。`library-file-scheme-probe/site/selftest.html`（256×256 の既知の画素を `putImageData` で書いて `getImageData` で読み返し、違う値を数える）で、画面ありの Brave の `http://localhost` では 262144 個の値のうち 278 個が違い、ヘッドレスの Chrome では 0 個だった。
   - 確かめ 2: P11 の 3 つのタイルは、どれも 256×256、8 ビットの RGB（カラータイプ 2）、インターレースなしで、チャンクは IHDR・IDAT・IEND だけだった。`library-file-scheme-probe/png_decode_check.js`（Node.js 24.21.0）で `DecompressionStream("deflate")` と行のフィルタを戻す処理だけで復号すると、真ん中の画素と全画素の値の合計が、3 つとも Chrome の Canvas の読み出し（上の表の左の列）と一致した（画素ごとの比較はしていない）。
   - 確かめ 3: 復号が扱う形（8 ビットの RGB、圧縮とフィルタの方式 0、インターレースなし）が、ほかのタイルでも同じかを、2026-11-10 に地理院の 39 枚で数えた（DEM10b 12 枚・DEM5a 15 枚・DEM5b 1 枚・DEM1a 11 枚。東京湾の周りの海の際を含む。DEM5b は山地の 20 点を探して 1 枚だけ見つかった）。39 枚とも同じ形で、チャンクは IHDR・IDAT・IEND だけ、使われていた行のフィルタは 1・2・4 だった。DEM5c は見つからず not run。全面が無効値のタイルは、今回の範囲では 404 になり、PNG では返らなかった。
   - 初めは「既知の画素で自己診断し、ずれていたら等高線を描かずに知らせる」と決めたが、確かめ 2 の後に替えた（既定の Brave で等高線が出ないため）。
-- **Firefox の `file://` の localStorage の分け方**（持ち主の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）。HLD の DEC136 に書いた。反対に Chrome と Brave は、フォルダが違っても localStorage を 1 つにまとめた（測ったのは同じフォルダの下の別のフォルダの間）。別の `$DATA_DIR` のビューアの世代も同じ扱いになり、引き継ぎの候補に入る見込みが高い。これも DEC136 に書いた。
+- **Firefox の `file://` の localStorage の分け方**（jj1xgo の判断、2026-11-10）: Firefox は対応に残し、挙動は変えない。作業用ビューアは `$DATA_DIR/results/merged_viewer.html` に書かれ、そこから開く限り前の世代からの引き継ぎは働く。別のフォルダへ写して開くと Firefox では前の保存が見えない（除外台帳と申請に戻した記録は除外判断 JSON で持ち越せる。名前と根拠の下書きは持ち越せない）。HLD の DEC136 に書いた。反対に Chrome と Brave は、フォルダが違っても localStorage を 1 つにまとめた（測ったのは同じフォルダの下の別のフォルダの間）。別の `$DATA_DIR` のビューアの世代も同じ扱いになり、引き継ぎの候補に入る見込みが高い。これも DEC136 に書いた。
 
 ## XLSX の方式の比較
 
@@ -190,4 +190,4 @@ P11・P12 の画素（タイルの真ん中の RGBA と、全画素の値の合�
 | ライブラリの名前の書き直し | 要らない（DEC129 の 3 つのまま） | 要る（SRS 12 か所・HLD・LLD・IT・ST と、SRS の改訂の ADR） |
 | 実装の手間 | pane の XML を書き足す処理を自分で持つ（`<sheetView>` の中の 1 要素） | 決定性のために、`docProps/core.xml` と ZIP のエントリの時刻を JSZip で読み直して書き直す処理が要る |
 
-決めた方式（持ち主の判断、2026-11-10）: (b)。SheetJS CE 0.20.3 で書き、JSZip 3.10.2 で申請書の `<sheetView>` に `A6` の固定の `<pane>` を書き足す（書き戻しは `createFolders: false`）。理由は、要件を全部満たし、決定性を保ち、DEC129 のライブラリの 3 つのまま名前の書き直しが要らないため。(c) ExcelJS は決定性のための書き直しと名前の書き直しが要る。新しい Issue は立てない。
+決めた方式（jj1xgo の判断、2026-11-10）: (b)。SheetJS CE 0.20.3 で書き、JSZip 3.10.2 で申請書の `<sheetView>` に `A6` の固定の `<pane>` を書き足す（書き戻しは `createFolders: false`）。理由は、要件を全部満たし、決定性を保ち、DEC129 のライブラリの 3 つのまま名前の書き直しが要らないため。(c) ExcelJS は決定性のための書き直しと名前の書き直しが要る。新しい Issue は立てない。
