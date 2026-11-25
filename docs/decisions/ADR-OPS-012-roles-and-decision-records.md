@@ -2,7 +2,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 状態 | 採用・未実装 |
+| 状態 | 採用・実装済み |
 | 決定日 | 2026-11-25 |
 
 ---
@@ -38,4 +38,6 @@
 
 - [開発ガイド](../03_development.md#8-役割と決定権)に 8 章、[用語集](../00_GLOSSARY.md#役割)に 3 語を足した。テスト方針書の「ユーザー承認」を「承認者の承認」に、[文書管理ルール](../CLAUDE.md)の「持ち主が利用者として決めたもの」を「承認者が利用者の立場で決めたもの」に替えた。多視点のレビューの手順（`.agents/skills/spec-panel/SKILL.md`）の「持ち主」を「承認者」に替えた（個別の許可と承認の箇所。「メンテナの運用」は残した）。本体の `AGENTS.md` から開発ガイド 8 章を指す 1 行を足し、用語集の採番例を直した。
 - [ADR-OPS-008](ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md) の Decision 4・5（確認と承認の範囲はメンテナの運用で定める）は変わらない。
-- LLD・UT・HLD・ほかの仕様書・SOURCES・ADR には、置き換えるまで「持ち主」が残る。[#353](https://github.com/jj1xgo/findsummits/issues/353) で追い、終わったら状態を「採用・実装済み」にする。
+- LLD・UT・HLD・ほかの仕様書・SOURCES・ADR・調査資料の「持ち主」を替えた（[#353](https://github.com/jj1xgo/findsummits/issues/353)）。残したのは、本 ADR と [ADR-HLD-006](ADR-HLD-006-hld-decision-selection-criteria-and-open-item-cleanup.md) の字句を論じる箇所、[ADR-HLD-008](ADR-HLD-008-remove-hld-open-items-subsections.md) の表（当時の字句・題の写しと、当時の仕分けの理由）、[ADR-OPS-008](ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md) の Context である。
+- 由来のほかに、ADR の次の箇所も意味に合う語に替えた。決めること、確かめることの担い手は変わらない。これからの行為は「承認者」（ADR-HLD-006 の Decision 4、ADR-OPS-008 の Decision 5 の確認の相手、ADR-SRS-086 の Decision 9）、URD に書いてよい制約は「承認者が利用者の立場で決めたもの」（ADR-URD-026 の Decision 2）、使う人は「利用者」（ADR-OPS-001、ADR-URD-019）、要求の出どころは「その要求を求める立場」（ADR-URD-021）、測る機械は「Mac」（ADR-OPS-010 の Decision 3 と、課題の題の引用）。
+- `make lint`（`tools/lint_docs.py` の検査E の E6）が、`docs/`・`.agents/` の Markdown と `ref/SOURCES.md` で、この語の再発を止める。残した 4 つの ADR は、残した数までを許す（ADR-HLD-008 は表の行、ほかの 3 つは残した行の字句に当たるものに限る）。4 つの ADR の中で数を増やさずに入れ替えたり移したりする変更は、過去の記録を消す変更が要り、差分のレビューで見えるので、検査では止めない。

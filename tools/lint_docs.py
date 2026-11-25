@@ -5,7 +5,8 @@
 検査B: 太字ラベル直前の空行欠落（レイアウト崩れ）検出
 検査C: 内部トラッカーID（ISSUE-NNN/BUG-NNN）および mgmt/ パス参照の混入検出
 検査D: FR/UR/NFR 裸参照（リンクでもコード表記でもない参照）の検出
-検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止）
+検査E: 表記ガード（spec-panelレビューで修正した表記揺れの再発防止。E6 は「持ち主」の再発防止〈ADR-OPS-012〉で、
+       ref/SOURCES.md と .agents/ も見る）
 検査F: HLD の設計判断（DEC）の定義（置き場・題の長さ・重要の印）と参照（リンク先・題）
 検査G: HLD の手順の項目の題（指される項目の題、参照に添えた題）
 検査H: docs/ の文書と ADR（調査資料を除く）と ref/SOURCES.md に残った 1 文字の記号（C・D・K と結合のつなぎ目の E・I）
@@ -56,6 +57,21 @@ NOTATION_RULES = [
     ('E5', None, re.compile('ポイントバンド変更候補'),
      '「ポイントバンド変更候補」は「バンド変更候補」に統一してください'),
 ]
+
+# 検査E の E6: 「持ち主」の再発（ADR-OPS-012）。docs/ の外（ref/SOURCES.md・.agents/）も見て、ファイルごとに
+# 残してよい数を持つので、NOTATION_RULES の表に入れない。
+# 残してよいのは、語そのものを論じる箇所と、当時の字句の写しだけ。
+# 値は (残してよい数, 残してよい行の正規表現)。数を増やさずに残した字句を入れ替えたり移したりする変更は止めない
+# （過去の記録を消す変更が要り、差分のレビューで見えるため。2026-11-26 の jj1xgo の決定）。
+AGENTS_DIR = os.sep + '.agents' + os.sep
+OWNER_WORD = '持ち主'
+OWNER_WORD_ALLOWED = {
+    'ADR-HLD-006-hld-decision-selection-criteria-and-open-item-cleanup.md': (2, re.compile('「持ち主の判断」')),
+    'ADR-HLD-008-remove-hld-open-items-subsections.md': (13, re.compile(r'^\|')),
+    'ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md': (
+        1, re.compile('持ち主（メンテナ）の承認の後としていた')),
+    'ADR-OPS-012-roles-and-decision-records.md': (10, re.compile('「持ち主')),
+}
 
 # 検査C・D 対象外ファイル（ルール自体の経緯を記録したメタドキュメントが将来追加された場合の受け皿）。
 CHECK_CD_EXEMPT_FILES = set()
@@ -152,7 +168,7 @@ def check_file(filepath):
     violations = []
     abs_filepath = os.path.abspath(filepath)
     base_dir = os.path.dirname(abs_filepath)
-    # docs/ 配下かどうか（mgmt/ 等の内部管理ファイルは除外）。検査Eはこの判定のみ使う。
+    # docs/ 配下かどうか（mgmt/ 等の内部管理ファイルは除外）。検査E の E1〜E5 はこの判定のみ使う。
     _in_docs = (
         os.sep + 'docs' + os.sep in abs_filepath or abs_filepath.endswith(os.sep + 'docs')
     )
@@ -227,7 +243,7 @@ def check_file(filepath):
                             f"「{ref_id}」はリンク化してください（docs/CLAUDE.md L108）"
                         )
 
-        # 検査E: 表記ガード（docs/ 配下全体が対象。CHECK_CD_EXEMPT_FILES の除外は適用しない）
+        # 検査E の E1〜E5: 表記ガード（docs/ 配下全体が対象。CHECK_CD_EXEMPT_FILES の除外は適用しない）
         if _in_docs:
             for rule_name, scope, pattern, message in NOTATION_RULES:
                 if scope is not None and scope not in abs_filepath:
@@ -240,6 +256,10 @@ def check_file(filepath):
     # 検査H: docs/ の文書と ADR（調査資料を除く）と ref/SOURCES.md
     if (_in_docs and RESEARCH_DIR not in abs_filepath) or abs_filepath.endswith(SOURCES_SUFFIX):
         violations.extend(check_old_symbols(filepath, lines))
+
+    # 検査E の E6: docs/ の文書（調査資料を含む）と ref/SOURCES.md と .agents/ の Markdown
+    if _in_docs or abs_filepath.endswith(SOURCES_SUFFIX) or AGENTS_DIR in abs_filepath:
+        violations.extend(check_owner_word(filepath, lines))
 
     # 検査F・G・I: docs/30_HLD.md だけに適用する（ファイル全体の定義と照合するため、行の検査の後に行う）
     if abs_filepath.endswith(HLD_PATH_SUFFIX):
@@ -365,6 +385,22 @@ def check_old_symbols(filepath, lines):
             s = m.group(1)
             violations.append(
                 f"{where}: OLD-SYMBOL: 1 文字の記号「{s}」は {OLD_PREFIX[s[0]]}{s[1:]} にしてください（ADR-HLD-007）"
+            )
+    return violations
+
+
+def check_owner_word(filepath, lines):
+    """検査E の E6: 「持ち主」を止める。
+    OWNER_WORD_ALLOWED のファイルは、残してよい数までの、残してよい行の字句だけを通す"""
+    allowed = OWNER_WORD_ALLOWED.get(os.path.basename(filepath))
+    over = allowed is None or sum(raw.count(OWNER_WORD) for raw in lines) > allowed[0]
+    violations = []
+    for i, raw in enumerate(lines):
+        line = raw.rstrip('\n')
+        if OWNER_WORD in line and (over or not allowed[1].search(line)):
+            violations.append(
+                f"{filepath}:{i + 1}: NOTATION-E6: "
+                "「持ち主」は使わず、役割の名か決めた人の名前で書いてください（ADR-OPS-012）"
             )
     return violations
 

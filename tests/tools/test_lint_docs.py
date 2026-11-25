@@ -1,4 +1,5 @@
-"""tools/lint_docs.py 検査F（HLD の設計判断の題）と検査G（HLD の項目の題）のテスト（標準ライブラリの unittest）"""
+"""tools/lint_docs.py 検査F（HLD の設計判断の題）と検査G（HLD の項目の題）、検査E6（「持ち主」の再発）のテスト
+（標準ライブラリの unittest）"""
 import sys
 import tempfile
 import unittest
@@ -335,6 +336,32 @@ class CheckHldItemRefsTest(unittest.TestCase):
 
     def test_other_files_not_checked(self):
         self.assertEqual(self.lint(HLD_ITEMS + '\n[4.8.2](#482-処理の流れ) の 3 に従う。\n', name='40_LLD.md'), [])
+
+
+class CheckOwnerWordTest(unittest.TestCase):
+    """検査E6: 「持ち主」の再発（ADR-OPS-012）"""
+
+    OPS008 = 'docs/decisions/ADR-OPS-008-defects-of-confirmed-artifacts-and-who-approves-fixes.md'
+
+    def test_word_is_reported(self):
+        for rel in ('docs/70_ST.md', 'docs/decisions/ADR-OPS-009-x.md', 'docs/decisions/research/x.md',
+                    'ref/SOURCES.md', '.agents/skills/spec-panel/SKILL.md'):
+            with self.subTest(rel):
+                self.assertEqual(lint_at('持ち主が決めた。\n\n「持ち主」の字句。\n', rel), ['NOTATION-E6'] * 2)
+
+    def test_allowed_number_is_kept_and_one_more_is_reported(self):
+        kept = '登録を持ち主（メンテナ）の承認の後としていた。\n'
+        self.assertEqual(lint_at(kept, self.OPS008), [])
+        self.assertEqual(lint_at(kept + '\n持ち主に聞く。\n', self.OPS008), ['NOTATION-E6'] * 2)
+        self.assertEqual(lint_at('持ち主に聞く。\n', self.OPS008), ['NOTATION-E6'])
+
+    def test_out_of_scope(self):
+        self.assertEqual(lint_at('持ち主が決めた。\n', '.claude/rules/x.md'), [])
+
+    def test_allowed_numbers_match_the_documents(self):
+        decisions = Path(__file__).resolve().parents[2] / 'docs' / 'decisions'
+        self.assertEqual({n: (decisions / n).read_text(encoding='utf-8').count('持ち主')
+                          for n in ld.OWNER_WORD_ALLOWED}, {n: v[0] for n, v in ld.OWNER_WORD_ALLOWED.items()})
 
 
 if __name__ == '__main__':
