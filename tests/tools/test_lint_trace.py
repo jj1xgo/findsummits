@@ -2,6 +2,7 @@
 import sys
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
@@ -1667,7 +1668,6 @@ class LldTest(TraceTestCase):
     def test_html_trace_outside_script_or_in_comment_is_ignored(self):
         for html in ('<p>\n// trace: LLD-one\n</p>\n',
                      '<!--\n<script>\n// trace: LLD-one\n</script>\n-->\n',
-                     '<textarea>\n<script>\n// trace: LLD-one\n</script>\n</textarea>\n',
                      "<script>\nf();  // trace: LLD-one\n/* trace: LLD-one */\n/*\n * trace: LLD-one\n */\n"
                      "const s = '// trace: LLD-one';\n</script>\n",
                      '<script>\n/*\n// trace: LLD-one\n*/\n</script>\n',
@@ -1675,6 +1675,13 @@ class LldTest(TraceTestCase):
             keys = self.html_keys(html)
             self.assertIn('T5:public/index.html', keys, html)
             self.assertIn('T5:LLD-one->public/index.html', keys, html)
+
+    @unittest.skipUnless(hasattr(HTMLParser, 'RCDATA_CONTENT_ELEMENTS'),
+                         'html.parser が textarea の中を文字として扱う版だけ')
+    def test_html_trace_in_textarea_is_ignored(self):
+        keys = self.html_keys('<textarea>\n<script>\n// trace: LLD-one\n</script>\n</textarea>\n')
+        self.assertIn('T5:public/index.html', keys)
+        self.assertIn('T5:LLD-one->public/index.html', keys)
 
     def test_html_comment_mark_in_script_string_does_not_hide_traces(self):
         keys = self.html_keys('<script>\nconst s = "<!--";\nconst u = "https://x/*";\n// trace: LLD-one\n</script>\n')
@@ -1699,9 +1706,47 @@ class LldTest(TraceTestCase):
             self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, head)
             self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, head)
 
+    def js_trace_keys(self, js):
+        files = self.files(**{'tests/public/test_one.js': js})
+        return self.keys(files)
+
     def test_js_division_is_not_a_regex(self):
-        files = self.files(**{'tests/public/test_one.js': "const h = (a) / 2 / b;\n// trace: UT-one-008\n"})
-        self.assertIn('T2:tests/public/test_one.js->UT-one-008', self.keys(files))
+        # 割り算を正規表現の始まりと誤ると、後ろの引用符やコメントの読み取りがずれて 009 を拾う
+        for js in ("const h = (a) / 2, s = '/', t = `\n// trace: UT-one-009\n`;\n",
+                   "x = a / b /* c\n// trace: UT-one-009\n*/;\n",
+                   "x = a++ / b /* c\n// trace: UT-one-009\n*/;\n",
+                   "x = o[i] / 2 /* c\n// trace: UT-one-009\n*/;\n"):
+            keys = self.js_trace_keys(js + "// trace: UT-one-008\n")
+            self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, js)
+            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, js)
+
+    def test_js_regex_after_control_paren_or_comment_or_keyword(self):
+        tail = "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-008\n"
+        for head in ("if (ready) /`/.test(value);\n", "while (x) /`/.test(y);\n",
+                     "const r = [\n  // 説明\n  /`/,\n];\n", "const r = [\n  /* 説明 */ /`/,\n];\n",
+                     "switch (x) { case /`/.test(y): break; }\n", "const f = (x) => /`/.test(x);\n",
+                     "if (a) {}\n/`/.test(b);\n"):
+            keys = self.js_trace_keys(head + tail)
+            self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, head)
+            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, head)
+
+    def test_js_nested_template_literals(self):
+        for js in ("const s = `<td>${a ? `<b>${x}</b>` : ''}</td>`;\n",
+                   "const s = `a${`b${`c`}`}d // trace: UT-one-009`;\n",
+                   "const s = `${ /* ` */ x }`;\n"):
+            keys = self.js_trace_keys(js + "// trace: UT-one-008\n")
+            self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, js)
+            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, js)
+
+    def test_js_bom_and_unicode_line_terminators(self):
+        keys = self.js_trace_keys("\ufeff// trace: UT-one-008\n// ordinary\u2028// trace: UT-one-007\n")
+        self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys)
+        self.assertIn('T2:tests/public/test_one.js->UT-one-007', keys)
+
+    def test_test_code_t5_needs_a_test_level_in_implemented_stages(self):
+        files = self.files(**{'tests/src/helper.cpp': 'int helper;\n'})
+        keys = self.keys(files, confirmed={'LLD'}, implemented={'LLD'})
+        self.assertNotIn('T5:tests/src/helper.cpp', keys)
 
     def test_empty_test_file_needs_no_trace(self):
         files = self.files(**{'tests/scripts/__init__.py': ' \n', 'tests/public/browser.js': '// 道具\n'})

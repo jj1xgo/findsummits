@@ -28,11 +28,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # 確定した段。設計の文書の段はゲートの判定が Go / 条件付きGo なら、テスト文書の段はヘッダーのステータスを
 # 「確定」にしたときに足す（docs/03_development.md §4、ADR-OPS-005）。
-# T3 と LLD の T5 は下位の段の名前で効くので、最上位の URD は入れない。
+# T3 と LLD の名乗りの誤りの検査は下位の段の名前で効くので、最上位の URD は入れない。
 CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
 
 # コードがそろった段（LLD は製品のコード、UT・IT・ST はそのレベルの自動のケースのテストのコード）。
-# 製品のコードと LLD、テストのコードとテスト文書の照合は、この段だけで効く。
+# 製品のコードと LLD の照合（名乗りの誤りを除く。それは LLD の確定から効く）と、テストのコードとテスト文書の照合は、
+# この段だけで効く。
 # CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005・ADR-OPS-011）。
 IMPLEMENTED_STAGES = frozenset()
 
@@ -1070,7 +1071,8 @@ LLD_ID_RE = re.compile(r'^LLD-[A-Za-z0-9_]+$')
 ANY_HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*$')
 CODE_SPAN_RE = re.compile(r'`([^`]+)`')
 TRACE_ID = r'(?:LLD|UT|IT|ST)-[A-Za-z0-9_０-９-]+'
-# コメントの trace: だけを拾う。Python と C/C++ は行末のコメントも、bash は行頭の # の行だけ（comment_texts）。
+# コメントの trace: だけを拾う。Python と C/C++ は行末のコメントも、bash・JavaScript・HTML の script 要素は
+# 行頭の # か // の行だけ（comment_texts）。
 # 1 つのコメントに複数の ID を「,」で並べられる。文字列リテラルの中の trace: は拾わない
 TRACE_RE = re.compile(rf'^\s*(?://+|#+|/?\*+)\s*trace:\s*({TRACE_ID}(?:\s*,\s*{TRACE_ID})*)', re.M)
 MODULE_LABELS = {'ID', '対応 HLD', 'ファイル'}
@@ -1481,20 +1483,33 @@ def c_comments(text):
     return out
 
 
-def _regex_may_start(text, i):
-    """i の / が正規表現リテラルの始まりか（直前の意味のある字で決める近似）"""
+_JS_LINE_TERMINATORS = '\n\r\u2028\u2029'
+# この語の直後の / は正規表現の始まり（それ以外の語・数・文字列・閉じ括弧の直後は割り算）
+_JS_REGEX_WORDS = frozenset({'return', 'typeof', 'case', 'do', 'else', 'in', 'instanceof', 'new', 'delete', 'void',
+                             'throw', 'yield', 'await', 'of'})
+_JS_CONTROL_WORDS = frozenset({'if', 'while', 'for', 'with'})
+# この字の直後の / は正規表現の始まり
+_JS_REGEX_PUNCT = frozenset('(,=:[!&|?{};+-*%<>~^')
+
+
+def _js_space(c):
+    return c.isspace() or c == '\ufeff'
+
+
+def _js_only_space_before(text, i):
+    """i の前の、同じ行（JavaScript の行終端〈\\n \\r U+2028 U+2029〉まで）が空白だけか"""
     j = i - 1
-    while j >= 0 and text[j] in ' \t\r\n':
+    while j >= 0 and text[j] not in _JS_LINE_TERMINATORS:
+        if not _js_space(text[j]):
+            return False
         j -= 1
-    if j < 0:
-        return True
-    return text[j] in '(,=:[!&|?{};+-*%<>~^' or text[:j + 1].endswith(('return', 'typeof'))
+    return True
 
 
 def _skip_regex(text, i):
     """i の / で始まる正規表現リテラルの、閉じの次の位置を返す。行の終わりまでに閉じなければ i + 1"""
     j, in_class = i + 1, False
-    while j < len(text) and text[j] != '\n':
+    while j < len(text) and text[j] not in _JS_LINE_TERMINATORS:
         c = text[j]
         if c == '\\':
             j += 2
@@ -1509,38 +1524,91 @@ def _skip_regex(text, i):
     return i + 1
 
 
-def js_line_comments(text):
-    """JavaScript の、行頭（空白を除く）の // コメントだけを返す（行末の // と /* */ は返さない）。
+def _js_skip_template(text, i):
+    """i のバッククォートで始まるテンプレートリテラルの、閉じの次の位置を返す（${…} の中の入れ子を読む）"""
+    n = len(text)
+    i += 1
+    while i < n:
+        c = text[i]
+        if c == '\\':
+            i += 2
+        elif c == '`':
+            return i + 1
+        elif text.startswith('${', i):
+            i = _js_scan(text, i + 2, None, True)
+        else:
+            i += 1
+    return n
 
-    文字列（' "）・テンプレートリテラル（`）・/* */・正規表現リテラルの中は読み飛ばす。正規表現リテラルは、
-    直前の字が (,=:[!&|?{};+-*%<>~^ か return・typeof のとき（行の終わりまでに閉じるもの）だけをそうみなす
-    （割り算との見分けの近似。`a++ / b` のような場合は正規表現と誤る）。入れ子のテンプレートリテラル
-    （${…} の中のバッククォート）で状態がずれうる（どちらも既知の制限。ずれると、名乗りを拾い損ねるか、
-    読み飛ばすべき行を拾う）。
+
+def _js_scan(text, i, out, in_expr):
+    """JavaScript のコードを i から読み、行頭の // コメントを out に集める（out が None なら集めない）。
+
+    in_expr のときは ${…} の中で、対応する } の次の位置を返す。そうでなければ読み終えた位置（末尾）を返す。
+    直前の意味のある字句（prev）で、/ を正規表現の始まりと割り算に分ける。
     """
-    out, i, n = [], 0, len(text)
+    n = len(text)
+    prev, parens, depth = '', [], 0
     while i < n:
         c, two = text[i], text[i:i + 2]
-        if two == '//':
-            j = text.find('\n', i)
-            j = n if j < 0 else j
-            if not text[text.rfind('\n', 0, i) + 1:i].strip():
+        if _js_space(c):
+            i += 1
+        elif two == '//':
+            j = i
+            while j < n and text[j] not in _JS_LINE_TERMINATORS:
+                j += 1
+            if out is not None and _js_only_space_before(text, i):
                 out.append(text[i:j])
             i = j
         elif two == '/*':
             j = text.find('*/', i + 2)
             i = n if j < 0 else j + 2
         elif c in '\'"':
-            i = skip_quoted(text, i)
-        elif c == '/' and _regex_may_start(text, i):
-            i = _skip_regex(text, i)
+            i, prev = skip_quoted(text, i), 'val'
         elif c == '`':
-            i += 1
-            while i < n and text[i] != '`':
-                i += 2 if text[i] == '\\' else 1
-            i += 1
+            i, prev = _js_skip_template(text, i), 'val'
+        elif c == '/':
+            regex = (prev in ('', 'rx', '}') or prev in _JS_REGEX_WORDS
+                     or (len(prev) == 1 and prev in _JS_REGEX_PUNCT))
+            i, prev = (_skip_regex(text, i), 'val') if regex else (i + 1, '/')
+        elif c.isalnum() or c in '_$':
+            j = i
+            while j < n and (text[j].isalnum() or text[j] in '_$'):
+                j += 1
+            word = text[i:j]
+            i, prev = j, (word if word in _JS_REGEX_WORDS or word in _JS_CONTROL_WORDS else 'val')
+        elif c == '(':
+            parens.append(prev in _JS_CONTROL_WORDS)
+            i, prev = i + 1, '('
+        elif c == ')':
+            i, prev = i + 1, ('rx' if parens and parens.pop() else 'val')
+        elif c == '{':
+            depth += 1
+            i, prev = i + 1, '{'
+        elif c == '}':
+            if in_expr and depth == 0:
+                return i + 1
+            depth = max(depth - 1, 0)
+            i, prev = i + 1, '}'
+        elif two in ('++', '--'):
+            i, prev = i + 2, 'val'  # 後置として扱う（直後の / は割り算）
         else:
-            i += 1
+            i, prev = i + 1, c
+    return n
+
+
+def js_line_comments(text):
+    """JavaScript の、行頭（空白を除く）の // コメントだけを返す（行末の // と /* */ は返さない）。
+
+    文字列（' "）・テンプレートリテラル（`。${…} の中の入れ子を含む）・/* */・正規表現リテラルの中は読み飛ばす。
+    / が正規表現の始まりか割り算かは、直前の字句で決める近似（式の文脈を解析しない）:
+    ( , = : [ ! & | ? { ; + - * % < > ~ ^ と return・typeof・case などの語、if・while・for・with の閉じ括弧の直後は
+    正規表現、語・数・文字列・閉じ括弧・
+    ++ と -- の直後は割り算。} の直後は正規表現とみなす（オブジェクトリテラルを割る式は誤る）。行の終わりまでに
+    閉じない正規表現は、/ だけを読み飛ばす。ずれると名乗りを拾い損ねるか、読み飛ばすべき行を拾う（既知の制限）。
+    """
+    out = []
+    _js_scan(text, 0, out, False)
     return out
 
 
@@ -1564,7 +1632,8 @@ class _ScriptCollector(HTMLParser):
 
 
 def html_scripts(text):
-    """HTML の script 要素の中身を 1 要素ずつ返す（標準の html.parser。コメント・textarea などの中は含めない）"""
+    """HTML の script 要素の中身を 1 要素ずつ返す（標準の html.parser。HTML のコメントの中は含めない。
+    textarea の中の疑似の script 要素を含めないのは、html.parser がそれを文字として扱う版だけ）"""
     p = _ScriptCollector()
     p.feed(text)
     p.close()
