@@ -1481,12 +1481,42 @@ def c_comments(text):
     return out
 
 
+def _regex_may_start(text, i):
+    """i の / が正規表現リテラルの始まりか（直前の意味のある字で決める近似）"""
+    j = i - 1
+    while j >= 0 and text[j] in ' \t\r\n':
+        j -= 1
+    if j < 0:
+        return True
+    return text[j] in '(,=:[!&|?{};+-*%<>~^' or text[:j + 1].endswith(('return', 'typeof'))
+
+
+def _skip_regex(text, i):
+    """i の / で始まる正規表現リテラルの、閉じの次の位置を返す。行の終わりまでに閉じなければ i + 1"""
+    j, in_class = i + 1, False
+    while j < len(text) and text[j] != '\n':
+        c = text[j]
+        if c == '\\':
+            j += 2
+            continue
+        if c == '[':
+            in_class = True
+        elif c == ']':
+            in_class = False
+        elif c == '/' and not in_class:
+            return j + 1
+        j += 1
+    return i + 1
+
+
 def js_line_comments(text):
     """JavaScript の、行頭（空白を除く）の // コメントだけを返す（行末の // と /* */ は返さない）。
 
-    文字列（' "）・テンプレートリテラル（`）・/* */ の中は読み飛ばす。正規表現リテラルの中の引用符・バッククォート・
-    /* を解析しないので、あると名乗りを読み落とす（T5 で止まる側に倒れる）。入れ子のテンプレートリテラル
-    （${…} の中のバッククォート）で状態がずれうる（どちらも既知の制限）。
+    文字列（' "）・テンプレートリテラル（`）・/* */・正規表現リテラルの中は読み飛ばす。正規表現リテラルは、
+    直前の字が (,=:[!&|?{};+-*%<>~^ か return・typeof のとき（行の終わりまでに閉じるもの）だけをそうみなす
+    （割り算との見分けの近似。`a++ / b` のような場合は正規表現と誤る）。入れ子のテンプレートリテラル
+    （${…} の中のバッククォート）で状態がずれうる（どちらも既知の制限。ずれると、名乗りを拾い損ねるか、
+    読み飛ばすべき行を拾う）。
     """
     out, i, n = [], 0, len(text)
     while i < n:
@@ -1502,6 +1532,8 @@ def js_line_comments(text):
             i = n if j < 0 else j + 2
         elif c in '\'"':
             i = skip_quoted(text, i)
+        elif c == '/' and _regex_may_start(text, i):
+            i = _skip_regex(text, i)
         elif c == '`':
             i += 1
             while i < n and text[i] != '`':

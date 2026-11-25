@@ -64,7 +64,7 @@ Consequences の最後の箇条の「本 ADR では、`CONFIRMED_STAGES`・`IMPL
 
 ADR-OPS-011（[#246](https://github.com/jj1xgo/findsummits/issues/246)）で、次を改めた。
 
-- Decision 2 と Consequences の最後から 2 番目の箇条（UT の確定の時機は #246 の段取りに縛られる）: UT の確定は、ゲート 4（LLD → COD）の判定と同じ場で承認者が認め、LLD を足す変更と同じ変更で `CONFIRMED_STAGES` に足す（上位の段が入っていることは、同じ変更の中で満たしていればよい）。
-- Decision 3 と、どのケースも名乗らないファイルの箇条: 検査の対象のファイルに `tests/public/` を足した。中身が空白だけのファイルは除く。ブラウザを動かす試験の道具 `tests/public/browser.js` は `EXEMPTIONS` で除く。
+- Decision 2 と Consequences の「ST・IT を `CONFIRMED_STAGES` に入れる時機は…」の箇条（UT の確定の時機は #246 の段取りに縛られる）: UT の確定は、ゲート 4（LLD → COD）の判定と同じ場で承認者が認め、LLD を足す変更と同じ変更で `CONFIRMED_STAGES` に足す（上位の段が入っていることは、同じ変更の中で満たしていればよい）。
+- Decision 3 と、Consequences の「あるレベルを `IMPLEMENTED_STAGES` に入れると…」の箇条（どのケースも名乗らないファイル）: 検査の対象のファイルに `tests/public/` を足した。中身が空白だけのファイルは除く。ブラウザを動かす試験の道具 `tests/public/browser.js` は `EXEMPTIONS` で除く。
 - Decision 4 と検査の表の T1 の行: `IMPLEMENTED_STAGES` の段は LLD か UT・IT・ST のどれかで、`CONFIRMED_STAGES` にも入っていなければならない。
 - Decision 6、検査の表の T2・T5 の行、Alternatives の最後の案: 製品のコードの T5 と LLD の「ファイル」の実在は、LLD を `IMPLEMENTED_STAGES` に入れたときから効く。名乗りの誤りだけは LLD を `CONFIRMED_STAGES` に入れたときから効く。

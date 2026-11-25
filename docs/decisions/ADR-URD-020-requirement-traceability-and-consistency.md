@@ -47,4 +47,4 @@ Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通っ�
 
 ## 追記（2026-11-25）: 製品のコードの T5 の時期
 
-Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通った後に効かせる」のうち、製品のコードの T5 は、名乗ったモジュールの「ファイル」の欄にそのファイルが無いことと LLD に無いモジュールを名乗ることを LLD を `CONFIRMED_STAGES` に入れたときから、どのモジュールも名乗らないファイルなどを LLD を `IMPLEMENTED_STAGES` に入れたとき（製品のコードがそろったとき）から効かせるように改めた（[ADR-OPS-011](ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。Consequences の「フェーズゲートの判定のたびに `CONFIRMED_STAGES` を書き換える作業が増える」は、LLD ではゲート 4 の判定の変更と、製品のコードをそろえる変更（`IMPLEMENTED_STAGES`）に読み替える。
+Decision 4 の「T3 と T5 は、下位の段がフェーズゲートを通った後に効かせる」のうち、製品のコードの照合（T2・T5）は、LLD に無いモジュールを名乗ることと、名乗ったモジュールの「ファイル」の欄にそのファイルが無いことを LLD を `CONFIRMED_STAGES` に入れたときから、どのモジュールも名乗らないファイルなどを LLD を `IMPLEMENTED_STAGES` に入れたとき（製品のコードがそろったとき）から効かせるように改めた（[ADR-OPS-011](ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。Consequences の「フェーズゲートの判定のたびに `CONFIRMED_STAGES` を書き換える作業が増える」は、LLD ではゲート 4 の判定の変更と、製品のコードをそろえる変更（`IMPLEMENTED_STAGES`）に読み替える。

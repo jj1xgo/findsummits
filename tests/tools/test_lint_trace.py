@@ -1689,6 +1689,20 @@ class LldTest(TraceTestCase):
         self.assertNotIn('T2:tests/public/test_one.js->UT-one-008', keys)
         self.assertNotIn('T2:tests/public/test_one.js->UT-one-007', keys)
 
+    def test_js_regex_literal_does_not_confuse_the_trace_reader(self):
+        # 正規表現リテラルの中のバッククォートや /* は、文字列やコメントの始まりではない（視点5 の指摘）
+        for head in ("const tick = /`/;\n", "const r = /[/*]/;\n", "foo(/'/);\n", "x = a / b; y = /`/g;\n",
+                     "return /`/.test(x);\n"):
+            files = self.files(**{'tests/public/test_one.js':
+                                  head + "const s = `\n// trace: UT-one-009\n`;\n// trace: UT-one-008\n"})
+            keys = self.keys(files)
+            self.assertNotIn('T2:tests/public/test_one.js->UT-one-009', keys, head)
+            self.assertIn('T2:tests/public/test_one.js->UT-one-008', keys, head)
+
+    def test_js_division_is_not_a_regex(self):
+        files = self.files(**{'tests/public/test_one.js': "const h = (a) / 2 / b;\n// trace: UT-one-008\n"})
+        self.assertIn('T2:tests/public/test_one.js->UT-one-008', self.keys(files))
+
     def test_empty_test_file_needs_no_trace(self):
         files = self.files(**{'tests/scripts/__init__.py': ' \n', 'tests/public/browser.js': '// 道具\n'})
         keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})

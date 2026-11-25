@@ -111,7 +111,7 @@ make clean                                 # build/ を削除
 
 テスト文書（UT・IT・ST の仕様書）の段は、ゲートの判定ではなく、承認者がテスト文書の確定を認めてヘッダーのステータスを「確定」にする変更で `CONFIRMED_STAGES` に足す（上位の段が入っていることは、ほかの段と同じ。上位の段と同じ変更で足してよい。UT の上位は LLD）。足す前に、[7.3](#73-レビュー) の多視点のレビューで Critical・Important の指摘が残っていないこと、その段を足した `tools/lint_trace.py` の検査で T3 の指摘が 0 件であることを確かめ、承認者の判定を、その文書の進捗を追う Issue（`type:進捗`。[7.1](#71-課題のラベル)）に記録する。テスト文書の「確定」は、ケースの中身と上位の文書との対応がそろったことを表し、テストのコードがそろったことは含めない。そのレベルの自動のケースのテストのコードがそろったら、その変更で段を `IMPLEMENTED_STAGES` にも足す。足したことは、その段を足した版で `make lint` が通る（T5 の指摘が 0 件）ことで確かめる。`IMPLEMENTED_STAGES` の段が LLD・UT・IT・ST のどれでもないとき、または `CONFIRMED_STAGES` に無いときも、T1 で CI が止まる（[ADR-OPS-005](decisions/ADR-OPS-005-test-document-status-and-t5-timing.md)、[ADR-OPS-011](decisions/ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。
 
-UT の確定は、ゲート 4（LLD → COD）の判定と同じ場で承認者が認める。どちらも認めたら、LLD と UT を同じ変更で `CONFIRMED_STAGES` に足す。製品のコードがそろい、試作のコードを `src/`・`scripts/` から除いたら、その変更で LLD を `IMPLEMENTED_STAGES` にも足し、足した版で `make lint` が通ることで確かめる（[ADR-OPS-011](decisions/ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。
+UT の確定は、ゲート 4（LLD → COD）の判定と同じ場で承認者が認める。どちらも認める前に、LLD と UT を足した検査で指摘が 0 件であること（LLD 全体と UT の最終周回で Critical・Important の指摘が残っていないことを含む）を確かめ、UT の判定を、ゲートの記録と UT の進捗を追う Issue の両方に記録する。どちらも認めたら、LLD と UT を同じ変更で `CONFIRMED_STAGES` に足す。製品のコードがそろい、試作のコードを `src/`・`scripts/` から除いたら、その変更で LLD を `IMPLEMENTED_STAGES` にも足し、足した版で `make lint` が通ることで確かめる（[ADR-OPS-011](decisions/ADR-OPS-011-separate-lld-confirmation-from-code-checks.md)）。
 
 ### 4.1 リスク台帳
 
