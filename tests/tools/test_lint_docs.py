@@ -358,6 +358,10 @@ class CheckOwnerWordTest(unittest.TestCase):
     def test_out_of_scope(self):
         self.assertEqual(lint_at('持ち主が決めた。\n', '.claude/rules/x.md'), [])
 
+    def test_allowed_name_elsewhere_is_reported(self):
+        kept = '登録を持ち主（メンテナ）の承認の後としていた。\n'
+        self.assertEqual(lint_at(kept, self.OPS008.replace('decisions/', 'decisions/research/')), ['NOTATION-E6'])
+
     def test_allowed_numbers_match_the_documents(self):
         decisions = Path(__file__).resolve().parents[2] / 'docs' / 'decisions'
         self.assertEqual({n: (decisions / n).read_text(encoding='utf-8').count('持ち主')

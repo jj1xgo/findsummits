@@ -392,7 +392,10 @@ def check_old_symbols(filepath, lines):
 def check_owner_word(filepath, lines):
     """検査E の E6: 「持ち主」を止める。
     OWNER_WORD_ALLOWED のファイルは、残してよい数までの、残してよい行の字句だけを通す"""
-    allowed = OWNER_WORD_ALLOWED.get(os.path.basename(filepath))
+    name = os.path.basename(filepath)
+    # 例外は docs/decisions/ の直下の 4 つの ADR だけ（調査資料などの同じ名前のファイルには当てない）
+    in_decisions = os.path.abspath(filepath).endswith(os.sep + os.path.join('docs', 'decisions', name))
+    allowed = OWNER_WORD_ALLOWED.get(name) if in_decisions else None
     over = allowed is None or sum(raw.count(OWNER_WORD) for raw in lines) > allowed[0]
     violations = []
     for i, raw in enumerate(lines):
