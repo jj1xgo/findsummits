@@ -19,6 +19,7 @@ import sys
 import tokenize
 import unicodedata
 from collections import Counter, defaultdict
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import NamedTuple
 from urllib.parse import unquote
@@ -61,10 +62,10 @@ UNEXEMPTABLE = ('T1:stage:', 'T1:doc:')
 NO_PARENT = 'なし（横断の設計）'
 ALL_COMPONENTS = '全体'
 MANUAL_MARK = '（手動）'
-PRODUCT_DIRS = ('src/', 'scripts/')
+PRODUCT_DIRS = ('src/', 'scripts/', 'public/')
 # テストのコードは製品のテスト（HLD §2.6.4 DEC18）。tests/tools/ の道具のテストと、tests/ 直下の試作は数えない
-TEST_DIRS = ('tests/src/', 'tests/scripts/')
-CODE_SUFFIXES = ('.c', '.h', '.cpp', '.hpp', '.py', '.sh')
+TEST_DIRS = ('tests/src/', 'tests/scripts/', 'tests/public/')
+CODE_SUFFIXES = ('.c', '.h', '.cpp', '.hpp', '.py', '.sh', '.html', '.js')
 
 HEADING_RE = re.compile(r'^(#{1,6})\s+(.*?)\s*#*\s*$')
 HTML_ANCHOR_RE = re.compile(r'<a\s+(?:id|name)=["\']?([^"\'\s>]+)')
@@ -1477,15 +1478,78 @@ def c_comments(text):
     return out
 
 
+def js_line_comments(text):
+    """JavaScript の、行頭（空白を除く）の // コメントだけを返す（行末の // と /* */ は返さない）。
+
+    文字列（' "）・テンプレートリテラル（`）・/* */ の中は読み飛ばす。正規表現リテラルの中の引用符・バッククォート・
+    /* を解析しないので、あると名乗りを読み落とす（T5 で止まる側に倒れる）。入れ子のテンプレートリテラル
+    （${…} の中のバッククォート）で状態がずれうる（どちらも既知の制限）。
+    """
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c, two = text[i], text[i:i + 2]
+        if two == '//':
+            j = text.find('\n', i)
+            j = n if j < 0 else j
+            if not text[text.rfind('\n', 0, i) + 1:i].strip():
+                out.append(text[i:j])
+            i = j
+        elif two == '/*':
+            j = text.find('*/', i + 2)
+            i = n if j < 0 else j + 2
+        elif c in '\'"':
+            i = skip_quoted(text, i)
+        elif c == '`':
+            i += 1
+            while i < n and text[i] != '`':
+                i += 2 if text[i] == '\\' else 1
+            i += 1
+        else:
+            i += 1
+    return out
+
+
+class _ScriptCollector(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.scripts, self._in = [], False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'script':
+            self._in = True
+            self.scripts.append('')
+
+    def handle_endtag(self, tag):
+        if tag == 'script':
+            self._in = False
+
+    def handle_data(self, data):
+        if self._in:
+            self.scripts[-1] += data
+
+
+def html_scripts(text):
+    """HTML の script 要素の中身を 1 要素ずつ返す（標準の html.parser。コメント・textarea などの中は含めない）"""
+    p = _ScriptCollector()
+    p.feed(text)
+    p.close()
+    return p.scripts
+
+
 def comment_texts(path, text):
     """本物のコメントだけを取り出す。文字列リテラルの中の trace: を数えないため。
 
-    Python は tokenize（三重引用符の中も除く）、C/C++ は c_comments。それ以外（bash）は行ごとに見るので、
+    Python は tokenize（三重引用符の中も除く）、C/C++ は c_comments、JavaScript は js_line_comments（行頭の
+    // だけ）、HTML は script 要素の中身に js_line_comments。それ以外（bash）は行ごとに見るので、
     heredoc の中で # から始まる行はコメントとして数えてしまう（既知の制限。テストのコードに heredoc で
     trace: を書かない）。
     """
     if path.endswith(C_SUFFIXES):
         return c_comments(text)
+    if path.endswith('.js'):
+        return js_line_comments(text)
+    if path.endswith('.html'):
+        return [c for body in html_scripts(text) for c in js_line_comments(body)]
     if not path.endswith('.py'):
         return text.split('\n')
     try:
@@ -1523,15 +1587,15 @@ def check_code(repo, modules, cases, confirmed, implemented):
                     continue  # 無いファイルは T2 が出す（対象の拡張子なのに「対象ではありません」と重ねない）
                 if f not in traces:
                     out.append(finding('T5', f'{mid}->{f}', m['where'],
-                                       f'{f} は製品のコードの対象（src/・scripts/ の .c・.h・.cpp・.hpp・.py・.sh）'
-                                       'ではありません'))
+                                       f'{f} は製品のコードの対象（{"・".join(PRODUCT_DIRS)} の '
+                                       f'{"・".join(CODE_SUFFIXES)}）ではありません'))
                 elif mid not in traces[f]:
                     out.append(finding('T5', f'{mid}->{f}', m['where'], f'{f} に trace: {mid} がありません'))
     traced_cases = set()
     tests_implemented = bool(implemented & set(CASE_DOCS))
     for f, ids in code_traces(repo, TEST_DIRS).items():
         case_ids = {i for i in ids if not i.startswith('LLD-')}
-        if tests_implemented and not case_ids:
+        if tests_implemented and not case_ids and repo.read(f).strip():
             out.append(finding('T5', f, f, 'どのテストケースも名乗っていません（trace: <テストケース ID>）'))
         for i in sorted(case_ids):
             traced_cases.add(i)

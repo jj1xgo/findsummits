@@ -1653,6 +1653,48 @@ class LldTest(TraceTestCase):
         files = self.files(**{'docs/40_LLD.md': lld, 'src/table.json': '{}\n'})
         self.assertIn('T5:LLD-one->src/table.json', self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
 
+    def html_keys(self, html):
+        lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`public/index.html`')
+        files = self.files(**{'docs/40_LLD.md': lld, 'public/index.html': html})
+        return self.keys(files, confirmed={'LLD'}, implemented={'LLD'})
+
+    def test_html_script_traces_are_read(self):
+        keys = self.html_keys('<script id="a">\n// trace: LLD-one\n</script>\n'
+                              '<SCRIPT id="b">\n  // trace: LLD-two\n</SCRIPT>\n')
+        self.assertNotIn('T5:LLD-one->public/index.html', keys)
+        self.assertIn('T2:public/index.html->LLD-two', keys)
+
+    def test_html_trace_outside_script_or_in_comment_is_ignored(self):
+        for html in ('<p>\n// trace: LLD-one\n</p>\n',
+                     '<!--\n<script>\n// trace: LLD-one\n</script>\n-->\n',
+                     '<textarea>\n<script>\n// trace: LLD-one\n</script>\n</textarea>\n',
+                     "<script>\nf();  // trace: LLD-one\n/* trace: LLD-one */\n/*\n * trace: LLD-one\n */\n"
+                     "const s = '// trace: LLD-one';\n</script>\n",
+                     '<script>\n/*\n// trace: LLD-one\n*/\n</script>\n',
+                     '<script>\nconst t = `\n// trace: LLD-one\n`;\n</script>\n'):
+            keys = self.html_keys(html)
+            self.assertIn('T5:public/index.html', keys, html)
+            self.assertIn('T5:LLD-one->public/index.html', keys, html)
+
+    def test_html_comment_mark_in_script_string_does_not_hide_traces(self):
+        keys = self.html_keys('<script>\nconst s = "<!--";\nconst u = "https://x/*";\n// trace: LLD-one\n</script>\n')
+        self.assertNotIn('T5:LLD-one->public/index.html', keys)
+
+    def test_js_test_code_is_read(self):
+        files = self.files(**{'tests/public/test_one.js':
+                              "test('a', () => {\n  // trace: UT-one-001\n});\nf();  // trace: UT-one-008\n"
+                              "/*\n * trace: UT-one-007\n */\n// trace: UT-one-009\n"})
+        keys = self.keys(files)
+        self.assertIn('T2:tests/public/test_one.js->UT-one-009', keys)
+        self.assertNotIn('T2:tests/public/test_one.js->UT-one-008', keys)
+        self.assertNotIn('T2:tests/public/test_one.js->UT-one-007', keys)
+
+    def test_empty_test_file_needs_no_trace(self):
+        files = self.files(**{'tests/scripts/__init__.py': ' \n', 'tests/public/browser.js': '// 道具\n'})
+        keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
+        self.assertNotIn('T5:tests/scripts/__init__.py', keys)
+        self.assertIn('T5:tests/public/browser.js', keys)
+
     def test_tool_tests_and_prototype_tests_are_not_test_code(self):
         files = self.files(**{'tests/tools/test_t.py': 'x = 1\n', 'tests/test_proto.c': 'int x;\n'})
         keys = self.keys(files, confirmed={'UT'}, implemented={'UT'})
