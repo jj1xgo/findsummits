@@ -3,12 +3,13 @@
 
 T1: 宣言の欠落・書式違い・欠番・重複、確定した段の文書と上位の段の欠落、IMPLEMENTED_STAGES の段の名前と確定、
     読めないファイル
-T2: 参照先（ID・見出しのアンカー・ファイル）の実在（LLD の「ファイル」のパスは LLD が確定した後だけ）
+T2: 参照先（ID・見出しのアンカー・ファイル）の実在（LLD の「ファイル」のパスは、製品のコードがそろった後
+    〈LLD が IMPLEMENTED_STAGES に入った後〉だけ。製品のコードが名乗る LLD のモジュールの実在は LLD の確定後）
 T3: 被覆（下位の段が確定済みのときだけ）
 T4: 追跡マトリクス（SRS・ST・HLD）と宣言の照合、HLD 2.2.4 の FR の表と第 3 章の宣言の照合、
     SRS の検証の表と品質特性の表の照合、IT の対応表と ST の印の照合
-T5: 製品のコード・テストのコードと文書の双方向（製品のコードは LLD の確定後、
-    テストのコードはそのレベルのコードがそろった後だけ）
+T5: 製品のコード・テストのコードと文書の双方向（製品のコードは、名乗ったモジュールの「ファイル」の欄に無いことは
+    LLD の確定後、ほかは LLD が IMPLEMENTED_STAGES に入った後だけ。テストのコードはそのレベルのコードがそろった後だけ）
 """
 import io
 import os
@@ -29,8 +30,9 @@ ROOT = Path(__file__).resolve().parent.parent
 # T3 と LLD の T5 は下位の段の名前で効くので、最上位の URD は入れない。
 CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
 
-# テストのコードがそろった、テストのレベルの段（UT・IT・ST）。テストのコードとテスト文書の T5 は、この段だけで効く。
-# そのレベルの自動のケースのテストのコードをそろえたときに足す。CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005）。
+# コードがそろった段（LLD は製品のコード、UT・IT・ST はそのレベルの自動のケースのテストのコード）。
+# 製品のコードと LLD、テストのコードとテスト文書の照合は、この段だけで効く。
+# CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005・ADR-OPS-011）。
 IMPLEMENTED_STAGES = frozenset()
 
 # 欠番と、削除の根拠の ADR
@@ -1070,7 +1072,7 @@ TRACE_RE = re.compile(rf'^\s*(?://+|#+|/?\*+)\s*trace:\s*({TRACE_ID}(?:\s*,\s*{T
 MODULE_LABELS = {'ID', '対応 HLD', 'ファイル'}
 
 
-def check_lld(repo, hld_sections, confirmed):
+def check_lld(repo, hld_sections, confirmed, implemented):
     if not repo.has(LLD):
         return [], None
     out, modules = [], {}
@@ -1112,9 +1114,9 @@ def check_lld(repo, hld_sections, confirmed):
             if not files:
                 out.append(finding('T1', f'{mid}:ファイル', f'{LLD}:{fno}',
                                    f'{mid} の「ファイル」にコード表記のパスがありません'))
-            # パスの実在は COD の段（LLD がフェーズゲートを通った後）から見る。それまではコードが
-            # HLD の名前にそろっていない（ADR-LLD-001）
-            for f in sorted(files) if 'LLD' in confirmed else ():
+            # パスの実在は、製品のコードがそろった後（LLD が IMPLEMENTED_STAGES に入った後）から見る。
+            # それまではコードが HLD の名前にそろっていない（ADR-LLD-001、ADR-OPS-011）
+            for f in sorted(files) if 'LLD' in implemented else ():
                 if not repo.has(f):
                     out.append(finding('T2', f'{mid}->{f}', f'{LLD}:{fno}',
                                        f'{mid} のファイル {f} は git にありません'))
@@ -1508,15 +1510,17 @@ def check_code(repo, modules, cases, confirmed, implemented):
         traces = code_traces(repo, PRODUCT_DIRS)
         for f, ids in traces.items():
             lld_ids = {i for i in ids if i.startswith('LLD-')}
-            if not lld_ids:
+            if not lld_ids and 'LLD' in implemented:
                 out.append(finding('T5', f, f, 'どの LLD モジュールも名乗っていません（trace: LLD-…）'))
             for i in sorted(lld_ids):
                 if i not in modules:
                     out.append(finding('T2', f'{f}->{i}', f, f'{i} は LLD にありません'))
                 elif f not in modules[i]['files']:
                     out.append(finding('T5', f'{f}->{i}', f, f'{i} の「ファイル」欄に {f} がありません'))
-        for mid, m in sorted(modules.items()):
+        for mid, m in sorted(modules.items()) if 'LLD' in implemented else ():
             for f in sorted(m['files']):
+                if not repo.has(f):
+                    continue  # 無いファイルは T2 が出す（対象の拡張子なのに「対象ではありません」と重ねない）
                 if f not in traces:
                     out.append(finding('T5', f'{mid}->{f}', m['where'],
                                        f'{f} は製品のコードの対象（src/・scripts/ の .c・.h・.cpp・.hpp・.py・.sh）'
@@ -1542,11 +1546,11 @@ def check_code(repo, modules, cases, confirmed, implemented):
 
 def check_stages(repo, confirmed, implemented):
     """確定した段（confirmed）の文書が git にあり、上位の段（たどった先まで）もすべて確定しているか。
-    テストのコードがそろった段（implemented）が、テストのレベルで、確定した段でもあるか。
+    コードがそろった段（implemented）が、LLD かテストのレベルで、確定した段でもあるか。
 
     どちらかが欠けると、その段の T3（と LLD の T5）が黙って外れる
     （下位の段の検査は上位の段の文書を読んで組み立てるため）。
-    implemented の段がテストのレベルでないと何も効かず、確定していないと T5 が T3 より先に効く。
+    implemented の段が LLD かテストのレベルでないと何も効かず、確定していないと T5 が T3 より先に効く。
     """
     out = []
     for stage in sorted(confirmed):
@@ -1568,8 +1572,8 @@ def check_stages(repo, confirmed, implemented):
                                f'段 {stage} を確定扱いにするには、上位の段 {"・".join(upper)} '
                                'も CONFIRMED_STAGES に入れます'))
     for stage in sorted(implemented):
-        if stage not in CASE_DOCS:
-            levels = '・'.join(CASE_DOCS)
+        if stage != 'LLD' and stage not in CASE_DOCS:
+            levels = '・'.join(('LLD', *CASE_DOCS))
             out.append(finding('T1', f'stage:{stage}:implemented', 'tools/lint_trace.py',
                                f'IMPLEMENTED_STAGES の段 {stage} は {levels} のどれでもありません'))
         elif stage not in confirmed:
@@ -1614,7 +1618,7 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, implemented=IMPLEMENTED_STAGES,
     out += hld_out
     out += check_hld_matrix(repo, req_ids, comps)
     out += check_hld_program_table(repo, req_ids, comps)
-    lld_out, modules = check_lld(repo, hld_sections, confirmed)
+    lld_out, modules = check_lld(repo, hld_sections, confirmed, implemented)
     out += lld_out
     seams = hld_seams(repo.read(HLD)) if repo.has(HLD) else None
     if repo.has(HLD):

@@ -344,10 +344,16 @@ class StageTest(TraceTestCase):
         keys = self.keys(dict(BASE), confirmed={'SRS', 'ST'}, implemented={'ST'})
         self.assertNotIn('T1:stage:ST:implemented', keys)
 
-    def test_implemented_stage_must_be_a_test_level(self):
+    def test_implemented_stage_must_be_lld_or_a_test_level(self):
         files = dict(BASE, **{'docs/30_HLD.md': HLD})
         keys = self.keys(files, confirmed={'SRS', 'HLD'}, implemented={'HLD'})
         self.assertIn('T1:stage:HLD:implemented', keys)
+
+    def test_lld_can_be_implemented_only_when_confirmed(self):
+        files = dict(BASE, **{'docs/30_HLD.md': HLD, 'docs/40_LLD.md': LLD})
+        self.assertIn('T1:stage:LLD:implemented', self.keys(files, confirmed={'SRS', 'HLD'}, implemented={'LLD'}))
+        self.assertNotIn('T1:stage:LLD:implemented',
+                         self.keys(files, confirmed={'SRS', 'HLD', 'LLD'}, implemented={'LLD'}))
 
     def test_implemented_stage_finding_cannot_be_exempted(self):
         files = dict(BASE, **{self.ADR: '# X\n'})
@@ -1564,29 +1570,34 @@ class LldTest(TraceTestCase):
         lld = LLD.replace('- **ファイル**: `src/one.cpp`\n', '')
         self.assertIn('T1:LLD-one:ファイル', self.keys(self.files(**{'docs/40_LLD.md': lld})))
 
-    def test_file_not_in_git_only_when_lld_confirmed(self):
-        # COD の段（LLD がフェーズゲートを通った後）までは、コードが HLD の名前にそろっていない（ADR-LLD-001）
+    def test_file_not_in_git_only_when_lld_implemented(self):
+        # 製品のコードがそろう（LLD が IMPLEMENTED_STAGES に入る）までは、コードが HLD の名前にそろっていない
+        # （ADR-LLD-001、ADR-OPS-011）
         lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/two.cpp`')
         files = self.files(**{'docs/40_LLD.md': lld})
-        self.assertIn('T2:LLD-one->src/two.cpp', self.keys(files, confirmed={'LLD'}))
-        self.assertNotIn('T2:LLD-one->src/two.cpp', self.keys(files))
+        key = 'T2:LLD-one->src/two.cpp'
+        self.assertIn(key, self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
+        self.assertNotIn(key, self.keys(files, confirmed={'LLD'}))
+        # 無いファイルは T2 だけにする（対象の拡張子なのに「対象ではありません」と重ねて出さない）
+        self.assertNotIn('T5:LLD-one->src/two.cpp', self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
 
     def test_unknown_hld_section(self):
         lld = LLD.replace('[4.1](30_HLD.md#41-fr-001-一)', '[4.9](30_HLD.md#41-fr-001-一)')
         self.assertIn('T2:LLD-one->4.9', self.keys(self.files(**{'docs/40_LLD.md': lld})))
 
-    def test_untraced_product_file_only_when_lld_confirmed(self):
+    def test_untraced_product_file_only_when_lld_implemented(self):
         files = self.files(**{'scripts/tool.py': 'print(1)\n'})
-        self.assertIn('T5:scripts/tool.py', self.keys(files, confirmed={'LLD'}))
-        self.assertNotIn('T5:scripts/tool.py', self.keys(files))
+        self.assertIn('T5:scripts/tool.py', self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
+        self.assertNotIn('T5:scripts/tool.py', self.keys(files, confirmed={'LLD'}))
 
     def test_trace_not_in_file_field(self):
         files = self.files(**{'src/extra.cpp': '// trace: LLD-one\n'})
         self.assertIn('T5:src/extra.cpp->LLD-one', self.keys(files, confirmed={'LLD'}))
 
-    def test_file_field_without_trace(self):
+    def test_file_field_without_trace_only_when_lld_implemented(self):
         files = self.files(**{'src/one.cpp': 'int one() { return 1; }\n'})
-        self.assertIn('T5:LLD-one->src/one.cpp', self.keys(files, confirmed={'LLD'}))
+        self.assertIn('T5:LLD-one->src/one.cpp', self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
+        self.assertNotIn('T5:LLD-one->src/one.cpp', self.keys(files, confirmed={'LLD'}))
 
     def test_unknown_lld_in_code(self):
         files = self.files(**{'src/one.cpp': '// trace: LLD-one\n// trace: LLD-two\n'})
@@ -1640,7 +1651,7 @@ class LldTest(TraceTestCase):
     def test_file_outside_code_scope(self):
         lld = LLD.replace('`src/one.cpp`', '`src/one.cpp`・`src/table.json`')
         files = self.files(**{'docs/40_LLD.md': lld, 'src/table.json': '{}\n'})
-        self.assertIn('T5:LLD-one->src/table.json', self.keys(files, confirmed={'LLD'}))
+        self.assertIn('T5:LLD-one->src/table.json', self.keys(files, confirmed={'LLD'}, implemented={'LLD'}))
 
     def test_tool_tests_and_prototype_tests_are_not_test_code(self):
         files = self.files(**{'tests/tools/test_t.py': 'x = 1\n', 'tests/test_proto.c': 'int x;\n'})
