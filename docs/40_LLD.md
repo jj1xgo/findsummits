@@ -3133,7 +3133,7 @@ void write_meshset(const std::set<std::string>& meshes, const std::string& analy
 
 処理の正本は上の前置きのとおりで、この節は C++ で書くための細部を足す。`check_signal` を呼ばない（[HLD 3.4.3](30_HLD.md#343-関数) の `check_signal` を呼ぶ群に「出力の記録」は入っていない。数十行を書くだけで、時間がかからない）。止まるときは、メッセージを `log_error` で出してから `throw ExitRequest(EXIT_ERROR)` する（1.2 の C++ の規約）。呼ぶ側の誤りは `std::invalid_argument` を投げる（6.2・6.3・6.10・6.12 と同じ）。通常のログと警告は出さない。
 
-#### `write_meshset`
+##### write_meshset
 
 1. 引数を次の順に確かめ、最初に当たったもので `std::invalid_argument` を投げる（ファイルに触れる前に確かめる）。
    - `csv_dir` が空か、最後のバイトが `/`: `write_meshset: csv_dir が空か / で終わる: <値>`。
@@ -3350,7 +3350,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
   - 通常モードの訪問の印は、メッシュ（解析単位）ごとに 1 回、ゾーンの段の始まり（最初の `fill_zone` の前）に作る（走査の後なので、成分ごとのデータと同時に持たない。6.8.2）。行が 0 行でも作る（作らない場合分けを足さない）。
   - 広域モードのグリッドは、`build_col_list` の後に捨てる（後の段は `range` だけを使う）。通常モードのグリッドは、ゾーンが使うので、`write_meshset` までメッシュのブロックの中に置く。
 
-#### `run_normal_mode`
+##### run_normal_mode
 
 1. `where = "入力の読み込み"`、`targets` は未定、`csv_meshes = 0`、`rows_total = 0` にして、ここから `try` に入る。
 2. 日本全土のリスト `japan = read_mesh_list_file(japan_mesh_list, "")`（案内は空で、既定の対処）、続けて北方領土除外メッシュのリスト `excluded = read_mesh_list_file(<除外リストのパス>, _excluded_guidance)` を読む（この順。[HLD 4.4.2](30_HLD.md#442-処理の流れ) の 2「入力を読む」）。
@@ -3372,7 +3372,7 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
    8. SL3 の途中経過を出す（`{done}` は終えたメッシュの数、`{total}` は `targets`。2.2 の途中経過の形で、前に出した割合の整数部より増えたときだけ出す）。
 7. `try` を抜けて SL4 を出し、戻る。
 
-#### `run_wide_mode`
+##### run_wide_mode
 
 1. `where = "入力の読み込み"`、`peaks`・`meshes` は未定、`analyzed = skipped = rows_total = 0` にして、ここから `try` に入る。
 2. `japan`・`excluded` を `run_normal_mode` の 2 と同じに読む。`peak_list = read_unresolved_peaks(unresolved, n)`、`peaks = peak_list.size()` にする（未定でなくなる）。

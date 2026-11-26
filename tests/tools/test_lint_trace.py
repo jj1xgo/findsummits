@@ -2089,5 +2089,39 @@ class UtCoverageReviewTest(UtCoverageTest.__base__):
         self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:ID重複:CI-one-001'])
 
 
+def lld_fn(body3, body4=''):
+    """モジュール 9.9 の関数の細部（9.9.3）とメッセージ文面（9.9.4）だけを持つ LLD の文字列"""
+    return ('### 9.9 `x`\n\n#### 9.9.3 関数の細部\n\n' + body3
+            + '\n#### 9.9.4 メッセージ文面\n\n' + body4 + '\n#### 9.9.5 UT 候補\n\nなし\n')
+
+
+class LldFunctionHeadingTest(unittest.TestCase):
+    """LLD 1.2 の関数の見出しの規則（群の下の ######、・でつないだ見出し）どおりに関数を拾う"""
+
+    def funcs(self, body3, body4=''):
+        return lt.lld_functions_and_symbols(lld_fn(body3, body4), '9.9')
+
+    def test_lld_functions_grouped_level6(self):
+        body = '##### 群A\n\n###### f1\n\n###### f2（bash）\n\n##### 群B\n\n###### g1\n'
+        self.assertEqual(self.funcs(body)[0], ['f1', 'f2', 'g1'])
+
+    def test_lld_functions_split_dot_joined(self):
+        body = '##### log_info・log_warning・log_error（x）\n\n##### a（x）・b（x）\n'
+        self.assertEqual(self.funcs(body)[0], ['log_info', 'log_warning', 'log_error', 'a', 'b'])
+
+    def test_lld_functions_level5_number_like_group(self):
+        body = '##### 3.9 と同じ決まり\n\n###### h1\n\n##### 画面\n\n###### h2\n'
+        sym = '| 記号 | 文面 |\n|---|---|\n| S1 | s |\n'
+        self.assertEqual(self.funcs(body, sym), (['h1', 'h2'], ['S1']))
+
+    def test_lld_functions_ungrouped_unchanged(self):
+        self.assertEqual(self.funcs('##### f1\n\n##### 本体（x）\n')[0], ['f1', '本体'])
+
+    def test_numbered_lines_ignores_level5_number(self):
+        text = lld_fn('##### 3.9 と同じ決まり\n\n###### h1\n')
+        current = {line: cur for _, line, cur in lt.numbered_lines(text, '9.9')}
+        self.assertEqual(current['###### h1'], '9.9.3')
+
+
 if __name__ == '__main__':
     unittest.main()
