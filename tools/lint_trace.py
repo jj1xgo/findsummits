@@ -37,7 +37,7 @@ CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
 # CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005・ADR-OPS-011）。
 IMPLEMENTED_STAGES = frozenset()
 
-# 単体テスト仕様書（50_UT.md）にカバレッジ項目の表を必ず置くモジュール（LLD の ID。試行中。ADR-OPS-013）。
+# 単体テスト仕様書（50_UT.md）にカバレッジ項目の表を必ず置くモジュール（LLD の ID。ADR-OPS-013）。
 # ここにあるモジュールの節は、正しい表がちょうど 1 つ無ければ止める。ほかの節は、表を置いたときだけ照らす
 UT_COVERAGE_TRIAL = ('LLD-check_cols', 'LLD-generate_viewer')
 
@@ -1531,7 +1531,7 @@ def coverage_table(lines, mid):
 
 
 def check_ut_coverage(modules, cases, lld_text, ut_text):
-    """50_UT.md のカバレッジ項目の表の参照の整合（ADR-OPS-013。試行中）。
+    """50_UT.md のカバレッジ項目の表の参照の整合（ADR-OPS-013）。
 
     表と LLD の関数の見出し・メッセージの表の記号、表と UT のケースと入力の目印の間の参照の整合だけを見る。
     「覆う対象」の文と入力の中身が合っているかは見ない。表を置いていない節は、UT_COVERAGE_TRIAL に無ければ見ない。
