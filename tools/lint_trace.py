@@ -37,6 +37,10 @@ CONFIRMED_STAGES = frozenset({'SRS', 'HLD'})
 # CONFIRMED_STAGES の部分集合に限る（ADR-OPS-005・ADR-OPS-011）。
 IMPLEMENTED_STAGES = frozenset()
 
+# 単体テスト仕様書（50_UT.md）にカバレッジ項目の表を必ず置くモジュール（LLD の ID。試行中。ADR-OPS-013）。
+# ここにあるモジュールの節は、正しい表がちょうど 1 つ無ければ止める。ほかの節は、表を置いたときだけ照らす
+UT_COVERAGE_TRIAL = ()
+
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
     'UR-006': 'docs/decisions/ADR-URD-022-split-ur-006-into-geojson-and-two-viewers.md',
@@ -1444,6 +1448,168 @@ def check_ut_moved(modules, cases, ut_text):
     return out
 
 
+COV_HEAD = ['ID', 'LLD の関数', '覆う対象', '技法', 'ケース']
+COV_HEAD_NAMES = frozenset(COV_HEAD[1:4])
+COV_ID_RE = re.compile(r'^`CI-([A-Za-z0-9_]+)-(\d{3})`$')
+COV_REASON_RE = re.compile(r'^なし（.+）$')
+COV_ITEM_RE = re.compile(r'^(\d{3})(?: の (\([a-z]+\)(?:・\([a-z]+\))*))?$')
+COV_MARKER_RE = re.compile(r'\([a-z]+\)')
+CELL_SPLIT_RE = re.compile(r'(?<!\\)\|')
+
+
+def split_cells(line):
+    """表の行をセルに分ける（逃がした \\| は区切りにしない）"""
+    body = line.strip()
+    if body.startswith('|'):
+        body = body[1:]
+    if body.endswith('|') and not body.endswith('\\|'):
+        body = body[:-1]
+    return [c.strip() for c in CELL_SPLIT_RE.split(body)]
+
+
+def numbered_lines(text, number):
+    """番号 number の見出しの節（下位の番号の見出しと番号の無い見出しを含む）を (行番号, 行, 今の番号) で返す"""
+    out, current = [], None
+    for no, line in iter_lines(text or ''):
+        h = HEADING_RE.match(line)
+        if h:
+            m = SECTION_NUMBER_RE.match(h.group(2))
+            if m:
+                current = m.group(1)
+        if current is not None and (current == number or current.startswith(number + '.')):
+            out.append((no, line, current))
+    return out
+
+
+def tables_of(lines):
+    """(行番号, 行) の並びから表を (最初の行番号, ヘッダーのセル, データの行の list[(行番号, セル)]) で返す"""
+    tables, block = [], []
+    for no, line in list(lines) + [(None, '')]:
+        if line.startswith('|'):
+            block.append((no, line))
+            continue
+        if block:
+            rows = [(n, split_cells(x)) for n, x in block]
+            body = [r for r in rows[1:] if not is_separator_row(r[1])]
+            tables.append((rows[0][0], rows[0][1], body))
+            block = []
+    return tables
+
+
+def lld_functions_and_symbols(lld_text, number):
+    """LLD のモジュールの節 number の、N.M.3 の下のレベル 5 の見出しの関数の名前（括弧の前）と、
+    N.M.4 の下の 1 列目が「記号」の表の記号"""
+    funcs, sub4 = [], []
+    for no, line, current in numbered_lines(lld_text, number):
+        h = HEADING_RE.match(line)
+        if h and not SECTION_NUMBER_RE.match(h.group(2)) and len(h.group(1)) == 5 and current == f'{number}.3':
+            funcs.append(h.group(2).split('（')[0].strip().strip('`').strip())
+        elif not h and current == f'{number}.4':
+            sub4.append((no, line))
+    symbols = [cells[0] for _, head, body in tables_of(sub4) if head and head[0] == '記号'
+               for _, cells in body if cells and cells[0]]
+    return funcs, symbols
+
+
+def coverage_table(lines, mid):
+    """節の表からカバレッジ項目の表を選ぶ。(表, 誤りの行番号) を返し、表の形の誤りなら表は None"""
+    tables = tables_of((no, line) for no, line, _ in lines)
+    cands = [t for t in tables
+             if t[1] == COV_HEAD
+             or (t[1] and t[1][0] == 'ID' and COV_HEAD_NAMES & set(t[1]))
+             or (t[2] and t[2][0][1] and t[2][0][1][0].startswith('`CI-'))]
+    bad = [t for t in cands if t[1] != COV_HEAD or not t[2]]
+    if bad or len(cands) > 1:
+        return None, (bad or cands)[0][0]
+    if not cands:
+        return None, (lines[0][0] if mid in UT_COVERAGE_TRIAL and lines else None)
+    return cands[0], None
+
+
+def check_ut_coverage(modules, cases, lld_text, ut_text):
+    """50_UT.md のカバレッジ項目の表の参照の整合（ADR-OPS-013。試行中）。
+
+    表と LLD の関数の見出し・メッセージの表の記号、表と UT のケースと入力の目印の間の参照の整合だけを見る。
+    「覆う対象」の文と入力の中身が合っているかは見ない。表を置いていない節は、UT_COVERAGE_TRIAL に無ければ見ない。
+    """
+    if lld_text is None or ut_text is None:
+        return []
+    out, ut_doc = [], CASE_DOCS['UT']
+    for mid in sorted(modules):
+        number = modules[mid].get('ut_number')
+        if number is None:
+            continue
+        mod = mid[len('LLD-'):]
+        lines = numbered_lines(ut_text, number)
+        where = f'{ut_doc}:{lines[0][0]}' if lines else ut_doc
+        table, bad_at = coverage_table(lines, mid)
+        if table is None:
+            if bad_at is not None or mid in UT_COVERAGE_TRIAL:
+                out.append(finding('T1', f'UT-cov:{mid}:表', f'{ut_doc}:{bad_at}' if bad_at else where,
+                                   f'{mid} の節に、ヘッダーが「{"・".join(COV_HEAD)}」で行が 1 つ以上ある'
+                                   'カバレッジ項目の表を 1 つだけ置きます'))
+            continue
+        steps = {}
+        for _, line, _ in lines:
+            c = CASE_ROW_RE.match(line)
+            if c and c.group(1).startswith(f'UT-{mod}-'):
+                cells = split_cells(line)
+                steps[c.group(1)] = cells[3] if len(cells) > 3 else ''
+        funcs, symbols = lld_functions_and_symbols(lld_text, number)
+        seen, used_cases, used_funcs, covered = set(), set(), set(), []
+        for no, cells in table[2]:
+            at = f'{ut_doc}:{no}'
+            cells = (cells + [''] * 5)[:5]
+            rid = cells[0].strip('`')
+            m = COV_ID_RE.match(cells[0])
+            if not m or m.group(1) != mod:
+                out.append(finding('T1', f'UT-cov:{mid}:ID:{rid}', at,
+                                   f'カバレッジ項目の ID「{rid}」の書式が CI-{mod}-<3 桁> と違います'))
+            elif rid in seen:
+                out.append(finding('T1', f'UT-cov:{mid}:ID重複:{rid}', at,
+                                   f'カバレッジ項目の ID {rid} が重複しています'))
+            seen.add(rid)
+            for name in CODE_SPAN_RE.findall(cells[1]):
+                used_funcs.add(name)
+                if name not in funcs:
+                    out.append(finding('T2', f'UT-cov:{mid}:関数:{name}', at,
+                                       f'{rid} の関数 {name} は、LLD {number} の関数の細部の見出しにありません'))
+            covered.append(cells[2])
+            if COV_REASON_RE.match(cells[4]):
+                continue
+            items = [COV_ITEM_RE.match(x.strip()) for x in cells[4].split('、')] if cells[4] else []
+            if not items or not all(items):
+                out.append(finding('T1', f'UT-cov:{mid}:書式:{rid}', at,
+                                   f'{rid} の「ケース」は、3 桁の連番（入力の目印は「の (a)・(b)」の形）を'
+                                   '読点で並べるか、「なし（理由）」にします'))
+                continue
+            for item in items:
+                cid = f'UT-{mod}-{item.group(1)}'
+                if cid not in steps:
+                    out.append(finding('T2', f'UT-cov:{mid}:参照:{rid}:{item.group(1)}', at,
+                                       f'{rid} のケース {item.group(1)} は 50_UT.md の {number} にありません'))
+                    continue
+                used_cases.add(cid)
+                for mark in COV_MARKER_RE.findall(item.group(2) or ''):
+                    if mark not in steps[cid]:
+                        out.append(finding('T2', f'UT-cov:{mid}:目印:{cid}:{mark}', at,
+                                           f'{rid} の入力の目印 {mark} が {cid} の手順にありません'))
+        for cid in sorted(set(steps) - used_cases):
+            out.append(finding('T2', f'UT-cov:{mid}:ケース:{cid}', where,
+                               f'{cid} がカバレッジ項目の表のどの行にも入っていません'))
+        for name in funcs:
+            if name not in used_funcs:
+                out.append(finding('T2', f'UT-cov:{mid}:関数なし:{name}', where,
+                                   f'LLD {number} の関数 {name} がカバレッジ項目の表のどの行にもありません'))
+        text = '\n'.join(covered)
+        for sym in symbols:
+            if not re.search(rf'(?<![A-Za-z0-9]){re.escape(sym)}(?![A-Za-z0-9])', text):
+                out.append(finding('T2', f'UT-cov:{mid}:記号:{sym}', where,
+                                   f'LLD {number} のメッセージの記号 {sym} が、カバレッジ項目の表の'
+                                   '「覆う対象」にありません'))
+    return out
+
+
 C_SUFFIXES = ('.c', '.h', '.cpp', '.hpp')
 RAW_OPEN_RE = re.compile(r'"([^ ()\\\t\n]{0,16})\(')
 
@@ -1795,6 +1961,8 @@ def run_checks(repo, confirmed=CONFIRMED_STAGES, implemented=IMPLEMENTED_STAGES,
     out += case_out + check_cases(cases, req_ids, urs, modules, seams, confirmed)
     if modules is not None:
         out += check_ut_moved(modules, cases, repo.read(CASE_DOCS['UT']) if repo.has(CASE_DOCS['UT']) else None)
+        out += check_ut_coverage(modules, cases, repo.read(LLD) if repo.has(LLD) else None,
+                                 repo.read(CASE_DOCS['UT']) if repo.has(CASE_DOCS['UT']) else None)
     out += check_st_matrix(repo, urs, declared, cases)
     out += check_it_moved(repo, cases)
     out += check_code(repo, modules, cases, confirmed, implemented)

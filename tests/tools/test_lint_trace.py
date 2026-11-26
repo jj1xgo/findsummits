@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 import lint_trace as lt  # noqa: E402
@@ -1894,6 +1895,148 @@ class ParserHardeningTest(TraceTestCase):
         for case_id in ('UT-one-007', 'UT-one-008', 'UT-one-006'):
             self.assertIn(f'T2:tests/src/test_raw.cpp->{case_id}', keys)
 
+
+
+LLD_COV = LLD + """
+#### 1.1.3 関数の細部
+
+##### main（one）
+
+本文。
+
+##### _parse
+
+本文。
+
+#### 1.1.4 メッセージ文面
+
+| 記号 | 場面 | 1 行目 | 2 行目 | 終了コード |
+|---|---|---|---|---|
+| KA1 | a | b | c | 2 |
+| KA2 | a | b | c | 2 |
+
+#### 1.1.5 UT 候補
+
+ケースは単体テスト仕様書の [1.1](50_UT.md#11-一)（`UT-one-001`〜`UT-one-002`）にある。
+"""
+
+COV_HEAD = '| ID | LLD の関数 | 覆う対象 | 技法 | ケース |\n|---|---|---|---|---|\n'
+COV_ROW1 = '| `CI-one-001` | `main` | 正しい形 | 同値分割 | 001 |\n'
+COV_ROW2 = '| `CI-one-002` | `_parse` | KA1: x、KA2: y | 同値分割 | 002 の (a)・(b) |\n'
+COV_TABLE = COV_HEAD + COV_ROW1 + COV_ROW2
+
+UT_CASES = """| ID | 確かめること | 前提条件 | 手順 | 期待結果 | 合否判定基準 |
+|---|---|---|---|---|---|
+| `UT-one-001` | a | なし | 呼ぶ | c | d |
+| `UT-one-002` | a | なし | (a) x、(b) y を渡す | c | d |
+"""
+
+
+def ut_cov(table=COV_TABLE, cases=UT_CASES):
+    return '# UT\n\n### 1.1 一\n\n' + (table + '\n' if table else '') + cases
+
+
+class UtCoverageTest(TraceTestCase):
+    """50_UT.md のカバレッジ項目の表の検査（ADR-OPS-013）"""
+
+    def cov_keys(self, lld=LLD_COV, ut=None):
+        files = dict(BASE, **{
+            'docs/30_HLD.md': HLD, 'docs/40_LLD.md': lld, 'docs/50_UT.md': ut if ut is not None else ut_cov(),
+            'src/one.cpp': '// trace: LLD-one\nint one() { return 1; }\n',
+        })
+        return sorted(k for k in self.keys(files) if ':UT-cov:' in k)
+
+    def test_no_table_no_finding(self):
+        self.assertEqual(self.cov_keys(ut=ut_cov(table='')), [])
+
+    def test_complete_table_passes(self):
+        self.assertEqual(self.cov_keys(), [])
+
+    def test_case_not_in_any_row(self):
+        row2 = '| `CI-one-002` | `_parse` | KA1: x、KA2: y | 同値分割 | なし（IT で確かめる） |\n'
+        table = COV_HEAD + COV_ROW1 + row2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:ケース:UT-one-002'])
+
+    def test_unknown_case_in_row(self):
+        table = COV_HEAD + COV_ROW1.replace('| 001 |', '| 001、009 |') + COV_ROW2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:参照:CI-one-001:009'])
+
+    def test_marker_missing_in_case(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2.replace('(a)・(b) |', '(a)・(b)・(z) |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:目印:UT-one-002:(z)'])
+
+    def test_marker_removed_from_case(self):
+        cases = UT_CASES.replace('(a) x、(b) y を渡す', '(a) x を渡す')
+        self.assertEqual(self.cov_keys(ut=ut_cov(cases=cases)), ['T2:UT-cov:LLD-one:目印:UT-one-002:(b)'])
+
+    def test_function_not_in_lld(self):
+        table = COV_HEAD + COV_ROW1.replace('| `main` |', '| `main`・`nope` |') + COV_ROW2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:関数:nope'])
+
+    def test_lld_function_without_row(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2.replace('| `_parse` |', '| `main` |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:関数なし:_parse'])
+
+    def test_heading_with_parenthesis(self):
+        # LLD の見出しは「main（one）」、表は `main`。括弧の前の名前で照らす
+        self.assertIn('##### main（one）', LLD_COV)
+        self.assertEqual(self.cov_keys(), [])
+
+    def test_symbol_not_covered(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2.replace('KA1: x、KA2: y', 'KA1: x')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:記号:KA2'])
+
+    def test_symbol_word_boundary(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2.replace('KA1: x、KA2: y', 'KA10、KA2: y')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T2:UT-cov:LLD-one:記号:KA1'])
+
+    def test_symbol_of_other_section_ignored(self):
+        lld = LLD_COV.replace('#### 1.1.5 UT 候補', 'CF1 は 2.1.4 の記号。\n\n#### 1.1.5 UT 候補')
+        self.assertEqual(self.cov_keys(lld=lld), [])
+
+    def test_reason_only_cell_ignores_numbers(self):
+        row3 = '| `CI-one-003` | `main` | 案内 | 同値分割 | なし（ST-FR-022-10 と ADR-OPS-013 で確かめる） |\n'
+        table = COV_TABLE + row3
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), [])
+
+    def test_range_is_format_error(self):
+        table = COV_HEAD + COV_ROW1.replace('| 001 |', '| 001〜002 |') + COV_ROW2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)),
+                         ['T1:UT-cov:LLD-one:書式:CI-one-001', 'T2:UT-cov:LLD-one:ケース:UT-one-001'])
+
+    def test_id_format_and_module(self):
+        table = (COV_HEAD + COV_ROW1.replace('`CI-one-001`', '`CI-one-1`')
+                 + COV_ROW2.replace('`CI-one-002`', '`CI-x-002`'))
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)),
+                         ['T1:UT-cov:LLD-one:ID:CI-one-1', 'T1:UT-cov:LLD-one:ID:CI-x-002'])
+
+    def test_id_duplicate(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2.replace('`CI-one-002`', '`CI-one-001`')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:ID重複:CI-one-001'])
+
+    def test_header_typo_is_reported(self):
+        table = COV_TABLE.replace('| 覆う対象 |', '| 対象 |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:表'])
+
+    def test_two_tables_is_reported(self):
+        self.assertEqual(self.cov_keys(ut=ut_cov(COV_TABLE + '\n' + COV_TABLE)), ['T1:UT-cov:LLD-one:表'])
+
+    def test_empty_table_with_header_typo(self):
+        table = COV_HEAD.replace('| 覆う対象 |', '| 対象 |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:表'])
+
+    def test_empty_table_is_reported(self):
+        self.assertEqual(self.cov_keys(ut=ut_cov(COV_HEAD)), ['T1:UT-cov:LLD-one:表'])
+
+    def test_trial_module_requires_valid_table(self):
+        with mock.patch.object(lt, 'UT_COVERAGE_TRIAL', ('LLD-one',)):
+            self.assertEqual(self.cov_keys(ut=ut_cov(table='')), ['T1:UT-cov:LLD-one:表'])
+            self.assertEqual(self.cov_keys(ut=ut_cov(COV_HEAD.replace('| ID |', '| Id |'))), ['T1:UT-cov:LLD-one:表'])
+            self.assertEqual(self.cov_keys(), [])
+
+    def test_reason_cell_must_be_whole(self):
+        table = COV_TABLE + '| `CI-one-003` | `main` | 案内 | 同値分割 | なし（理由）、001 |\n'
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:書式:CI-one-003'])
 
 if __name__ == '__main__':
     unittest.main()
