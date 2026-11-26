@@ -2062,5 +2062,32 @@ class UtCoverageTest(TraceTestCase):
         table = COV_TABLE.replace('|---|---|---|---|---|\n', '')
         self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:表'])
 
+class UtCoverageReviewTest(UtCoverageTest.__base__):
+    """push 前のレビューで見つかった入力（ADR-OPS-013）"""
+
+    cov_keys = UtCoverageTest.cov_keys
+
+    def test_separator_with_wrong_column_count_is_reported(self):
+        table = COV_TABLE.replace('|---|---|---|---|---|', '|---|---|---|---|')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:表'])
+
+    def test_function_cell_with_plain_name_is_reported(self):
+        table = COV_HEAD + COV_ROW1.replace('| `main` |', '| `main`・nope |') + COV_ROW2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:関数欄:CI-one-001'])
+
+    def test_row_with_extra_column_is_reported(self):
+        table = COV_HEAD + COV_ROW1.replace('| 001 |', '| 001 | 余り |') + COV_ROW2
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:列:CI-one-001'])
+
+    def test_range_with_spaces_is_not_a_marker(self):
+        cases = UT_CASES.replace('| なし | (a) x、(b) y を渡す |', '| (a) x を置く | (a) 〜 (b) のそれぞれで呼ぶ |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(cases=cases)), ['T2:UT-cov:LLD-one:目印:UT-one-002:(b)'])
+
+    def test_id_three_times_is_reported_once(self):
+        row = COV_ROW2.replace('`CI-one-002`', '`CI-one-001`')
+        table = COV_HEAD + COV_ROW1 + row + row
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:ID重複:CI-one-001'])
+
+
 if __name__ == '__main__':
     unittest.main()

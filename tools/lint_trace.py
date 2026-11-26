@@ -1454,7 +1454,8 @@ COV_ID_RE = re.compile(r'^`CI-([A-Za-z0-9_]+)-(\d{3})`$')
 COV_REASON_RE = re.compile(r'^なし（.+）$')
 COV_ITEM_RE = re.compile(r'^(\d{3})(?: の (\([a-z]+\)(?:・\([a-z]+\))*))?$')
 COV_MARKER_RE = re.compile(r'\([a-z]+\)')
-COV_MARKER_RANGE_RE = re.compile(r'\([a-z]+\)〜\([a-z]+\)')
+COV_MARKER_RANGE_RE = re.compile(r'\([a-z]+\)\s*〜\s*\([a-z]+\)')
+COV_FUNCS_RE = re.compile(r'^`[^`]+`(?:・`[^`]+`)*$')
 CELL_SPLIT_RE = re.compile(r'(?<!\\)\|')
 
 
@@ -1484,7 +1485,7 @@ def numbered_lines(text, number):
 
 def tables_of(lines):
     """(行番号, 行) の並びから表を (最初の行番号, ヘッダーのセル, データの行の list[(行番号, セル)],
-    2 行目が区切りの行か) で返す"""
+    2 行目がヘッダーと同じ列の数の区切りの行か) で返す"""
     tables, block = [], []
     for no, line in list(lines) + [(None, '')]:
         if line.startswith('|'):
@@ -1493,7 +1494,8 @@ def tables_of(lines):
         if block:
             rows = [(n, split_cells(x)) for n, x in block]
             body = [r for r in rows[1:] if not is_separator_row(r[1])]
-            tables.append((rows[0][0], rows[0][1], body, len(rows) > 1 and is_separator_row(rows[1][1])))
+            sep_ok = len(rows) > 1 and is_separator_row(rows[1][1]) and len(rows[1][1]) == len(rows[0][1])
+            tables.append((rows[0][0], rows[0][1], body, sep_ok))
             block = []
     return tables
 
@@ -1559,22 +1561,25 @@ def check_ut_coverage(modules, cases, lld_text, ut_text):
                 # 前提条件と手順の列（入力の目印はどちらかに書く）。範囲（(a)〜(e)）の端は入力を書いたことにしない
                 steps[c.group(1)] = COV_MARKER_RANGE_RE.sub('', ' '.join(cells[2:4]))
         funcs, symbols = lld_functions_and_symbols(lld_text, number)
-        seen, used_cases, used_funcs, covered = set(), set(), set(), []
+        seen, dup, used_cases, used_funcs, covered = set(), set(), set(), set(), []
         for no, cells in table[2]:
             at = f'{ut_doc}:{no}'
+            rid = (cells[0] if cells else '').strip('`')
+            if len(cells) != 5:
+                out.append(finding('T1', f'UT-cov:{mid}:列:{rid}', at, f'{rid} の行の列の数が 5 でありません'))
             cells = (cells + [''] * 5)[:5]
-            rid = cells[0].strip('`')
             m = COV_ID_RE.match(cells[0])
             if not m or m.group(1) != mod:
                 out.append(finding('T1', f'UT-cov:{mid}:ID:{rid}', at,
                                    f'カバレッジ項目の ID「{rid}」の書式が CI-{mod}-<3 桁> と違います'))
-            elif rid in seen:
+            elif rid in seen and rid not in dup:
+                dup.add(rid)
                 out.append(finding('T1', f'UT-cov:{mid}:ID重複:{rid}', at,
                                    f'カバレッジ項目の ID {rid} が重複しています'))
             seen.add(rid)
-            if not CODE_SPAN_RE.findall(cells[1]):
+            if not COV_FUNCS_RE.match(cells[1]):
                 out.append(finding('T1', f'UT-cov:{mid}:関数欄:{rid}', at,
-                                   f'{rid} の「LLD の関数」に、コード表記の関数名が 1 つもありません'))
+                                   f'{rid} の「LLD の関数」は、コード表記の関数名を・で並べた形にします'))
             for name in CODE_SPAN_RE.findall(cells[1]):
                 used_funcs.add(name)
                 if name not in funcs:
