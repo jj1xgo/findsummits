@@ -2038,5 +2038,29 @@ class UtCoverageTest(TraceTestCase):
         table = COV_TABLE + '| `CI-one-003` | `main` | 案内 | 同値分割 | なし（理由）、001 |\n'
         self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:書式:CI-one-003'])
 
+    def test_marker_in_preconditions_passes(self):
+        # 入力ごとの準備を目印付きで前提条件の列に書いたケース（手順は範囲で書く）も、目印を照らせる
+        cases = UT_CASES.replace('| なし | (a) x、(b) y を渡す |', '| (a) x を置く、(b) y を置く | それぞれで呼ぶ |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(cases=cases)), [])
+
+    def test_marker_missing_in_preconditions_and_steps(self):
+        cases = UT_CASES.replace('| なし | (a) x、(b) y を渡す |', '| (a) x を置く | それぞれで呼ぶ |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(cases=cases)), ['T2:UT-cov:LLD-one:目印:UT-one-002:(b)'])
+
+    def test_marker_only_as_range_end_is_missing(self):
+        # 範囲（(a)〜(b)）の端に出るだけの目印は、その入力が書かれていることにならない
+        cases = UT_CASES.replace('| なし | (a) x、(b) y を渡す |', '| (a) x を置く | (a)〜(b) のそれぞれで呼ぶ |')
+        self.assertEqual(self.cov_keys(ut=ut_cov(cases=cases)), ['T2:UT-cov:LLD-one:目印:UT-one-002:(b)'])
+
+    def test_function_cell_without_code_is_reported(self):
+        table = COV_HEAD + COV_ROW1 + COV_ROW2 + '| `CI-one-003` | main | 案内 | 同値分割 | 001 |\n'
+        empty = COV_HEAD + COV_ROW1 + COV_ROW2 + '| `CI-one-003` |  | 案内 | 同値分割 | 001 |\n'
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:関数欄:CI-one-003'])
+        self.assertEqual(self.cov_keys(ut=ut_cov(empty)), ['T1:UT-cov:LLD-one:関数欄:CI-one-003'])
+
+    def test_table_without_separator_is_reported(self):
+        table = COV_TABLE.replace('|---|---|---|---|---|\n', '')
+        self.assertEqual(self.cov_keys(ut=ut_cov(table)), ['T1:UT-cov:LLD-one:表'])
+
 if __name__ == '__main__':
     unittest.main()

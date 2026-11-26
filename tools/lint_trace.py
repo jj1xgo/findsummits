@@ -1454,6 +1454,7 @@ COV_ID_RE = re.compile(r'^`CI-([A-Za-z0-9_]+)-(\d{3})`$')
 COV_REASON_RE = re.compile(r'^なし（.+）$')
 COV_ITEM_RE = re.compile(r'^(\d{3})(?: の (\([a-z]+\)(?:・\([a-z]+\))*))?$')
 COV_MARKER_RE = re.compile(r'\([a-z]+\)')
+COV_MARKER_RANGE_RE = re.compile(r'\([a-z]+\)〜\([a-z]+\)')
 CELL_SPLIT_RE = re.compile(r'(?<!\\)\|')
 
 
@@ -1482,7 +1483,8 @@ def numbered_lines(text, number):
 
 
 def tables_of(lines):
-    """(行番号, 行) の並びから表を (最初の行番号, ヘッダーのセル, データの行の list[(行番号, セル)]) で返す"""
+    """(行番号, 行) の並びから表を (最初の行番号, ヘッダーのセル, データの行の list[(行番号, セル)],
+    2 行目が区切りの行か) で返す"""
     tables, block = [], []
     for no, line in list(lines) + [(None, '')]:
         if line.startswith('|'):
@@ -1491,7 +1493,7 @@ def tables_of(lines):
         if block:
             rows = [(n, split_cells(x)) for n, x in block]
             body = [r for r in rows[1:] if not is_separator_row(r[1])]
-            tables.append((rows[0][0], rows[0][1], body))
+            tables.append((rows[0][0], rows[0][1], body, len(rows) > 1 and is_separator_row(rows[1][1])))
             block = []
     return tables
 
@@ -1506,7 +1508,7 @@ def lld_functions_and_symbols(lld_text, number):
             funcs.append(h.group(2).split('（')[0].strip().strip('`').strip())
         elif not h and current == f'{number}.4':
             sub4.append((no, line))
-    symbols = [cells[0] for _, head, body in tables_of(sub4) if head and head[0] == '記号'
+    symbols = [cells[0] for _, head, body, _ in tables_of(sub4) if head and head[0] == '記号'
                for _, cells in body if cells and cells[0]]
     return funcs, symbols
 
@@ -1518,7 +1520,7 @@ def coverage_table(lines, mid):
              if t[1] == COV_HEAD
              or (t[1] and t[1][0] == 'ID' and COV_HEAD_NAMES & set(t[1]))
              or (t[2] and t[2][0][1] and t[2][0][1][0].startswith('`CI-'))]
-    bad = [t for t in cands if t[1] != COV_HEAD or not t[2]]
+    bad = [t for t in cands if t[1] != COV_HEAD or not t[2] or not t[3]]
     if bad or len(cands) > 1:
         return None, (bad or cands)[0][0]
     if not cands:
@@ -1554,7 +1556,8 @@ def check_ut_coverage(modules, cases, lld_text, ut_text):
             c = CASE_ROW_RE.match(line)
             if c and c.group(1).startswith(f'UT-{mod}-'):
                 cells = split_cells(line)
-                steps[c.group(1)] = cells[3] if len(cells) > 3 else ''
+                # 前提条件と手順の列（入力の目印はどちらかに書く）。範囲（(a)〜(e)）の端は入力を書いたことにしない
+                steps[c.group(1)] = COV_MARKER_RANGE_RE.sub('', ' '.join(cells[2:4]))
         funcs, symbols = lld_functions_and_symbols(lld_text, number)
         seen, used_cases, used_funcs, covered = set(), set(), set(), []
         for no, cells in table[2]:
@@ -1569,6 +1572,9 @@ def check_ut_coverage(modules, cases, lld_text, ut_text):
                 out.append(finding('T1', f'UT-cov:{mid}:ID重複:{rid}', at,
                                    f'カバレッジ項目の ID {rid} が重複しています'))
             seen.add(rid)
+            if not CODE_SPAN_RE.findall(cells[1]):
+                out.append(finding('T1', f'UT-cov:{mid}:関数欄:{rid}', at,
+                                   f'{rid} の「LLD の関数」に、コード表記の関数名が 1 つもありません'))
             for name in CODE_SPAN_RE.findall(cells[1]):
                 used_funcs.add(name)
                 if name not in funcs:
@@ -1593,7 +1599,7 @@ def check_ut_coverage(modules, cases, lld_text, ut_text):
                 for mark in COV_MARKER_RE.findall(item.group(2) or ''):
                     if mark not in steps[cid]:
                         out.append(finding('T2', f'UT-cov:{mid}:目印:{cid}:{mark}', at,
-                                           f'{rid} の入力の目印 {mark} が {cid} の手順にありません'))
+                                           f'{rid} の入力の目印 {mark} が {cid} の前提条件と手順にありません'))
         for cid in sorted(set(steps) - used_cases):
             out.append(finding('T2', f'UT-cov:{mid}:ケース:{cid}', where,
                                f'{cid} がカバレッジ項目の表のどの行にも入っていません'))
