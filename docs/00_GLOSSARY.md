@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 作成日 | 2026-04-28 |
-| 最終更新日 | 2026-11-25 |
+| 最終更新日 | 2026-11-26 |
 | ステータス | ドラフト |
 
 本プロジェクトで使用する用語の定義。本書を参照先として、各ドキュメント（URD/SRS/HLD/LLD等）内では略称・通称を使用してよい。
@@ -284,7 +284,7 @@ per-mesh CSV / GeoJSON の列名・フラグ・コード体系。
   - 新規 ADR は各ステージの現状最大値 + 1 から採番する
     - 次の URD: `ADR-URD-030-...`
     - 次の SRS: `ADR-SRS-089-...`
-    - 次の OPS: `ADR-OPS-013-...`
+    - 次の OPS: `ADR-OPS-014-...`
     - 次の HLD: `ADR-HLD-011-...`（まだ ADR の無いステージは 001 から）
 
 例: `ADR-URD-005-northern-territories-exclusion.md`（スコープ判断）、`ADR-SRS-001-hybrid-c-python-architecture.md`（アーキテクチャ判断）、`ADR-HLD-001-program-structure-chapter-and-two-tier-it.md`（設計文書の構造の判断）

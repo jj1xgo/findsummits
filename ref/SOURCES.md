@@ -198,6 +198,7 @@
 | ISO/IEC/IEEE 29119-1:2022 | Software and systems engineering — Software testing — Part 1: General concepts | <https://www.iso.org/standard/81291.html> |
 | ISO/IEC/IEEE 29119-2:2021 | Software and systems engineering — Software testing — Part 2: Test processes | <https://www.iso.org/standard/79428.html> |
 | ISO/IEC/IEEE 29119-3:2021 | Software and systems engineering — Software testing — Part 3: Test documentation | <https://www.iso.org/standard/79429.html> |
+| ISO/IEC/IEEE 29119-4:2021 | Software and systems engineering — Software testing — Part 4: Test techniques | <https://www.iso.org/standard/79430.html> |
 | ISO/IEC 25010:2023 | Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model | <https://www.iso.org/standard/78176.html> |
 | ISO/IEC/IEEE 24765:2017 | Systems and software engineering — Vocabulary | <https://www.iso.org/standard/71952.html>（オンライン版の SEVOCAB: <https://www.computer.org/sevocab>） |
 | ISTQB CTFL シラバス v4.0.1 | Certified Tester Foundation Level Syllabus v4.0.1 | <https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf> |
@@ -207,10 +208,14 @@
 | 参考資料: Ubl, Design Docs at Google | Google の design doc の構成（Alternatives considered など）を示した記事 | <https://www.industrialempathy.com/posts/design-docs-at-google/> |
 | 二次資料: 29148:2018 に基づくとするソフトウェア要件仕様書（SRS）の雛形 | ISO/IEC/IEEE 29148:2018 Software Requirements Specification（第三者の公開の雛形。規格の本文ではない） | <https://github.com/G7DAO/idea-submission-guidelines/blob/main/SRS-Template.md> |
 | 二次資料: 25010:2023 の特性と副特性の一覧 | arc42 Quality Model の「ISO/IEC 25010 - Systems and Software Quality」と「Update on ISO 25010, version 2023」（第三者の解説。規格の本文ではない） | <https://github.com/arc42/quality.arc42.org-site>（commit `713c46f8fb98`、2026-10-05 の時点。`_standards/iso/iso-25010.md`、`_articles/07-iso-25010-update-2023.md`、`images/articles/iso-25010/ISO-25010-2023-detailed.png`） |
+| 二次資料: 29119-3:2021 の目次（販売元のプレビュー） | ISO/IEC/IEEE 29119-3:2021 の表紙・目次・序文・1〜3 章の冒頭（VDE Verlag が公開する抜粋。規格の本文ではない） | <https://www.vde-verlag.de/iec-normen/preview-pdf/info_isoiecieee29119-3%7Bed2.0%7Den.pdf> |
+| 二次資料: 29119-3:2021 の目次（DIN） | ISO/IEC/IEEE 29119-3:2021 の目次（DIN が公開する。規格の本文ではない） | <https://www.din.de/de/mitwirken/normenausschuesse/nia/veroeffentlichungen/wdc-beuth:din21:347518868/toc-3312001/download> |
+| 二次資料: AS/NZS ISO/IEC/IEEE 29119.3:2022 の販売ページ | 29119-3:2021 をそのまま採った AS/NZS 版の販売ページの目次（Standards Australia。規格の本文ではない） | <https://store.standards.org.au/product/as-nzs-iso-iec-ieee-29119-3-2022> |
 
 - IEEE 1016-2009 の確認日: 2026-10-14。
 - 確認日: 2026-10-07。ISO の目録ページの題・版・状態を、Web 検索の結果に出た目録ページで確かめた（作業環境から iso.org へ直接は接続できなかった）。
 - 改訂の動き（2026-10-07 時点）: 12207:2026 は 12207:2017 を置き換えた。29148 は次の版の委員会原案が、24765 は第 3 版の国際規格案（DIS）が進行中。
 - 25010:2023 の特性と副特性は、2026-10-08 に上の arc42 のソースを取得して確かめた。ソースの表は Testability を Flexibility の行に置くが、同じリポジトリの詳細図は Maintainability の下に置くので、図に従う。iso.org には作業環境から接続できず、規格の本文と ISO の公式の見本は読んでいない。
+- 29119-4:2021 の題と版は、2026-11-26 に Web 検索の結果に出た ISO の目録ページで確かめた（第 2 版、2021-10）。29119-3:2021 の項目の見出しは、2026-11-26 に上の 3 つの二次資料で確かめた（プレビューと DIN の目次は 8.3.3 まで、販売ページの目次は 8.3.3.8 まで）。規格の本文は読んでいない。どれも作業環境から取得した（販売ページは目次の文字列を抜き出して読んだ）。
 - CTFL シラバス v4.0.1 は、2026-10-08 に上の URL から PDF を取得し、2.2（2.2.1 を含む）・5.1.1・5.1.3 の原文を読んだ（取得した PDF の SHA-256 は `3b072f81db5c7671aadacc42553e726faa93913a969cc7a89e9dc28c2318d1f1`）。
 - arc42 §9・§11、Nygard の記事、Ubl の記事は、2026-10-12 に上の URL から取得して読んだ（HLD の設計判断の選別基準の拠り所。[ADR-HLD-006](../docs/decisions/ADR-HLD-006-hld-decision-selection-criteria-and-open-item-cleanup.md)）。42010:2022 は公開のプレビューの目次（6.9・6.10 の見出し。<https://assets.vde-verlag.de/iec-normen/preview-pdf/info_isoiecieee42010%7Bed2.0%7Den.pdf>）と iso-architecture.org の概念モデルの頁（<http://www.iso-architecture.org/ieee-1471/cm/>。https では接続できなかった）で確かめ、本文は読んでいないという扱いを変えない。
