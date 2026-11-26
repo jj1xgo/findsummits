@@ -5089,7 +5089,7 @@ dominant_peak = min(candidates, key=key)
 
 内部の関数（モジュールの最上位）:
 
-- `_index_features(features: list[dict]) -> dict[tuple[str, str, str], list[dict]]`: 鍵は `(feature_type, 鍵の名前, 鍵の値)`、鍵の名前は `'summit_code'` と `'review_group_id'`。値は、その鍵のフィーチャを `features` の順に並べた `list`。**鍵の扱い**（argon の並走の I2。2026-11-03）: 鍵の値が空でない `str` のフィーチャだけを入れる（保留組の地形のフィーチャは `summit_code` が空文字なので、ピークの点の行の索引に入らない。入れると、保留組が 1 組のとき空文字の鍵で別の行に黙って結ばれる）。フィーチャに `properties`・`feature_type` が無いときは `KeyError` にせず、索引に入れない。
+- `_index_features(features: list[dict]) -> dict[tuple[str, str, str], list[dict]]`: 鍵は `(feature_type, 鍵の名前, 鍵の値)`、鍵の名前は `'summit_code'` と `'review_group_id'`。値は、その鍵のフィーチャを `features` の順に並べた `list`。**鍵の扱い**: 鍵の値が空でない `str` のフィーチャだけを入れる（保留組の地形のフィーチャは `summit_code` が空文字なので、ピークの点の行の索引に入らない。入れると、保留組が 1 組のとき空文字の鍵で別の行に黙って結ばれる）。フィーチャに `properties`・`feature_type` が無いときは `KeyError` にせず、索引に入れない。
 - `_cell_text_problem(value: str) -> str | None`: `openpyxl.cell.cell.ILLEGAL_CHARACTERS_RE.search(value)` が当たれば `書けない制御文字を含む`、`len(value) > 32767` なら `32767 字を超える`、どちらでもなければ `None`（制御文字を先に見る）。
 - `_write_cell(ws, row: int, col: int, value: object, number_format: str | None) -> str | None`: セルを書く（手順 4）。文字列が書けないときは、書かずに `_cell_text_problem` の文を返し（呼ぶ側が問題として控える）、書いたときと空のセルのときは `None` を返す。
 
@@ -5446,7 +5446,7 @@ dominant_peak = min(candidates, key=key)
 
 - 中断でも片づける理由: HLD の DEC132 は「保証するのは CMP6 が捕捉できる失敗まで」と書くが、`SignalStop` は捕捉できる中断なので、7.5 と同じく片づけて「そろって置くか、どちらも置かない」を守る。HTML を最後に置くので中断で残りうるのはデータファイルだけで、開くものは無いが、次のフェーズ4 の始まりに CMP3 が消すまで残るのは避ける。
 - 置き換えの前の失敗では、本来の名前のファイルに触れない理由: 7.5 と同じ。フェーズ4 の始まりに CMP3 が前回の 2 つを消している（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。`generate_viewer` は内部の起動口で、`run_pipeline` のフェーズ4 からだけ起動される前提にする（利用者が直に起動して前回の HTML が残っている場面は扱わない。そのときデータファイルを消した後に古い HTML が残りうる）。
-- 片づけで許す残り（spec-panel 8.1 の指摘で挙がり、許すと決めた）:
+- 片づけで許す残り:
   1. 消せなかったかの判定に `os.path.lexists` を使うので、親のディレクトリの検索権限が実行の途中で失われたときなど、`lstat` 自体が `OSError` になると、残っているファイルも「無い」と見て、消せなかったものに入れない（VW1 の「どちらも置いていない」で終わる、中断の VW3 が出ない、になりうる）。残りうるのは、正規の名前の出力（次のフェーズ4 の始まりに CMP3 が消す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）と、次の起動が開いて上書きする一時ファイル（[2.3](#23-ファイルの名前と書き方)）だけである。無視する誤りを `FileNotFoundError`・`NotADirectoryError` に狭めると、検索権限が無いために一時ファイルを作れなかった回にも、無かったファイルの VW2 を出す。[7.4.3](#743-関数の細部)の `write_unresolved_list` の KW1・KW2 の分け方と同じにそろえる。
   2. 置き換えが失敗した出力は、`OSError` の片づけが一時ファイルを消した後、その片づけの途中で `SignalStop` が上がると、「置いた」と数えて正規の名前を消そうとする（一時ファイルがもう無いため。[7.5.3](#753-関数の細部)の `write_summit_outputs` も同じ作り）。そのとき正規の名前に先からある物は、CMP3 がフェーズ4 の始まりに消す物か、利用者が置いたディレクトリなどに限られ、消せなければ VW3 が出る。窓は片づけの途中の中断だけである。
 
