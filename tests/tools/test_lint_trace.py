@@ -2120,7 +2120,25 @@ class LldFunctionHeadingTest(unittest.TestCase):
     def test_numbered_lines_ignores_level5_number(self):
         text = lld_fn('##### 3.9 と同じ決まり\n\n###### h1\n')
         current = {line: cur for _, line, cur in lt.numbered_lines(text, '9.9')}
-        self.assertEqual(current['###### h1'], '9.9.3')
+        self.assertEqual(current.get('###### h1'), '9.9.3')
+
+    def test_lld_functions_ignore_headings_in_html_comment(self):
+        self.assertEqual(self.funcs('##### f\n\n<!--\n###### ghost\n-->\n')[0], ['f'])
+
+    def test_lld_functions_dot_inside_parenthesis_not_split(self):
+        self.assertEqual(self.funcs('##### a（bash・Python）・b\n')[0], ['a', 'b'])
+
+    def test_lld_functions_grouped_module_group_without_children(self):
+        # 群で分けたモジュールでは、下に関数の見出しが無いレベル 5 の見出しも群
+        body = '##### 群A\n\n###### f\n\n##### 群B\n\n本文\n'
+        self.assertEqual(self.funcs(body)[0], ['f'])
+
+    def test_lld_functions_stop_at_unnumbered_level4(self):
+        body = '##### f\n\n#### 参考\n\n##### 補足\n'
+        self.assertEqual(self.funcs(body)[0], ['f'])
+
+    def test_lld_functions_drop_empty_and_duplicate_names(self):
+        self.assertEqual(self.funcs('##### a・\n\n##### a（x）\n\n##### b\n')[0], ['a', 'b'])
 
 
 if __name__ == '__main__':

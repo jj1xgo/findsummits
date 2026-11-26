@@ -1504,23 +1504,31 @@ def tables_of(lines):
 def lld_functions_and_symbols(lld_text, number):
     """LLD のモジュールの節 number の、N.M.3 の関数の見出しの関数の名前と、N.M.4 の下の 1 列目が「記号」の表の記号。
 
-    関数の見出しは LLD 1.2 のとおり、レベル 5 の見出し。ただし、下にレベル 6 の見出しを持つレベル 5 の見出しは
-    群の見出しで、名前に入れず、その下のレベル 6 の見出しを関数の見出しにする。見出しは「・」で分け、
-    各部分の括弧の前を名前にする。
+    関数の見出しは LLD 1.2 のとおり、レベル 5 の見出し。ただし、群の見出しで分けたモジュール（N.M.3 にレベル 6 の
+    見出しがあるモジュール）では、レベル 5 の見出しは群の見出しで名前に入れず、レベル 6 の見出しを関数の見出しに
+    する。見出しは括弧の外の「・」で分け、各部分の括弧の前を名前にする（空の名前と 2 度目の名前は除く）。
+    HTML のコメントの中の行と、N.M.3 の後の番号の無いレベル 4 以下の見出しより後は読まない。
     """
-    heads, sub4 = [], []
-    for no, line, current in numbered_lines(lld_text, number):
-        h = HEADING_RE.match(line)
-        if h and len(h.group(1)) in (5, 6) and current == f'{number}.3':
+    rows = numbered_lines(lld_text, number)
+    visible = strip_html_comments([(no, line) for no, line, _ in rows])
+    heads, sub4, in3 = [], [], False
+    for (no, line, current), seen in zip(rows, visible, strict=True):
+        h = HEADING_RE.match(line) if seen.lstrip().startswith('#') else None
+        if h and len(h.group(1)) <= 4:
+            in3 = current == f'{number}.3' and bool(SECTION_NUMBER_RE.match(h.group(2)))
+        elif h and len(h.group(1)) in (5, 6) and in3:
             heads.append((len(h.group(1)), h.group(2)))
         elif not h and current == f'{number}.4':
             sub4.append((no, line))
+    func_level = 6 if any(level == 6 for level, _ in heads) else 5
     funcs = []
-    for i, (level, text) in enumerate(heads):
-        if level == 5 and i + 1 < len(heads) and heads[i + 1][0] == 6:
+    for level, text in heads:
+        if level != func_level:
             continue
-        for part in text.split('・'):
-            funcs.append(part.split('（')[0].strip().strip('`').strip())
+        for part in re.split(r'・(?![^（]*）)', text):
+            name = part.split('（')[0].strip().strip('`').strip()
+            if name and name not in funcs:
+                funcs.append(name)
     symbols = [cells[0] for _, head, body, _ in tables_of(sub4) if head and head[0] == '記号'
                for _, cells in body if cells and cells[0]]
     return funcs, symbols
