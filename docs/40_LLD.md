@@ -1552,7 +1552,7 @@ bash の規約（この節の関数すべてに当てる）。1〜6 は[1.2](#12
 
 1. `mkdir -p -- "$LOG_DIR"` を `err` に受けて動かし、失敗すれば G3（`{path}` は `LOG_DIR`、`{config_path}` は `CONFIG_PATH`）で `exit "$EXIT_ERROR"`（`log_dir` がファイルのときも、`mkdir` が失敗する）。
 2. `path="$LOG_DIR/run_pipeline_${START_STAMP}_$$.log"`（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 2「ファイルの名前」）。`err=$( { LC_ALL=C; set -C; : >"$path"; } 2>&1 )` が失敗したら、`[[ -e $path ]]` なら G4、そうでなければ G3（`{path}` は `path`）で `exit "$EXIT_ERROR"`（既にあるファイルには触れない）。
-3. `if ! { exec 8>>"$path"; } 2>/dev/null; then` G3 で止まる。開けたら `LOG_PATH="$path"`、`LOG_OPEN=1`。
+3. [1.2](#12-lld-の規約)の bash の規約の 6 の形で `: >>"$path"` を試し（`err=$( { LC_ALL=C; : >>"$path"; } 2>&1 )`）、失敗すれば G3（`{path}` は `path`、`{reason}` は `err` から取ったもの）で止まる。続けて `if ! { exec 8>>"$path"; } 2>/dev/null; then` G3（`{reason}` は 1 つ目の試しと同じ形で取り直したもの）で止まる（`acquire_lock` の 1 と同じ形）。開けたら `LOG_PATH="$path"`、`LOG_OPEN=1`。
 4. trap を次の順に付ける: `trap _on_exit EXIT`、`trap '_on_signal 2' INT`、`trap '_on_signal 15' TERM`（シグナルを最後にするのは、シグナルで止まるときに必ず `_on_exit` が動くようにするため。2.1.3 の `start_log` の 4 と同じ）。
 5. L1（2.2。引数は `_quote` で引用）、PL1（起動のしかた）、PL2（データ置き場）、PL3（ログの置き場）をこの順に `log_info` で出す。L2（設定値）は書かない（HLD 3.3.3 の `open_log`）。
 
@@ -1584,7 +1584,7 @@ bash の規約（この節の関数すべてに当てる）。1〜6 は[1.2](#12
 2. `LOG_BROKEN` が 1 なら、何も書かずに `exit "$EXIT_ERROR"`（[HLD 5.7.2](30_HLD.md#572-処理の流れ)の 4「始まりと終わりの行」の「ログファイルに書けなくなって止まるとき」）。
 3. 結果の要約 PL9 を `_emit out 1` で出す（書けなければ `_emit` の 3 のとおり G5 で 1）。
 4. L3（2.2）を作る。`SIGNUM` があれば、シグナルの形（`{signame}` は `2` なら `SIGINT`、`15` なら `SIGTERM`）で、終了コードは `code`（128＋番号）。`{end}` は今の時刻（`_emit` と同じ書式）。`{sec}` は今の `/proc/uptime` の 1 つ目の値から `START_UP` を引いた値（どちらも小数 2 桁なので、100 倍の整数で引き、`%d.%02d0` の形で小数 3 桁にする）。
-5. L3 を、時刻と空白を付けて記述子 8 にだけ直接書く（`_emit` を使わない。書き込みの失敗を G5 でなく G6 にするため）。失敗したら G6 を標準エラー出力にだけ（失敗は無視して）出して `exit "$EXIT_ERROR"`（[HLD 5.7.3](30_HLD.md#573-異常系)の「終わりの行だけを書けなかった」）。書けたら、同じ文面を標準出力に時刻なしで出し（失敗は無視する）、`exit "$code"`。
+5. L3 を、時刻と空白を付けて記述子 8 にだけ直接書く（`_emit` を使わない。書き込みの失敗を G5 でなく G6 にするため）。書き方と失敗の受け方は `_emit` の 3 と同じ（`if ! err=$( { LC_ALL=C; printf '%s' "$buf" >&8; } 2>&1 ); then`。G6 の `{path}` は `LOG_PATH`、`{reason}` は `err` から [1.2](#12-lld-の規約)の bash の規約の 6 のとおりに取ったもの）。失敗したら G6 を標準エラー出力にだけ（失敗は無視して）出して `exit "$EXIT_ERROR"`（[HLD 5.7.3](30_HLD.md#573-異常系)の「終わりの行だけを書けなかった」）。書けたら、同じ文面を標準出力に時刻なしで出し（失敗は無視する）、`exit "$code"`。
 
 ##### 起動前提条件
 
@@ -1618,7 +1618,7 @@ bash の規約（この節の関数すべてに当てる）。1〜6 は[1.2](#12
 `check_preconditions`（受け取るものは `PHASE`・`STAGE_N`・`DATA_DIR`・`REQUIRED_CODES`）。HLD 4.23.2 の「フェーズごとの起動前提条件」を確かめる。誤りは、配列 `PRECOND_WHAT`（`what`）と `PRECOND_ACTION`（`action`）に同じ添字で足していき、最後にまとめて出す（`check_fetch_record` も同じ 2 つの配列に足す）。
 
 1. 次をこの順に見て、無ければ PC1 を足す（どれも `[[ -e "…" ]]` で有無だけを見る）: `PHASE` が `3` なら `"$DATA_DIR"/results/key_col_unresolved_peaks-$((STAGE_N - 1)).csv`、`PHASE` が `3` か `4` なら `"$DATA_DIR"/results/merged_peak.csv`、`PHASE` が `4` なら `"$DATA_DIR"/results/merged_peak.geojson`、`PHASE` が空か `4` なら `"$DATA_DIR"/ref/summitslist.csv`。
-2. `PHASE` が空か `4` なら、`"$DATA_DIR"/ref/sota_updatelist_[0123456789][0123456789][0123456789][0123456789].xhtml` のグロブに合って `[[ -e "$f" ]]` が真のものが 1 つも無ければ PC2 を足す（`found=0; for f in <そのグロブ>; do if [[ -e "$f" ]]; then found=1; fi; done` で見る。合うものが無いとき、グロブはそのままの文字列になり `-e` が偽になる。`&&` で書くと、偽のときに `for` の終了状態が 1 になるので `if` で書く）。
+2. `PHASE` が空か `4` なら、`"$DATA_DIR"/ref/sota_updatelist_[0123456789][0123456789][0123456789][0123456789].xhtml` のグロブに合って `[[ -f "$f" ]]` が真のもの（通常のファイル。シンボリックリンクは先をたどる）が 1 つも無ければ PC2 を足す（`found=0; for f in <そのグロブ>; do if [[ -f "$f" ]]; then found=1; fi; done` で見る。合うものが無いとき、グロブはそのままの文字列になり `-f` が偽になる。`&&` で書くと、偽のときに `for` の終了状態が 1 になるので `if` で書く）。`-e` でなく `-f` で見るのは、CMP5 の [7.5.3](#753-関数の細部) の `find_updatelist` が同じ名前の条件に `os.path.isfile` を足して探すため（名前の合うディレクトリだけがあるときに、前回の出力を消した後のフェーズ4 で止まらないように、開始時に PC2 で止める。[HLD の DEC103](30_HLD.md#494-設計判断)「`--phase 4` でもサミットリストを起動前に確かめる」）。
 3. `fetch_record_path` を呼び、`check_fetch_record` を呼ぶ。
 4. 足したものがあれば、足した順に `log_error` で出して `exit "$EXIT_ERROR"`（何も消さない。全部を出してから 1 回だけ止まる）。
 5. `PHASE` が空か `2` か `3` なら、`_run_child merge_peaks --check-land-peaks` を呼び（HLD 4.23.2 の 2「起動前提条件を検査する」、[DEC85](30_HLD.md#4234-設計判断)「CMP3 は陸地最高峰リストの書式を CMP5 で確かめる」）、`CHILD_RC` が 0 以外なら `exit "$CHILD_RC"`（何も消さない）。1〜4 で止まったときは起動しない（陸地最高峰リストの検査は、ほかの前提がそろってから行う）。
@@ -1712,11 +1712,11 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 | 足りないファイル | 2 行目 |
 |---|---|
-| `key_col_unresolved_peaks-<N−1>.csv`（`--phase 3 --n <N>`） | N−1 が 3 なら `先に scripts/run_pipeline.sh --phase 2{config_opt} を起動する。前の段で未確定のピークが無ければ、このファイルは作られない。そのときは --phase 3 は要らず、--phase 4 を起動する`。4 以上なら `先に scripts/run_pipeline.sh --phase 3 --n {N−1}{config_opt} を起動する。前の段で未確定のピークが無ければ、このファイルは作られない。そのときは --phase 3 は要らず、--phase 4 を起動する`（先頭の起動の指示だけが違い、続く 2 文は同じ） |
+| `key_col_unresolved_peaks-<N−1>.csv`（`--phase 3 --n <N>`） | N−1 が 3 なら `先に scripts/run_pipeline.sh --phase 2{config_opt} を起動する。前の段で未確定のピークが無ければ、このファイルは作られない。そのときは --phase 3 は要らず、scripts/run_pipeline.sh --phase 4{config_opt} を起動する`。4 以上なら `先に scripts/run_pipeline.sh --phase 3 --n {N−1}{config_opt} を起動する。前の段で未確定のピークが無ければ、このファイルは作られない。そのときは --phase 3 は要らず、scripts/run_pipeline.sh --phase 4{config_opt} を起動する`（先頭の起動の指示だけが違い、続く 2 文は同じ） |
 | `merged_peak.csv`・`merged_peak.geojson` | `先に scripts/run_pipeline.sh --phase 2{config_opt} を起動する（通しの実行でもよい）` |
 | `summitslist.csv` | `SOTA サミットリスト CSV を https://www.sotadata.org.uk/summitslist.csv から入手して {path} に置いてから、もう一度起動する` |
 
-北方領土除外メッシュリストの案内（`read_mesh_list_file` に渡す R1〜R3 の `対処:`）: `venv/bin/python3 scripts/preprocess_boundaries.py{config_opt} を起動して北方領土除外メッシュリストを作ってから、もう一度起動する`（`{config_opt}` は上の `ERROR:`・`WARNING:` の表の後の段落のとおり）。
+北方領土除外メッシュリストの案内（`read_mesh_list_file` に渡す R1〜R3 の `対処:`）: `権限か種類（ディレクトリなど）が原因で読めないときは、それを直してから、もう一度起動する。無いか、中身が壊れている（UTF-8 として読めない、4 桁の数字でない行がある）ときは、venv/bin/python3 scripts/preprocess_boundaries.py{config_opt} --rebuild を起動して正常に終えてから、もう一度起動する（作り直すと取得完了の記録も消えるので、取得は日本全土をやり直す）`（`{config_opt}` は上の `ERROR:`・`WARNING:` の表の後の段落のとおり）。[4.1.4](#414-メッセージ文面) の `{cmp1_list}` と同じ文にする（CMP1 は、出力がそろっていれば中身を読まずに作り直さず、作り直すと取得完了の記録を消すので、原因ごとの案内を 1 つの文に並べる。[3.1.3](#313-関数の細部) の `needs_rebuild`）。
 
 通常のログに出す行（`log_info` で標準出力とログファイルに出す）:
 
@@ -1752,7 +1752,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 
 #### 5.1.5 UT 候補
 
-ケースは単体テスト仕様書の [5.1](50_UT.md#51-run_pipeline)（`UT-run_pipeline-001`〜`UT-run_pipeline-035`）にある。
+ケースは単体テスト仕様書の [5.1](50_UT.md#51-run_pipeline)（`UT-run_pipeline-001`〜`UT-run_pipeline-036`）にある。
 
 ### 5.2 `resolve_config`
 
@@ -1804,7 +1804,7 @@ PC1 の 2 行目（足りないファイルごと。`対処:` と空白 1 つの
 `load_config` が確かめない 2 つ（[HLD 3.9](30_HLD.md#39-共通部品)の表の後の段落）を確かめ、誤りごとに `(what, action)` を返す（無ければ空のリスト）。順は次のとおり。
 
 1. パスの改行: `data_dir` の値に `'\n'` か `'\r'` があれば RP1（`{key}` は `data_dir`）。`log_dir` は `from_file` が真で、値に `'\n'` か `'\r'` があるときだけ RP1（`{key}` は `log_dir`。デフォルトの `log_dir` は `data_dir` から作るので、`data_dir` の RP1 で足りる）。2.1.3 の設定ファイルの書式では、行は `'\n'` で分かれるので値に `'\n'` は入らないが、行の途中の `'\r'` は値に残りうる。読み方に頼らず両方を見る（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の「パスに改行を含む設定は、設定解決が終了コード 2 で拒否する」）。
-2. 相互制約: `prominence_primary_m` の値が `prominence_final_m` の値以上なら CX1（[2.2](#22-ログとメッセージの文面)）。どちらもデフォルトのときも比べる（今の許容範囲では最終フィルタ閾値は 150 だけなので、一次フィルタ閾値に 150 以上を書いたときに当たる）。
+2. 相互制約: `prominence_primary_m` の値が `prominence_final_m` の値以上なら CX1（[2.2](#22-ログとメッセージの文面)）。どちらもデフォルトのときも比べる（[2.1.2](#212-型とデータ)の設定のキーの表の許容範囲では最終フィルタ閾値は 150 だけなので、一次フィルタ閾値に 150 以上を書いたときに当たる）。
 
 ##### write_resolved_paths
 
@@ -5350,7 +5350,7 @@ dominant_peak = min(candidates, key=key)
 
 - 内部の定数（モジュールの最上位。名前は `_` で始める）:
   - `_CONFIG_KEYS_USED = ('data_dir', 'log_dir')`（[HLD 2.3.2](30_HLD.md#232-設定ファイル)の表で CMP6 が使うキー。`load_config` に渡す）。必須は `('data_dir',)`。
-  - `_SOURCE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（ソースツリーの根。[2.1.1](#211-ファイル割付)の「`scripts/common.py` の親の親」と同じ求め方を、8.1 が自分のファイルで行う。`_SOURCE_ROOT` は 2.1 の内部の名前で、ほかのモジュールから使えない〈[1.2](#12-lld-の規約)〉ので、同じ式を置く。[HLD 3.6.1](30_HLD.md#361-プログラム)の「自分の置き場から求めたソースツリーの中で読み、起動した作業ディレクトリによらない」）。`_TEMPLATE_PATH = os.path.join(_SOURCE_ROOT, 'public', 'index.html')`（[HLD の DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」。import のときに決まり、`main` はこれを `read_template` に渡す）。`public/` はまだリポジトリに無い（CMP7 の実装の着手時に作る。[#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」）ので、UT は一時のディレクトリの下に自分で `public/index.html` を置く。
+  - `_SOURCE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（ソースツリーの根。[2.1.1](#211-ファイル割付)の「`scripts/common.py` の親の親」と同じ求め方を、8.1 が自分のファイルで行う。`_SOURCE_ROOT` は 2.1 の内部の名前で、ほかのモジュールから使えない〈[1.2](#12-lld-の規約)〉ので、同じ式を置く。[HLD 3.6.1](30_HLD.md#361-プログラム)の「自分の置き場から求めたソースツリーの中で読み、起動した作業ディレクトリによらない」）。`_TEMPLATE_PATH = os.path.join(_SOURCE_ROOT, 'public', 'index.html')`（[HLD の DEC128](30_HLD.md#4134-設計判断)「テンプレートは `public/index.html`」。import のときに決まり、`main` はこれを `read_template` に渡す）。`public/` は CMP7 の実装の着手時に作る（[#198](https://github.com/jj1xgo/findsummits/issues/198)「CMP7 の実装の着手時に行うこと（モックアップの置き換え、検査の追従）」）ので、UT は一時のディレクトリの下に自分で `public/index.html` を置く。
   - `_INPUT_NAME = 'merged_summit.geojson'`、`_DATA_NAME = 'merged_viewer_data.js'`、`_HTML_NAME = 'merged_viewer.html'`（[SRS §6.2.4](20_SRS.md#624-突合済み統合-geojson)・[§6.2.5](20_SRS.md#625-作業用-html-ビューア)）。
   - `_DATA_PREFIX = 'window.FINDSUMMITS_DATA = '`、`_DATA_SUFFIX = ';\n'`（[HLD の DEC126](30_HLD.md#4134-設計判断)「データファイルは GeoJSON を変数に代入する 1 文」。`=` の前後の空白は 1 つずつ）。`_TRAILING = ' \t\r\n'`（除く末尾の空白文字。[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 2「データファイルの中身を作る」の「スペース・タブ・CR・LF」の 4 字だけ）。
 - 内部の状態（モジュールの最上位）: `_config_opt: str = ''`（`main` の 5 が入れる、[8.1.4](#814-メッセージ文面)の `{config_opt}` の値。`main` を通らない同じプロセスの UT は空のまま使う。[7.2.2](#722-型とデータ)〜[7.5.2](#752-型とデータ)と同じ）。
@@ -5364,7 +5364,9 @@ dominant_peak = min(candidates, key=key)
 
 **止まり方**: 8.1 の関数は、誤りを見つけたら、[8.1.4](#814-メッセージ文面)のメッセージを `common.log_error(<1 行目>, <2 行目>)` で出してから `sys.exit(common.EXIT_ERROR)` で止まる（`start_log` の前の引数と設定の誤りは `common.EXIT_USAGE`）。8.1 の関数は `cmp5_common` を使わず、`InputError` を捕まえる `try` は無い。
 
-**{reason}・{path}**: [2.1.4](#214-メッセージ文面)と同じ（`OSError` の `strerror`、無ければ `str(e)`。`UnicodeDecodeError` なら `UTF-8 として読めない`）。`{path}` は `os.path.abspath` したパス。`{detail}` は 8.1.4 の表の行ごとに書いた文。
+**{reason}・{path}**: [2.1.4](#214-メッセージ文面)と同じ（`OSError` の `strerror`、無ければ `str(e)`。`UnicodeDecodeError` なら `UTF-8 として読めない`）。`{path}` は、関数に渡されたパスと、そこから `os.path.join` で組み立てたパスのまま（`os.path.abspath` で正規化しない。`..` やシンボリックリンクがあっても字の上で除かない）。入力・出力・一時ファイルのパスは `data_dir`（`load_config` が絶対パスの検査を済ませている）から組み立て、テンプレートのパスは `_TEMPLATE_PATH` なので、どれも絶対パス。`{detail}` は 8.1.4 の表の行ごとに書いた文。
+
+**パスを正規化しない理由**: `data_dir` は正規化されずに渡る（[2.1.3](#213-関数の細部)の `load_config` は値をそのまま返し、[5.2.3](#523-関数の細部)の `write_resolved_paths` も正規化しない）。`data_dir` がシンボリックリンクの後に `..` を含むと、字の上で `..` を除いたパスは、OS がリンクをたどって開く場所と別の場所を指す。読む場所・書く場所・CMP3 の `clear_outputs` が消す場所をそろえるため、[3.1](#31-preprocess_boundaries)・[4.1](#41-fetch_tiles) と同じく正規化しない。
 
 **メモリ**: 8.1 の前置きに書いた。
 
@@ -5379,7 +5381,7 @@ dominant_peak = min(candidates, key=key)
 3. `config = common.load_config(args.config, _CONFIG_KEYS_USED, ('data_dir',))`。`data_dir`・`log_dir` を `config.values[<キー>].value` で取り出す。
 4. `common.start_log(log_dir, config, 'generate_viewer', sys.argv[1:], start)`。ロックは掛けない（内部の起動口は CMP3 のロックの下で動く。[HLD 2.9.3](30_HLD.md#293-同時起動の排他)）。
 5. `_config_opt` に [8.1.4](#814-メッセージ文面)の `{config_opt}` の値を入れる。決め方は [7.2.3](#723-関数の細部)の `main` の 5 と同じ（`config.path == common.DEFAULT_CONFIG_PATH` なら空の文字列、それ以外は `' --config ' + shlex.quote(config.path)`）。
-6. `try` の前に `completed = False`、`code = common.EXIT_OK`、`feature_count: int | None = None`、`written = False` を置き、`results_dir = os.path.join(data_dir, 'results')`、`input_path = os.path.join(results_dir, _INPUT_NAME)`、`data_path = os.path.join(os.path.abspath(results_dir), _DATA_NAME)`、`html_path = os.path.join(os.path.abspath(results_dir), _HTML_NAME)` を作る（`data_dir` は `load_config` が絶対パスの検査を済ませている）。`try` の中で次を行う。
+6. `try` の前に `completed = False`、`code = common.EXIT_OK`、`feature_count: int | None = None`、`written = False` を置き、`results_dir = os.path.join(data_dir, 'results')`、`input_path = os.path.join(results_dir, _INPUT_NAME)`、`data_path = os.path.join(results_dir, _DATA_NAME)`、`html_path = os.path.join(results_dir, _HTML_NAME)` を作る（`data_dir` は `load_config` が絶対パスの検査を済ませている。どれも `os.path.abspath` で正規化しない。8.1.3 の前置きの「パスを正規化しない理由」）。`try` の中で次を行う。
    1. `text = read_summit_geojson(input_path)`。
    2. `feature_count = _check_top_level(text, input_path)`（読んだフィーチャの数。`read_summit_geojson` が確かめ終えた文字列なので、ここで止まることは無い）。**読んだフィーチャの数は、`main` が同じ文字列をもう 1 度解析して数える**。[HLD 3.6.3](30_HLD.md#363-関数)の表は `read_summit_geojson` が復号した文字列（解析した値は返さない）を返すと決め、[HLD 5.7.2](30_HLD.md#572-処理の流れ)の表は結果の要約に読んだフィーチャの数を求める。関数の返すものは LLD で変えられない（文書管理ルールの[HLD と LLD の書き分け](CLAUDE.md#hld-と-lld-の書き分け)）ので、`read_summit_geojson` の最上位の確かめと `main` の数え直しを同じ内部の関数で行う。費用は `json.loads` 1 回分の時間（全国分の数十 MB で数秒）で、メモリの山は解析した値を返す前に手放すので、HLD 4.13.2 の「文字列と解析した値を同時に持つ」を超えない。選ばなかった案: HLD 3.6.3 の返すものを「復号した文字列とフィーチャの数」に直す（確定した成果物の改訂になり、数えるためだけに HLD を改める割に、得るのは数秒）。
    3. `data_js = build_data_js(text)`、続けて `del text`（データファイルのバイト列を作った後は文字列を持ち続けない。`build_data_js` の中では、文字列と、末尾を除いた文字列と、つないだ文字列と、バイト列を一時に持つが、解析した値を手放した後なので、HLD 4.13.2 の「メモリ」の山〈文字列と解析した値〉を超えない見込み。実測は HLD 5.2.2 の「実測の計画」の範囲）。
@@ -5413,7 +5415,7 @@ dominant_peak = min(candidates, key=key)
 3. `_check_top_level(text, path)` で解析して最上位の形を確かめる（返された数は使わない）。
 4. 復号した文字列を返す（解析した値は返さない。HLD 3.6.3 の表、[HLD の DEC126](30_HLD.md#4134-設計判断)「データファイルは GeoJSON を変数に代入する 1 文」）。
 
-`_check_top_level(text: str, path: str) -> int`（内部）: `path` は VR2・VR3 の `{path}` に入れる入力のパス（`os.path.abspath` する）。`json.loads(text)` で解析し、`json.JSONDecodeError` なら VR2（`{detail}` は `str(e)`。BOM で始まる文字列もここで止まる）で止まる。解析した値が `dict` でなければ VR3（`{detail}` は `最上位がオブジェクトでない`）、`value.get('type') != 'FeatureCollection'` なら VR3（`最上位の type が FeatureCollection でない`）、`isinstance(value.get('features'), list)` が偽なら VR3（`最上位に features の配列が無い`）で止まる。通れば `len(value['features'])` を返す（解析した値は返さずに手放す）。フィーチャのプロパティは確かめない（HLD 4.13.2 の 1。スキーマの正本は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。`read_summit_geojson` の 3 と `main` の 6 の 2 の両方がこの関数を呼ぶ。
+`_check_top_level(text: str, path: str) -> int`（内部）: `path` は VR2・VR3 の `{path}` に入れる入力のパス（渡されたまま）。`json.loads(text, parse_constant=_reject_constant)` で解析する（`_reject_constant(token)` は内部の関数で、`NaN`・`Infinity`・`-Infinity` を受けたら `ValueError(f'{token} は JSON の数でない')` を上げる。[3.1.3](#313-関数の細部)と同じ）。`ValueError`（`json.JSONDecodeError` と `_reject_constant` が上げるものの両方を含む）なら VR2（`{detail}` は `str(e)`。BOM で始まる文字列もここで止まる）、`RecursionError`（入れ子が深すぎる）なら VR2（`{detail}` は `入れ子が深すぎる`。`RecursionError` の文は Python の版で変わるので使わない）で止まる（[HLD 4.13.3](30_HLD.md#4133-異常系)の「JSON でない」。3.1.3・[7.1](#71-cmp5_common)・[7.5](#75-match_summits) と同じく、どちらも JSON として読めないとして扱う）。解析した値が `dict` でなければ VR3（`{detail}` は `最上位がオブジェクトでない`）、`value.get('type') != 'FeatureCollection'` なら VR3（`最上位の type が FeatureCollection でない`）、`isinstance(value.get('features'), list)` が偽なら VR3（`最上位に features の配列が無い`）で止まる。通れば `len(value['features'])` を返す（解析した値は返さずに手放す）。フィーチャのプロパティは確かめない（HLD 4.13.2 の 1。スキーマの正本は [FR-009](20_SRS.md#fr-009-sotaリスト突合match_status-判定)）。`read_summit_geojson` の 3 と `main` の 6 の 2 の両方がこの関数を呼ぶ。
 
 ##### build_data_js
 
@@ -5431,7 +5433,7 @@ dominant_peak = min(candidates, key=key)
 
 `write_viewer_outputs(data_js: bytes, template: bytes, results_dir: str) -> None`
 
-[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 4「2 つを置く」である（[HLD の DEC132](30_HLD.md#4134-設計判断)「CMP6 の 2 つの出力はそろって置くか、どちらも置かない」）。`out_dir = os.path.abspath(results_dir)`、`data_path = os.path.join(out_dir, _DATA_NAME)`、`html_path = os.path.join(out_dir, _HTML_NAME)`、一時ファイルは [2.3](#23-ファイルの名前と書き方)の決まりで `data_tmp = data_path + '.tmp'`、`html_tmp = html_path + '.tmp'`。ディレクトリ（`results/`）は作らない（`merged_summit.geojson` をそこから読んだ直後にあるため。無ければ `open` の失敗で VW1）。本体の `try` より前に、`data_started`・`html_started`・`done`・`handled` を 4 つとも `False` にしておく（最初の一時ファイルを開く段の失敗でも、片づけがこれらを読むため）。
+[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 4「2 つを置く」である（[HLD の DEC132](30_HLD.md#4134-設計判断)「CMP6 の 2 つの出力はそろって置くか、どちらも置かない」）。`out_dir = results_dir`（`os.path.abspath` で正規化しない。8.1.3 の前置きの「パスを正規化しない理由」）、`data_path = os.path.join(out_dir, _DATA_NAME)`、`html_path = os.path.join(out_dir, _HTML_NAME)`、一時ファイルは [2.3](#23-ファイルの名前と書き方)の決まりで `data_tmp = data_path + '.tmp'`、`html_tmp = html_path + '.tmp'`。ディレクトリ（`results/`）は作らない（`merged_summit.geojson` をそこから読んだ直後にあるため。無ければ `open` の失敗で VW1）。本体の `try` より前に、`data_started`・`html_started`・`done`・`handled` を 4 つとも `False` にしておく（最初の一時ファイルを開く段の失敗でも、片づけがこれらを読むため）。
 
 1. データファイルの一時ファイルを書く。`open(data_tmp, 'wb')` で開き、`data_js` を書き、`flush()`、`os.fsync(f.fileno())`、閉じる（2.3 の「書く」）。
 2. HTML の一時ファイルを `template` で同じように書く。一時ファイルを書く順はデータ → HTML とする（HLD は置き換えの順だけを決めている。どちらの順でも、本来の名前へ置く前に両方を書き終える）。
@@ -5475,7 +5477,7 @@ dominant_peak = min(candidates, key=key)
 | VA4 | `--config` が無い | `--config が無い` | `--config と設定ファイルの絶対パスを渡す` | 2 |
 | VA5 | `--config` が絶対パスでない | `--config のパスが絶対パスでない: {value}` | `--config に設定ファイルの絶対パスを渡す` | 2 |
 | VR1 | `merged_summit.geojson` が無い、読めない、UTF-8 でない | `merged_summit.geojson を読めない: {path}: {reason}` | `{rerun4}（フェーズ4 は突合から始まり、merged_summit.geojson を書き直す）` | 1 |
-| VR2 | `merged_summit.geojson` が JSON でない | `merged_summit.geojson が JSON として読めない: {path}: {detail}` | VR1 と同じ | 1 |
+| VR2 | `merged_summit.geojson` が JSON でない（`NaN`・`Infinity`・`-Infinity` の字句を含むもの、入れ子が深すぎて読めないものを含む） | `merged_summit.geojson が JSON として読めない: {path}: {detail}` | VR1 と同じ | 1 |
 | VR3 | `merged_summit.geojson` の最上位の形が違う | `merged_summit.geojson の最上位の形が違う: {path}: {detail}` | VR1 と同じ | 1 |
 | VT1 | テンプレートが無いか読めない | `テンプレートを読めない: {path}: {reason}` | `リポジトリの checkout に public/index.html があることを確かめてから、{rerun4}` | 1 |
 | VW1 | 出力を書けない（一時ファイルと置いたファイルは消した） | `{name} の{step}に失敗した: {path}: {reason}。2 つの出力はどちらも置いていない` | `{dir} の空きと権限を確かめてから、{rerun4}` | 1 |
@@ -5496,7 +5498,7 @@ dominant_peak = min(candidates, key=key)
 
 #### 8.1.5 UT 候補
 
-ケースは単体テスト仕様書の [8.1](50_UT.md#81-generate_viewer)（`UT-generate_viewer-001`〜`UT-generate_viewer-014`）にある。
+ケースは単体テスト仕様書の [8.1](50_UT.md#81-generate_viewer)（`UT-generate_viewer-001`〜`UT-generate_viewer-015`）にある。
 
 ## 9. CMP7 申請書生成 UI
 
