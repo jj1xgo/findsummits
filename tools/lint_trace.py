@@ -39,8 +39,8 @@ IMPLEMENTED_STAGES = frozenset()
 
 # 単体テスト仕様書（50_UT.md）にカバレッジ項目の表を必ず置くモジュール（LLD の ID。ADR-OPS-013）。
 # ここにあるモジュールの節は、正しい表がちょうど 1 つ無ければ止める。ほかの節は、表を置いたときだけ照らす
-UT_COVERAGE_TRIAL = ('LLD-common', 'LLD-preprocess_boundaries', 'LLD-fetch_tiles', 'LLD-check_cols',
-                     'LLD-generate_viewer')
+UT_COVERAGE_TRIAL = ('LLD-common', 'LLD-preprocess_boundaries', 'LLD-fetch_tiles', 'LLD-run_pipeline',
+                     'LLD-resolve_config', 'LLD-check_cols', 'LLD-generate_viewer', 'LLD-build_public_site')
 
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
