@@ -3023,7 +3023,7 @@ void write_zone_geojson(const std::vector<PeakCsvRow>& rows, const std::vector<R
 
 `ZoneFill fill_zone(const PeakCsvRow& row, ZoneKind kind, const ElevationGrid& grid, const GridRange& range, long long activation_zone_drop_m, long long delete_zone_max_drop_m, std::vector<std::uint64_t>& marks)`
 
-1. 呼ぶ側の誤り（この順に確かめ、最初に当たったもので投げる）: `range.z14` が真（ゾーンは通常モードだけ）。`grid.width`・`grid.height` が `256 × (x_max − x_min + 1) + 2`・`256 × (y_max − y_min + 1) + 2` と違う（`range.box` から。`std::int64_t` で計算する。[6.6.3](#663-関数の細部) の `build_col_list` の 1 と同じ）。`grid.values.size()` が W × H と違う。`marks.size()` が `(W × H + 63) / 64` と違う。`row.row.peak` が外周でないグリッドの中（px が 1〜W − 2、py が 1〜H − 2）に無い。ピークの画素の値が陸地（`> 0.0f`）でない。ピークの画素の値が `row.row.peak_elevation` と `==` でない。ピークの画素の中心が範囲の中でない。
+1. 呼ぶ側の誤り（この順に確かめ、最初に当たったもので投げる）: `range.z14` が真（ゾーンは通常モードだけ）。`grid.width`・`grid.height` が `256 × (x_max − x_min + 1) + 2`・`256 × (y_max − y_min + 1) + 2` と違う（`range.box` から。`std::int64_t` で計算する。[6.6.3](#663-関数の細部) の `build_col_list` の 1 と同じ）。以下、この節の W・H は、この 2 つの式で `range.box` から求めた値（`grid.width`・`grid.height` の値でない）。`grid.values.size()` が W × H と違う。`marks.size()` が `(W × H + 63) / 64` と違う。`row.row.peak` が外周でないグリッドの中（px が 1〜W − 2、py が 1〜H − 2）に無い。ピークの画素の値が陸地（`> 0.0f`）でない。ピークの画素の値が `row.row.peak_elevation` と `==` でない。ピークの画素の中心が範囲の中でない。
 2. 閾値の条件を決める（[HLD 4.16.2](30_HLD.md#4162-処理の流れ) の 1「閾値の条件を決める」。`kp = _zone_key(row.row.peak_elevation)`）。
    - アクティベーションゾーン: `{kp − 100 × activation_zone_drop_m, false}`。
    - delete判定ゾーン: `key_col_resolved` が真なら `kc = _zone_key(row.row.col_elevation)` を求め（偽の行の `col_elevation` は読まない。[6.6.2](#662-型とデータ)）、`kc >= kp − 100 × delete_zone_max_drop_m` なら `{kc, true}` にする（コルの標高を含めない。[DEC70](30_HLD.md#4164-設計判断)「Key コルで決まる閾値はコルの標高を含めない」。2 つが等しいときもこちら）。それ以外（`key_col_resolved` が偽か、コルがそれより低い）は `{kp − 100 × delete_zone_max_drop_m, false}`。海面確定の行（`col_elevation` が 0）で前者に当たると `{0, true}` になり、陸地の画素（値は 0.01 以上でキーは 1 以上）がすべて条件を満たす。特別扱いしない。
@@ -3253,7 +3253,7 @@ LatLon z15_pixel_center_latlon(const Z15Pixel& pixel);
 
 `TileXY latlon_to_tile(double lat, double lon, int z)`。式と計算の順は 2.4 の `latlon_to_tile` のとおり。`floor` の後の倍精度の値を `static_cast<int>` で `x`・`y` にする。引数を検査しない（2.1 の Python と同じ）。
 
-渡せるのは、`lat` が −85.0511287798066 以上 85.0511287798066 以下（Web メルカトルの緯度の限界。[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 1「リストを読む」の座標として読める条件の (3) の注）、`lon` が −180 以上 180 未満（同じく (2)）、`z` が 0 以上 23 以下のときだけである。このとき `x` は 0 以上 `2^z` 以下（`lon` が 180 未満の最大の倍精度の値のときは、`lon + 180` が丸めで 360 になり `x = 2^z`）、`y` は −1 以上 `2^z − 1` 以下（緯度 +85.0511287798066 で −1、緯度 −85.0511287798066 で `2^z − 1`）に入り、`int` に変えられる。範囲の外を渡すと、`int` に変えるところで未定義の動作になりうる（−90 に最も近い倍精度の緯度では `tan(r) + 1 / cos(r)` が 0 になり、`log` が負の無限大を返す。NaN も同じ）ので、呼ぶ側が範囲を守る。今の呼ぶ側は、bounding box の四隅で呼ぶ [6.4](#64-analyze_terrain_grid) の `tile_range`（上 2 桁と下 2 桁の範囲を確かめてから呼ぶ）と、6.3 の `check_mesh_tiles`（メッシュの四隅で呼ぶ）、所属メッシュが存在メッシュだと確かめた後の対象ピークで `latlon_to_z15_pixel` を通して呼ぶ「対象」の群、読み戻した値で呼ぶ「CSV と早期終了」の群である。範囲を確かめてから渡すかは、それぞれの群の節で決める。
+渡せるのは、`lat` が −85.0511287798066 以上 85.0511287798066 以下（Web メルカトルの緯度の限界。[HLD 4.8.2](30_HLD.md#482-処理の流れ) の 1「リストを読む」の座標として読める条件の (3) の注）、`lon` が −180 以上 180 未満（同じく (2)）、`z` が 0 以上 23 以下のときだけである。このとき `x` は 0 以上 `2^z` 以下（`lon` が 180 未満の最大の倍精度の値のときは、`lon + 180` が丸めで 360 になり `x = 2^z`）、`y` は −1 以上 `2^z − 1` 以下（緯度 +85.0511287798066 で −1、緯度 −85.0511287798066 で `2^z − 1`）に入り、`int` に変えられる。範囲の外を渡すと、`int` に変えるところで未定義の動作になりうる（−90 に最も近い倍精度の緯度では `tan(r) + 1 / cos(r)` が 0 になり、`log` が負の無限大を返す。NaN も同じ）ので、呼ぶ側が範囲を守る。呼ぶ側は、bounding box の四隅で呼ぶ [6.4](#64-analyze_terrain_grid) の `tile_range`（上 2 桁と下 2 桁の範囲を確かめてから呼ぶ）と、6.3 の `check_mesh_tiles`（メッシュの四隅で呼ぶ）、所属メッシュが存在メッシュだと確かめた後の対象ピークで `latlon_to_z15_pixel` を通して呼ぶ「対象」の群、読み戻した値で呼ぶ「CSV と早期終了」の群である。範囲を確かめてから渡すかは、それぞれの群の節で決める。
 
 ##### tile_to_latlon（analyze_terrain_convert）
 
@@ -3407,9 +3407,9 @@ void run_wide_mode(const std::string& japan_mesh_list, int n,
 
 書き方は [2.2](#22-ログとメッセージの文面)。TM1〜TM3 は [6.2.4](#624-メッセージ文面)、WN1 は [6.3.4](#634-メッセージ文面)、R1〜R3 は [2.1.4](#214-メッセージ文面) の文面のまま。日本全土1次メッシュコードリストの R1〜R3 の案内は空（既定の対処）。北方領土除外メッシュリストの案内 `_excluded_guidance` は、次の文にする。
 
-`venv/bin/python3 scripts/preprocess_boundaries.py を起動して北方領土除外メッシュリストを作ってから、止まったコマンドを同じ引数で起動し直す（設定ファイルを指定して起動したときは、どちらにも同じ --config を付ける）`
+`権限か種類（ディレクトリなど）が原因で読めないときは、それを直してから、止まったコマンドを同じ引数で起動し直す。無いか、中身が壊れている（UTF-8 として読めない、4 桁の数字でない行がある）ときは、venv/bin/python3 scripts/preprocess_boundaries.py --rebuild を起動して正常に終えてから、止まったコマンドを同じ引数で起動し直す（作り直すと取得完了の記録も消えるので、取得は日本全土をやり直す。設定ファイルを指定して起動したときは、どちらにも同じ --config を付ける）`
 
-6.11 は起動のしかたを知らないので、[5.1.4](#514-メッセージ文面) の除外リストの案内にある `{config_opt}` の代わりに、括弧で書く。ほかの関数が出すもの（MS1〜MS3・TT1・TT2・TR1・IM1・IW1・CW1・RB1・RB2・ZW1・MW1・UP1〜UP3）は、6.11 は出さない。
+[5.1.4](#514-メッセージ文面) の北方領土除外メッシュリストの案内（[4.1.4](#414-メッセージ文面) の `{cmp1_list}` と同じ文）と同じく、原因ごとの案内を 1 つの文に並べる（CMP1 は、出力がそろっていれば中身を読まずに作り直さないので、`--rebuild` は中身が壊れているときに要る。[3.1.3](#313-関数の細部) の `needs_rebuild`）。6.11 は起動のしかたを知らないので、5.1.4 の `{config_opt}` の代わりに括弧で書き、「もう一度起動する」の代わりに「止まったコマンドを同じ引数で起動し直す」と書く。ほかの関数が出すもの（MS1〜MS3・TT1・TT2・TR1・IM1・IW1・CW1・RB1・RB2・ZW1・MW1・UP1〜UP3）は、6.11 は出さない。
 
 `ERROR:` のメッセージ（2 行目は `対処:` と空白 1 つの後）:
 
@@ -3557,7 +3557,7 @@ void check_signal();
 1. 2 回目の呼び出しは `throw std::logic_error("start_log の 2 回目")`。
 2. `_make_dirs(log_dir, err)`（下）が失敗なら、2.2 の G3（`{path}` は `log_dir`、`{reason}` は `err` の文）を出して `throw ExitRequest(EXIT_ERROR)`。
 3. `path = _join(log_dir, program + "_" + _local_time(start.wall, true) + "_" + std::to_string(getpid()) + ".log")`。`open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666)`。失敗が `EEXIST` なら G4（`{path}` は `path`）、ほかの失敗は G3（`{path}` は `path`）を出して `throw ExitRequest(EXIT_ERROR)`（既にあるファイルには触れない）。
-4. `_state` の `has_exit_code` を偽、`exit_code` を 0、`broken`・`signal_thrown`・`finished` を偽にしてから、`log_fd`・`log_path`・`program`・`start` を入れ、最後に `started` を真にする（`start_log` の前に作った `ExitRequest` は記録しないが、念のためここで初期化する。6.12.2 の `ExitRequest`）。続けて、次をこの順に取り付ける: `std::atexit(_finish_log)`、最後に `SIGINT` と `SIGTERM` のハンドラを `_on_signal` にする（`sigaction`、`sa_flags = SA_RESTART`、`sa_mask` は空。シグナルのハンドラを最後にする理由は 2.1.3 の `start_log` の 4 と同じ）。
+4. `_state` の `has_exit_code` を偽、`exit_code` を 0、`broken`・`signal_thrown`・`finished` を偽にしてから、`log_fd`・`log_path`・`program`・`start` を入れ、最後に `started` を真にする（`start_log` の前に作った `ExitRequest` は記録しないが、念のためここで初期化する。6.12.2 の `ExitRequest`）。続けて、次をこの順に取り付ける: `std::atexit(_finish_log)`、最後に `SIGINT` と `SIGTERM` のハンドラを `_on_signal` にする（`sigaction`、`sa_flags = SA_RESTART`、`sa_mask` は `SIGINT` と `SIGTERM` の 2 つ〈`sigemptyset` の後に `sigaddset` で足す。理由は `_on_signal`〉。シグナルのハンドラを最後にする理由は 2.1.3 の `start_log` の 4 と同じ）。
 5. 2.2 の L1・L2 の行を `_emit`（標準出力）で出す。L1 の `{args}` は 2.2 の引用の決まりで 1 つずつ書いて空白 1 つでつなぐ（`_quote_arg`。引数が無ければ `開始: {program}`）。L2 は `設定ファイル: {config.path}` の後、`config.values` のキーを `_config_keys` の順に `設定: [{section}] {key} = {value}（{source}）`。`{value}` は整数なら 10 進（先頭の `0` なし）、パスならその文字列、未設定なら `未設定`。`{source}` は `from_file` が真なら `ファイル`、偽なら `デフォルト`（未設定のときもデフォルト）。
 
 ##### _emit（analyze_terrain_common）
@@ -3591,7 +3591,7 @@ void check_signal();
 
 `void _on_signal(int signum)`（内部。シグナルのハンドラ）
 
-`_signum` が 0 なら `_signum = signum`（2 回目からは何もしない。止まるための後始末を途中で切らないため）。ほかのことはしない（非同期シグナル安全な代入だけ）。
+`_signum` が 0 なら `_signum = signum`（2 回目からは何もしない。止まるための後始末を途中で切らないため）。ほかのことはしない（非同期シグナル安全な代入だけ）。`start_log` の 4 で、どちらのハンドラの `sa_mask` にも `SIGINT` と `SIGTERM` を入れるので、ハンドラの中にもう一方のハンドラは入らない（`_signum` を 0 と読んでから書くまでの間に別のシグナルの番号が書かれ、それを上書きすることが無い。最初に受けたシグナルが残る）。
 
 ##### check_signal
 
@@ -3652,7 +3652,7 @@ void check_signal();
 
 #### 6.12.5 UT 候補
 
-ケースは単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common)（`UT-analyze_terrain_common-001`〜`UT-analyze_terrain_common-035`）にある。
+ケースは単体テスト仕様書の [6.12](50_UT.md#612-analyze_terrain_common)（`UT-analyze_terrain_common-001`〜`UT-analyze_terrain_common-036`）にある。
 
 ## 7. CMP5 統合・突合
 
