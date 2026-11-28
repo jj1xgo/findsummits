@@ -6653,7 +6653,7 @@ HLD 4.19.2 の「等高線」の読んだタイルの記録と、「ブラウザ
 4. 返すのは `{overall, missing, features}`（`features` と `missing` は新しい配列。`features` の要素は受け取ったフィーチャそのもので写さない）。
 
 - `missing` の `name` は `category` の値と同じ字句なので、画面は欠けた本のカテゴリのフィルターを「データなし」にするのに使える（9.2）。
-- つないだ並びは `merged_summit.geojson` の並びと違う。並びに頼る計算は `match_search` の同じ順位の並びだけで、それを並びによらない決め方にした（`match_search` の 6）。画面の描く順（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「点」の「点はフィーチャの並びの順に描き」と、「delete判定ゾーン」の「ゾーンを並びの順に同じように重ねる」）は、並びのままでは作業用と公開用で重なりの上下が変わりうる。[HLD 4.20.1](30_HLD.md#4201-目的と範囲)の対象外の行が LLD に送った、並びで表示が変わるところの確かめのうち、描く順は画面の側の [9.2.3](#923-関数の細部)の `draw_features` の 3 が、`category` の順に決めて並びによらない決め方にした。
+- つないだ並びは `merged_summit.geojson` の並びと違う。並びに頼る計算は `match_search` の同じ順位の並びだけで、それを並びによらない決め方にした（`match_search` の 6）。画面の描く順は、[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「点」と「delete判定ゾーン」が `category` の順（同じ `category` の中ではフィーチャの並びの順）に決めていて、作業用と公開用で `features` の並びが違っても重なりの上下は変わらない（画面の側は [9.2.3](#923-関数の細部)の `draw_features` の 3）。[HLD 4.20.1](30_HLD.md#4201-目的と範囲)の対象外の行が LLD に送った、並びで表示が変わるところの確かめは、この 2 つで済む。
 
 ###### check_generated_at_mix
 
@@ -7167,7 +7167,7 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
 
 この群の内部の決まり（どの関数も使う）を先に書く。
 
-- **ズーム**: 計算の関数に渡すズームは `_map.getZoom()` の値（`zoomSnap` が 1 なので整数）だけにする。`moveend` と、半径だけを替える `zoomend` の受け手の中で取る（地図の計算の関数が整数のズームだけを受けるため。[9.1.3](#913-関数の細部)の `visible_tiles`・`contour_tile_plan`・`benchmark_zoom`）。
+- **ズーム**: 表示範囲から求める呼び出し（`visible_tiles`・`benchmark_zoom`・`marker_radius`・`mesh_label_layout`、`_contour_needed` が見るタイル）に渡すズームは `_map.getZoom()` の値（`zoomSnap` が 1 なので整数）にし、`moveend` と、半径だけを替える `zoomend` の受け手の中で取る。タイル 1 枚を描く呼び出し（`createTile` と、`draw_contours` の 2・`_on_contour_result` が呼ぶ `_paint_contour_tile` の `contour_tile_plan`・`contour_interval`）は、そのタイルの座標の `z` を渡す（ズームを動かしている途中に前のズームのタイルを描くときも、間隔と読むタイルをタイルにそろえるため。[9.1.3](#913-関数の細部)の `contour_interval`）。どちらも整数（地図の計算の関数が整数のズームだけを受けるため）。
 - **表示範囲** `_map_bounds()`（内部）: `_map.getBounds()` を `{south, west, north, east}`（`MapBounds`。[9.1.2](#912-型とデータ)）にして返す。
 - **待ち行列の更新** `_update_tile_queue(finished: Array<string>)`（内部）:
   1. `needed` を、等高線が今要る URL（`_contour_needed()`。`draw_contours` の 5）と基準点が今要る URL（`_benchmark_needed()`。`draw_benchmarks` の 3）をこの順につないだものにする（どちらもレイヤーが地図に無ければ空）。
