@@ -880,7 +880,7 @@ HLD の [DEC6](30_HLD.md#225-設計判断決めたこと理由却下した案)�
 - 交差の判定: 「交差する」（[HLD 4.17.2](30_HLD.md#4172-処理の流れ) の「共通部分が面積を持つ」）は、`shapely.relate_pattern(<ポリゴン>, <矩形>, 'T********')`（内部どうしが交わる）が真であることとする。面積の値と比べない（浮動小数の閾値を置かない）。2 つの面の内部どうしが交われば共通部分は面積を持ち、境界で接するだけなら交わらない。
 - 例外の受け方: 各関数が名前を挙げた例外だけを捕まえる（[1.2](#12-lld-の規約) の規約）。`SignalStop`・`LogWriteError` は捕まえない。
 - 画面への出力の失敗（標準出力や標準エラー出力が読む相手の無いパイプなど）は、このモジュールでは特別に扱わず、[2.1.3](#213-関数の細部) の `log_info`・`log_warning`・`log_error` と `_finish_log` の決まりのままにする（`start_log` の前に止まる BA1〜BA4 などで標準エラー出力に書けないときの終了コードは、Python の既定のまま）。利用者が端末から起動するコマンドで、[5.2](#52-resolve_config) の `resolve_config` のように標準出力を別のプログラムが読む約束が無いため。
-- `{reason}` は [2.1.4](#214-メッセージ文面) と同じ（`OSError` の `strerror`〈無ければ `str(e)`〉、`UnicodeDecodeError` なら `UTF-8 として読めない`）に加えて、`zipfile.BadZipFile`・`zlib.error`・`EOFError`・`NotImplementedError`・`json.JSONDecodeError`・`ValueError`・`TypeError`・`RecursionError`・`shapely.errors.GEOSException` は `str(e)` の 1 行目（空なら例外のクラス名）。
+- `{reason}` は [2.1.4](#214-メッセージ文面) と同じ（`OSError` の `strerror`〈無ければ `str(e)`〉、`UnicodeDecodeError` なら `UTF-8 として読めない`）に加えて、`zipfile.BadZipFile`・`zlib.error`・`EOFError`・`NotImplementedError`・`json.JSONDecodeError`・`ValueError`・`TypeError`・`shapely.errors.GEOSException` は `str(e)` の 1 行目（空なら例外のクラス名）。`RecursionError` は `入れ子が深すぎる`（文は Python の版で変わるため。7.1.3・8.1.3 と同じ）。
 
 ##### main（preprocess_boundaries）
 
@@ -5140,9 +5140,9 @@ dominant_peak = min(candidates, key=key)
 2. `placed_xlsx` が真なら、置いた `merged_summit.xlsx` を `os.remove` で消す。消せたら 3 の SW1。消せなければ（`OSError`）3 の SW2 にする。
 3. SW1 か SW2 を `common.log_error` で出して `sys.exit(common.EXIT_ERROR)`。`{path}` は失敗した段の出力の本来の名前のパス（`os.path.join(results_dir, <名前>)` のまま。正規化しない。一時ファイルの段の失敗でも `merged_summit.geojson` か `merged_summit.xlsx`。[7.2.3](#723-関数の細部)の `write_merged_peak` の MF1 と同じ）、`{reason}` は [2.1.4](#214-メッセージ文面)のとおり。SW2 の `{xlsx_path}`・`{xlsx_reason}` は、消せなかった `merged_summit.xlsx` のパス（同じ形）とその理由。
 
-**中断**: `OSError` 以外の例外で抜けるとき（`SignalStop`〈[2.1.3](#213-関数の細部)の `_on_signal` が `SIGINT`・`SIGTERM` で上げる〉、`workbook.save` が上げる `OSError` 以外の例外）と、`OSError` の片づけの途中で `SignalStop` が上がったときも、止める前に片づける。作りは、本体を `try` で囲み、`OSError` を捕まえる `except` の後に `finally` を置く。`OSError` の `except` は、入ったら最初に（一時ファイルを消す前に）、下の 1 と同じ見方で置いた出力を決めて `placed` に控え、SW1 か SW2 を出し終えて `sys.exit` を呼ぶ直前に `handled = True` にする。`finally` は、`done` も `handled` も偽のときだけ、次の順に片づける。
+**中断**: `OSError` 以外の例外で抜けるとき（`SignalStop`〈[2.1.3](#213-関数の細部)の `_on_signal` が `SIGINT`・`SIGTERM` で上げる〉、`workbook.save` が上げる `OSError` 以外の例外）と、`OSError` の片づけの途中で `SignalStop` が上がったときも、止める前に片づける。作りは、本体を `try` で囲み、`OSError` を捕まえる `except` の後に `finally` を置く。`OSError` の `except` は、入ったら最初に（一時ファイルを消す前に）、下の 1 と同じ見方で置いた出力を決めて `placed` に並び（置いた出力が無ければ空の並び）として控え（`placed` は本体の `try` より前に `None` にしておく）、SW1 か SW2 を出し終えて `sys.exit` を呼ぶ直前に `handled = True` にする。`finally` は、`done` も `handled` も偽のときだけ、次の順に片づける。
 
-1. 置き換えが済んだ出力を決める（一時ファイルを消す前に決める）。`OSError` の `except` が `placed` を控えていれば、一時ファイルの有無を見直さずに `placed` を使う（`except` が一時ファイルを消した後に止まると、置き換えに失敗した出力も一時ファイルが無くなり、置いたものと見誤るため）。出力ごとに（XLSX と GeoJSON。`xlsx_started` と `xlsx_path`・`xlsx_tmp`、`geo_started` と `geo_path`・`geo_tmp` の組）、その組の `*_started` が真で、一時ファイルがもう無い（`os.path.lexists(<一時ファイル>)` が偽。置き換えが済んで一時ファイルが本来の名前になった）ものを、置いた出力とする。置き換えの呼び出しに入る前に止まったときは一時ファイルがまだあるので、置いた出力に入れず、本来の名前のファイルには触れない。
+1. 置き換えが済んだ出力を決める（一時ファイルを消す前に決める）。`placed` が `None` でなければ（`OSError` の `except` が控えた。空の並びのときも）、一時ファイルの有無を見直さずに `placed` を使う（`except` が一時ファイルを消した後に止まると、置き換えに失敗した出力も一時ファイルが無くなり、置いたものと見誤るため。空の並びで見直すと、置き換えの前からあった本来の名前の出力を消す）。`None` のときだけ、次の見方で決める。出力ごとに（XLSX と GeoJSON。`xlsx_started` と `xlsx_path`・`xlsx_tmp`、`geo_started` と `geo_path`・`geo_tmp` の組）、その組の `*_started` が真で、一時ファイルがもう無い（`os.path.lexists(<一時ファイル>)` が偽。置き換えが済んで一時ファイルが本来の名前になった）ものを、置いた出力とする。置き換えの呼び出しに入る前に止まったときは一時ファイルがまだあるので、置いた出力に入れず、本来の名前のファイルには触れない。
 2. 2 つの一時ファイルを `os.remove` で消す（無いものと、消せない誤りは無視する）。
 3. 1 で決めた置いた出力を、XLSX、GeoJSON の順に `os.remove` で消す。無いもの（`FileNotFoundError`）は無視する。ほかの `OSError` で消せなければ、SW3 を `common.log_warning` で出して次へ進む（`sys.exit` しない。止まる原因は中断で、終了コードは共通部品が決める）。
 
@@ -5445,7 +5445,7 @@ dominant_peak = min(candidates, key=key)
 
 `write_viewer_outputs(data_js: bytes, template: bytes, results_dir: str) -> None`
 
-[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 4「2 つを置く」である（[HLD の DEC132](30_HLD.md#4134-設計判断)「CMP6 の 2 つの出力はそろって置くか、どちらも置かない」）。`out_dir = results_dir`（`os.path.abspath` で正規化しない。8.1.3 の前置きの「パスを正規化しない理由」）、`data_path = os.path.join(out_dir, _DATA_NAME)`、`html_path = os.path.join(out_dir, _HTML_NAME)`、一時ファイルは [2.3](#23-ファイルの名前と書き方)の決まりで `data_tmp = data_path + '.tmp'`、`html_tmp = html_path + '.tmp'`。ディレクトリ（`results/`）は作らない（`merged_summit.geojson` をそこから読んだ直後にあるため。無ければ `open` の失敗で VW1）。本体の `try` より前に、`data_started`・`html_started`・`done`・`handled` を 4 つとも `False` にしておく（最初の一時ファイルを開く段の失敗でも、片づけがこれらを読むため）。
+[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 4「2 つを置く」である（[HLD の DEC132](30_HLD.md#4134-設計判断)「CMP6 の 2 つの出力はそろって置くか、どちらも置かない」）。`out_dir = results_dir`（`os.path.abspath` で正規化しない。8.1.3 の前置きの「パスを正規化しない理由」）、`data_path = os.path.join(out_dir, _DATA_NAME)`、`html_path = os.path.join(out_dir, _HTML_NAME)`、一時ファイルは [2.3](#23-ファイルの名前と書き方)の決まりで `data_tmp = data_path + '.tmp'`、`html_tmp = html_path + '.tmp'`。ディレクトリ（`results/`）は作らない（`merged_summit.geojson` をそこから読んだ直後にあるため。無ければ `open` の失敗で VW1）。本体の `try` より前に、`data_started`・`html_started`・`done`・`handled` を 4 つとも `False` に、`placed` を `None` にしておく（最初の一時ファイルを開く段の失敗でも、片づけがこれらを読むため）。
 
 1. データファイルの一時ファイルを書く。`open(data_tmp, 'wb')` で開き、`data_js` を書き、`flush()`、`os.fsync(f.fileno())`、閉じる（2.3 の「書く」）。
 2. HTML の一時ファイルを `template` で同じように書く。一時ファイルを書く順はデータ → HTML とする（HLD は置き換えの順だけを決めている。どちらの順でも、本来の名前へ置く前に両方を書き終える）。
@@ -5457,9 +5457,9 @@ dominant_peak = min(candidates, key=key)
 2. 内部の関数 `_remove_files(paths: Sequence[str]) -> list[tuple[str, str]]` で順に消す: パスごとに `os.remove` を呼び、`FileNotFoundError` は無視し、ほかの `OSError` は、`os.path.lexists(そのパス)` が偽（そのパスに何も無い。`results` がディレクトリでなく `NotADirectoryError` になったときや、まだ開いていない一時ファイル）なら無視し、真のときだけ `(そのパス, {reason})` を並びに足して次へ進む（[7.4.3](#743-関数の細部)の `write_unresolved_list` の KW1・KW2 の分け方と同じ）。返すのは消せなかったものの並び。
 3. 消せなかったものが無ければ VW1、あれば VW2（`{list}` は `{path}: {reason}` を `、` でつなぎ、`{list_paths}` はパスを `・` でつなぐ）を `common.log_error` で出し、`handled = True` にしてから `sys.exit(common.EXIT_ERROR)`。2.3 の「消せないときの `OSError` は無視する」と違い、一時ファイルを消せなかったことも VW2 で知らせるのは、[HLD 4.13.2](30_HLD.md#4132-処理の流れ)の 4 と [4.13.3](30_HLD.md#4133-異常系)の表が「置き換え済みの方か一時ファイルを消せない」ときにそのパスを示すと決めているため（7.5 の SW1・SW2 が置いた XLSX だけを知らせるのと違う点）。
 
-**中断**: `OSError` 以外の例外で抜けるとき（`SignalStop`〈[2.1.3](#213-関数の細部)の `_on_signal` が `SIGINT`・`SIGTERM` で上げる〉と、`OSError` の片づけの途中で `SignalStop` が上がったとき）も、止める前に片づける。作りは 7.5.3 の `write_summit_outputs` の「中断」と同じ: 本体を `try` で囲み、`OSError` を捕まえる `except` の後に `finally` を置く。`finally` は、`done` も `handled` も偽のときだけ、次の順に片づける。
+**中断**: `OSError` 以外の例外で抜けるとき（`SignalStop`〈[2.1.3](#213-関数の細部)の `_on_signal` が `SIGINT`・`SIGTERM` で上げる〉と、`OSError` の片づけの途中で `SignalStop` が上がったとき）も、止める前に片づける。作りは 7.5.3 の `write_summit_outputs` の「中断」と同じ: 本体を `try` で囲み、`OSError` を捕まえる `except` の後に `finally` を置く。`OSError` の `except` は、入ったら最初に（上の「失敗」の 1 より前に。一時ファイルを消す前に）、下の 1 と同じ見方で置いた出力を決め、`placed` に並び（置いた出力が無ければ空の並び）として控える。`finally` は、`done` も `handled` も偽のときだけ、次の順に片づける。
 
-1. 置き換えが済んだ出力を決める（一時ファイルを消す前に決める）。出力ごとに（`data_started` と `data_tmp`・`data_path`、`html_started` と `html_tmp`・`html_path` の組）、その組の `*_started` が真で、一時ファイルがもう無い（`os.path.lexists(<一時ファイル>)` が偽）ものを、置いた出力とする。
+1. 置き換えが済んだ出力を決める（一時ファイルを消す前に決める）。`placed` が `None` でなければ（`OSError` の `except` が控えた。空の並びのときも）、一時ファイルの有無を見直さずに `placed` を使う（`except` が一時ファイルを消した後に止まると、置き換えに失敗した出力も一時ファイルが無くなり、置いたものと見誤るため。空の並びで見直すと、置き換えの前からあった本来の名前の出力を消す。7.5.3 と同じ）。`None` のときだけ、次の見方で決める。出力ごとに（`data_started` と `data_tmp`・`data_path`、`html_started` と `html_tmp`・`html_path` の組）、その組の `*_started` が真で、一時ファイルがもう無い（`os.path.lexists(<一時ファイル>)` が偽）ものを、置いた出力とする。
 2. `_remove_files` で、`data_tmp`、`html_tmp`、1 で決めた置いた出力（データファイル、HTML の順）を消す。
 3. 消せなかったもの 1 つごとに VW3 を `common.log_warning` で出して次へ進む（`sys.exit` しない。止まる原因は中断で、終了コードは共通部品が 128＋シグナルの番号にする）。
 
@@ -5467,9 +5467,7 @@ dominant_peak = min(candidates, key=key)
 
 - 中断でも片づける理由: HLD の DEC132 は「保証するのは CMP6 が捕捉できる失敗まで」と書くが、`SignalStop` は捕捉できる中断なので、7.5 と同じく片づけて「そろって置くか、どちらも置かない」を守る。HTML を最後に置くので中断で残りうるのはデータファイルだけで、開くものは無いが、次のフェーズ4 の始まりに CMP3 が消すまで残るのは避ける。
 - 置き換えの前の失敗では、本来の名前のファイルに触れない理由: 7.5 と同じ。フェーズ4 の始まりに CMP3 が前回の 2 つを消している（[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）。`generate_viewer` は内部の起動口で、`run_pipeline` のフェーズ4 からだけ起動される前提にする（利用者が直に起動して前回の HTML が残っている場面は扱わない。そのときデータファイルを消した後に古い HTML が残りうる）。
-- 片づけで許す残り:
-  1. 消せなかったかの判定に `os.path.lexists` を使うので、親のディレクトリの検索権限が実行の途中で失われたときなど、`lstat` 自体が `OSError` になると、残っているファイルも「無い」と見て、消せなかったものに入れない（VW1 の「どちらも置いていない」で終わる、中断の VW3 が出ない、になりうる）。残りうるのは、正規の名前の出力（次のフェーズ4 の始まりに CMP3 が消す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）と、次の起動が開いて上書きする一時ファイル（[2.3](#23-ファイルの名前と書き方)）だけである。無視する誤りを `FileNotFoundError`・`NotADirectoryError` に狭めると、検索権限が無いために一時ファイルを作れなかった回にも、無かったファイルの VW2 を出す。[7.4.3](#743-関数の細部)の `write_unresolved_list` の KW1・KW2 の分け方と同じにそろえる。
-  2. 置き換えが失敗した出力は、`OSError` の片づけが一時ファイルを消した後、その片づけの途中で `SignalStop` が上がると、「置いた」と数えて正規の名前を消そうとする（一時ファイルがもう無いため。[7.5.3](#753-関数の細部)の `write_summit_outputs` も同じ作り）。そのとき正規の名前に先からある物は、CMP3 がフェーズ4 の始まりに消す物か、利用者が置いたディレクトリなどに限られ、消せなければ VW3 が出る。窓は片づけの途中の中断だけである。
+- 片づけで許す残り: 消せなかったかの判定に `os.path.lexists` を使うので、親のディレクトリの検索権限が実行の途中で失われたときなど、`lstat` 自体が `OSError` になると、残っているファイルも「無い」と見て、消せなかったものに入れない（VW1 の「どちらも置いていない」で終わる、中断の VW3 が出ない、になりうる）。残りうるのは、正規の名前の出力（次のフェーズ4 の始まりに CMP3 が消す。[HLD 2.10.3](30_HLD.md#2103-フェーズのやり直し)）と、次の起動が開いて上書きする一時ファイル（[2.3](#23-ファイルの名前と書き方)）だけである。無視する誤りを `FileNotFoundError`・`NotADirectoryError` に狭めると、検索権限が無いために一時ファイルを作れなかった回にも、無かったファイルの VW2 を出す。[7.4.3](#743-関数の細部)の `write_unresolved_list` の KW1・KW2 の分け方と同じにそろえる。
 
 #### 8.1.4 メッセージ文面
 
