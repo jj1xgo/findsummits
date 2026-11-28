@@ -7140,7 +7140,7 @@ HLD 4.19.2 の「等高線」の読んだタイルの記録と、「ブラウザ
 
 1. `kind` が 2 つの字句のどちらでもなければ、`TypeError` で reject する。
 2. `_check_writable()` が `false` なら何もしない（読み直すまでエクスポートを受けない）。
-3. `_export_busy` が真なら、[9.2.4](#924-メッセージ文面)の「作成中」を `notify('result', …)` で出して終える（作っている間にもう一度呼ばれたとき。押されたボタンは次の `disabled` で押せなくなっているので、ふつうはプログラムから呼ばれたときの守り）。偽なら `_export_busy = true` とし、`#export-control` の `dataset.busy` に `kind` を入れ（処理中の種別を、ボタンが作り直されても失わないため。`#export-control` は作り直さない）、押されたボタン（`kind` が `'application'` なら `#export-application`、`'evidence'` なら `#export-evidence`）を `disabled` にして文字を `作成中` にし（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザ内の並行処理」の、ボタンを「作成中」にして重ねて押せなくする）、4 から 8 を `try` の中で行い、`finally` で `_export_busy = false` に戻し、`#export-control` の `dataset.busy` を除き（`delete`）、ボタンを元の文字（`申請書`・`申請エビデンス`）と押せる状態に戻す（どの終わり方でも戻す。ボタンが無ければ何もしない）。`render_export_controls` の作りは変えない。ライブラリの読み込みでボタンが作り直されたときは、`_refresh_export_controls` が `dataset.busy` を見て、処理中の種別のボタンを `disabled` にして文字を `作成中` に直す（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ボタンを『作成中』にして重ねて押せなくする」が、作り直しの後も保たれる）。
+3. `_export_busy` が真なら、[9.2.4](#924-メッセージ文面)の「作成中（結果）」を `notify('result', …)` で出して終える（作っている間にもう一度呼ばれたとき。押されたボタンは次の `disabled` で押せなくなっているので、ふつうはプログラムから呼ばれたときの守り）。偽なら `_export_busy = true` とし、`#export-control` の `dataset.busy` に `kind` を入れ（処理中の種別を、ボタンが作り直されても失わないため。`#export-control` は作り直さない）、押されたボタン（`kind` が `'application'` なら `#export-application`、`'evidence'` なら `#export-evidence`）を `disabled` にして文字を `作成中` にし（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ブラウザ内の並行処理」の、ボタンを「作成中」にして重ねて押せなくする）、4 から 8 を `try` の中で行い、`finally` で `_export_busy = false` に戻し、`#export-control` の `dataset.busy` を除き（`delete`）、ボタンを元の文字（`申請書`・`申請エビデンス`）と押せる状態に戻す（どの終わり方でも戻す。ボタンが無ければ何もしない）。`render_export_controls` の作りは変えない。ライブラリの読み込みでボタンが作り直されたときは、`_refresh_export_controls` が `dataset.busy` を見て、処理中の種別のボタンを `disabled` にして文字を `作成中` に直す（[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「ボタンを『作成中』にして重ねて押せなくする」が、作り直しの後も保たれる）。
 4. `time = new Date()`（押したときの時刻。確認画面で待った時間を入れない。[HLD 4.19.2](30_HLD.md#4192-処理の流れ)の「エクスポートの前の確認」）。
 5. ライブラリ（HLD の 1）: `libs = check_libraries(['sheetjs', 'jszip'])`。どちらかが `'ok'` でなければ、`notify('stop', {title: <「出力できない」の題。kind ごと>, lines: <3 行>})` を出して終える。
    - 1 行目は `SheetJS: <印の文字>`、2 行目は `JSZip: <印の文字>`。印の文字は [9.2.4](#924-メッセージ文面)の `読み込み中`・`使える`・`使えない`。
@@ -7487,8 +7487,8 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
    - 本文まで受けたら `{failed: false, status: <応答>.status, body: <本文>}` を解決する。`fetch` か `text()` が reject したら（取りやめを含む）、`{failed: true, status: null, body: null}` を解決する。reject しない。どちらの終わり方でも、`finally` で `clearTimeout` する。
 5. 始めの表示: `#map-message` の子を除き、`<p>` を 1 つ作ってその `textContent` に [9.2.4](#924-メッセージ文面)の「公開用データを読み込み中」を入れて足し、`hidden` を外す（`#map-message` の子は常に `<p>`）。`render_public_status(null, null)` と、`apply_filters({kind: 'setup', leaflet, public_files: 'pending'})`（検索とフィルターを使えなくする）を呼ぶ。
 6. `site.json` が終わったら、`site = accept_site_json(<その FetchOutcome>)` とし、`render_public_status(site, files)` を呼ぶ（`files` は、その時点で 7 が済んでいればその値、まだなら `null`）。
-7. 5 本がすべて終わったら（`Promise.all`）:
-   1. `results` を作る（5 本それぞれ `classify_public_file(<FetchOutcome>)`、`_public_file_names` の順）。HLD 3.8.3 の呼ぶ順では 1 本が終わるたびに判定するが、5 本がそろうまで描かないので、そろってから 5 本をまとめて判定してよい。判定の結果は同じになる。
+7. 5 本のそれぞれは、終わるたびにその `FetchOutcome` を `classify_public_file` で判定し、`_public_file_names` の位置に結果を控える（HLD 3.8.3 の呼ぶ順のとおり、1 本ごとに判定する。描くのは 5 本がそろってから）。5 本がすべて終わったら（`Promise.all`）:
+   1. `results` は、控えた 5 本の判定の結果（`_public_file_names` の順）。
    2. `combined = combine_public_files(results)`・`mix = check_generated_at_mix(results)`・`meta = pick_metadata_file(results)` とし、`files = {combined, mix, meta}`（`PublicFilesState`。[9.2.2](#922-型とデータ)）。
    3. `_all_features = combined.features`（Leaflet が使えないときも、件数と検索が見るため。`_redraw_state` の 3 と同じ扱い）。
    4. `meta` が `null` でなければ `render_header(format_metadata(meta.metadata), null)`。`null` なら `#meta` を空にする（HLD の「5 本とも欠けたときはメタデータを出さない」）。
@@ -7520,14 +7520,14 @@ HLD 3.7.3 の「地図の描画」の表のうち置き場が「画面」の 6 �
    - 7 桁にするのはここである（9.1 の `accept_site_json` が、先頭 7 桁にして出すのは画面としている）。
 3. データの印 `#data-marks`（HLD の「欠けか混在があるときだけ出し、閲覧者は消せない」）: 子を作り直す。
    - `files` が `null` でなく、`combined.overall === 'partial'` なら、「欠けた本」の 1 行（`missing` の各要素を `<名前>（取れない|読めない）` にして `、` でつなぐ）を `<span class="data-mark">` に入れる。
-   - `mix.mixed` が真なら、「異なる解析結果が混在」の 1 行（`values` の各要素を `<名前> <generated_at>` にしてつなぐ）を足す。
+   - `files` が `null` でなく、`mix.mixed` が真なら、「異なる解析結果が混在」の 1 行（`values` の各要素を `<名前> <generated_at>` にしてつなぐ）を足す。
    - どちらも無ければ `hidden` にする。あれば `hidden` を外す。
 4. 5 本とも欠けたとき（`files` が `null` でなく、`combined.overall === 'none'`）:
    - `#map-message` の子を除き、`<p>` を 1 つ作ってその `textContent` に [9.2.4](#924-メッセージ文面)の「公開用データを読めない」を入れて足し、`hidden` を外す。
    - `site` が `null` でなく、`site.channel === 'unknown'` なら、続けて「置き忘れの案内」を同じ箱の 2 つ目の `<p>` に出す。`site` が `null`（まだ）か、`site.channel` が `'release'`・`'dev'` なら出さない（HLD の、`site.json` の結果が出た後に添えるかを決めること）。
    - `#map-message` は地図の場所の縦の中ほどに置く（[9.2.1](#921-ファイル割付)の `<style>` の表）。Leaflet が無いときの `#map` の上の `.map-unavailable` の文と重ならず、両方が出る。
    - `overall` が `'none'` でなければ、`#map-message` には触れない（読み込み中は `start_public` が消す）。
-5. 文字はすべて `textContent` で入れる。2 度以上呼んでよく、呼ぶたびに今の引数だけから作り直す。
+5. 文字はすべて `textContent` で入れる。2 度以上呼んでよく、呼ぶたびに今の引数だけから作り直す（作り直すのは `#site-channel` と `#data-marks` で、`#map-message` は 4 の `none` のときだけ書く。読み込み中の文を消すのは `start_public` の 7 の 5 で、同じ起動の中で `overall` が `none` から変わることは無い）。
 
 #### 9.2.4 メッセージ文面
 
@@ -7692,7 +7692,7 @@ popup の行の見出しと値の書き方（[9.2.3](#923-関数の細部)の `b
 
 #### 9.2.5 UT 候補
 
-ケースは単体テスト仕様書の [9.2](50_UT.md#92-index_screen)（`UT-index_screen-001`〜`UT-index_screen-104`）にある。
+ケースは単体テスト仕様書の [9.2](50_UT.md#92-index_screen)（`UT-index_screen-001`〜`UT-index_screen-105`）にある。
 
 ## 10. CMP8 公開用ビューア
 
