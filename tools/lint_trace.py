@@ -45,7 +45,8 @@ UT_COVERAGE_TRIAL = ('LLD-common', 'LLD-preprocess_boundaries', 'LLD-fetch_tiles
                      'LLD-analyze_terrain_scan', 'LLD-analyze_terrain_csv', 'LLD-analyze_terrain_zone',
                      'LLD-analyze_terrain_record', 'LLD-analyze_terrain_convert', 'LLD-analyze_terrain_stage',
                      'LLD-analyze_terrain_common', 'LLD-cmp5_common', 'LLD-merge_peaks', 'LLD-merge_zones',
-                     'LLD-check_cols', 'LLD-match_summits', 'LLD-generate_viewer', 'LLD-build_public_site')
+                     'LLD-check_cols', 'LLD-match_summits', 'LLD-generate_viewer', 'LLD-index_calc',
+                     'LLD-build_public_site')
 
 # 欠番と、削除の根拠の ADR
 RETIRED_IDS = {
